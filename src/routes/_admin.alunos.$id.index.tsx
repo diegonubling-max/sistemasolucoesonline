@@ -180,6 +180,49 @@ function AlunoDetalhes() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showResetModal} onOpenChange={setShowResetModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Redefinir Senha</DialogTitle>
+            <DialogDescription>
+              Digite a nova senha para o aluno <strong>{aluno.nome}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="pass">Nova Senha</Label>
+              <Input
+                id="pass"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm">Confirmar Senha</Label>
+              <Input
+                id="confirm"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repita a nova senha"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowResetModal(false)}>Cancelar</Button>
+            <Button 
+              onClick={() => resetPassword.mutate()}
+              disabled={resetPassword.isPending || !newPassword || !confirmPassword}
+            >
+              {resetPassword.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar Redefinição
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
