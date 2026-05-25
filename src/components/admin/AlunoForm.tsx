@@ -107,41 +107,15 @@ export function AlunoForm({
           <Field label="Nome completo" error={errors.nome?.message}>
             <Input {...form.register("nome")} />
           </Field>
-          <Field label="Sexo" error={errors.sexo?.message}>
-            <RadioGroup
-              value={form.watch("sexo")}
-              onValueChange={(v: any) => form.setValue("sexo", v, { shouldValidate: true })}
-              className="flex gap-2"
-            >
-              <div className="flex-1">
-                <RadioGroupItem value="Masculino" id="masculino" className="peer sr-only" />
-                <Label
-                  htmlFor="masculino"
-                  className="flex items-center justify-center px-4 py-2 border rounded-md cursor-pointer transition-colors peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground hover:bg-muted"
-                >
-                  Masculino
-                </Label>
-              </div>
-              <div className="flex-1">
-                <RadioGroupItem value="Feminino" id="feminino" className="peer sr-only" />
-                <Label
-                  htmlFor="feminino"
-                  className="flex items-center justify-center px-4 py-2 border rounded-md cursor-pointer transition-colors peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground hover:bg-muted"
-                >
-                  Feminino
-                </Label>
-              </div>
-            </RadioGroup>
-          </Field>
-          <Field label="E-mail" error={errors.email?.message}>
-            <Input type="email" {...form.register("email")} />
-          </Field>
           <Field label="Telefone" error={errors.telefone?.message}>
             <Input
               value={form.watch("telefone")}
               onChange={(e) => form.setValue("telefone", maskPhone(e.target.value), { shouldValidate: true })}
               placeholder="(00) 00000-0000"
             />
+          </Field>
+          <Field label="E-mail" error={errors.email?.message}>
+            <Input type="email" {...form.register("email")} />
           </Field>
           <Field label="CPF" error={errors.cpf?.message}>
             <Input
@@ -157,15 +131,6 @@ export function AlunoForm({
                 Idade: {calcAge(dob)} anos {menor && "• Menor de idade"}
               </p>
             )}
-          </Field>
-          <Field label="Status">
-            <div className="flex items-center gap-2 h-9">
-              <Switch
-                checked={form.watch("ativo")}
-                onCheckedChange={(v) => form.setValue("ativo", v)}
-              />
-              <span className="text-sm">{form.watch("ativo") ? "Ativo" : "Inativo"}</span>
-            </div>
           </Field>
           <Field label="Como nos conheceu?" error={errors.origem?.message}>
             <Select
@@ -192,6 +157,44 @@ export function AlunoForm({
               />
             </Field>
           )}
+
+          <Field label="Sexo" error={errors.sexo?.message}>
+            <RadioGroup
+              value={form.watch("sexo")}
+              onValueChange={(v: any) => form.setValue("sexo", v, { shouldValidate: true })}
+              className="flex gap-2"
+            >
+              <div className="flex-1">
+                <RadioGroupItem value="Masculino" id="masculino" className="peer sr-only" />
+                <Label
+                  htmlFor="masculino"
+                  className={cn(
+                    "flex items-center justify-center gap-2 px-4 py-2 border rounded-md cursor-pointer transition-all",
+                    "border-input bg-background text-muted-foreground hover:bg-muted",
+                    "peer-data-[state=checked]:bg-[#1E3A5F] peer-data-[state=checked]:text-white peer-data-[state=checked]:border-[#1E3A5F]"
+                  )}
+                >
+                  {form.watch("sexo") === "Masculino" && <Check className="h-4 w-4" />}
+                  Masculino
+                </Label>
+              </div>
+              <div className="flex-1">
+                <RadioGroupItem value="Feminino" id="feminino" className="peer sr-only" />
+                <Label
+                  htmlFor="feminino"
+                  className={cn(
+                    "flex items-center justify-center gap-2 px-4 py-2 border rounded-md cursor-pointer transition-all",
+                    "border-input bg-background text-muted-foreground hover:bg-muted",
+                    "peer-data-[state=checked]:bg-[#1E3A5F] peer-data-[state=checked]:text-white peer-data-[state=checked]:border-[#1E3A5F]"
+                  )}
+                >
+                  {form.watch("sexo") === "Feminino" && <Check className="h-4 w-4" />}
+                  Feminino
+                </Label>
+              </div>
+            </RadioGroup>
+          </Field>
+
           <Field label="Vendedora responsável" error={errors.vendedora?.message}>
             <Select
               value={form.watch("vendedora")}
@@ -208,6 +211,43 @@ export function AlunoForm({
                 ))}
               </SelectContent>
             </Select>
+          </Field>
+
+          <Field label="Status">
+            <RadioGroup
+              value={form.watch("ativo") ? "Ativo" : "Inativo"}
+              onValueChange={(v: string) => form.setValue("ativo", v === "Ativo")}
+              className="flex gap-2"
+            >
+              <div className="flex-1">
+                <RadioGroupItem value="Ativo" id="status-ativo" className="peer sr-only" />
+                <Label
+                  htmlFor="status-ativo"
+                  className={cn(
+                    "flex items-center justify-center gap-2 px-4 py-2 border rounded-md cursor-pointer transition-all",
+                    "border-input bg-background text-muted-foreground hover:bg-muted",
+                    "peer-data-[state=checked]:bg-[#1E3A5F] peer-data-[state=checked]:text-white peer-data-[state=checked]:border-[#1E3A5F]"
+                  )}
+                >
+                  {form.watch("ativo") && <Check className="h-4 w-4" />}
+                  Ativo
+                </Label>
+              </div>
+              <div className="flex-1">
+                <RadioGroupItem value="Inativo" id="status-inativo" className="peer sr-only" />
+                <Label
+                  htmlFor="status-inativo"
+                  className={cn(
+                    "flex items-center justify-center gap-2 px-4 py-2 border rounded-md cursor-pointer transition-all",
+                    "border-input bg-background text-muted-foreground hover:bg-muted",
+                    "peer-data-[state=checked]:bg-[#1E3A5F] peer-data-[state=checked]:text-white peer-data-[state=checked]:border-[#1E3A5F]"
+                  )}
+                >
+                  {!form.watch("ativo") && <Check className="h-4 w-4" />}
+                  Inativo
+                </Label>
+              </div>
+            </RadioGroup>
           </Field>
         </CardContent>
       </Card>
