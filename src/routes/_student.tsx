@@ -49,7 +49,7 @@ function StudentLayout() {
       const { data: aluno } = await supabase
         .from('alunos')
         .select('nome')
-        .eq('email', session.user.email)
+        .eq('email', session.user.email ?? '')
         .single();
       
       if (aluno) setUserName(aluno.nome);
