@@ -2,16 +2,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
 const VENDEDORAS = ["Vera", "Gislaine", "Mônica", "Sabrina", "Bruna", "Juliana", "Outros"] as const;
