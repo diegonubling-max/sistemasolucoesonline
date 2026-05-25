@@ -79,21 +79,29 @@ function NovaMatricula() {
       const { error: mcError } = await supabase.from("matricula_cursos").insert(courseInserts);
       if (mcError) throw mcError;
 
-      // 3. Generate access
-      const password = Math.random().toString(36).slice(-8);
-      const { data: profile, error: pError } = await supabase
-        .from("perfis_alunos")
-        .upsert({
-          aluno_id: selectedStudent.id,
-          senha: password,
-        }, { onConflict: 'aluno_id' })
-        .select()
-        .single();
+      // 3. Generate access via Edge Function
+      const { data: accessData, error: accessError } = await supabase.functions.invoke("manage-student-access", {
+        body: {
+          email: selectedStudent.email,
+          nome: selectedStudent.nome,
+        }
+      });
 
-      if (pError) throw pError;
+      if (accessError) throw accessError;
 
-      return { email: selectedStudent.email, password };
+      return { 
+        email: selectedStudent.email, 
+        password: accessData.password,
+        is_new: accessData.is_new
+      };
     },
+    onSuccess: (data) => {
+      setGeneratedAccess(data);
+      setShowAccessModal(true);
+      qc.invalidateQueries({ queryKey: ["matriculas"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
     onSuccess: (data) => {
       setGeneratedAccess(data);
       setShowAccessModal(true);
