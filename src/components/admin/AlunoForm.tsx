@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
 
 const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
-const VENDEDORAS = ["Eduarda", "Julia", "Dandara", "Gaby", "Outros"] as const;
+const VENDEDORAS = ["Vera", "Gislaine", "Mônica", "Sabrina", "Bruna", "Juliana", "Outros"] as const;
 const SEXOS = ["Masculino", "Feminino"] as const;
 
 const schema = z
@@ -25,10 +25,6 @@ const schema = z
     email: z.string().email("E-mail inválido"),
     data_nascimento: z.string().min(1, "Informe a data"),
     cpf: z.string().refine((v) => isValidCPF(v), "CPF inválido"),
-    endereco: z.string().optional().nullable(),
-    bairro: z.string().optional().nullable(),
-    cidade: z.string().optional().nullable(),
-    estado: z.string().optional().nullable(),
     ativo: z.boolean(),
     origem: z.enum(ORIGENS),
     origem_detalhe: z.string().optional().nullable(),
@@ -64,10 +60,6 @@ export const defaultValues: AlunoFormValues = {
   email: "",
   data_nascimento: "",
   cpf: "",
-  endereco: "",
-  bairro: "",
-  cidade: "",
-  estado: "",
   ativo: true,
   origem: "Google",
   origem_detalhe: "",
@@ -231,26 +223,6 @@ export function AlunoForm({
               placeholder="Adicione aqui informações relevantes sobre o aluno..."
               className="min-h-[120px] resize-y"
             />
-          </Field>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Endereço</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Endereço" className="md:col-span-2">
-            <Input {...form.register("endereco")} />
-          </Field>
-          <Field label="Bairro">
-            <Input {...form.register("bairro")} />
-          </Field>
-          <Field label="Cidade">
-            <Input {...form.register("cidade")} />
-          </Field>
-          <Field label="Estado">
-            <Input maxLength={2} {...form.register("estado")} />
           </Field>
         </CardContent>
       </Card>
