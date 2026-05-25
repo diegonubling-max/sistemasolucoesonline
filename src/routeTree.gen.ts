@@ -15,6 +15,7 @@ import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as AdminMatriculasIndexRouteImport } from './routes/_admin.matriculas.index'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
+import { Route as AdminMatriculasNovoRouteImport } from './routes/_admin.matriculas.novo'
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
@@ -49,6 +50,11 @@ const AdminCursosIndexRoute = AdminCursosIndexRouteImport.update({
 const AdminAlunosIndexRoute = AdminAlunosIndexRouteImport.update({
   id: '/alunos/',
   path: '/alunos/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMatriculasNovoRoute = AdminMatriculasNovoRouteImport.update({
+  id: '/matriculas/novo',
+  path: '/matriculas/novo',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCursosNovoRoute = AdminCursosNovoRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
+  '/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/alunos/': typeof AdminAlunosIndexRoute
   '/cursos/': typeof AdminCursosIndexRoute
   '/matriculas/': typeof AdminMatriculasIndexRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
+  '/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/alunos': typeof AdminAlunosIndexRoute
   '/cursos': typeof AdminCursosIndexRoute
   '/matriculas': typeof AdminMatriculasIndexRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
+  '/_admin/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/_admin/alunos/': typeof AdminAlunosIndexRoute
   '/_admin/cursos/': typeof AdminCursosIndexRoute
   '/_admin/matriculas/': typeof AdminMatriculasIndexRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/alunos/novo'
     | '/cursos/novo'
+    | '/matriculas/novo'
     | '/alunos/'
     | '/cursos/'
     | '/matriculas/'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/'
     | '/alunos/novo'
     | '/cursos/novo'
+    | '/matriculas/novo'
     | '/alunos'
     | '/cursos'
     | '/matriculas'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/_admin/'
     | '/_admin/alunos/novo'
     | '/_admin/cursos/novo'
+    | '/_admin/matriculas/novo'
     | '/_admin/alunos/'
     | '/_admin/cursos/'
     | '/_admin/matriculas/'
@@ -215,6 +227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/matriculas/novo': {
+      id: '/_admin/matriculas/novo'
+      path: '/matriculas/novo'
+      fullPath: '/matriculas/novo'
+      preLoaderRoute: typeof AdminMatriculasNovoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/cursos/novo': {
       id: '/_admin/cursos/novo'
       path: '/cursos/novo'
@@ -264,6 +283,7 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
   AdminCursosNovoRoute: typeof AdminCursosNovoRoute
+  AdminMatriculasNovoRoute: typeof AdminMatriculasNovoRoute
   AdminAlunosIndexRoute: typeof AdminAlunosIndexRoute
   AdminCursosIndexRoute: typeof AdminCursosIndexRoute
   AdminMatriculasIndexRoute: typeof AdminMatriculasIndexRoute
@@ -277,6 +297,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminAlunosNovoRoute: AdminAlunosNovoRoute,
   AdminCursosNovoRoute: AdminCursosNovoRoute,
+  AdminMatriculasNovoRoute: AdminMatriculasNovoRoute,
   AdminAlunosIndexRoute: AdminAlunosIndexRoute,
   AdminCursosIndexRoute: AdminCursosIndexRoute,
   AdminMatriculasIndexRoute: AdminMatriculasIndexRoute,
