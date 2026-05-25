@@ -11,6 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/_admin'
+import { Route as AdminIndexRouteImport } from './routes/_admin.index'
+import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
+import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
+import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
+import { Route as AdminAlunosIdEditarRouteImport } from './routes/_admin.alunos.$id.editar'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -21,30 +26,88 @@ const AdminRoute = AdminRouteImport.update({
   id: '/_admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAlunosIndexRoute = AdminAlunosIndexRouteImport.update({
+  id: '/alunos/',
+  path: '/alunos/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAlunosNovoRoute = AdminAlunosNovoRouteImport.update({
+  id: '/alunos/novo',
+  path: '/alunos/novo',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
+  id: '/alunos/$id/',
+  path: '/alunos/$id/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAlunosIdEditarRoute = AdminAlunosIdEditarRouteImport.update({
+  id: '/alunos/$id/editar',
+  path: '/alunos/$id/editar',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AdminRoute
+  '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/alunos/novo': typeof AdminAlunosNovoRoute
+  '/alunos/': typeof AdminAlunosIndexRoute
+  '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
+  '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/': typeof AdminIndexRoute
+  '/alunos/novo': typeof AdminAlunosNovoRoute
+  '/alunos': typeof AdminAlunosIndexRoute
+  '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
+  '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_admin': typeof AdminRoute
+  '/_admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/_admin/': typeof AdminIndexRoute
+  '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
+  '/_admin/alunos/': typeof AdminAlunosIndexRoute
+  '/_admin/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
+  '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/alunos/novo'
+    | '/alunos/'
+    | '/alunos/$id/editar'
+    | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login'
-  id: '__root__' | '/_admin' | '/login'
+  to:
+    | '/login'
+    | '/'
+    | '/alunos/novo'
+    | '/alunos'
+    | '/alunos/$id/editar'
+    | '/alunos/$id'
+  id:
+    | '__root__'
+    | '/_admin'
+    | '/login'
+    | '/_admin/'
+    | '/_admin/alunos/novo'
+    | '/_admin/alunos/'
+    | '/_admin/alunos/$id/editar'
+    | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
 }
 
@@ -64,13 +127,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_admin/': {
+      id: '/_admin/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/alunos/': {
+      id: '/_admin/alunos/'
+      path: '/alunos'
+      fullPath: '/alunos/'
+      preLoaderRoute: typeof AdminAlunosIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/alunos/novo': {
+      id: '/_admin/alunos/novo'
+      path: '/alunos/novo'
+      fullPath: '/alunos/novo'
+      preLoaderRoute: typeof AdminAlunosNovoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/alunos/$id/': {
+      id: '/_admin/alunos/$id/'
+      path: '/alunos/$id'
+      fullPath: '/alunos/$id/'
+      preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/alunos/$id/editar': {
+      id: '/_admin/alunos/$id/editar'
+      path: '/alunos/$id/editar'
+      fullPath: '/alunos/$id/editar'
+      preLoaderRoute: typeof AdminAlunosIdEditarRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
+  AdminAlunosIndexRoute: typeof AdminAlunosIndexRoute
+  AdminAlunosIdEditarRoute: typeof AdminAlunosIdEditarRoute
+  AdminAlunosIdIndexRoute: typeof AdminAlunosIdIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+  AdminAlunosNovoRoute: AdminAlunosNovoRoute,
+  AdminAlunosIndexRoute: AdminAlunosIndexRoute,
+  AdminAlunosIdEditarRoute: AdminAlunosIdEditarRoute,
+  AdminAlunosIdIndexRoute: AdminAlunosIdIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
