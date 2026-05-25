@@ -87,7 +87,12 @@ function AlunoDetalhes() {
             <Info label="Bairro" value={aluno.bairro} />
             <Info label="Cidade" value={aluno.cidade} />
             <Info label="Estado" value={aluno.estado} />
+            <Info label="Como nos conheceu" value={aluno.origem_detalhe ? `${aluno.origem} (${aluno.origem_detalhe})` : aluno.origem} />
+            <Info label="Vendedora" value={aluno.vendedora} />
             <Info label="Cadastrado em" value={formatDate(aluno.created_at)} />
+            <div className="col-span-2">
+              <Info label="Observações" value={aluno.observacao} />
+            </div>
             {aluno.menor_de_idade && (
               <>
                 <div className="col-span-2 mt-4 pt-4 border-t">
