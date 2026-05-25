@@ -183,22 +183,60 @@ export type Database = {
           aluno_id: string
           created_at: string
           id: string
+          observacao: string | null
         }
         Insert: {
           aluno_id: string
           created_at?: string
           id?: string
+          observacao?: string | null
         }
         Update: {
           aluno_id?: string
           created_at?: string
           id?: string
+          observacao?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "matriculas_aluno_id_fkey"
             columns: ["aluno_id"]
             isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfis_alunos: {
+        Row: {
+          aluno_id: string
+          created_at: string | null
+          id: string
+          senha: string
+          ultimo_acesso: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string | null
+          id?: string
+          senha: string
+          ultimo_acesso?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string | null
+          id?: string
+          senha?: string
+          ultimo_acesso?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfis_alunos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: true
             referencedRelation: "alunos"
             referencedColumns: ["id"]
           },
