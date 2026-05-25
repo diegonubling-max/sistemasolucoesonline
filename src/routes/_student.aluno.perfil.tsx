@@ -81,6 +81,17 @@ function StudentProfile() {
             className="space-y-4"
           >
             <div className="space-y-2">
+              <Label htmlFor="current-pass">Senha Atual</Label>
+              <Input
+                id="current-pass"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Sua senha atual"
+                required
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="new-pass">Nova Senha</Label>
               <Input
                 id="new-pass"
