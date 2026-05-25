@@ -19,6 +19,7 @@ import { Route as AdminMatriculasNovoRouteImport } from './routes/_admin.matricu
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
+import { Route as AdminMatriculasIdEditarRouteImport } from './routes/_admin.matriculas.$id.editar'
 import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
 import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
 import { Route as AdminAlunosIdEditarRouteImport } from './routes/_admin.alunos.$id.editar'
@@ -72,6 +73,11 @@ const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
   path: '/alunos/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMatriculasIdEditarRoute = AdminMatriculasIdEditarRouteImport.update({
+  id: '/matriculas/$id/editar',
+  path: '/matriculas/$id/editar',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCursosIdEditarRoute = AdminCursosIdEditarRouteImport.update({
   id: '/cursos/$id/editar',
   path: '/cursos/$id/editar',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
+  '/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
+  '/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesById {
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/_admin/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/_admin/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/_admin/cursos/$id/editar': typeof AdminCursosIdEditarRoute
+  '/_admin/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
+    | '/matriculas/$id/editar'
     | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
+    | '/matriculas/$id/editar'
     | '/alunos/$id'
   id:
     | '__root__'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/_admin/alunos/$id/editar'
     | '/_admin/cursos/$id/aulas'
     | '/_admin/cursos/$id/editar'
+    | '/_admin/matriculas/$id/editar'
     | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -255,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/matriculas/$id/editar': {
+      id: '/_admin/matriculas/$id/editar'
+      path: '/matriculas/$id/editar'
+      fullPath: '/matriculas/$id/editar'
+      preLoaderRoute: typeof AdminMatriculasIdEditarRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/cursos/$id/editar': {
       id: '/_admin/cursos/$id/editar'
       path: '/cursos/$id/editar'
@@ -290,6 +309,7 @@ interface AdminRouteChildren {
   AdminAlunosIdEditarRoute: typeof AdminAlunosIdEditarRoute
   AdminCursosIdAulasRoute: typeof AdminCursosIdAulasRoute
   AdminCursosIdEditarRoute: typeof AdminCursosIdEditarRoute
+  AdminMatriculasIdEditarRoute: typeof AdminMatriculasIdEditarRoute
   AdminAlunosIdIndexRoute: typeof AdminAlunosIdIndexRoute
 }
 
@@ -304,6 +324,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAlunosIdEditarRoute: AdminAlunosIdEditarRoute,
   AdminCursosIdAulasRoute: AdminCursosIdAulasRoute,
   AdminCursosIdEditarRoute: AdminCursosIdEditarRoute,
+  AdminMatriculasIdEditarRoute: AdminMatriculasIdEditarRoute,
   AdminAlunosIdIndexRoute: AdminAlunosIdIndexRoute,
 }
 
