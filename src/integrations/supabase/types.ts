@@ -17,14 +17,10 @@ export type Database = {
       alunos: {
         Row: {
           ativo: boolean
-          bairro: string | null
-          cidade: string | null
           cpf: string
           created_at: string
           data_nascimento: string
           email: string
-          endereco: string | null
-          estado: string | null
           id: string
           menor_de_idade: boolean
           nome: string
@@ -41,14 +37,10 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
-          bairro?: string | null
-          cidade?: string | null
           cpf: string
           created_at?: string
           data_nascimento: string
           email: string
-          endereco?: string | null
-          estado?: string | null
           id?: string
           menor_de_idade?: boolean
           nome: string
@@ -65,14 +57,10 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
-          bairro?: string | null
-          cidade?: string | null
           cpf?: string
           created_at?: string
           data_nascimento?: string
           email?: string
-          endereco?: string | null
-          estado?: string | null
           id?: string
           menor_de_idade?: boolean
           nome?: string

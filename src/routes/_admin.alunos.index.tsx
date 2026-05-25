@@ -30,7 +30,7 @@ function AlunosList() {
     queryFn: async () => {
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, cidade, estado, ativo, created_at, vendedora", { count: "exact" })
+        .select("id, nome, email, telefone, ativo, created_at, vendedora", { count: "exact" })
         .order("created_at", { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       if (search) q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
@@ -88,7 +88,6 @@ function AlunosList() {
                 <TableHead>Nome</TableHead>
                 <TableHead>E-mail</TableHead>
                 <TableHead>Telefone</TableHead>
-                <TableHead>Cidade/UF</TableHead>
                 <TableHead>Vendedora</TableHead>
                 <TableHead>Situação</TableHead>
                 <TableHead>Cadastro</TableHead>
@@ -108,7 +107,6 @@ function AlunosList() {
                   <TableCell className="font-medium">{a.nome}</TableCell>
                   <TableCell>{a.email}</TableCell>
                   <TableCell>{a.telefone}</TableCell>
-                  <TableCell>{[a.cidade, a.estado].filter(Boolean).join("/") || "—"}</TableCell>
                   <TableCell>{a.vendedora}</TableCell>
                   <TableCell>
                     {a.ativo ? (

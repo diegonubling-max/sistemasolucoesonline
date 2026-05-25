@@ -84,10 +84,6 @@ function AlunoDetalhes() {
             <Info label="CPF" value={aluno.cpf} />
             <Info label="Nascimento" value={formatDate(aluno.data_nascimento)} />
             <Info label="Menor de idade" value={aluno.menor_de_idade ? "Sim" : "Não"} />
-            <Info label="Endereço" value={aluno.endereco} />
-            <Info label="Bairro" value={aluno.bairro} />
-            <Info label="Cidade" value={aluno.cidade} />
-            <Info label="Estado" value={aluno.estado} />
             <Info label="Como nos conheceu" value={aluno.origem_detalhe ? `${aluno.origem} (${aluno.origem_detalhe})` : aluno.origem} />
             <Info label="Vendedora" value={aluno.vendedora} />
             <Info label="Cadastrado em" value={formatDate(aluno.created_at)} />
