@@ -26,7 +26,15 @@ function StudentProfile() {
       if (newPassword !== confirmPassword) throw new Error("As senhas não coincidem");
       if (newPassword.length < 6) throw new Error("A senha deve ter pelo menos 6 caracteres");
 
-      // Note: Supabase auth.updateUser handles changing the password for the current user
+      // Verify current password first (recommended for security as per user request)
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: session?.user.email ?? "",
+        password: currentPassword,
+      });
+
+      if (signInError) throw new Error("Senha atual incorreta");
+
+      // Update to new password
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -35,6 +43,7 @@ function StudentProfile() {
     },
     onSuccess: () => {
       toast.success("Senha atualizada com sucesso");
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     },
