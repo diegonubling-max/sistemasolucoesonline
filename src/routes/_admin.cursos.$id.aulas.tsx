@@ -266,13 +266,6 @@ function AulaDialog({
   const [ordem, setOrdem] = useState<number>(aula?.ordem ?? nextOrdem);
   const [saving, setSaving] = useState(false);
 
-  // Reset when aula prop changes
-  useState(() => {
-    setTitulo(aula?.titulo ?? "");
-    setDescricao(aula?.descricao ?? "");
-    setUrlVideo(aula?.url_video ?? "");
-    setOrdem(aula?.ordem ?? nextOrdem);
-  });
 
   const save = async () => {
     if (!titulo.trim()) {
