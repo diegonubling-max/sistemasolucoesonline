@@ -20,6 +20,33 @@ export const Route = createFileRoute("/_admin/alunos/$id/")({
 
 function AlunoDetalhes() {
   const { id } = Route.useParams();
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const resetPassword = useMutation({
+    mutationFn: async () => {
+      if (newPassword !== confirmPassword) throw new Error("As senhas não coincidem");
+      if (newPassword.length < 6) throw new Error("A senha deve ter pelo menos 6 caracteres");
+
+      const { error } = await supabase.functions.invoke("manage-student-access", {
+        body: {
+          email: aluno?.email,
+          action: "reset_password",
+          newPassword
+        }
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Senha redefinida com sucesso");
+      setShowResetModal(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: aluno, isLoading } = useQuery({
     queryKey: ["aluno", id],
