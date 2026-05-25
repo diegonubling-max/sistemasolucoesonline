@@ -64,6 +64,7 @@ function EditarAluno() {
         <AlunoForm
           initialValues={{
             nome: aluno.nome,
+            sexo: aluno.sexo as any,
             telefone: aluno.telefone,
             email: aluno.email,
             data_nascimento: aluno.data_nascimento,

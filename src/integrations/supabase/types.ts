@@ -35,6 +35,7 @@ export type Database = {
           responsavel_email: string | null
           responsavel_nome: string | null
           responsavel_telefone: string | null
+          sexo: Database["public"]["Enums"]["sexo_aluno"]
           telefone: string
           vendedora: string
         }
@@ -58,6 +59,7 @@ export type Database = {
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          sexo: Database["public"]["Enums"]["sexo_aluno"]
           telefone: string
           vendedora: string
         }
@@ -81,6 +83,7 @@ export type Database = {
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
+          sexo?: Database["public"]["Enums"]["sexo_aluno"]
           telefone?: string
           vendedora?: string
         }
@@ -250,6 +253,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "aluno"
       origem_aluno: "Google" | "Meta" | "Indicação" | "Outros"
+      sexo_aluno: "Masculino" | "Feminino"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -379,6 +383,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "aluno"],
       origem_aluno: ["Google", "Meta", "Indicação", "Outros"],
+      sexo_aluno: ["Masculino", "Feminino"],
     },
   },
 } as const

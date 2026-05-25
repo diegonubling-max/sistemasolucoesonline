@@ -9,15 +9,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
 
 const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
 const VENDEDORAS = ["Eduarda", "Julia", "Dandara", "Gaby", "Outros"] as const;
+const SEXOS = ["Masculino", "Feminino"] as const;
 
 const schema = z
   .object({
     nome: z.string().min(2, "Informe o nome"),
+    sexo: z.enum(SEXOS),
     telefone: z.string().min(14, "Telefone inválido"),
     email: z.string().email("E-mail inválido"),
     data_nascimento: z.string().min(1, "Informe a data"),
@@ -56,6 +59,7 @@ export type AlunoFormValues = z.infer<typeof schema>;
 
 export const defaultValues: AlunoFormValues = {
   nome: "",
+  sexo: "Feminino",
   telefone: "",
   email: "",
   data_nascimento: "",
@@ -110,6 +114,32 @@ export function AlunoForm({
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Nome completo" error={errors.nome?.message}>
             <Input {...form.register("nome")} />
+          </Field>
+          <Field label="Sexo" error={errors.sexo?.message}>
+            <RadioGroup
+              value={form.watch("sexo")}
+              onValueChange={(v: any) => form.setValue("sexo", v, { shouldValidate: true })}
+              className="flex gap-2"
+            >
+              <div className="flex-1">
+                <RadioGroupItem value="Masculino" id="masculino" className="peer sr-only" />
+                <Label
+                  htmlFor="masculino"
+                  className="flex items-center justify-center px-4 py-2 border rounded-md cursor-pointer transition-colors peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground hover:bg-muted"
+                >
+                  Masculino
+                </Label>
+              </div>
+              <div className="flex-1">
+                <RadioGroupItem value="Feminino" id="feminino" className="peer sr-only" />
+                <Label
+                  htmlFor="feminino"
+                  className="flex items-center justify-center px-4 py-2 border rounded-md cursor-pointer transition-colors peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground hover:bg-muted"
+                >
+                  Feminino
+                </Label>
+              </div>
+            </RadioGroup>
           </Field>
           <Field label="E-mail" error={errors.email?.message}>
             <Input type="email" {...form.register("email")} />

@@ -80,6 +80,7 @@ function AlunoDetalhes() {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4 text-sm">
             <Info label="Telefone" value={aluno.telefone} />
+            <Info label="Sexo" value={aluno.sexo} />
             <Info label="CPF" value={aluno.cpf} />
             <Info label="Nascimento" value={formatDate(aluno.data_nascimento)} />
             <Info label="Menor de idade" value={aluno.menor_de_idade ? "Sim" : "Não"} />
