@@ -119,15 +119,25 @@ export function AlunoForm({
             <RadioGroup
               value={form.watch("sexo")}
               onValueChange={(v: any) => form.setValue("sexo", v, { shouldValidate: true })}
-              className="flex gap-4 h-10"
+              className="flex gap-2"
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Masculino" id="masculino" />
-                <Label htmlFor="masculino" className="cursor-pointer">Masculino</Label>
+              <div className="flex-1">
+                <RadioGroupItem value="Masculino" id="masculino" className="peer sr-only" />
+                <Label
+                  htmlFor="masculino"
+                  className="flex items-center justify-center px-4 py-2 border rounded-md cursor-pointer transition-colors peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground hover:bg-muted"
+                >
+                  Masculino
+                </Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Feminino" id="feminino" />
-                <Label htmlFor="feminino" className="cursor-pointer">Feminino</Label>
+              <div className="flex-1">
+                <RadioGroupItem value="Feminino" id="feminino" className="peer sr-only" />
+                <Label
+                  htmlFor="feminino"
+                  className="flex items-center justify-center px-4 py-2 border rounded-md cursor-pointer transition-colors peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground hover:bg-muted"
+                >
+                  Feminino
+                </Label>
               </div>
             </RadioGroup>
           </Field>
