@@ -1,12 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, GraduationCap } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { ArrowLeft, Pencil, GraduationCap, Key, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { formatDate } from "@/lib/format";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
   head: () => ({ meta: [{ title: "Aluno — EduManager" }] }),
@@ -15,6 +20,33 @@ export const Route = createFileRoute("/_admin/alunos/$id/")({
 
 function AlunoDetalhes() {
   const { id } = Route.useParams();
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const resetPassword = useMutation({
+    mutationFn: async () => {
+      if (newPassword !== confirmPassword) throw new Error("As senhas não coincidem");
+      if (newPassword.length < 6) throw new Error("A senha deve ter pelo menos 6 caracteres");
+
+      const { error } = await supabase.functions.invoke("manage-student-access", {
+        body: {
+          email: aluno?.email,
+          action: "reset_password",
+          newPassword
+        }
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Senha redefinida com sucesso");
+      setShowResetModal(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: aluno, isLoading } = useQuery({
     queryKey: ["aluno", id],
@@ -55,6 +87,10 @@ function AlunoDetalhes() {
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar
               </Link>
+            </Button>
+            <Button variant="outline" onClick={() => setShowResetModal(true)}>
+              <Key className="h-4 w-4 mr-2" />
+              Redefinir Senha
             </Button>
             <Button asChild>
               <Link to="/alunos/$id/editar" params={{ id }}>
@@ -144,6 +180,49 @@ function AlunoDetalhes() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showResetModal} onOpenChange={setShowResetModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Redefinir Senha</DialogTitle>
+            <DialogDescription>
+              Digite a nova senha para o aluno <strong>{aluno.nome}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="pass">Nova Senha</Label>
+              <Input
+                id="pass"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm">Confirmar Senha</Label>
+              <Input
+                id="confirm"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repita a nova senha"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowResetModal(false)}>Cancelar</Button>
+            <Button 
+              onClick={() => resetPassword.mutate()}
+              disabled={resetPassword.isPending || !newPassword || !confirmPassword}
+            >
+              {resetPassword.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar Redefinição
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

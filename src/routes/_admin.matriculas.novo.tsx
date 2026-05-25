@@ -79,20 +79,21 @@ function NovaMatricula() {
       const { error: mcError } = await supabase.from("matricula_cursos").insert(courseInserts);
       if (mcError) throw mcError;
 
-      // 3. Generate access
-      const password = Math.random().toString(36).slice(-8);
-      const { data: profile, error: pError } = await supabase
-        .from("perfis_alunos")
-        .upsert({
-          aluno_id: selectedStudent.id,
-          senha: password,
-        }, { onConflict: 'aluno_id' })
-        .select()
-        .single();
+      // 3. Generate access via Edge Function
+      const { data: accessData, error: accessError } = await supabase.functions.invoke("manage-student-access", {
+        body: {
+          email: selectedStudent.email,
+          nome: selectedStudent.nome,
+        }
+      });
 
-      if (pError) throw pError;
+      if (accessError) throw accessError;
 
-      return { email: selectedStudent.email, password };
+      return { 
+        email: selectedStudent.email, 
+        password: accessData.password,
+        is_new: accessData.is_new
+      };
     },
     onSuccess: (data) => {
       setGeneratedAccess(data);
@@ -261,25 +262,33 @@ function NovaMatricula() {
               Matrícula Realizada!
             </DialogTitle>
             <DialogDescription>
-              Acesso gerado automaticamente para o aluno. Copie os dados abaixo:
+              {generatedAccess?.is_new 
+                ? "Acesso gerado automaticamente para o aluno. Copie os dados abaixo:" 
+                : "Aluno já possui acesso. Os novos cursos foram liberados automaticamente."}
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-muted p-4 rounded-lg space-y-4 my-4">
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground uppercase">Login (E-mail)</p>
-              <div className="flex items-center justify-between group cursor-pointer" onClick={() => copyToClipboard(generatedAccess?.email)}>
-                <span className="font-mono font-bold">{generatedAccess?.email}</span>
-                <Copy className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+          
+          {generatedAccess?.is_new && (
+            <div className="bg-muted p-4 rounded-lg space-y-4 my-4 animate-in zoom-in duration-300">
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase">Login (E-mail)</p>
+                <div className="flex items-center justify-between group cursor-pointer" onClick={() => copyToClipboard(generatedAccess?.email)}>
+                  <span className="font-mono font-bold">{generatedAccess?.email}</span>
+                  <Copy className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
               </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground uppercase">Senha Temporária</p>
-              <div className="flex items-center justify-between group cursor-pointer" onClick={() => copyToClipboard(generatedAccess?.password)}>
-                <span className="font-mono font-bold">{generatedAccess?.password}</span>
-                <Copy className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase">Senha Temporária</p>
+                <div className="flex items-center justify-between group cursor-pointer" onClick={() => copyToClipboard(generatedAccess?.password)}>
+                  <span className="font-mono font-bold">{generatedAccess?.password}</span>
+                  <Copy className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
               </div>
+              <p className="text-[10px] text-destructive font-medium bg-destructive/5 p-2 rounded">
+                * Anote a senha pois ela não será exibida novamente
+              </p>
             </div>
-          </div>
+          )}
           <DialogFooter>
             <Button className="w-full" onClick={() => navigate({ to: "/matriculas" })}>
               Concluir e Ir para Lista
