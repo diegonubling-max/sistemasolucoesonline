@@ -22,6 +22,7 @@ import { Route as AdminMatriculasNovoRouteImport } from './routes/_admin.matricu
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
+import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
 import { Route as AdminMatriculasIdEditarRouteImport } from './routes/_admin.matriculas.$id.editar'
 import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
 import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
@@ -90,6 +91,11 @@ const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
   path: '/alunos/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
+const StudentAlunoCursoIdRoute = StudentAlunoCursoIdRouteImport.update({
+  id: '/aluno/curso/$id',
+  path: '/aluno/curso/$id',
+  getParentRoute: () => StudentRoute,
+} as any)
 const AdminMatriculasIdEditarRoute = AdminMatriculasIdEditarRouteImport.update({
   id: '/matriculas/$id/editar',
   path: '/matriculas/$id/editar',
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
   '/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
+  '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
   '/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
+  '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesById {
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/_admin/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/_admin/cursos/$id/editar': typeof AdminCursosIdEditarRoute
   '/_admin/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
+  '/_student/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
     | '/matriculas/$id/editar'
+    | '/aluno/curso/$id'
     | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
     | '/matriculas/$id/editar'
+    | '/aluno/curso/$id'
     | '/alunos/$id'
   id:
     | '__root__'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/_admin/cursos/$id/aulas'
     | '/_admin/cursos/$id/editar'
     | '/_admin/matriculas/$id/editar'
+    | '/_student/aluno/curso/$id'
     | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -321,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_student/aluno/curso/$id': {
+      id: '/_student/aluno/curso/$id'
+      path: '/aluno/curso/$id'
+      fullPath: '/aluno/curso/$id'
+      preLoaderRoute: typeof StudentAlunoCursoIdRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/_admin/matriculas/$id/editar': {
       id: '/_admin/matriculas/$id/editar'
       path: '/matriculas/$id/editar'
@@ -386,10 +405,12 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface StudentRouteChildren {
   StudentAlunoDashboardRoute: typeof StudentAlunoDashboardRoute
+  StudentAlunoCursoIdRoute: typeof StudentAlunoCursoIdRoute
 }
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentAlunoDashboardRoute: StudentAlunoDashboardRoute,
+  StudentAlunoCursoIdRoute: StudentAlunoCursoIdRoute,
 }
 
 const StudentRouteWithChildren =
@@ -404,3 +425,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
