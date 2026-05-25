@@ -12,11 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin.index'
+import { Route as AdminMatriculasIndexRouteImport } from './routes/_admin.matriculas.index'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
+import { Route as AdminMatriculasNovoRouteImport } from './routes/_admin.matriculas.novo'
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
+import { Route as AdminMatriculasIdEditarRouteImport } from './routes/_admin.matriculas.$id.editar'
 import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
 import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
 import { Route as AdminAlunosIdEditarRouteImport } from './routes/_admin.alunos.$id.editar'
@@ -35,6 +38,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMatriculasIndexRoute = AdminMatriculasIndexRouteImport.update({
+  id: '/matriculas/',
+  path: '/matriculas/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCursosIndexRoute = AdminCursosIndexRouteImport.update({
   id: '/cursos/',
   path: '/cursos/',
@@ -43,6 +51,11 @@ const AdminCursosIndexRoute = AdminCursosIndexRouteImport.update({
 const AdminAlunosIndexRoute = AdminAlunosIndexRouteImport.update({
   id: '/alunos/',
   path: '/alunos/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMatriculasNovoRoute = AdminMatriculasNovoRouteImport.update({
+  id: '/matriculas/novo',
+  path: '/matriculas/novo',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCursosNovoRoute = AdminCursosNovoRouteImport.update({
@@ -58,6 +71,11 @@ const AdminAlunosNovoRoute = AdminAlunosNovoRouteImport.update({
 const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
   id: '/alunos/$id/',
   path: '/alunos/$id/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMatriculasIdEditarRoute = AdminMatriculasIdEditarRouteImport.update({
+  id: '/matriculas/$id/editar',
+  path: '/matriculas/$id/editar',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCursosIdEditarRoute = AdminCursosIdEditarRouteImport.update({
@@ -81,11 +99,14 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
+  '/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/alunos/': typeof AdminAlunosIndexRoute
   '/cursos/': typeof AdminCursosIndexRoute
+  '/matriculas/': typeof AdminMatriculasIndexRoute
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
+  '/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -93,11 +114,14 @@ export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
+  '/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/alunos': typeof AdminAlunosIndexRoute
   '/cursos': typeof AdminCursosIndexRoute
+  '/matriculas': typeof AdminMatriculasIndexRoute
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
+  '/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesById {
@@ -107,11 +131,14 @@ export interface FileRoutesById {
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
+  '/_admin/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/_admin/alunos/': typeof AdminAlunosIndexRoute
   '/_admin/cursos/': typeof AdminCursosIndexRoute
+  '/_admin/matriculas/': typeof AdminMatriculasIndexRoute
   '/_admin/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/_admin/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/_admin/cursos/$id/editar': typeof AdminCursosIdEditarRoute
+  '/_admin/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -121,11 +148,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/alunos/novo'
     | '/cursos/novo'
+    | '/matriculas/novo'
     | '/alunos/'
     | '/cursos/'
+    | '/matriculas/'
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
+    | '/matriculas/$id/editar'
     | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -133,11 +163,14 @@ export interface FileRouteTypes {
     | '/'
     | '/alunos/novo'
     | '/cursos/novo'
+    | '/matriculas/novo'
     | '/alunos'
     | '/cursos'
+    | '/matriculas'
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
+    | '/matriculas/$id/editar'
     | '/alunos/$id'
   id:
     | '__root__'
@@ -146,11 +179,14 @@ export interface FileRouteTypes {
     | '/_admin/'
     | '/_admin/alunos/novo'
     | '/_admin/cursos/novo'
+    | '/_admin/matriculas/novo'
     | '/_admin/alunos/'
     | '/_admin/cursos/'
+    | '/_admin/matriculas/'
     | '/_admin/alunos/$id/editar'
     | '/_admin/cursos/$id/aulas'
     | '/_admin/cursos/$id/editar'
+    | '/_admin/matriculas/$id/editar'
     | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -182,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/matriculas/': {
+      id: '/_admin/matriculas/'
+      path: '/matriculas'
+      fullPath: '/matriculas/'
+      preLoaderRoute: typeof AdminMatriculasIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/cursos/': {
       id: '/_admin/cursos/'
       path: '/cursos'
@@ -194,6 +237,13 @@ declare module '@tanstack/react-router' {
       path: '/alunos'
       fullPath: '/alunos/'
       preLoaderRoute: typeof AdminAlunosIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/matriculas/novo': {
+      id: '/_admin/matriculas/novo'
+      path: '/matriculas/novo'
+      fullPath: '/matriculas/novo'
+      preLoaderRoute: typeof AdminMatriculasNovoRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/cursos/novo': {
@@ -215,6 +265,13 @@ declare module '@tanstack/react-router' {
       path: '/alunos/$id'
       fullPath: '/alunos/$id/'
       preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/matriculas/$id/editar': {
+      id: '/_admin/matriculas/$id/editar'
+      path: '/matriculas/$id/editar'
+      fullPath: '/matriculas/$id/editar'
+      preLoaderRoute: typeof AdminMatriculasIdEditarRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/cursos/$id/editar': {
@@ -245,11 +302,14 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
   AdminCursosNovoRoute: typeof AdminCursosNovoRoute
+  AdminMatriculasNovoRoute: typeof AdminMatriculasNovoRoute
   AdminAlunosIndexRoute: typeof AdminAlunosIndexRoute
   AdminCursosIndexRoute: typeof AdminCursosIndexRoute
+  AdminMatriculasIndexRoute: typeof AdminMatriculasIndexRoute
   AdminAlunosIdEditarRoute: typeof AdminAlunosIdEditarRoute
   AdminCursosIdAulasRoute: typeof AdminCursosIdAulasRoute
   AdminCursosIdEditarRoute: typeof AdminCursosIdEditarRoute
+  AdminMatriculasIdEditarRoute: typeof AdminMatriculasIdEditarRoute
   AdminAlunosIdIndexRoute: typeof AdminAlunosIdIndexRoute
 }
 
@@ -257,11 +317,14 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminAlunosNovoRoute: AdminAlunosNovoRoute,
   AdminCursosNovoRoute: AdminCursosNovoRoute,
+  AdminMatriculasNovoRoute: AdminMatriculasNovoRoute,
   AdminAlunosIndexRoute: AdminAlunosIndexRoute,
   AdminCursosIndexRoute: AdminCursosIndexRoute,
+  AdminMatriculasIndexRoute: AdminMatriculasIndexRoute,
   AdminAlunosIdEditarRoute: AdminAlunosIdEditarRoute,
   AdminCursosIdAulasRoute: AdminCursosIdAulasRoute,
   AdminCursosIdEditarRoute: AdminCursosIdEditarRoute,
+  AdminMatriculasIdEditarRoute: AdminMatriculasIdEditarRoute,
   AdminAlunosIdIndexRoute: AdminAlunosIdIndexRoute,
 }
 
@@ -274,13 +337,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
