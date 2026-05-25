@@ -28,11 +28,15 @@ export type Database = {
           id: string
           menor_de_idade: boolean
           nome: string
+          observacao: string | null
+          origem: Database["public"]["Enums"]["origem_aluno"]
+          origem_detalhe: string | null
           responsavel_cpf: string | null
           responsavel_email: string | null
           responsavel_nome: string | null
           responsavel_telefone: string | null
           telefone: string
+          vendedora: string
         }
         Insert: {
           ativo?: boolean
@@ -47,11 +51,15 @@ export type Database = {
           id?: string
           menor_de_idade?: boolean
           nome: string
+          observacao?: string | null
+          origem: Database["public"]["Enums"]["origem_aluno"]
+          origem_detalhe?: string | null
           responsavel_cpf?: string | null
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
           telefone: string
+          vendedora: string
         }
         Update: {
           ativo?: boolean
@@ -66,11 +74,15 @@ export type Database = {
           id?: string
           menor_de_idade?: boolean
           nome?: string
+          observacao?: string | null
+          origem?: Database["public"]["Enums"]["origem_aluno"]
+          origem_detalhe?: string | null
           responsavel_cpf?: string | null
           responsavel_email?: string | null
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
           telefone?: string
+          vendedora?: string
         }
         Relationships: []
       }
@@ -237,6 +249,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "aluno"
+      origem_aluno: "Google" | "Meta" | "Indicação" | "Outros"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -365,6 +378,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "aluno"],
+      origem_aluno: ["Google", "Meta", "Indicação", "Outros"],
     },
   },
 } as const

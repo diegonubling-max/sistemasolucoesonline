@@ -8,8 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
+
+const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
+const VENDEDORAS = ["Eduarda", "Julia", "Dandara", "Gaby", "Outros"] as const;
 
 const schema = z
   .object({
@@ -23,6 +27,10 @@ const schema = z
     cidade: z.string().optional().nullable(),
     estado: z.string().optional().nullable(),
     ativo: z.boolean(),
+    origem: z.enum(ORIGENS),
+    origem_detalhe: z.string().optional().nullable(),
+    vendedora: z.string().min(1, "Selecione a vendedora"),
+    observacao: z.string().optional().nullable(),
     responsavel_nome: z.string().optional().nullable(),
     responsavel_telefone: z.string().optional().nullable(),
     responsavel_cpf: z.string().optional().nullable(),
@@ -57,6 +65,10 @@ export const defaultValues: AlunoFormValues = {
   cidade: "",
   estado: "",
   ativo: true,
+  origem: "Google",
+  origem_detalhe: "",
+  vendedora: "",
+  observacao: "",
   responsavel_nome: "",
   responsavel_telefone: "",
   responsavel_cpf: "",
@@ -132,6 +144,63 @@ export function AlunoForm({
               />
               <span className="text-sm">{form.watch("ativo") ? "Ativo" : "Inativo"}</span>
             </div>
+          </Field>
+          <Field label="Como nos conheceu?" error={errors.origem?.message}>
+            <Select
+              value={form.watch("origem")}
+              onValueChange={(v: any) => form.setValue("origem", v, { shouldValidate: true })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma opção" />
+              </SelectTrigger>
+              <SelectContent>
+                {ORIGENS.map((o) => (
+                  <SelectItem key={o} value={o}>
+                    {o}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          {(form.watch("origem") === "Indicação" || form.watch("origem") === "Outros") && (
+            <Field label="Detalhe" error={errors.origem_detalhe?.message}>
+              <Input
+                {...form.register("origem_detalhe")}
+                placeholder={form.watch("origem") === "Indicação" ? "Nome de quem indicou" : "Especifique"}
+              />
+            </Field>
+          )}
+          <Field label="Vendedora responsável" error={errors.vendedora?.message}>
+            <Select
+              value={form.watch("vendedora")}
+              onValueChange={(v) => form.setValue("vendedora", v, { shouldValidate: true })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a vendedora" />
+              </SelectTrigger>
+              <SelectContent>
+                {VENDEDORAS.map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Observações</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Field label="Informações adicionais">
+            <Textarea
+              {...form.register("observacao")}
+              placeholder="Adicione aqui informações relevantes sobre o aluno..."
+              className="min-h-[120px] resize-y"
+            />
           </Field>
         </CardContent>
       </Card>
