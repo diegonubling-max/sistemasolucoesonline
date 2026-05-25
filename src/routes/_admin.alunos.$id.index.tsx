@@ -88,6 +88,10 @@ function AlunoDetalhes() {
                 Voltar
               </Link>
             </Button>
+            <Button variant="outline" onClick={() => setShowResetModal(true)}>
+              <Key className="h-4 w-4 mr-2" />
+              Redefinir Senha
+            </Button>
             <Button asChild>
               <Link to="/alunos/$id/editar" params={{ id }}>
                 <Pencil className="h-4 w-4 mr-2" />
