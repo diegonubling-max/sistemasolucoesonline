@@ -87,6 +87,40 @@ function LoginPage() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Entrar
             </Button>
+            <div className="pt-2 text-center">
+              <p className="text-xs text-muted-foreground">
+                Não tem uma conta?{" "}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!email || !password) {
+                      toast.error("Preencha e-mail e senha para criar conta admin");
+                      return;
+                    }
+                    setLoading(true);
+                    const { data, error } = await supabase.auth.signUp({ email, password });
+                    if (error) {
+                      toast.error("Erro ao criar conta", { description: error.message });
+                    } else if (data.user) {
+                      const { error: roleError } = await supabase
+                        .from("user_roles")
+                        .insert({ user_id: data.user.id, role: "admin" });
+                      
+                      if (roleError) {
+                        toast.error("Erro ao atribuir perfil admin", { description: roleError.message });
+                      } else {
+                        toast.success("Conta admin criada e logada com sucesso!");
+                        navigate({ to: "/" });
+                      }
+                    }
+                    setLoading(false);
+                  }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Criar conta Admin
+                </button>
+              </p>
+            </div>
           </form>
         </div>
       </div>
