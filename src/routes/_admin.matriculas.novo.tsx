@@ -102,13 +102,6 @@ function NovaMatricula() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
-    onSuccess: (data) => {
-      setGeneratedAccess(data);
-      setShowAccessModal(true);
-      qc.invalidateQueries({ queryKey: ["matriculas"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
   const toggleCourse = (id: string) => {
     setSelectedCourses(prev => 
