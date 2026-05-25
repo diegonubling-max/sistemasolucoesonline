@@ -90,9 +90,6 @@ function AlunoDetalhes() {
             <Info label="Como nos conheceu" value={aluno.origem_detalhe ? `${aluno.origem} (${aluno.origem_detalhe})` : aluno.origem} />
             <Info label="Vendedora" value={aluno.vendedora} />
             <Info label="Cadastrado em" value={formatDate(aluno.created_at)} />
-            <div className="col-span-2">
-              <Info label="Observações" value={aluno.observacao} />
-            </div>
             {aluno.menor_de_idade && (
               <>
                 <div className="col-span-2 mt-4 pt-4 border-t">
@@ -106,6 +103,17 @@ function AlunoDetalhes() {
             )}
           </CardContent>
         </Card>
+
+        {aluno.observacao && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-base">Observações</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm whitespace-pre-wrap">{aluno.observacao}</p>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
