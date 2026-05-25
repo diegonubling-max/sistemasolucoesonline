@@ -17,6 +17,7 @@ import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as AdminMatriculasIndexRouteImport } from './routes/_admin.matriculas.index'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
+import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
 import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.aluno.dashboard'
 import { Route as AdminMatriculasNovoRouteImport } from './routes/_admin.matriculas.novo'
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
@@ -65,6 +66,11 @@ const AdminAlunosIndexRoute = AdminAlunosIndexRouteImport.update({
   id: '/alunos/',
   path: '/alunos/',
   getParentRoute: () => AdminRoute,
+} as any)
+const StudentAlunoPerfilRoute = StudentAlunoPerfilRouteImport.update({
+  id: '/aluno/perfil',
+  path: '/aluno/perfil',
+  getParentRoute: () => StudentRoute,
 } as any)
 const StudentAlunoDashboardRoute = StudentAlunoDashboardRouteImport.update({
   id: '/aluno/dashboard',
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/cursos/novo': typeof AdminCursosNovoRoute
   '/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
+  '/aluno/perfil': typeof StudentAlunoPerfilRoute
   '/alunos/': typeof AdminAlunosIndexRoute
   '/cursos/': typeof AdminCursosIndexRoute
   '/matriculas/': typeof AdminMatriculasIndexRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/cursos/novo': typeof AdminCursosNovoRoute
   '/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
+  '/aluno/perfil': typeof StudentAlunoPerfilRoute
   '/alunos': typeof AdminAlunosIndexRoute
   '/cursos': typeof AdminCursosIndexRoute
   '/matriculas': typeof AdminMatriculasIndexRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
   '/_admin/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/_student/aluno/dashboard': typeof StudentAlunoDashboardRoute
+  '/_student/aluno/perfil': typeof StudentAlunoPerfilRoute
   '/_admin/alunos/': typeof AdminAlunosIndexRoute
   '/_admin/cursos/': typeof AdminCursosIndexRoute
   '/_admin/matriculas/': typeof AdminMatriculasIndexRoute
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/cursos/novo'
     | '/matriculas/novo'
     | '/aluno/dashboard'
+    | '/aluno/perfil'
     | '/alunos/'
     | '/cursos/'
     | '/matriculas/'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/cursos/novo'
     | '/matriculas/novo'
     | '/aluno/dashboard'
+    | '/aluno/perfil'
     | '/alunos'
     | '/cursos'
     | '/matriculas'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/_admin/cursos/novo'
     | '/_admin/matriculas/novo'
     | '/_student/aluno/dashboard'
+    | '/_student/aluno/perfil'
     | '/_admin/alunos/'
     | '/_admin/cursos/'
     | '/_admin/matriculas/'
@@ -297,6 +309,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/alunos/'
       preLoaderRoute: typeof AdminAlunosIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/_student/aluno/perfil': {
+      id: '/_student/aluno/perfil'
+      path: '/aluno/perfil'
+      fullPath: '/aluno/perfil'
+      preLoaderRoute: typeof StudentAlunoPerfilRouteImport
+      parentRoute: typeof StudentRoute
     }
     '/_student/aluno/dashboard': {
       id: '/_student/aluno/dashboard'
@@ -405,11 +424,13 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface StudentRouteChildren {
   StudentAlunoDashboardRoute: typeof StudentAlunoDashboardRoute
+  StudentAlunoPerfilRoute: typeof StudentAlunoPerfilRoute
   StudentAlunoCursoIdRoute: typeof StudentAlunoCursoIdRoute
 }
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentAlunoDashboardRoute: StudentAlunoDashboardRoute,
+  StudentAlunoPerfilRoute: StudentAlunoPerfilRoute,
   StudentAlunoCursoIdRoute: StudentAlunoCursoIdRoute,
 }
 
