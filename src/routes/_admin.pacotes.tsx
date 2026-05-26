@@ -97,7 +97,7 @@ function PacotesList() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead>Entrada</TableHead>
+                <TableHead>Taxa de Matrícula</TableHead>
                 <TableHead>Parcelas</TableHead>
                 <TableHead>Valor Total</TableHead>
                 <TableHead>Status</TableHead>
@@ -209,7 +209,7 @@ function PacoteFormModal({ open, onOpenChange, pacote, onSubmit, submitting }: a
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Valor da entrada</Label>
+              <Label>Taxa de Matrícula</Label>
               <Input type="number" step="0.01" {...register("valor_matricula", { valueAsNumber: true })} />
             </div>
           </div>
