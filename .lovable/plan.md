@@ -1,24 +1,16 @@
-I will implement Phase 2 (Enrollment and Access Generation) for the EduManager system.
+## Problema
+O enum `app_role` no banco só aceita `'admin'` e `'aluno'`. As policies criadas recentemente (`is_admin()`) e o botão "Recriar Admin" tentam usar `'administrador'`, que não existe no enum — daí o erro `invalid input value for enum app_role: "administrador"` ao inserir o role, e o RLS de `cursos` bloqueando o admin (que nunca recebeu o papel correto).
 
-### Database Updates
-The tables `matriculas` and `matricula_cursos` exist, but I'll add the `observacao` column to `matriculas` as it was mentioned in the requirement but currently missing from the schema.
+## Correção (padronizar tudo em `'admin'`)
 
-### Admin Interface
-1. **Sidebar Update**: Enable the "Matrículas" item and link it to `/matriculas`.
-2. **Matrículas Route Structure**:
-    - `_admin.matriculas.index.tsx`: List of enrollments with search and actions.
-    - `_admin.matriculas.novo.tsx`: Stepper for new enrollment (Select Student -> Select Courses).
-    - `_admin.matriculas.$id.editar.tsx`: Edit existing enrollment (Add/Remove courses).
-3. **Enrollment Workflow**:
-    - Step 1: Search and select student.
-    - Step 2: Select multiple courses from a card grid.
-    - On confirmation: Save to DB, generate credentials (using a simple random password for now), and show a modal with login info.
+1. **Migração SQL**
+   - Recriar `is_admin()` e `is_student()` usando os valores existentes do enum (`'admin'`, `'aluno'`).
+   - (Nenhuma alteração de policies necessária — elas usam as funções.)
 
-### Logic Details
-- **Credential Generation**: When a student is enrolled, if they don't have a login/password yet, I will generate them. Since the user asked for this in "Module 2", I'll implement a logic where the `email` is the login and a random string is the password, storing them appropriately (I'll check if a `perfil_aluno` or similar table exists for credentials, otherwise I'll propose a table for student access).
+2. **Edge function `manage-student-access`** (ação `recreate_admin`)
+   - Trocar o insert/select de `user_roles` de `role: 'administrador'` para `role: 'admin'`.
 
-### Technical Details
-- Use TanStack Router for navigation.
-- Use TanStack Query for data fetching.
-- Use Lucide icons for UI elements.
-- Ensure consistent styling with existing admin modules.
+3. **Verificação**
+   - Após o deploy, clicar em "Recriar Admin", relogar e tentar salvar um curso.
+
+Nenhuma outra funcionalidade é alterada.
