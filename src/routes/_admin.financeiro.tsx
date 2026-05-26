@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
+import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
@@ -64,6 +65,15 @@ function Financeiro() {
     parcelas?: number;
   } | null>(null);
 
+  const [resumoBaixa, setResumoBaixa] = useState<{
+    formaPagamento: string;
+    parcelas?: number;
+    valorBruto: number;
+    taxa?: number;
+    valorLiquido: number;
+    dataPagamento: string;
+  } | null>(null);
+
   const { data: globalStats } = useQuery({
     queryKey: ["financeiro-global-stats"],
     queryFn: async () => {
@@ -71,16 +81,21 @@ function Financeiro() {
       const lastDay = endOfMonth(today);
 
       const [pagoMes, abertoMes, atrasado, totalAberto] = await Promise.all([
-        supabase.from("parcelas").select("valor").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")),
+        supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")),
         supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd")),
         supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd")),
         supabase.from("parcelas").select("valor").neq("status", "isento"),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
+      const receivedSum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => {
+        const isCartao = curr.forma_pagamento === 'cartao';
+        const val = isCartao && curr.valor_liquido ? Number(curr.valor_liquido) : Number(curr.valor);
+        return acc + val;
+      }, 0);
 
       return {
-        recebido: sum(pagoMes.data),
+        recebido: receivedSum(pagoMes.data),
         aReceberMes: sum(abertoMes.data),
         atrasado: sum(atrasado.data),
         totalGeral: sum(totalAberto.data),
@@ -206,9 +221,21 @@ function Financeiro() {
         })
         .eq("id", id);
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
-      toast.success("Pagamento registrado com sucesso!");
+    onSuccess: (data: any) => {
+      if (data.forma_pagamento === 'cartao') {
+        setResumoBaixa({
+          formaPagamento: 'cartao',
+          parcelas: data.parcelas_cartao,
+          valorBruto: baixaModal?.valor || 0,
+          taxa: data.taxa_cartao,
+          valorLiquido: data.valor_liquido,
+          dataPagamento: data.data_pagamento,
+        });
+      } else {
+        toast.success("Pagamento registrado com sucesso!");
+      }
       setBaixaModal(null);
       queryClient.invalidateQueries({ queryKey: ["financeiro-global-stats"] });
       queryClient.invalidateQueries({ queryKey: ["financeiro-recebimentos"] });
@@ -373,14 +400,23 @@ function Financeiro() {
                       )}
                     </TableCell>
                     <TableCell>{formatDate(p.data_pagamento)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
+                    <TableCell className="text-right">
+                      {p.forma_pagamento === 'cartao' && p.valor_liquido ? (
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs text-muted-foreground line-through">{formatCurrency(p.valor)}</span>
+                          <span className="text-green-600 font-bold">{formatCurrency(p.valor_liquido)}</span>
+                        </div>
+                      ) : (
+                        formatCurrency(p.valor)
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {recebimentos?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum recebimento no período.</TableCell></TableRow>}
               </TableBody>
             </Table>
             <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <p className="font-bold">Total recebido: {formatCurrency((recebimentos ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
+              <p className="font-bold">Total recebido: {formatCurrency((recebimentos ?? []).reduce((acc: number, p: any) => acc + Number(p.forma_pagamento === 'cartao' && p.valor_liquido ? p.valor_liquido : p.valor), 0))}</p>
               <Button variant="outline" size="sm" onClick={() => exportCSV(recebimentos || [], "recebimentos")}>
                 <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
