@@ -23,21 +23,30 @@ function StudentProfile() {
 
   const updatePassword = useMutation({
     mutationFn: async () => {
-      if (newPassword !== confirmPassword) throw new Error("As senhas não coincidem");
+      if (newPassword !== confirmPassword) throw new Error("As senhas não conferem");
       if (newPassword.length < 6) {
-        throw new Error("A senha deve ter pelo menos 6 caracteres");
+        throw new Error("Mínimo de 6 caracteres");
       }
 
-      // Update password using the provided RPC to bypass Supabase's "weak password" check
-      const { error } = await supabase.rpc('redefinir_senha_aluno', {
-        p_email: session?.user.email ?? "",
-        p_nova_senha: newPassword
+      // 1. Verificar a senha atual
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: session?.user.email ?? "",
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        throw new Error("Senha atual incorreta");
+      }
+
+      // 2. Atualizar para a nova senha via Supabase Auth diretamente
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
       });
 
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Senha atualizada com sucesso");
+      toast.success("Senha alterada com sucesso!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
