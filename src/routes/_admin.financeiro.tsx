@@ -99,7 +99,7 @@ function Financeiro() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone))")
+        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("status", "aberto")
         .gte("data_vencimento", aRecPeriod.start)
         .lte("data_vencimento", aRecPeriod.end)
