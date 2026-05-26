@@ -393,7 +393,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      delete_aluno_completo: { Args: { aluno_id: string }; Returns: undefined }
+      delete_aluno_completo: {
+        Args: { p_aluno_id: string }
+        Returns: undefined
+      }
       delete_user_auth: { Args: { user_email: string }; Returns: undefined }
       has_role: {
         Args: {
