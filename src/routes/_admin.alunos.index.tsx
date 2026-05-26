@@ -143,7 +143,7 @@ function AlunosList() {
                 </TableRow>
               )}
               {data?.rows.map((a) => (
-                <TableRow key={a.id} className="border-b border-gray-100">
+                <TableRow key={a.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
                   <TableCell>
                     <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
                       #{a.ctr}
