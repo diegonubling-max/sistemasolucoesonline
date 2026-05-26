@@ -102,6 +102,8 @@ function AlunoDetalhes() {
       if (error) throw error;
       return data ?? [];
     },
+  });
+
   const { data: parcelas } = useQuery({
     queryKey: ["aluno-parcelas", id],
     queryFn: async () => {
