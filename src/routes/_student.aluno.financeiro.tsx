@@ -227,8 +227,8 @@ function StudentFinance() {
             </TableHeader>
             <TableBody>
               {parcelas.length === 0 ? (
-                <TableRow className={isDark ? "border-white/5" : "border-black/5"}>
-                  <TableCell colSpan={5} className={`h-32 text-center ${isDark ? "text-[#B3B3B3]" : "text-gray-400"}`}>
+                <TableRow className="border-gray-100">
+                  <TableCell colSpan={5} className="h-32 text-center text-gray-400">
                     Nenhuma cobrança encontrada.
                   </TableCell>
                 </TableRow>
@@ -238,14 +238,14 @@ function StudentFinance() {
                   const isPago = status === 'pago';
                   
                   return (
-                    <TableRow key={parcela.id} className={`${isDark ? "border-white/5 hover:bg-white/5" : "border-black/5 hover:bg-gray-50"} transition-colors`}>
-                      <TableCell className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
+                    <TableRow key={parcela.id} className="border-gray-100 hover:bg-gray-50 transition-colors">
+                      <TableCell className="font-medium text-gray-900">
                         {parcela.descricao || (parcela.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${parcela.numero}`)}
                       </TableCell>
-                      <TableCell className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>
+                      <TableCell className="text-gray-500">
                         {format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}
                       </TableCell>
-                      <TableCell className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                      <TableCell className="font-bold text-gray-900">
                         {formatCurrency(Number(parcela.valor))}
                       </TableCell>
                       <TableCell>
@@ -253,7 +253,7 @@ function StudentFinance() {
                           {status === 'pago' ? (
                             <Badge className="bg-green-500/20 text-green-500 border-none">Pago</Badge>
                           ) : status === 'isento' ? (
-                            <Badge className={`${isDark ? "bg-white/10 text-[#B3B3B3]" : "bg-gray-100 text-gray-500"} border-none`}>Isento</Badge>
+                            <Badge className="bg-gray-100 text-gray-500 border-none">Isento</Badge>
                           ) : isBefore(new Date(parcela.data_vencimento), startOfDay(new Date())) ? (
                             <Badge className="bg-red-500/20 text-red-500 border-none">Vencido</Badge>
                           ) : (
@@ -266,13 +266,13 @@ function StudentFinance() {
                         {isPago ? (
                           <span className="text-xs text-green-500 font-medium">Pago via {parcela.forma_pagamento || 'N/A'}</span>
                         ) : status === 'isento' ? (
-                          <span className="text-xs text-[#B3B3B3] italic">Isentado</span>
+                          <span className="text-xs text-gray-500 italic">Isentado</span>
                         ) : (
                           <div className="flex justify-end gap-2">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="outline" size="sm" disabled className="h-8 border-white/10 text-[#B3B3B3] bg-transparent opacity-50">
+                                  <Button variant="outline" size="sm" disabled className="h-8 border-gray-100 text-gray-500 bg-transparent opacity-50">
                                     <CreditCard className="h-3 w-3 mr-1" /> Pagar
                                   </Button>
                                 </TooltipTrigger>
