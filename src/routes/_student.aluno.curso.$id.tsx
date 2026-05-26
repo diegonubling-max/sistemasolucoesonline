@@ -100,7 +100,7 @@ function StudentCourse() {
   if (loadingCurso) {
     return (
       <div className="flex justify-center py-40 bg-[#141414] min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-[#2ECC71]" />
+        <Loader2 className="h-12 w-12 animate-spin text-[#2D6ADF]" />
       </div>
     );
   }
@@ -113,7 +113,7 @@ function StudentCourse() {
            <h2 className="text-2xl font-bold tracking-tight">Ops! Acesso Negado</h2>
            <p className="text-[#B3B3B3]">{cursoError.message}</p>
         </div>
-        <Button onClick={() => navigate({ to: "/aluno/dashboard" })} className="bg-[#2ECC71] hover:bg-[#27ae60] text-black font-bold">
+        <Button onClick={() => navigate({ to: "/aluno/dashboard" })} className="bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white font-bold">
            Voltar para Meus Cursos
         </Button>
       </div>
@@ -140,7 +140,7 @@ function StudentCourse() {
     return (
        <div className="aspect-video bg-[#1e1e1e] flex flex-col items-center justify-center text-white p-8 text-center gap-4">
          <p className="text-[#B3B3B3]">Este vídeo deve ser acessado pelo link externo:</p>
-         <a href={url} target="_blank" className="bg-[#2ECC71] text-black px-6 py-2 rounded-md font-bold transition-transform hover:scale-105">{url}</a>
+         <a href={url} target="_blank" className="bg-[#1E3A5F] text-white px-6 py-2 rounded-md font-bold transition-transform hover:scale-105">{url}</a>
        </div>
     );
   };
@@ -158,7 +158,7 @@ function StudentCourse() {
               <div className="flex items-center gap-3 mt-1">
                  <span className="text-xs text-[#B3B3B3] uppercase font-bold tracking-wider">{curso?.aulas?.length} aulas</span>
                  <div className="w-24 h-1 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#2ECC71]" style={{ width: '0%' }} />
+                    <div className="h-full bg-[#1E3A5F]" style={{ width: '0%' }} />
                  </div>
               </div>
            </div>
@@ -197,7 +197,7 @@ function StudentCourse() {
                    <Button 
                      onClick={handleNext} 
                      disabled={activeAulaIndex === (curso?.aulas?.length || 0) - 1}
-                     className="bg-[#2ECC71] hover:bg-[#27ae60] text-black font-bold"
+                     className="bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white font-bold"
                    >
                      Próxima Aula <ChevronRight className="ml-2 h-4 w-4" />
                    </Button>
@@ -214,7 +214,7 @@ function StudentCourse() {
         )}>
           <div className="p-4 border-b border-white/5 font-bold tracking-tight text-[#B3B3B3] uppercase text-xs flex items-center justify-between">
              <span>Conteúdo do Curso</span>
-             <span className="text-[#2ECC71]">0%</span>
+             <span className="text-[#2D6ADF]">0%</span>
           </div>
           <ScrollArea className="flex-1 custom-scrollbar">
             <div className="p-0">
@@ -226,13 +226,13 @@ function StudentCourse() {
                     onClick={() => setActiveAulaId(aula.id)}
                     className={cn(
                       "w-full text-left px-6 py-6 border-b border-white/5 transition-all flex items-start gap-4 hover:bg-white/5 group",
-                      isActive ? "bg-[#2ECC71]/5 border-l-4 border-l-[#2ECC71]" : ""
+                      isActive ? "bg-[#1E3A5F]/10 border-l-4 border-l-[#1E3A5F]" : ""
                     )}
                   >
                     <div className="mt-1 shrink-0">
                        <div className={cn(
                          "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
-                         isActive ? "bg-[#2ECC71] text-black" : "bg-[#2a2a2a] text-[#B3B3B3] group-hover:bg-[#333]"
+                         isActive ? "bg-[#1E3A5F] text-white" : "bg-[#2a2a2a] text-[#B3B3B3] group-hover:bg-[#333]"
                        )}>
                           {isActive ? <Play className="h-4 w-4 fill-current" /> : <PlayCircle className="h-5 w-5" />}
                        </div>
@@ -241,14 +241,14 @@ function StudentCourse() {
                       <div className="flex items-center justify-between gap-2">
                         <span className={cn(
                           "text-xs font-black tracking-widest uppercase mb-1",
-                          isActive ? "text-[#2ECC71]" : "text-[#555]"
+                          isActive ? "text-[#2D6ADF]" : "text-[#555]"
                         )}>
                           Aula {index + 1}
                         </span>
                       </div>
                       <p className={cn(
                         "text-sm font-bold leading-snug transition-colors",
-                        isActive ? "text-[#2ECC71]" : "text-white group-hover:text-white"
+                        isActive ? "text-[#2D6ADF]" : "text-white group-hover:text-white"
                       )}>
                         {aula.titulo}
                       </p>
