@@ -397,6 +397,7 @@ export type Database = {
         Args: { p_aluno_id: string }
         Returns: undefined
       }
+      delete_pacote: { Args: { p_pacote_id: string }; Returns: undefined }
       delete_user_auth: { Args: { user_email: string }; Returns: undefined }
       has_role: {
         Args: {
