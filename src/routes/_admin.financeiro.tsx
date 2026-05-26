@@ -584,89 +584,17 @@ function Financeiro() {
         </Card>
       )}
 
-      {/* Modal Baixa */}
-      <Dialog open={!!baixaModal?.open} onOpenChange={(open) => !open && setBaixaModal(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{baixaModal?.isCard ? "Pagamento no Cartão" : "Confirmar Pagamento"}</DialogTitle>
-            <DialogDescription>
-              {baixaModal?.isCard ? "Selecione o parcelamento utilizado pelo aluno." : "Informe a data em que o pagamento foi realizado."}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {baixaModal?.isCard && (
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label>Parcelas</Label>
-                  <Select 
-                    value={String(baixaModal.parcelas)} 
-                    onValueChange={(v) => setBaixaModal(prev => prev ? { ...prev, parcelas: parseInt(v) } : null)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione as parcelas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
-                        <SelectItem key={num} value={String(num)}>{num}x</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="p-4 bg-muted/30 rounded-lg space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Valor bruto:</span>
-                    <span className="font-medium">{formatCurrency(baixaModal.valor || 0)}</span>
-                  </div>
-                  <div className="flex justify-between text-red-500">
-                    <span>Taxa (8%):</span>
-                    <span>- {formatCurrency((baixaModal.valor || 0) * 0.08)}</span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2 font-bold text-base">
-                    <span>Valor líquido:</span>
-                    <span className="text-green-600">{formatCurrency((baixaModal.valor || 0) * 0.92)}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <Label>{baixaModal?.isCard ? "Data do recebimento" : "Data do pagamento"}</Label>
-              <Input 
-                type="date" 
-                value={baixaModal?.date || ""} 
-                onChange={(e) => setBaixaModal(prev => prev ? { ...prev, date: e.target.value } : null)} 
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBaixaModal(null)}>Cancelar</Button>
-            <Button 
-              onClick={() => {
-                if (!baixaModal) return;
-                const extra = baixaModal.isCard ? {
-                  valor_bruto: baixaModal.valor,
-                  valor_taxa: (baixaModal.valor || 0) * 0.08,
-                  valor_liquido: (baixaModal.valor || 0) * 0.92,
-                  cartao_parcelas: baixaModal.parcelas,
-                  observacao: `Pagamento em ${baixaModal.parcelas}x no cartão`
-                } : {};
-                
-                darBaixaMutation.mutate({ 
-                  id: baixaModal.id, 
-                  date: baixaModal.date,
-                  ...extra
-                });
-              }} 
-              disabled={darBaixaMutation.isPending}
-            >
-              {baixaModal?.isCard ? "Confirmar baixa" : "Confirmar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BaixaModal 
+        open={baixaModal?.open || false}
+        onOpenChange={(o) => !o && setBaixaModal(null)}
+        isLoading={darBaixaMutation.isPending}
+        valorOriginal={baixaModal?.valor || 0}
+        onConfirm={(data) => {
+          if (baixaModal?.id) {
+            darBaixaMutation.mutate({ id: baixaModal.id, ...data });
+          }
+        }}
+      />
     </div>
   );
 }
