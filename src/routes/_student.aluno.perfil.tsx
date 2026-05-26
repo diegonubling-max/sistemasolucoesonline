@@ -93,26 +93,26 @@ function StudentProfile() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-md"} border-none shadow-xl border`}>
+        <Card className="bg-white border-gray-100 shadow-md border-none shadow-xl border">
             <CardHeader>
-            <CardTitle className={`${isDark ? "text-white" : "text-gray-900"} flex items-center gap-2`}>
+            <CardTitle className="text-gray-900 flex items-center gap-2">
                 <UserIcon className="h-5 w-5 text-[#2D6ADF]" />
                 Dados da Conta
             </CardTitle>
-            <CardDescription className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>Informações básicas do seu registro</CardDescription>
+            <CardDescription className="text-gray-500">Informações básicas do seu registro</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className={`${isDark ? "bg-white/5 border-white/5" : "bg-gray-50 border-black/5"} p-4 rounded-lg border transition-colors`}>
-                    <p className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-400"} uppercase font-bold tracking-wider`}>Nome Completo</p>
-                    <p className={`${isDark ? "text-white" : "text-gray-900"} font-medium`}>{alunoData?.nome || "---"}</p>
+                <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
+                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Nome Completo</p>
+                    <p className="text-gray-900 font-medium">{alunoData?.nome || "---"}</p>
                 </div>
-                <div className={`${isDark ? "bg-white/5 border-white/5" : "bg-gray-50 border-black/5"} p-4 rounded-lg border transition-colors`}>
-                    <p className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-400"} uppercase font-bold tracking-wider`}>E-mail</p>
-                    <p className={`${isDark ? "text-white" : "text-gray-900"} font-medium`}>{session?.user.email}</p>
+                <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
+                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">E-mail</p>
+                    <p className="text-gray-900 font-medium">{session?.user.email}</p>
                 </div>
-                <div className={`${isDark ? "bg-white/5 border-white/5" : "bg-gray-50 border-black/5"} p-4 rounded-lg border transition-colors`}>
-                    <p className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-400"} uppercase font-bold tracking-wider`}>CTR</p>
-                    <p className={`${isDark ? "text-white" : "text-gray-900"} font-medium`}>{alunoData?.ctr || "---"}</p>
+                <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
+                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">CTR</p>
+                    <p className="text-gray-900 font-medium">{alunoData?.ctr || "---"}</p>
                 </div>
             </CardContent>
         </Card>
