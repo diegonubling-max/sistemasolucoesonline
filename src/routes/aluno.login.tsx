@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, Lock, Mail, ArrowRight } from "lucide-react";
+import { Loader2, Lock, User, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,15 +14,28 @@ export const Route = createFileRoute("/aluno/login")({
 
 function AlunoLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [ctr, setCtr] = useState("");
   const [password, setPassword] = useState("");
 
   const login = useMutation({
     mutationFn: async () => {
+      // 1. Buscar o email do aluno pelo CTR
+      const { data: aluno, error: alunoError } = await supabase
+        .from('alunos')
+        .select('email')
+        .eq('ctr', parseInt(ctr))
+        .maybeSingle();
+
+      if (alunoError || !aluno || !aluno.email) {
+        throw new Error('CTR não encontrado');
+      }
+
+      // 2. Autenticar com o email encontrado
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: aluno.email,
         password,
       });
+
       if (error) throw error;
       return data;
     },
@@ -42,19 +55,31 @@ function AlunoLogin() {
         await supabase.auth.signOut();
       }
     },
-    onError: (e: Error) => toast.error(e.message === "Invalid login credentials" ? "E-mail ou senha incorretos" : e.message),
+    onError: (e: Error) => toast.error(e.message === "Invalid login credentials" ? "Senha incorreta" : e.message),
   });
 
   const handleResetPassword = async () => {
-    if (!email) {
-      toast.error("Informe seu e-mail para recuperar a senha");
+    if (!ctr) {
+      toast.error("Informe seu CTR para recuperar a senha");
       return;
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+
+    const { data: aluno, error: alunoError } = await supabase
+      .from('alunos')
+      .select('email')
+      .eq('ctr', parseInt(ctr))
+      .maybeSingle();
+
+    if (alunoError || !aluno || !aluno.email) {
+      toast.error("CTR não encontrado");
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(aluno.email, {
       redirectTo: `${window.location.origin}/aluno/perfil`,
     });
     if (error) toast.error(error.message);
-    else toast.success("E-mail de recuperação enviado!");
+    else toast.success("E-mail de recuperação enviado para " + aluno.email);
   };
 
   return (
@@ -83,13 +108,14 @@ function AlunoLogin() {
               className="space-y-4"
             >
               <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Login (seu CTR)</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
-                    type="email" 
-                    placeholder="Seu e-mail" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text" 
+                    placeholder="Ex: 1627" 
+                    value={ctr}
+                    onChange={(e) => setCtr(e.target.value)}
                     className="pl-10 h-12 border-muted focus:border-primary transition-all"
                     required
                   />
