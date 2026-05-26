@@ -79,6 +79,7 @@ function EditarAluno() {
             responsavel_cpf: aluno.responsavel_cpf ?? "",
             responsavel_email: aluno.responsavel_email ?? "",
           }}
+          isEdit={true}
           submitting={submitting || mut.isPending}
           submitLabel="Salvar alterações"
           onSubmit={async (v) => {
