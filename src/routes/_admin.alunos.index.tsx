@@ -124,7 +124,7 @@ function AlunosList() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[80px] text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">CTR</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">CTR</TableHead>
                 <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Nome</TableHead>
                 <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">E-mail</TableHead>
                 <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Telefone</TableHead>
@@ -158,7 +158,7 @@ function AlunosList() {
                       <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 rounded-full px-3 font-semibold">Pendente</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground/80 font-normal">{formatDate(a.created_at)}</TableCell>
+                  <TableCell className="text-sm font-normal text-muted-foreground/80">{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button asChild size="icon" variant="ghost" title="Ver detalhes">
