@@ -147,7 +147,7 @@ function AlunosList() {
                   <TableCell>
                     <span className="text-sm font-normal text-slate-700">#{a.ctr}</span>
                   </TableCell>
-                  <TableCell className="text-sm font-bold text-slate-700">{a.nome}</TableCell>
+                  <TableCell className="text-sm font-bold text-slate-700 whitespace-nowrap">{a.nome}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.email}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.telefone}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.vendedora}</TableCell>
@@ -158,7 +158,7 @@ function AlunosList() {
                       <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 rounded-full px-3 font-semibold">Pendente</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground/80 font-normal">{formatDate(a.created_at)}</TableCell>
+                  <TableCell className="text-sm font-normal text-muted-foreground/80">{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button asChild size="icon" variant="ghost" title="Ver detalhes">
