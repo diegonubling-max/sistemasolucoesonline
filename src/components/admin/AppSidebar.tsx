@@ -8,8 +8,7 @@ const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
   { title: "Alunos", url: "/alunos", icon: Users, enabled: true },
   { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true },
-  { title: "Matrículas", url: "/matriculas", icon: GraduationCap, enabled: true },
-  { title: "Financeiro", url: "#", icon: Wallet, enabled: false },
+  { title: "Pacotes", url: "/pacotes", icon: Wallet, enabled: true },
 ];
 
 export function AppSidebar() {

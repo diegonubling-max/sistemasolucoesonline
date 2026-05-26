@@ -14,6 +14,7 @@ import { Route as StudentRouteImport } from './routes/_student'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
+import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminMatriculasIndexRouteImport } from './routes/_admin.matriculas.index'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
@@ -51,6 +52,11 @@ const AlunoLoginRoute = AlunoLoginRouteImport.update({
   id: '/aluno/login',
   path: '/aluno/login',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPacotesRoute = AdminPacotesRouteImport.update({
+  id: '/pacotes',
+  path: '/pacotes',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminMatriculasIndexRoute = AdminMatriculasIndexRouteImport.update({
   id: '/matriculas/',
@@ -126,6 +132,7 @@ const AdminAlunosIdEditarRoute = AdminAlunosIdEditarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/pacotes': typeof AdminPacotesRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/pacotes': typeof AdminPacotesRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/_admin': typeof AdminRouteWithChildren
   '/_student': typeof StudentRouteWithChildren
   '/login': typeof LoginRoute
+  '/_admin/pacotes': typeof AdminPacotesRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/pacotes'
     | '/aluno/login'
     | '/alunos/novo'
     | '/cursos/novo'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/pacotes'
     | '/aluno/login'
     | '/alunos/novo'
     | '/cursos/novo'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/_admin'
     | '/_student'
     | '/login'
+    | '/_admin/pacotes'
     | '/aluno/login'
     | '/_admin/'
     | '/_admin/alunos/novo'
@@ -288,6 +300,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/aluno/login'
       preLoaderRoute: typeof AlunoLoginRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_admin/pacotes': {
+      id: '/_admin/pacotes'
+      path: '/pacotes'
+      fullPath: '/pacotes'
+      preLoaderRoute: typeof AdminPacotesRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_admin/matriculas/': {
       id: '/_admin/matriculas/'
@@ -391,6 +410,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminPacotesRoute: typeof AdminPacotesRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
   AdminCursosNovoRoute: typeof AdminCursosNovoRoute
@@ -406,6 +426,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminPacotesRoute: AdminPacotesRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminAlunosNovoRoute: AdminAlunosNovoRoute,
   AdminCursosNovoRoute: AdminCursosNovoRoute,
@@ -446,3 +467,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
