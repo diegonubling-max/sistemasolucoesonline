@@ -142,13 +142,13 @@ function PacotesList() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-gray-100">
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Nome</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Tipo</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Taxa de Matrícula</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Parcelas</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Valor Total</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Status</TableHead>
-                <TableHead className="text-right text-muted-foreground font-normal text-xs uppercase tracking-wider">Ações</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Nome</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Tipo</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Taxa de Matrícula</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Parcelas</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Valor Total</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Status</TableHead>
+                <TableHead className="text-right text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -159,11 +159,11 @@ function PacotesList() {
               )}
               {pacotes?.map((p) => (
                 <TableRow key={p.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
-                  <TableCell className="font-bold text-foreground">{p.nome}</TableCell>
-                  <TableCell><Badge variant="outline" className="capitalize bg-gray-50 text-muted-foreground border-gray-200 font-normal">{p.tipo}</Badge></TableCell>
-                  <TableCell className="font-normal text-muted-foreground">R$ {p.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
-                  <TableCell className="font-normal text-muted-foreground">{p.numero_parcelas}x R$ {p.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
-                  <TableCell className="font-normal text-foreground">R$ {p.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                  <TableCell className="text-sm font-bold text-slate-700">{p.nome}</TableCell>
+                  <TableCell><Badge variant="outline" className="capitalize bg-gray-50 text-muted-foreground/60 border-gray-200 font-normal text-xs">{p.tipo}</Badge></TableCell>
+                  <TableCell className="text-sm font-normal text-muted-foreground/80">R$ {p.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                  <TableCell className="text-sm font-normal text-muted-foreground/80">{p.numero_parcelas}x R$ {p.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                  <TableCell className="text-sm font-normal text-slate-700">R$ {p.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
                   <TableCell>
                     {p.ativo ? (
                       <Badge className="bg-green-500 text-white hover:bg-green-500 rounded-full px-3 font-semibold">Ativo</Badge>
