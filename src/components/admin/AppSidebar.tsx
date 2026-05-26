@@ -1,8 +1,10 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
@@ -14,6 +16,7 @@ const items = [
 export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
+  const [recreating, setRecreating] = useState(false);
 
   const isActive = (url: string) => {
     if (url === "/") return path === "/";
@@ -23,6 +26,25 @@ export function AppSidebar() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/login" });
+  };
+
+  const handleRecreateAdmin = async () => {
+    if (!confirm("Recriar/resetar o usuário admin com as credenciais configuradas nas variáveis do projeto?")) return;
+    setRecreating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-student-access", {
+        body: { action: "recreate_admin" },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success((data as any)?.message ?? "Admin recriado", {
+        description: (data as any)?.email,
+      });
+    } catch (e: any) {
+      toast.error("Falha ao recriar admin", { description: e?.message ?? String(e) });
+    } finally {
+      setRecreating(false);
+    }
   };
 
   return (
@@ -69,7 +91,16 @@ export function AppSidebar() {
           );
         })}
       </nav>
-      <div className="p-3 border-t border-sidebar-border">
+      <div className="p-3 border-t border-sidebar-border space-y-1">
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          onClick={handleRecreateAdmin}
+          disabled={recreating}
+        >
+          {recreating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShieldPlus className="h-4 w-4 mr-2" />}
+          Recriar Admin
+        </Button>
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
