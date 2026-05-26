@@ -117,13 +117,13 @@ function StudentProfile() {
             </CardContent>
         </Card>
 
-        <Card className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-md"} border-none shadow-xl border`}>
+        <Card className="bg-white border-gray-100 shadow-md border-none shadow-xl border">
             <CardHeader>
-            <CardTitle className={`${isDark ? "text-white" : "text-gray-900"} flex items-center gap-2`}>
+            <CardTitle className="text-gray-900 flex items-center gap-2">
                 <Key className="h-5 w-5 text-[#2D6ADF]" />
                 Segurança
             </CardTitle>
-            <CardDescription className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>
+            <CardDescription className="text-gray-500">
                 Altere sua senha de acesso
             </CardDescription>
             </CardHeader>
@@ -136,38 +136,38 @@ function StudentProfile() {
                 className="space-y-4"
             >
                 <div className="space-y-2">
-                <Label htmlFor="current-pass" className={isDark ? "text-white" : "text-gray-700"}>Senha Atual</Label>
+                <Label htmlFor="current-pass" className="text-gray-700">Senha Atual</Label>
                 <Input
                     id="current-pass"
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="Sua senha atual"
-                    className={`${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-[#555]" : "bg-white border-gray-200"} focus-visible:ring-[#2D6ADF] transition-colors`}
+                    className="bg-white border-gray-200 focus-visible:ring-[#2D6ADF] transition-colors"
                     required
                 />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="new-pass" className={isDark ? "text-white" : "text-gray-700"}>Nova Senha</Label>
+                <Label htmlFor="new-pass" className="text-gray-700">Nova Senha</Label>
                 <Input
                     id="new-pass"
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Mínimo 6 caracteres"
-                    className={`${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-[#555]" : "bg-white border-gray-200"} focus-visible:ring-[#2D6ADF] transition-colors`}
+                    className="bg-white border-gray-200 focus-visible:ring-[#2D6ADF] transition-colors"
                     required
                 />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="confirm-pass" className={isDark ? "text-white" : "text-gray-700"}>Confirmar Nova Senha</Label>
+                <Label htmlFor="confirm-pass" className="text-gray-700">Confirmar Nova Senha</Label>
                 <Input
                     id="confirm-pass"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repita a nova senha"
-                    className={`${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-[#555]" : "bg-white border-gray-200"} focus-visible:ring-[#2D6ADF] transition-colors`}
+                    className="bg-white border-gray-200 focus-visible:ring-[#2D6ADF] transition-colors"
                     required
                 />
                 </div>
