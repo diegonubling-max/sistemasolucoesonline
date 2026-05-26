@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Users, BookOpen, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp } from "lucide-react";
+import { Users, BookOpen, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +22,7 @@ function Dashboard() {
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
-      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto] = await Promise.all([
+      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData] = await Promise.all([
         supabase.from("alunos").select("*", { count: "exact", head: true }),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         supabase.from("matriculas").select("*", { count: "exact", head: true }),
@@ -32,6 +32,7 @@ function Dashboard() {
         supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd")),
         supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd")),
         supabase.from("parcelas").select("valor").neq("status", "isento"),
+        supabase.from("alunos").select("origem"),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
@@ -41,11 +42,28 @@ function Dashboard() {
         return acc + val;
       }, 0);
 
+      // Calcular origens
+      const origensMap = (origensData.data ?? []).reduce((acc: Record<string, number>, curr) => {
+        const key = curr.origem || 'Outros';
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+
+      const totalAlunos = a.count ?? 0;
+      const origens = Object.entries(origensMap)
+        .map(([name, count]) => ({
+          name,
+          count,
+          percent: totalAlunos > 0 ? Math.round((count / totalAlunos) * 100) : 0
+        }))
+        .sort((a, b) => b.count - a.count);
+
       return {
-        alunos: a.count ?? 0,
+        alunos: totalAlunos,
         cursos: c.count ?? 0,
         matriculas: m.count ?? 0,
         ativos: aa.count ?? 0,
+        origens,
         faturamento: {
           recebido: receivedSum(pagoMes.data),
           aReceberMes: sum(abertoMes.data),
@@ -107,6 +125,48 @@ function Dashboard() {
           );
         })}
       </div>
+
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">Origem das Matrículas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {(stats?.origens ?? []).map((o) => {
+              let Icon = Pin;
+              if (o.name.toLowerCase().includes("google")) Icon = Search;
+              else if (o.name.toLowerCase().includes("meta") || o.name.toLowerCase().includes("facebook") || o.name.toLowerCase().includes("instagram")) Icon = Smartphone;
+              else if (o.name.toLowerCase().includes("indicação") || o.name.toLowerCase().includes("indicacao")) Icon = UserGroup;
+
+              return (
+                <div key={o.name} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-gray-100 rounded-md">
+                        <Icon className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <span className="font-medium text-gray-700">{o.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-muted-foreground">{o.count} {o.count === 1 ? 'aluno' : 'alunos'}</span>
+                      <span className="font-bold text-gray-900 w-10 text-right">{o.percent}%</span>
+                    </div>
+                  </div>
+                  <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-200">
+                    <div 
+                      className="h-full bg-[#1E3A5F] transition-all duration-1000 ease-out" 
+                      style={{ width: `${o.percent}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {(!stats?.origens || stats.origens.length === 0) && (
+              <p className="text-center text-muted-foreground py-4">Nenhuma origem registrada.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map((c) => {
