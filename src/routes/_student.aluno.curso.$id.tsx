@@ -179,23 +179,23 @@ function StudentCourse() {
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
         {/* Main Content (Video + Info) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/5 group">
+          <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-black/5 group">
             {activeAula && renderVideoPlayer(activeAula.url_video)}
             {!activeAula && (
-              <div className="w-full h-full flex items-center justify-center text-[#B3B3B3]">
+              <div className="w-full h-full flex items-center justify-center text-gray-400">
                 Selecione uma aula para começar
               </div>
             )}
           </div>
 
-          <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-md"} p-6 rounded-xl border space-y-6 transition-colors`}>
-            <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b ${isDark ? "border-white/5" : "border-black/5"} pb-6`}>
-                <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{activeAula?.titulo}</h2>
+          <div className="bg-white border-gray-200 shadow-md p-6 rounded-xl border space-y-6 transition-colors">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+                <h2 className="text-2xl font-bold text-gray-900">{activeAula?.titulo}</h2>
                 <div className="flex items-center gap-3">
                     <Button 
                         variant="outline" 
                         size="sm" 
-                        className={`bg-transparent ${isDark ? "border-white/10 text-white hover:bg-white/5" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+                        className="bg-transparent border-gray-200 text-gray-700 hover:bg-gray-50"
                         disabled
                     >
                         ⬅ Anterior
