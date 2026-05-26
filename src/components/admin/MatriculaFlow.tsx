@@ -378,12 +378,11 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
               <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
             </Button>
             <Button 
-              disabled={!selectedPacote || concludeMatricula.isPending}
-              className="bg-green-600 hover:bg-green-700 h-12 px-8 text-lg"
-              onClick={() => concludeMatricula.mutate()}
+              disabled={!selectedPacote || saveStep3.isPending}
+              onClick={() => saveStep3.mutate()}
             >
-              {concludeMatricula.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Concluir Matrícula
+              {saveStep3.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Salvar e continuar <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
         </div>
