@@ -22,7 +22,7 @@ function Dashboard() {
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
-      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto] = await Promise.all([
+      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData] = await Promise.all([
         supabase.from("alunos").select("*", { count: "exact", head: true }),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         supabase.from("matriculas").select("*", { count: "exact", head: true }),
@@ -32,6 +32,7 @@ function Dashboard() {
         supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd")),
         supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd")),
         supabase.from("parcelas").select("valor").neq("status", "isento"),
+        supabase.from("alunos").select("origem"),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
