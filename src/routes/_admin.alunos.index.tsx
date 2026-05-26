@@ -75,65 +75,11 @@ function AlunosList() {
     mutationFn: async (student: { id: string; email: string }) => {
       if (!student.id) throw new Error("ID do aluno não fornecido");
 
-      // 1. Chamar delete_user_auth(email_do_aluno)
-      if (student.email) {
-        const { error: authError } = await supabase.rpc('delete_user_auth', { 
-          user_email: student.email 
-        });
-        if (authError) {
-          console.error('Erro ao remover usuário do Auth:', authError);
-          // Opcionalmente lançar erro se falhar for crítico, 
-          // mas seguindo a ordem solicitada.
-        }
-      }
+      const { error } = await supabase.rpc('delete_aluno_completo', { 
+        aluno_id: student.id 
+      });
 
-      // 2. Obter os IDs das matrículas do aluno para limpar dependências antes de excluir o aluno
-      const { data: matriculas, error: matriculasError } = await supabase
-        .from('matriculas')
-        .select('id')
-        .eq('aluno_id', student.id);
-      
-      if (matriculasError) throw matriculasError;
-      
-      const matriculaIds = matriculas?.map(m => m.id) || [];
-
-      if (matriculaIds.length > 0) {
-        // a. DELETE FROM parcelas
-        const { error: parcelasError } = await supabase
-          .from('parcelas')
-          .delete()
-          .in('matricula_id', matriculaIds);
-        if (parcelasError) throw parcelasError;
-
-        // b. DELETE FROM matricula_cursos
-        const { error: matCursosError } = await supabase
-          .from('matricula_cursos')
-          .delete()
-          .in('matricula_id', matriculaIds);
-        if (matCursosError) throw matCursosError;
-
-        // c. DELETE FROM matricula_pacotes
-        const { error: matPacotesError } = await supabase
-          .from('matricula_pacotes')
-          .delete()
-          .in('matricula_id', matriculaIds);
-        if (matPacotesError) throw matPacotesError;
-
-        // d. DELETE FROM matriculas
-        const { error: deleteMatriculasError } = await supabase
-          .from('matriculas')
-          .delete()
-          .eq('aluno_id', student.id);
-        if (deleteMatriculasError) throw deleteMatriculasError;
-      }
-
-      // 3. DELETE FROM alunos WHERE id = [id_do_aluno]
-      const { error: dbError } = await supabase
-        .from('alunos')
-        .delete()
-        .eq('id', student.id);
-      
-      if (dbError) throw dbError;
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Aluno excluído com sucesso");
