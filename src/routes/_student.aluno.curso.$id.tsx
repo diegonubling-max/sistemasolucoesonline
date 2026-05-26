@@ -164,13 +164,13 @@ function StudentCourse() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-2">
-          <Link to="/aluno/dashboard" className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-gray-500 hover:text-gray-900"} flex items-center gap-1 text-sm font-medium transition-colors`}>
+          <Link to="/aluno/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-1 text-sm font-medium transition-colors">
             <ChevronLeft className="h-4 w-4" /> Voltar para o início
           </Link>
-          <h1 className={`text-3xl md:text-4xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-tight`}>{curso?.nome}</h1>
-          <div className={`flex items-center gap-4 text-sm ${isDark ? "text-[#B3B3B3]" : "text-gray-500"}`}>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{curso?.nome}</h1>
+          <div className="flex items-center gap-4 text-sm text-gray-500">
              <span>{curso?.aulas?.length} aulas</span>
-             <span className={`h-1 w-1 rounded-full ${isDark ? "bg-[#333]" : "bg-gray-300"}`} />
+             <span className="h-1 w-1 rounded-full bg-gray-300" />
              <span className="text-[#2D6ADF] font-bold">0% concluído</span>
           </div>
         </div>
