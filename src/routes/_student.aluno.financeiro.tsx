@@ -33,7 +33,7 @@ import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute("/_student/aluno/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Financeiro — Soluções Online" }] }),
   component: StudentFinance,
 });
 
