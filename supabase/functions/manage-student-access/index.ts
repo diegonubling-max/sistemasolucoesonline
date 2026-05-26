@@ -17,10 +17,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { email, nome, action, newPassword } = await req.json()
+    const { email, nome, action, password, newPassword } = await req.json()
 
     if (action === 'reset_password') {
-      // Find user by email
       const { data: users, error: listError } = await supabaseClient.auth.admin.listUsers()
       if (listError) throw listError
       
@@ -43,7 +42,6 @@ serve(async (req) => {
     }
     
     if (action === 'delete_user') {
-      // Find user by email
       const { data: users, error: listError } = await supabaseClient.auth.admin.listUsers()
       if (listError) throw listError
       
@@ -62,59 +60,36 @@ serve(async (req) => {
       })
     }
 
-    // Default: Check/Create access
-    // 1. Check if user exists
-    const { data: listData, error: listError } = await supabaseClient.auth.admin.listUsers()
-    if (listError) throw listError
-    
-    const existingUser = listData.users.find(u => u.email === email)
-    
-    if (existingUser) {
-      // Ensure user has the role
-      await supabaseClient.from('user_roles').upsert({
-        user_id: existingUser.id,
+    if (action === 'create') {
+      // Create user with provided password
+      const { data: authUser, error: createError } = await supabaseClient.auth.admin.createUser({
+        email,
+        password: password,
+        email_confirm: true,
+        user_metadata: { nome }
+      })
+
+      if (createError) throw createError
+
+      // Assign role
+      const { error: roleError } = await supabaseClient.from('user_roles').insert({
+        user_id: authUser.user.id,
         role: 'aluno'
-      }, { onConflict: 'user_id' })
+      })
+
+      if (roleError) throw roleError
 
       return new Response(JSON.stringify({ 
-        message: 'Acesso já existente vinculado', 
-        user_id: existingUser.id,
-        is_new: false 
+        message: 'Acesso criado com sucesso', 
+        user_id: authUser.user.id,
+        is_new: true 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // 2. Generate password
-    const cleanNome = nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-    const base = cleanNome.substring(0, 4).padEnd(4, 'x')
-    const year = new Date().getFullYear()
-    const password = `${base}@${year}`
-
-    // 3. Create user
-    const { data: authUser, error: createError } = await supabaseClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { nome }
-    })
-
-    if (createError) throw createError
-
-    // 4. Assign role
-    const { error: roleError } = await supabaseClient.from('user_roles').insert({
-      user_id: authUser.user.id,
-      role: 'aluno'
-    })
-
-    if (roleError) throw roleError
-
-    return new Response(JSON.stringify({ 
-      message: 'Acesso criado com sucesso', 
-      user_id: authUser.user.id,
-      password,
-      is_new: true 
-    }), {
+    return new Response(JSON.stringify({ error: 'Ação inválida' }), {
+      status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
