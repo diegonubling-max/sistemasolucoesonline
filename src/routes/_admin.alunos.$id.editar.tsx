@@ -18,6 +18,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { BaixaModal } from "@/components/admin/BaixaModal";
+import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { formatCurrency } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/alunos/$id/editar")({
   head: () => ({ meta: [{ title: "Editar aluno — EduManager" }] }),
@@ -261,7 +264,15 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
   const [localParcelas, setLocalParcelas] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
-  const [baixaData, setBaixaData] = useState<{ id: string, date: Date } | null>(null);
+  const [baixaData, setBaixaData] = useState<{ id: string, valor: number } | null>(null);
+  const [resumoBaixa, setResumoBaixa] = useState<{
+    formaPagamento: string;
+    parcelas?: number;
+    valorBruto: number;
+    taxa?: number;
+    valorLiquido: number;
+    dataPagamento: string;
+  } | null>(null);
 
   useEffect(() => {
     setLocalParcelas(parcelas);
@@ -323,20 +334,32 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
     toast.success("Nova parcela adicionada!");
   };
 
-  const confirmBaixa = async () => {
+  const confirmBaixa = async (data: any) => {
     if (!baixaData) return;
     try {
       const { error } = await supabase
         .from("parcelas")
         .update({
           status: 'pago',
-          data_pagamento: format(baixaData.date, 'yyyy-MM-dd')
+          ...data
         })
         .eq("id", baixaData.id);
       
       if (error) throw error;
       
-      toast.success("Baixa realizada!");
+      if (data.forma_pagamento === 'cartao') {
+        setResumoBaixa({
+          formaPagamento: 'cartao',
+          parcelas: data.parcelas_cartao,
+          valorBruto: baixaData.valor,
+          taxa: data.taxa_cartao,
+          valorLiquido: data.valor_liquido,
+          dataPagamento: data.data_pagamento,
+        });
+      } else {
+        toast.success("Baixa realizada!");
+      }
+      
       setShowBaixaModal(false);
       setBaixaData(null);
       onSuccess();
@@ -417,7 +440,7 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
                       variant="ghost" 
                       className="h-8 w-8 text-green-600"
                       onClick={() => {
-                        setBaixaData({ id: p.id, date: new Date() });
+                        setBaixaData({ id: p.id, valor: Number(p.valor) });
                         setShowBaixaModal(true);
                       }}
                     >
