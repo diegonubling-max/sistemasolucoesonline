@@ -25,8 +25,7 @@ export const Route = createFileRoute("/_admin/alunos/$id/")({
 function AlunoDetalhes() {
   const { id } = Route.useParams();
   const [showResetModal, setShowResetModal] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showResetDefaultModal, setShowResetDefaultModal] = useState(false);
   const [showPasswordResult, setShowPasswordResult] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
@@ -55,28 +54,29 @@ function AlunoDetalhes() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const resetPassword = useMutation({
+  const resetToDefaultPassword = useMutation({
     mutationFn: async () => {
-      if (newPassword !== confirmPassword) throw new Error("As senhas não coincidem");
-      if (newPassword.length < 6) throw new Error("A senha deve ter pelo menos 6 caracteres");
+      if (!aluno?.email || !aluno?.nome) return;
 
-      const { error } = await supabase.functions.invoke("manage-student-access", {
-        body: {
-          email: aluno?.email,
-          action: "reset_password",
-          newPassword
-        }
+      const primeiroNome = aluno.nome.split(' ')[0];
+      const senhaPadrao = '123' + primeiroNome.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+      const { error } = await supabase.rpc('redefinir_senha_aluno', {
+        p_email: aluno.email,
+        p_nova_senha: senhaPadrao
       });
 
       if (error) throw error;
+      return senhaPadrao;
     },
-    onSuccess: () => {
+    onSuccess: (senhaGerada) => {
+      if (!senhaGerada) return;
       toast.success("Senha redefinida com sucesso");
-      setPasswordToDisplay(newPassword);
-      setShowResetModal(false);
+      setPasswordToDisplay(senhaGerada);
+      setShowResetDefaultModal(false);
       setShowPasswordResult(true);
-      setNewPassword("");
-      setConfirmPassword("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -141,9 +141,9 @@ function AlunoDetalhes() {
                 Voltar
               </Link>
             </Button>
-            <Button variant="outline" onClick={() => setShowResetModal(true)}>
+            <Button variant="outline" onClick={() => setShowResetDefaultModal(true)}>
               <Key className="h-4 w-4 mr-2" />
-              Redefinir Senha
+              Redefinir Senha Padrão
             </Button>
             <Button asChild>
               <Link to="/alunos/$id/editar" params={{ id }}>
@@ -391,44 +391,27 @@ function AlunoDetalhes() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showResetModal} onOpenChange={setShowResetModal}>
+      <Dialog open={showResetDefaultModal} onOpenChange={setShowResetDefaultModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Redefinir Senha</DialogTitle>
+            <DialogTitle>Confirmar Redefinição</DialogTitle>
             <DialogDescription>
-              Digite a nova senha para o aluno <strong>{aluno.nome}</strong>.
+              Deseja redefinir a senha de <strong>{aluno.nome}</strong> para a senha padrão?
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="pass">Nova Senha</Label>
-              <Input
-                id="pass"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm">Confirmar Senha</Label>
-              <Input
-                id="confirm"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repita a nova senha"
-              />
-            </div>
+          <div className="py-4">
+            <p className="text-sm">
+              Senha padrão que será definida: <code className="bg-muted px-1 rounded">123{aluno.nome.split(' ')[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}</code>
+            </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowResetModal(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setShowResetDefaultModal(false)}>Cancelar</Button>
             <Button 
-              onClick={() => resetPassword.mutate()}
-              disabled={resetPassword.isPending || !newPassword || !confirmPassword}
+              onClick={() => resetToDefaultPassword.mutate()}
+              disabled={resetToDefaultPassword.isPending}
             >
-              {resetPassword.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Confirmar Redefinição
+              {resetToDefaultPassword.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar
             </Button>
           </DialogFooter>
         </DialogContent>
