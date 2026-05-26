@@ -42,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ThumbnailUpload } from "@/components/admin/ThumbnailUpload";
 
 export const Route = createFileRoute("/_admin/cursos/$id/aulas")({
   head: () => ({ meta: [{ title: "Aulas — EduManager" }] }),
@@ -54,6 +55,7 @@ type Aula = {
   titulo: string;
   descricao: string | null;
   url_video: string | null;
+  thumbnail_url: string | null;
   ordem: number;
   ativo: boolean;
 };
@@ -284,6 +286,7 @@ function AulaDialog({
     titulo: "",
     descricao: "",
     url_video: "",
+    thumbnail_url: null,
     ordem: nextOrdem,
     ativo: true,
   });
@@ -297,6 +300,7 @@ function AulaDialog({
         titulo: "",
         descricao: "",
         url_video: "",
+        thumbnail_url: null,
         ordem: nextOrdem,
         ativo: true,
       });
@@ -318,6 +322,7 @@ function AulaDialog({
             titulo: aulaEditando.titulo,
             descricao: aulaEditando.descricao,
             url_video: aulaEditando.url_video,
+            thumbnail_url: aulaEditando.thumbnail_url,
             ordem: aulaEditando.ordem,
             ativo: aulaEditando.ativo
           })
@@ -331,6 +336,7 @@ function AulaDialog({
           titulo: aulaEditando.titulo,
           descricao: aulaEditando.descricao,
           url_video: aulaEditando.url_video,
+          thumbnail_url: aulaEditando.thumbnail_url,
           ordem: aulaEditando.ordem,
           ativo: aulaEditando.ativo,
         });
@@ -356,6 +362,15 @@ function AulaDialog({
           <Input
             value={aulaEditando.titulo || ""}
             onChange={(e) => setAulaLocal({ ...aulaEditando, titulo: e.target.value })}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Thumbnail da Aula</Label>
+          <ThumbnailUpload
+            value={aulaEditando.thumbnail_url}
+            onChange={(url) => setAulaLocal({ ...aulaEditando, thumbnail_url: url })}
+            bucket="thumbnails-aulas"
+            recommendedSize="320x180px"
           />
         </div>
         <div className="space-y-1.5">

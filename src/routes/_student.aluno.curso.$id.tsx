@@ -62,6 +62,7 @@ function StudentCourse() {
             titulo,
             descricao,
             url_video,
+            thumbnail_url,
             ordem,
             ativo
           )
@@ -241,9 +242,19 @@ function StudentCourse() {
                         : "hover:bg-gray-50 border border-transparent"
                       }`}
                     >
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isActive ? 'bg-[#2D6ADF] text-white' : 'bg-gray-100 text-gray-500'}`}>
-                        {index + 1}
-                      </div>
+                      {aula.thumbnail_url ? (
+                        <div className="h-12 w-20 rounded-md overflow-hidden shrink-0 border border-gray-100">
+                          <img 
+                            src={aula.thumbnail_url} 
+                            alt={aula.titulo}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center transition-colors shrink-0 bg-gray-100 text-gray-500`}>
+                          <PlayCircle className="h-5 w-5" />
+                        </div>
+                      )}
                       <div className="flex-1">
                         <p className={`text-sm font-medium leading-tight transition-colors ${isActive ? 'text-[#2D6ADF] font-bold' : 'text-gray-600 group-hover:text-gray-900'}`}>
                           {aula.titulo}
