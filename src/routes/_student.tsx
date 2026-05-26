@@ -108,7 +108,7 @@ function StudentLayout() {
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
-      isDark ? "bg-[#141414] text-white" : "bg-[#F5F5F5] text-[#111827]"
+      isDark ? "bg-[#141414] text-white" : "bg-[#F5F5F5] text-[#111827] border-[#E5E7EB]"
     }`}>
       <header className={`${
         isDark ? "bg-[#1e1e1e] border-white/10" : "bg-[#1E3A5F] border-black/5"
