@@ -124,7 +124,7 @@ function AlunosList() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[80px] text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">CTR</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">CTR</TableHead>
                 <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Nome</TableHead>
                 <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">E-mail</TableHead>
                 <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Telefone</TableHead>
