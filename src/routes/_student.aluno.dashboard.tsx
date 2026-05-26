@@ -60,53 +60,78 @@ function StudentDashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Meus Cursos</h1>
-        <p className="text-muted-foreground">Continue de onde você parou</p>
+    <div className="space-y-12 animate-in fade-in duration-700">
+      {/* Welcome Banner */}
+      <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden bg-gradient-to-r from-[#1a1a2e] to-[#141414] flex items-center px-8 md:px-12">
+        <div className="relative z-10 space-y-4 max-w-2xl">
+          <h1 className="text-4xl md:text-6xl font-bold text-white">
+            Bem-vindo(a) de volta!
+          </h1>
+          <p className="text-lg md:text-xl text-[#B3B3B3]">
+            Continue seus estudos de onde você parou.
+          </p>
+        </div>
+        {/* Background Decorative Element */}
+        <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-[#2D6ADF]/10 to-transparent pointer-events-none" />
       </div>
 
-      {!cursos || cursos.length === 0 ? (
-        <Card className="bg-muted/50 border-dashed">
-          <CardContent className="py-12 text-center space-y-4">
-            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50" />
-            <div className="space-y-1">
-              <p className="font-semibold text-lg">Nenhum curso encontrado</p>
-              <p className="text-sm text-muted-foreground">Você ainda não possui matrículas ativas.</p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cursos.map((c: any, i) => {
-            const curso = c.cursos;
-            if (!curso) return null;
-            const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
-            
-            return (
-              <Card key={i} className="group hover:shadow-xl transition-all duration-300 border-none bg-white overflow-hidden flex flex-col">
-                <div className="aspect-video bg-gradient-to-br from-primary/10 to-[#3B82F6]/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                  <PlayCircle className="h-12 w-12 text-primary/40 group-hover:text-primary transition-colors" />
-                </div>
-                <CardHeader className="flex-1">
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{curso.nome}</CardTitle>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
-                    {curso.descricao || "Sem descrição disponível."}
-                  </p>
-                </CardHeader>
-                <CardFooter className="pt-0 border-t mt-4 py-4 flex justify-between items-center">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {aulasCount} {aulasCount === 1 ? 'aula' : 'aulas'}
-                  </span>
-                  <Link to="/aluno/curso/$id" params={{ id: curso.id }}>
-                    <Button size="sm" className="bg-[#3B82F6] hover:bg-[#3B82F6]/90">Acessar curso</Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-white">Meus Cursos</h2>
+        
+        {!cursos || cursos.length === 0 ? (
+          <Card className="bg-[#1e1e1e] border-dashed border-white/10">
+            <CardContent className="py-12 text-center space-y-4">
+              <BookOpen className="h-12 w-12 mx-auto text-[#B3B3B3]" />
+              <div className="space-y-1">
+                <p className="font-semibold text-lg text-white">Nenhum curso encontrado</p>
+                <p className="text-sm text-[#B3B3B3]">Você ainda não possui matrículas ativas.</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {cursos.map((c: any, i: number) => {
+              const curso = c.cursos;
+              if (!curso) return null;
+              const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
+              
+              return (
+                <Link key={i} to="/aluno/curso/$id" params={{ id: curso.id }} className="group">
+                  <div className="relative bg-[#1e1e1e] rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-white/5 h-full flex flex-col">
+                    <div className="aspect-video bg-[#222] flex items-center justify-center relative">
+                      <div className="p-4 bg-[#2D6ADF]/20 rounded-full">
+                        <PlayCircle className="h-10 w-10 text-[#2D6ADF]" />
+                      </div>
+                      
+                      {/* Play Button Overlay on Hover */}
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-2 bg-[#2D6ADF] px-4 py-2 rounded-full text-white font-bold">
+                            <PlayCircle className="h-5 w-5" />
+                            Assistir
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-white line-clamp-1">{curso.nome}</h3>
+                        <p className="text-xs text-[#B3B3B3] mt-1">{aulasCount} {aulasCount === 1 ? 'aula' : 'aulas'}</p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="h-1 w-full bg-[#333] rounded-full overflow-hidden">
+                          <div className="h-full bg-[#2D6ADF] transition-all" style={{ width: '0%' }} />
+                        </div>
+                        <p className="text-[10px] text-[#B3B3B3] uppercase tracking-wider font-bold">0% Concluído</p>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
