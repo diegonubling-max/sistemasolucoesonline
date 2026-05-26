@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, PlayCircle, Loader2 } from "lucide-react";
+import { BookOpen, PlayCircle, Loader2, Lock, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { formatCurrency } from "@/lib/format";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useStudentTheme } from "./_student";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +19,7 @@ export const Route = createFileRoute("/_student/aluno/dashboard")({
 function StudentDashboard() {
   const { session } = useAuth();
   const { isDark } = useStudentTheme();
+  const [selectedVitrine, setSelectedVitrine] = useState<any>(null);
 
   const { data: cursos, isLoading } = useQuery({
     queryKey: ["student-courses", session?.user.email],
@@ -48,6 +52,36 @@ function StudentDashboard() {
           )
         `)
         .in("matricula_id", ids);
+
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!session?.user.email,
+  });
+
+  const { data: vitrine } = useQuery({
+    queryKey: ["student-vitrine", session?.user.email],
+    queryFn: async () => {
+      const { data: aluno } = await supabase
+        .from("alunos")
+        .select("id")
+        .eq("email", session?.user.email ?? "")
+        .single();
+      
+      if (!aluno) return [];
+
+      const { data, error } = await supabase
+        .from("cursos_vitrine")
+        .select(`
+          *,
+          cursos (
+            id,
+            nome,
+            thumbnail_url
+          )
+        `)
+        .eq("aluno_id", aluno.id)
+        .eq("ativo", true);
 
       if (error) throw error;
       return data ?? [];
@@ -155,6 +189,127 @@ function StudentDashboard() {
           </div>
         )}
       </div>
+
+      {vitrine && vitrine.length > 0 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-900">Cursos Disponíveis para Você 🔒</h2>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {vitrine.map((item: any) => {
+              const curso = item.cursos;
+              if (!curso) return null;
+              
+              return (
+                <div 
+                  key={item.id} 
+                  onClick={() => setSelectedVitrine(item)}
+                  className="group cursor-pointer"
+                >
+                  <div className="relative bg-white border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] hover:border-[#2D6ADF] border h-full flex flex-col shadow-sm">
+                    <div className="aspect-video bg-gray-100 flex items-center justify-center relative overflow-hidden">
+                      {curso.thumbnail_url ? (
+                        <img 
+                          src={curso.thumbnail_url} 
+                          alt={curso.nome}
+                          className="w-full h-full object-cover grayscale transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="p-4 bg-gray-200 rounded-full grayscale">
+                          <BookOpen className="h-10 w-10 text-gray-400" />
+                        </div>
+                      )}
+                      
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
+                          <Lock className="h-8 w-8 text-white" />
+                        </div>
+                      </div>
+
+                      <div className="absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-white font-bold text-sm">Clique para desbloquear</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-600 line-clamp-1">{curso.nome}</h3>
+                        <div className="mt-2 space-y-1">
+                          <p className="text-sm font-bold text-[#1E3A5F]">
+                            PIX: {formatCurrency(item.preco_pix)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            ou Cartão até {item.max_parcelas}x
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <Dialog open={!!selectedVitrine} onOpenChange={(open) => !open && setSelectedVitrine(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-[#1E3A5F]" />
+              Desbloquear Curso
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedVitrine && (
+            <div className="space-y-6 py-4">
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-bold text-gray-900">{selectedVitrine.cursos?.nome}</h3>
+                <p className="text-sm text-gray-500 italic">Checkout em breve...</p>
+              </div>
+
+              <div className="bg-gray-50 p-6 rounded-xl space-y-4 border border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <Smartphone className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">PIX</p>
+                    <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedVitrine.preco_pix)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                    <Smartphone className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Cartão</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      até {selectedVitrine.max_parcelas}x de {formatCurrency(selectedVitrine.preco_cartao / selectedVitrine.max_parcelas)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 text-center">
+                <p className="text-sm text-gray-600">Para adquirir entre em contato:</p>
+                <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2" asChild>
+                  <a href={`https://wa.me/5511999999999`} target="_blank" rel="noopener noreferrer">
+                    <Smartphone className="h-4 w-4" />
+                    WhatsApp da escola
+                  </a>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" className="w-full" onClick={() => setSelectedVitrine(null)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

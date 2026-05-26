@@ -157,6 +157,57 @@ export type Database = {
         }
         Relationships: []
       }
+      cursos_vitrine: {
+        Row: {
+          aluno_id: string
+          ativo: boolean | null
+          created_at: string
+          curso_id: string
+          id: string
+          max_parcelas: number | null
+          preco_cartao: number | null
+          preco_pix: number | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          ativo?: boolean | null
+          created_at?: string
+          curso_id: string
+          id?: string
+          max_parcelas?: number | null
+          preco_cartao?: number | null
+          preco_pix?: number | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          ativo?: boolean | null
+          created_at?: string
+          curso_id?: string
+          id?: string
+          max_parcelas?: number | null
+          preco_cartao?: number | null
+          preco_pix?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cursos_vitrine_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cursos_vitrine_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matricula_cursos: {
         Row: {
           curso_id: string
