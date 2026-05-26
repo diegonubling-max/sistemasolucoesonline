@@ -49,7 +49,7 @@ export function AppSidebar() {
 
   return (
     <aside className="w-64 bg-[#1E3A5F] text-white flex flex-col min-h-screen">
-      <div className="px-6 py-6 border-b border-sidebar-border">
+      <div className="px-6 py-6 border-b border-white/10">
         <h1 className="text-2xl font-bold tracking-tight">
           <span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span>
         </h1>
@@ -91,7 +91,7 @@ export function AppSidebar() {
           );
         })}
       </nav>
-      <div className="p-3 border-t border-sidebar-border space-y-1">
+      <div className="p-3 border-t border-white/10 space-y-1">
         <Button
           variant="ghost"
           className="w-full justify-start text-white hover:bg-white/10 hover:text-white"
