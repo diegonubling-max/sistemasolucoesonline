@@ -75,7 +75,7 @@ function Financeiro() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome), ctr)")
+        .select("*, matriculas(alunos(nome, ctr))")
         .eq("status", "pago")
         .gte("data_pagamento", recPeriod.start)
         .lte("data_pagamento", recPeriod.end)
@@ -90,7 +90,7 @@ function Financeiro() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome), ctr)")
+        .select("*, matriculas(alunos(nome, ctr))")
         .eq("status", "aberto")
         .gte("data_vencimento", aRecPeriod.start)
         .lte("data_vencimento", aRecPeriod.end)
@@ -109,7 +109,7 @@ function Financeiro() {
       
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome), ctr)")
+        .select("*, matriculas(alunos(nome, ctr))")
         .eq("numero", 1)
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
@@ -126,9 +126,6 @@ function Financeiro() {
       const start = format(new Date(Number(year), Number(month) - 1, 1), "yyyy-MM-dd");
       const end = format(endOfMonth(new Date(Number(year), Number(month) - 1, 1)), "yyyy-MM-dd");
 
-      // To find the last parcel, we need to compare with total parcels in the matricula.
-      // Since SQL grouping/max can be complex here, we'll fetch parcelas in range and filter if they are the max number for their matricula.
-      // Actually, a simpler way for this feature is to fetch all max parcel numbers.
       const { data: allParcelas, error: pError } = await supabase
         .from("parcelas")
         .select("matricula_id, numero")
@@ -145,7 +142,7 @@ function Financeiro() {
 
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome), ctr)")
+        .select("*, matriculas(alunos(nome, ctr))")
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
         .order("data_vencimento", { ascending: true });
@@ -185,7 +182,7 @@ function Financeiro() {
       headers.join(","),
       ...data.map(p => [
         `"${p.matriculas?.alunos?.nome || ""}"`,
-        `"${p.matriculas?.ctr || ""}"`,
+        `"${p.matriculas?.alunos?.ctr || ""}"`,
         `"${p.tipo || ""}"`,
         p.data_pagamento || p.data_vencimento,
         p.valor,
@@ -285,10 +282,10 @@ function Financeiro() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(recebimentos ?? []).map((p) => (
+              {(recebimentos ?? []).map((p: any) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                  <TableCell>{p.matriculas?.ctr}</TableCell>
+                  <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                   <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                   <TableCell>{formatDate(p.data_pagamento)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
@@ -302,7 +299,7 @@ function Financeiro() {
             </TableBody>
           </Table>
           <div className="mt-4 pt-4 border-t text-right font-bold">
-            Total recebido no período: {formatCurrency((recebimentos ?? []).reduce((acc, p) => acc + Number(p.valor), 0))}
+            Total recebido no período: {formatCurrency((recebimentos ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}
           </div>
         </CardContent>
       </Card>
@@ -351,10 +348,10 @@ function Financeiro() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(aReceber ?? []).map((p) => (
+              {(aReceber ?? []).map((p: any) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                  <TableCell>{p.matriculas?.ctr}</TableCell>
+                  <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                   <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                   <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
@@ -379,7 +376,7 @@ function Financeiro() {
             </TableBody>
           </Table>
           <div className="mt-4 pt-4 border-t text-right font-bold">
-            Total a receber no período: {formatCurrency((aReceber ?? []).reduce((acc, p) => acc + Number(p.valor), 0))}
+            Total a receber no período: {formatCurrency((aReceber ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}
           </div>
         </CardContent>
       </Card>
@@ -412,7 +409,7 @@ function Financeiro() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(primeiras ?? []).map((p) => (
+                {(primeiras ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium max-w-[120px] truncate">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
@@ -424,7 +421,7 @@ function Financeiro() {
             </Table>
             <div className="mt-4 flex justify-between items-center text-sm font-semibold">
               <span className="text-muted-foreground">{primeiras?.length || 0} primeiras parcelas encontradas</span>
-              <span>Total: {formatCurrency((primeiras ?? []).reduce((acc, p) => acc + Number(p.valor), 0))}</span>
+              <span>Total: {formatCurrency((primeiras ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</span>
             </div>
           </CardContent>
         </Card>
@@ -456,7 +453,7 @@ function Financeiro() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(ultimas ?? []).map((p) => (
+                {(ultimas ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium max-w-[120px] truncate">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
@@ -468,7 +465,7 @@ function Financeiro() {
             </Table>
             <div className="mt-4 flex justify-between items-center text-sm font-semibold">
               <span className="text-muted-foreground">{ultimas?.length || 0} últimas parcelas encontradas</span>
-              <span>Total: {formatCurrency((ultimas ?? []).reduce((acc, p) => acc + Number(p.valor), 0))}</span>
+              <span>Total: {formatCurrency((ultimas ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</span>
             </div>
           </CardContent>
         </Card>
