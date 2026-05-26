@@ -30,7 +30,7 @@ function AlunosList() {
     queryFn: async () => {
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, ativo, created_at, vendedora", { count: "exact" })
+        .select("id, nome, email, telefone, ativo, created_at, vendedora, matriculas(id)", { count: "exact" })
         .order("created_at", { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       if (search) q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
@@ -89,7 +89,7 @@ function AlunosList() {
                 <TableHead>E-mail</TableHead>
                 <TableHead>Telefone</TableHead>
                 <TableHead>Vendedora</TableHead>
-                <TableHead>Situação</TableHead>
+                <TableHead>Matrícula</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -109,16 +109,16 @@ function AlunosList() {
                   <TableCell>{a.telefone}</TableCell>
                   <TableCell>{a.vendedora}</TableCell>
                   <TableCell>
-                    {a.ativo ? (
-                      <Badge className="bg-accent text-accent-foreground hover:bg-accent">Ativo</Badge>
+                    {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
+                      <Badge className="bg-green-500 text-white hover:bg-green-600">Matriculado</Badge>
                     ) : (
-                      <Badge variant="secondary">Inativo</Badge>
+                      <Badge className="bg-yellow-500 text-white hover:bg-yellow-600">Pendente</Badge>
                     )}
                   </TableCell>
                   <TableCell>{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button asChild size="icon" variant="ghost" title="Ver detalhes">
+                      <Button asChild size="icon" variant="ghost" title={Array.isArray(a.matriculas) && a.matriculas.length > 0 ? "Ver matrícula" : "Ver detalhes"}>
                         <Link to="/alunos/$id" params={{ id: a.id }}>
                           <Eye className="h-4 w-4" />
                         </Link>

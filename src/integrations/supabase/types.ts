@@ -178,6 +178,42 @@ export type Database = {
           },
         ]
       }
+      matricula_pacotes: {
+        Row: {
+          created_at: string
+          id: string
+          matricula_id: string
+          pacote_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          matricula_id: string
+          pacote_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          matricula_id?: string
+          pacote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matricula_pacotes_matricula_id_fkey"
+            columns: ["matricula_id"]
+            isOneToOne: false
+            referencedRelation: "matriculas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matricula_pacotes_pacote_id_fkey"
+            columns: ["pacote_id"]
+            isOneToOne: false
+            referencedRelation: "pacotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matriculas: {
         Row: {
           aluno_id: string
@@ -206,6 +242,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pacotes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          numero_parcelas: number
+          tipo: Database["public"]["Enums"]["tipo_pacote"]
+          valor_matricula: number
+          valor_parcela: number
+          valor_total: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          numero_parcelas?: number
+          tipo: Database["public"]["Enums"]["tipo_pacote"]
+          valor_matricula?: number
+          valor_parcela?: number
+          valor_total?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          numero_parcelas?: number
+          tipo?: Database["public"]["Enums"]["tipo_pacote"]
+          valor_matricula?: number
+          valor_parcela?: number
+          valor_total?: number
+        }
+        Relationships: []
       }
       perfis_alunos: {
         Row: {
@@ -280,6 +355,7 @@ export type Database = {
       app_role: "admin" | "aluno"
       origem_aluno: "Google" | "Meta" | "Indicação" | "Outros"
       sexo_aluno: "Masculino" | "Feminino"
+      tipo_pacote: "boleto" | "cartao" | "pix"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -410,6 +486,7 @@ export const Constants = {
       app_role: ["admin", "aluno"],
       origem_aluno: ["Google", "Meta", "Indicação", "Outros"],
       sexo_aluno: ["Masculino", "Feminino"],
+      tipo_pacote: ["boleto", "cartao", "pix"],
     },
   },
 } as const

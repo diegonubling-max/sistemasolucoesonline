@@ -14,17 +14,15 @@ import { Route as StudentRouteImport } from './routes/_student'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
-import { Route as AdminMatriculasIndexRouteImport } from './routes/_admin.matriculas.index'
+import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
 import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
 import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.aluno.dashboard'
-import { Route as AdminMatriculasNovoRouteImport } from './routes/_admin.matriculas.novo'
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
 import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
-import { Route as AdminMatriculasIdEditarRouteImport } from './routes/_admin.matriculas.$id.editar'
 import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
 import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
 import { Route as AdminAlunosIdEditarRouteImport } from './routes/_admin.alunos.$id.editar'
@@ -52,9 +50,9 @@ const AlunoLoginRoute = AlunoLoginRouteImport.update({
   path: '/aluno/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminMatriculasIndexRoute = AdminMatriculasIndexRouteImport.update({
-  id: '/matriculas/',
-  path: '/matriculas/',
+const AdminPacotesRoute = AdminPacotesRouteImport.update({
+  id: '/pacotes',
+  path: '/pacotes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCursosIndexRoute = AdminCursosIndexRouteImport.update({
@@ -77,11 +75,6 @@ const StudentAlunoDashboardRoute = StudentAlunoDashboardRouteImport.update({
   path: '/aluno/dashboard',
   getParentRoute: () => StudentRoute,
 } as any)
-const AdminMatriculasNovoRoute = AdminMatriculasNovoRouteImport.update({
-  id: '/matriculas/novo',
-  path: '/matriculas/novo',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminCursosNovoRoute = AdminCursosNovoRouteImport.update({
   id: '/cursos/novo',
   path: '/cursos/novo',
@@ -102,11 +95,6 @@ const StudentAlunoCursoIdRoute = StudentAlunoCursoIdRouteImport.update({
   path: '/aluno/curso/$id',
   getParentRoute: () => StudentRoute,
 } as any)
-const AdminMatriculasIdEditarRoute = AdminMatriculasIdEditarRouteImport.update({
-  id: '/matriculas/$id/editar',
-  path: '/matriculas/$id/editar',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminCursosIdEditarRoute = AdminCursosIdEditarRouteImport.update({
   id: '/cursos/$id/editar',
   path: '/cursos/$id/editar',
@@ -126,38 +114,34 @@ const AdminAlunosIdEditarRoute = AdminAlunosIdEditarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/pacotes': typeof AdminPacotesRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
-  '/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
   '/alunos/': typeof AdminAlunosIndexRoute
   '/cursos/': typeof AdminCursosIndexRoute
-  '/matriculas/': typeof AdminMatriculasIndexRoute
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
-  '/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/pacotes': typeof AdminPacotesRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
-  '/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
   '/alunos': typeof AdminAlunosIndexRoute
   '/cursos': typeof AdminCursosIndexRoute
-  '/matriculas': typeof AdminMatriculasIndexRoute
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
-  '/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
@@ -166,20 +150,18 @@ export interface FileRoutesById {
   '/_admin': typeof AdminRouteWithChildren
   '/_student': typeof StudentRouteWithChildren
   '/login': typeof LoginRoute
+  '/_admin/pacotes': typeof AdminPacotesRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
-  '/_admin/matriculas/novo': typeof AdminMatriculasNovoRoute
   '/_student/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/_student/aluno/perfil': typeof StudentAlunoPerfilRoute
   '/_admin/alunos/': typeof AdminAlunosIndexRoute
   '/_admin/cursos/': typeof AdminCursosIndexRoute
-  '/_admin/matriculas/': typeof AdminMatriculasIndexRoute
   '/_admin/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/_admin/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/_admin/cursos/$id/editar': typeof AdminCursosIdEditarRoute
-  '/_admin/matriculas/$id/editar': typeof AdminMatriculasIdEditarRoute
   '/_student/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
@@ -188,38 +170,34 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/pacotes'
     | '/aluno/login'
     | '/alunos/novo'
     | '/cursos/novo'
-    | '/matriculas/novo'
     | '/aluno/dashboard'
     | '/aluno/perfil'
     | '/alunos/'
     | '/cursos/'
-    | '/matriculas/'
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
-    | '/matriculas/$id/editar'
     | '/aluno/curso/$id'
     | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/pacotes'
     | '/aluno/login'
     | '/alunos/novo'
     | '/cursos/novo'
-    | '/matriculas/novo'
     | '/aluno/dashboard'
     | '/aluno/perfil'
     | '/alunos'
     | '/cursos'
-    | '/matriculas'
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
-    | '/matriculas/$id/editar'
     | '/aluno/curso/$id'
     | '/alunos/$id'
   id:
@@ -227,20 +205,18 @@ export interface FileRouteTypes {
     | '/_admin'
     | '/_student'
     | '/login'
+    | '/_admin/pacotes'
     | '/aluno/login'
     | '/_admin/'
     | '/_admin/alunos/novo'
     | '/_admin/cursos/novo'
-    | '/_admin/matriculas/novo'
     | '/_student/aluno/dashboard'
     | '/_student/aluno/perfil'
     | '/_admin/alunos/'
     | '/_admin/cursos/'
-    | '/_admin/matriculas/'
     | '/_admin/alunos/$id/editar'
     | '/_admin/cursos/$id/aulas'
     | '/_admin/cursos/$id/editar'
-    | '/_admin/matriculas/$id/editar'
     | '/_student/aluno/curso/$id'
     | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
@@ -289,11 +265,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlunoLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_admin/matriculas/': {
-      id: '/_admin/matriculas/'
-      path: '/matriculas'
-      fullPath: '/matriculas/'
-      preLoaderRoute: typeof AdminMatriculasIndexRouteImport
+    '/_admin/pacotes': {
+      id: '/_admin/pacotes'
+      path: '/pacotes'
+      fullPath: '/pacotes'
+      preLoaderRoute: typeof AdminPacotesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/cursos/': {
@@ -324,13 +300,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentAlunoDashboardRouteImport
       parentRoute: typeof StudentRoute
     }
-    '/_admin/matriculas/novo': {
-      id: '/_admin/matriculas/novo'
-      path: '/matriculas/novo'
-      fullPath: '/matriculas/novo'
-      preLoaderRoute: typeof AdminMatriculasNovoRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/_admin/cursos/novo': {
       id: '/_admin/cursos/novo'
       path: '/cursos/novo'
@@ -359,13 +328,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentAlunoCursoIdRouteImport
       parentRoute: typeof StudentRoute
     }
-    '/_admin/matriculas/$id/editar': {
-      id: '/_admin/matriculas/$id/editar'
-      path: '/matriculas/$id/editar'
-      fullPath: '/matriculas/$id/editar'
-      preLoaderRoute: typeof AdminMatriculasIdEditarRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/_admin/cursos/$id/editar': {
       id: '/_admin/cursos/$id/editar'
       path: '/cursos/$id/editar'
@@ -391,32 +353,28 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminPacotesRoute: typeof AdminPacotesRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
   AdminCursosNovoRoute: typeof AdminCursosNovoRoute
-  AdminMatriculasNovoRoute: typeof AdminMatriculasNovoRoute
   AdminAlunosIndexRoute: typeof AdminAlunosIndexRoute
   AdminCursosIndexRoute: typeof AdminCursosIndexRoute
-  AdminMatriculasIndexRoute: typeof AdminMatriculasIndexRoute
   AdminAlunosIdEditarRoute: typeof AdminAlunosIdEditarRoute
   AdminCursosIdAulasRoute: typeof AdminCursosIdAulasRoute
   AdminCursosIdEditarRoute: typeof AdminCursosIdEditarRoute
-  AdminMatriculasIdEditarRoute: typeof AdminMatriculasIdEditarRoute
   AdminAlunosIdIndexRoute: typeof AdminAlunosIdIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminPacotesRoute: AdminPacotesRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminAlunosNovoRoute: AdminAlunosNovoRoute,
   AdminCursosNovoRoute: AdminCursosNovoRoute,
-  AdminMatriculasNovoRoute: AdminMatriculasNovoRoute,
   AdminAlunosIndexRoute: AdminAlunosIndexRoute,
   AdminCursosIndexRoute: AdminCursosIndexRoute,
-  AdminMatriculasIndexRoute: AdminMatriculasIndexRoute,
   AdminAlunosIdEditarRoute: AdminAlunosIdEditarRoute,
   AdminCursosIdAulasRoute: AdminCursosIdAulasRoute,
   AdminCursosIdEditarRoute: AdminCursosIdEditarRoute,
-  AdminMatriculasIdEditarRoute: AdminMatriculasIdEditarRoute,
   AdminAlunosIdIndexRoute: AdminAlunosIdIndexRoute,
 }
 
