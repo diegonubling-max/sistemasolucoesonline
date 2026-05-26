@@ -151,7 +151,8 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
           numero: p.tipo === 'taxa_matricula' ? 0 : p.numero,
           valor: p.valor,
           data_vencimento: format(p.vencimento, 'yyyy-MM-dd'),
-          status: p.status
+          status: p.status,
+          descricao: p.descricao || (p.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : 'Parcela')
         });
       });
 
@@ -187,7 +188,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     parcelasGeradas.forEach(p => {
       items.push({
         ...p,
-        tipo: 'parcela',
+        tipo: p.tipo || 'parcela',
         status: 'aberto'
       });
     });
@@ -476,12 +477,14 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                         const hoje = new Date();
                         
                         if (pacote.tipo === 'cartao') {
-                          // Se for cartão, gera apenas uma parcela com o valor total
+                          // Se for cartão, gera apenas uma linha de pagamento do cartão com o valor total (sem a taxa)
                           novasParcelas.push({
                             id: Math.random().toString(36).substr(2, 9),
+                            tipo: 'parcela',
                             numero: 1,
-                            vencimento: hoje, // Data combinada, mas inicia com hoje
-                            valor: pacote.valor_total
+                            descricao: "Pagamento Cartão",
+                            vencimento: hoje,
+                            valor: pacote.valor_total - pacote.valor_matricula
                           });
                         } else {
                           for (let i = 1; i <= pacote.numero_parcelas; i++) {
@@ -531,6 +534,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                     <thead>
                       <tr className="border-b">
                         <th className="text-left py-2 font-bold">Nº</th>
+                        <th className="text-left py-2 font-bold">Descrição</th>
                         <th className="text-left py-2 font-bold">Vencimento</th>
                         <th className="text-left py-2 font-bold">Valor</th>
                         <th className="text-left py-2 font-bold">Status</th>
@@ -544,6 +548,9 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             {p.tipo === 'taxa_matricula' ? (
                               <Badge variant="outline" className="font-bold border-primary text-primary">Taxa</Badge>
                             ) : p.numero}
+                          </td>
+                          <td className="py-3">
+                            {p.descricao || (p.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${p.numero}`)}
                           </td>
                           <td className="py-3">
                             <Popover>
