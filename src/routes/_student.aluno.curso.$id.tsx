@@ -18,6 +18,7 @@ function StudentCourse() {
   const { id } = Route.useParams();
   const { session } = useAuth();
   const navigate = useNavigate();
+  const { isDark } = useStudentTheme();
   const [activeAulaId, setActiveAulaId] = useState<string | null>(null);
 
   const { data: curso, isLoading: loadingCurso, error: cursoError } = useQuery({
