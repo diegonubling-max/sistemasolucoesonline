@@ -10,7 +10,8 @@ const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
   { title: "Alunos", url: "/alunos", icon: Users, enabled: true },
   { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true },
-  { title: "Pacotes", url: "/pacotes", icon: Wallet, enabled: true },
+  { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true },
 ];
 
 export function AppSidebar() {
