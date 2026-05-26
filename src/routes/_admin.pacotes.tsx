@@ -67,22 +67,40 @@ function PacotesList() {
   });
 
   const upsertMut = useMutation({
-    mutationFn: async (values: any) => {
+    mutationFn: async (formData: any) => {
+      const dataToSave = {
+        nome: formData.nome,
+        tipo: formData.tipo,
+        valor_matricula: formData.valor_matricula,
+        numero_parcelas: formData.numero_parcelas,
+        valor_parcela: formData.valor_parcela,
+        valor_total: formData.valor_total,
+        descricao: formData.descricao,
+        ativo: formData.ativo ?? true
+      };
+
       if (editingPacote) {
-        const { error } = await supabase.from("pacotes").update(values).eq("id", editingPacote.id);
+        const { error } = await supabase
+          .from('pacotes')
+          .update(dataToSave)
+          .eq('id', editingPacote.id);
+        
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("pacotes").insert(values);
+        const { error } = await supabase
+          .from('pacotes')
+          .insert(dataToSave);
+        
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      toast.success(editingPacote ? "Pacote atualizado" : "Pacote criado");
+      toast.success(editingPacote ? "Pacote atualizado com sucesso" : "Pacote criado com sucesso");
       qc.invalidateQueries({ queryKey: ["pacotes"] });
       setIsModalOpen(false);
       setEditingPacote(null);
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(`Erro ao ${editingPacote ? 'atualizar' : 'criar'} pacote: ${e.message}`),
   });
 
   const toggleMut = useMutation({
@@ -321,6 +339,17 @@ function PacoteFormModal({ open, onOpenChange, pacote, onSubmit, submitting }: a
           <div className="space-y-1.5">
             <Label>Descrição (opcional)</Label>
             <Textarea {...register("descricao")} placeholder="Detalhes do pacote..." />
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="ativo"
+              {...register("ativo")}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <Label htmlFor="ativo" className="text-sm font-medium cursor-pointer">
+              Pacote Ativo
+            </Label>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
