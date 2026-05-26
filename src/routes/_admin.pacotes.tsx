@@ -340,6 +340,17 @@ function PacoteFormModal({ open, onOpenChange, pacote, onSubmit, submitting }: a
             <Label>Descrição (opcional)</Label>
             <Textarea {...register("descricao")} placeholder="Detalhes do pacote..." />
           </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="ativo"
+              {...register("ativo")}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <Label htmlFor="ativo" className="text-sm font-medium cursor-pointer">
+              Pacote Ativo
+            </Label>
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button type="submit" disabled={submitting}>Salvar Pacote</Button>
