@@ -463,7 +463,7 @@ function Financeiro() {
                     <TableCell>{getStatusBadge(p)}</TableCell>
                     <TableCell className="text-right">
                       {p.status === 'aberto' && (
-                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}>
+                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
                           <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
                         </Button>
                       )}
