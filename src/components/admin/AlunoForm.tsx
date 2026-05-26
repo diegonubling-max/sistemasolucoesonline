@@ -18,16 +18,16 @@ const SEXOS = ["Masculino", "Feminino"] as const;
 
 const schema = z
   .object({
-    nome: z.string().min(2, "Informe o nome"),
+    nome: z.string().min(2, "O nome é obrigatório"),
     sexo: z.enum(SEXOS),
-    telefone: z.string().min(14, "Telefone inválido"),
-    email: z.string().email("E-mail inválido"),
-    data_nascimento: z.string().min(1, "Informe a data"),
-    cpf: z.string().refine((v) => isValidCPF(v), "CPF inválido"),
+    telefone: z.string().min(14, "Telefone obrigatório"),
+    email: z.string().email("E-mail inválido").optional().or(z.literal("")),
+    data_nascimento: z.string().min(1, "Data de nascimento obrigatória"),
+    cpf: z.string().refine((v) => isValidCPF(v), "CPF inválido ou obrigatório"),
     ativo: z.boolean(),
     origem: z.enum(ORIGENS),
     origem_detalhe: z.string().optional().nullable(),
-    vendedora: z.string().min(1, "Selecione a vendedora"),
+    vendedora: z.string().optional().or(z.literal("")),
     observacao: z.string().optional().nullable(),
     responsavel_nome: z.string().optional().nullable(),
     responsavel_telefone: z.string().optional().nullable(),
@@ -103,10 +103,10 @@ export function AlunoForm({
           <CardTitle>Dados pessoais</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Nome completo" error={errors.nome?.message}>
+          <Field label="Nome completo *" error={errors.nome?.message}>
             <Input {...form.register("nome")} />
           </Field>
-          <Field label="Telefone" error={errors.telefone?.message}>
+          <Field label="Telefone *" error={errors.telefone?.message}>
             <Input
               value={form.watch("telefone")}
               onChange={(e) => form.setValue("telefone", maskPhone(e.target.value), { shouldValidate: true })}
@@ -116,14 +116,14 @@ export function AlunoForm({
           <Field label="E-mail" error={errors.email?.message}>
             <Input type="email" {...form.register("email")} />
           </Field>
-          <Field label="CPF" error={errors.cpf?.message}>
+          <Field label="CPF *" error={errors.cpf?.message}>
             <Input
               value={form.watch("cpf")}
               onChange={(e) => form.setValue("cpf", maskCPF(e.target.value), { shouldValidate: true })}
               placeholder="000.000.000-00"
             />
           </Field>
-          <Field label="Data de nascimento" error={errors.data_nascimento?.message}>
+          <Field label="Data de nascimento *" error={errors.data_nascimento?.message}>
             <Input type="date" {...form.register("data_nascimento")} />
             {dob && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -131,7 +131,7 @@ export function AlunoForm({
               </p>
             )}
           </Field>
-          <Field label="Como nos conheceu?" error={errors.origem?.message}>
+          <Field label="Como nos conheceu? *" error={errors.origem?.message}>
             <Select
               value={form.watch("origem")}
               onValueChange={(v: any) => form.setValue("origem", v, { shouldValidate: true })}

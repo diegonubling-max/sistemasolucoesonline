@@ -272,25 +272,27 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 return;
               }
 
-              // 2. Create Auth user via Edge Function
-              const { error: authError } = await supabase.functions.invoke("manage-student-access", {
-                body: {
-                  email: studentData.email,
-                  nome: studentData.nome,
-                  password: pass,
-                  action: "create"
-                }
-              });
+              // 2. Create Auth user via Edge Function if email exists
+              if (studentData.email) {
+                const { error: authError } = await supabase.functions.invoke("manage-student-access", {
+                  body: {
+                    email: studentData.email,
+                    nome: studentData.nome,
+                    password: pass,
+                    action: "create"
+                  }
+                });
 
-              if (authError) {
-                console.error("Erro ao criar acesso:", authError);
-                toast.error(`Aluno salvo, mas houve erro ao criar acesso: ${authError.message}`);
-                // Proceed anyway, admin can reset later
+                if (authError) {
+                  console.error("Erro ao criar acesso:", authError);
+                  toast.error(`Aluno salvo, mas houve erro ao criar acesso: ${authError.message}`);
+                  // Proceed anyway, admin can reset later
+                }
               }
               
               setAlunoId(studentData.id);
               setAccessData({
-                email: studentData.email,
+                email: studentData.email ?? "",
                 pass: pass,
                 ctr: studentData.ctr,
                 nome: studentData.nome

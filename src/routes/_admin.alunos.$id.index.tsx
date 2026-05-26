@@ -132,7 +132,7 @@ function AlunoDetalhes() {
     <div>
       <PageHeader
         title={`${aluno.nome} | CTR #${aluno.ctr}`}
-        description={aluno.email}
+        description={aluno.email ?? "Sem e-mail"}
         actions={
           <>
             <Button asChild variant="outline">

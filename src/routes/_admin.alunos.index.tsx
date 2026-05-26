@@ -186,7 +186,7 @@ function AlunosList() {
                         variant="ghost"
                         title="Excluir"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setStudentToDelete({ id: a.id, nome: a.nome, email: a.email })}
+                        onClick={() => setStudentToDelete({ id: a.id, nome: a.nome, email: a.email ?? "" })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
