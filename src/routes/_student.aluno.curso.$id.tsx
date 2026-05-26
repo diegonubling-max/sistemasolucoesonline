@@ -87,17 +87,17 @@ function StudentCourse() {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="space-y-4">
-            <Skeleton className={`h-4 w-32 ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
-            <Skeleton className={`h-10 w-64 ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
-            <Skeleton className={`h-4 w-48 ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+            <Skeleton className="h-4 w-32 bg-gray-200" />
+            <Skeleton className="h-10 w-64 bg-gray-200" />
+            <Skeleton className="h-4 w-48 bg-gray-200" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
             <div className="lg:col-span-7 space-y-6">
-                <Skeleton className={`aspect-video w-full rounded-xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
-                <Skeleton className={`h-48 w-full rounded-xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+                <Skeleton className="aspect-video w-full rounded-xl bg-gray-200" />
+                <Skeleton className="h-48 w-full rounded-xl bg-gray-200" />
             </div>
             <div className="lg:col-span-3">
-                <Skeleton className={`h-[500px] w-full rounded-xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+                <Skeleton className="h-[500px] w-full rounded-xl bg-gray-200" />
             </div>
         </div>
       </div>
@@ -164,13 +164,13 @@ function StudentCourse() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-2">
-          <Link to="/aluno/dashboard" className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-gray-500 hover:text-gray-900"} flex items-center gap-1 text-sm font-medium transition-colors`}>
+          <Link to="/aluno/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-1 text-sm font-medium transition-colors">
             <ChevronLeft className="h-4 w-4" /> Voltar para o início
           </Link>
-          <h1 className={`text-3xl md:text-4xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-tight`}>{curso?.nome}</h1>
-          <div className={`flex items-center gap-4 text-sm ${isDark ? "text-[#B3B3B3]" : "text-gray-500"}`}>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{curso?.nome}</h1>
+          <div className="flex items-center gap-4 text-sm text-gray-500">
              <span>{curso?.aulas?.length} aulas</span>
-             <span className={`h-1 w-1 rounded-full ${isDark ? "bg-[#333]" : "bg-gray-300"}`} />
+             <span className="h-1 w-1 rounded-full bg-gray-300" />
              <span className="text-[#2D6ADF] font-bold">0% concluído</span>
           </div>
         </div>
@@ -179,23 +179,23 @@ function StudentCourse() {
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
         {/* Main Content (Video + Info) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/5 group">
+          <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-black/5 group">
             {activeAula && renderVideoPlayer(activeAula.url_video)}
             {!activeAula && (
-              <div className="w-full h-full flex items-center justify-center text-[#B3B3B3]">
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
                 Selecione uma aula para começar
               </div>
             )}
           </div>
 
-          <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-md"} p-6 rounded-xl border space-y-6 transition-colors`}>
-            <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b ${isDark ? "border-white/5" : "border-black/5"} pb-6`}>
-                <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{activeAula?.titulo}</h2>
+          <div className="bg-white border-gray-200 shadow-md p-6 rounded-xl border space-y-6 transition-colors">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+                <h2 className="text-2xl font-bold text-gray-900">{activeAula?.titulo}</h2>
                 <div className="flex items-center gap-3">
                     <Button 
                         variant="outline" 
                         size="sm" 
-                        className={`bg-transparent ${isDark ? "border-white/10 text-white hover:bg-white/5" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+                        className="bg-transparent border-gray-200 text-gray-700 hover:bg-gray-50"
                         disabled
                     >
                         ⬅ Anterior
@@ -212,8 +212,8 @@ function StudentCourse() {
             </div>
             
             <div className="space-y-3">
-                <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Sobre esta aula</h3>
-                <div className={`${isDark ? "text-[#B3B3B3]" : "text-gray-600"} leading-relaxed`}>
+                <h3 className="text-lg font-semibold text-gray-900">Sobre esta aula</h3>
+                <div className="text-gray-600 leading-relaxed">
                 {activeAula?.descricao || "Sem descrição para esta aula."}
                 </div>
             </div>
@@ -222,10 +222,10 @@ function StudentCourse() {
 
         {/* Sidebar (Lesson List) */}
         <div className="lg:col-span-3">
-          <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-lg"} rounded-xl border overflow-hidden flex flex-col h-full max-h-[calc(100vh-12rem)] transition-colors`}>
-            <div className={`p-4 border-b ${isDark ? "border-white/5" : "border-black/5"} flex items-center justify-between`}>
-                <span className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Lista de aulas</span>
-                <span className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-500"}`}>{curso?.aulas?.length} vídeos</span>
+          <div className="bg-white border-gray-200 shadow-lg rounded-xl border overflow-hidden flex flex-col h-full max-h-[calc(100vh-12rem)] transition-colors">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                <span className="font-bold text-gray-900">Lista de aulas</span>
+                <span className="text-xs text-gray-500">{curso?.aulas?.length} vídeos</span>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-2 space-y-1">
@@ -238,14 +238,14 @@ function StudentCourse() {
                       className={`w-full text-left p-4 rounded-lg flex items-center gap-4 transition-all duration-200 group ${
                         isActive 
                         ? "bg-[#2D6ADF]/10 border border-[#2D6ADF]/20" 
-                        : isDark ? "hover:bg-white/5 border border-transparent" : "hover:bg-gray-50 border border-transparent"
+                        : "hover:bg-gray-50 border border-transparent"
                       }`}
                     >
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isActive ? 'bg-[#2D6ADF] text-white' : isDark ? 'bg-[#333] text-[#B3B3B3]' : 'bg-gray-100 text-gray-400'}`}>
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isActive ? 'bg-[#2D6ADF] text-white' : 'bg-gray-100 text-gray-500'}`}>
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <p className={`text-sm font-medium leading-tight transition-colors ${isActive ? (isDark ? 'text-white font-bold' : 'text-[#2D6ADF] font-bold') : isDark ? 'text-[#B3B3B3] group-hover:text-white' : 'text-gray-600 group-hover:text-gray-900'}`}>
+                        <p className={`text-sm font-medium leading-tight transition-colors ${isActive ? 'text-[#2D6ADF] font-bold' : 'text-gray-600 group-hover:text-gray-900'}`}>
                           {aula.titulo}
                         </p>
                       </div>

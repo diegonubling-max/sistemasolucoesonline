@@ -104,15 +104,11 @@ function StudentLayout() {
     );
   }
 
-  const isDark = tema === "escuro";
+  const isDark = false; // Tema sempre claro conforme solicitado
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
-      isDark ? "bg-[#141414] text-white" : "bg-[#F5F5F5] text-[#111827] border-[#E5E7EB]"
-    }`}>
-      <header className={`${
-        isDark ? "bg-[#1e1e1e] border-white/10" : "bg-[#1E3A5F] border-black/5"
-      } border-b sticky top-0 z-20 transition-colors duration-300`}>
+    <div className="min-h-screen flex flex-col transition-colors duration-300 bg-gray-50 text-gray-900">
+      <header className="bg-[#1E3A5F] border-b border-black/5 sticky top-0 z-20 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link to="/aluno/dashboard" className="flex items-center gap-2">
@@ -125,20 +121,20 @@ function StudentLayout() {
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 to="/aluno/dashboard"
-                className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-white/80 hover:text-white"} font-medium transition-colors flex items-center gap-2`}
+                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
                 activeProps={{ className: "text-white font-bold" }}
               >
                 Início
               </Link>
               <Link
                 to="/aluno/dashboard"
-                className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-white/80 hover:text-white"} font-medium transition-colors flex items-center gap-2`}
+                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
               >
                 Meus Cursos
               </Link>
               <Link
                 to="/aluno/financeiro"
-                className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-white/80 hover:text-white"} font-medium transition-colors flex items-center gap-2`}
+                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
                 activeProps={{ className: "text-white font-bold" }}
               >
                 Financeiro
@@ -154,17 +150,13 @@ function StudentLayout() {
                       {userName[0]?.toUpperCase()}
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className={`${isDark ? "bg-[#1e1e1e] text-white border-white/10" : "bg-white text-gray-900"} w-48 shadow-xl`}>
+                <DropdownMenuContent align="end" className="bg-white text-gray-900 w-48 shadow-xl border-gray-200">
                   <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-                  <DropdownMenuSeparator className={isDark ? "bg-white/10" : ""} />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate({ to: "/aluno/perfil" })} className="cursor-pointer">
                     <UserIcon className="h-4 w-4 mr-2" /> Meu Perfil
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={toggleTema} className="cursor-pointer">
-                    {isDark ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
-                    {isDark ? "Tema Claro" : "Tema Escuro"}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className={isDark ? "bg-white/10" : ""} />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 focus:text-red-500">
                     <LogOut className="h-4 w-4 mr-2" /> Sair
                   </DropdownMenuItem>
@@ -185,7 +177,7 @@ function StudentLayout() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className={`md:hidden ${isDark ? "bg-[#1e1e1e] border-white/10" : "bg-[#1E3A5F] border-white/10"} border-t py-4 px-4 space-y-4 animate-in slide-in-from-top duration-200`}>
+          <div className="md:hidden bg-[#1E3A5F] border-t border-white/10 py-4 px-4 space-y-4 animate-in slide-in-from-top duration-200">
             <div className="flex flex-col gap-2">
               <Link
                 to="/aluno/dashboard"

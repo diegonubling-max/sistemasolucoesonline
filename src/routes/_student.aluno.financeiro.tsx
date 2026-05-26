@@ -170,65 +170,65 @@ function StudentFinance() {
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
       <div className="space-y-2">
-        <h1 className={`text-3xl md:text-4xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-tight`}>Financeiro</h1>
-        <p className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>Acompanhe suas mensalidades e histórico de pagamentos.</p>
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Financeiro</h1>
+        <p className="text-gray-500">Acompanhe suas mensalidades e histórico de pagamentos.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-sm"} border p-6 rounded-xl relative overflow-hidden group transition-all`}>
+        <div className="bg-white border-gray-200 shadow-sm border p-6 rounded-xl relative overflow-hidden group transition-all">
           <div className="flex items-center justify-between relative z-10">
-            <span className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-medium`}>Total Pago</span>
+            <span className="text-gray-500 font-medium">Total Pago</span>
             <div className="p-2 bg-green-500/10 rounded-lg">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             </div>
           </div>
-          <div className={`mt-4 text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"} relative z-10`}>{formatCurrency(totalPago)}</div>
+          <div className="mt-4 text-3xl font-bold text-gray-900 relative z-10">{formatCurrency(totalPago)}</div>
           <div className="absolute bottom-0 left-0 h-1 w-full bg-green-500 transform translate-y-1 group-hover:translate-y-0 transition-transform" />
         </div>
 
-        <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-sm"} border p-6 rounded-xl relative overflow-hidden group transition-all`}>
+        <div className="bg-white border-gray-200 shadow-sm border p-6 rounded-xl relative overflow-hidden group transition-all">
           <div className="flex items-center justify-between relative z-10">
-            <span className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-medium`}>Em Aberto</span>
+            <span className="text-gray-500 font-medium">Em Aberto</span>
             <div className="p-2 bg-yellow-500/10 rounded-lg">
               <Clock className="h-5 w-5 text-yellow-500" />
             </div>
           </div>
-          <div className={`mt-4 text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"} relative z-10`}>{formatCurrency(totalEmAberto)}</div>
+          <div className="mt-4 text-3xl font-bold text-gray-900 relative z-10">{formatCurrency(totalEmAberto)}</div>
           <div className="absolute bottom-0 left-0 h-1 w-full bg-yellow-500 transform translate-y-1 group-hover:translate-y-0 transition-transform" />
         </div>
 
-        <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-sm"} border p-6 rounded-xl relative overflow-hidden group transition-all`}>
+        <div className="bg-white border-gray-200 shadow-sm border p-6 rounded-xl relative overflow-hidden group transition-all">
           <div className="flex items-center justify-between relative z-10">
-            <span className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-medium`}>Total do Contrato</span>
+            <span className="text-gray-500 font-medium">Total do Contrato</span>
             <div className="p-2 bg-[#2D6ADF]/10 rounded-lg">
               <Wallet className="h-5 w-5 text-[#2D6ADF]" />
             </div>
           </div>
-          <div className={`mt-4 text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"} relative z-10`}>{formatCurrency(totalContrato)}</div>
+          <div className="mt-4 text-3xl font-bold text-gray-900 relative z-10">{formatCurrency(totalContrato)}</div>
           <div className="absolute bottom-0 left-0 h-1 w-full bg-[#2D6ADF] transform translate-y-1 group-hover:translate-y-0 transition-transform" />
         </div>
       </div>
 
-      <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-md"} border rounded-xl overflow-hidden`}>
-        <div className={`p-6 border-b ${isDark ? "border-white/5" : "border-black/5"} flex items-center gap-3`}>
+      <div className="bg-white border-gray-200 shadow-md border rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-gray-100 flex items-center gap-3">
           <Receipt className="h-5 w-5 text-[#2D6ADF]" />
-          <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Minhas Cobranças</h2>
+          <h2 className="text-xl font-bold text-gray-900">Minhas Cobranças</h2>
         </div>
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className={isDark ? "bg-white/5" : "bg-gray-50"}>
-              <TableRow className={`${isDark ? "border-white/5" : "border-black/5"} hover:bg-transparent`}>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold`}>Descrição</TableHead>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold`}>Vencimento</TableHead>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold`}>Valor</TableHead>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold text-center`}>Status</TableHead>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold text-right`}>Ação</TableHead>
+            <TableHeader className="bg-gray-50">
+              <TableRow className="border-gray-100 hover:bg-transparent">
+                <TableHead className="text-gray-500 font-bold">Descrição</TableHead>
+                <TableHead className="text-gray-500 font-bold">Vencimento</TableHead>
+                <TableHead className="text-gray-500 font-bold">Valor</TableHead>
+                <TableHead className="text-gray-500 font-bold text-center">Status</TableHead>
+                <TableHead className="text-gray-500 font-bold text-right">Ação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {parcelas.length === 0 ? (
-                <TableRow className={isDark ? "border-white/5" : "border-black/5"}>
-                  <TableCell colSpan={5} className={`h-32 text-center ${isDark ? "text-[#B3B3B3]" : "text-gray-400"}`}>
+                <TableRow className="border-gray-100">
+                  <TableCell colSpan={5} className="h-32 text-center text-gray-500">
                     Nenhuma cobrança encontrada.
                   </TableCell>
                 </TableRow>
@@ -238,14 +238,14 @@ function StudentFinance() {
                   const isPago = status === 'pago';
                   
                   return (
-                    <TableRow key={parcela.id} className={`${isDark ? "border-white/5 hover:bg-white/5" : "border-black/5 hover:bg-gray-50"} transition-colors`}>
-                      <TableCell className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
+                    <TableRow key={parcela.id} className="border-gray-100 hover:bg-gray-50 transition-colors">
+                      <TableCell className="font-medium text-gray-900">
                         {parcela.descricao || (parcela.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${parcela.numero}`)}
                       </TableCell>
-                      <TableCell className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>
+                      <TableCell className="text-gray-500">
                         {format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}
                       </TableCell>
-                      <TableCell className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                      <TableCell className="font-bold text-gray-900">
                         {formatCurrency(Number(parcela.valor))}
                       </TableCell>
                       <TableCell>
@@ -253,7 +253,7 @@ function StudentFinance() {
                           {status === 'pago' ? (
                             <Badge className="bg-green-500/20 text-green-500 border-none">Pago</Badge>
                           ) : status === 'isento' ? (
-                            <Badge className={`${isDark ? "bg-white/10 text-[#B3B3B3]" : "bg-gray-100 text-gray-500"} border-none`}>Isento</Badge>
+                            <Badge className="bg-gray-100 text-gray-500 border-none">Isento</Badge>
                           ) : isBefore(new Date(parcela.data_vencimento), startOfDay(new Date())) ? (
                             <Badge className="bg-red-500/20 text-red-500 border-none">Vencido</Badge>
                           ) : (
@@ -266,13 +266,13 @@ function StudentFinance() {
                         {isPago ? (
                           <span className="text-xs text-green-500 font-medium">Pago via {parcela.forma_pagamento || 'N/A'}</span>
                         ) : status === 'isento' ? (
-                          <span className="text-xs text-[#B3B3B3] italic">Isentado</span>
+                          <span className="text-xs text-gray-500 italic">Isentado</span>
                         ) : (
                           <div className="flex justify-end gap-2">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="outline" size="sm" disabled className="h-8 border-white/10 text-[#B3B3B3] bg-transparent opacity-50">
+                                  <Button variant="outline" size="sm" disabled className="h-8 border-gray-100 text-gray-500 bg-transparent opacity-50">
                                     <CreditCard className="h-3 w-3 mr-1" /> Pagar
                                   </Button>
                                 </TooltipTrigger>

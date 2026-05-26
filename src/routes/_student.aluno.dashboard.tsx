@@ -57,12 +57,12 @@ function StudentDashboard() {
   if (isLoading) {
     return (
       <div className="space-y-12">
-        <Skeleton className={`h-64 md:h-80 w-full rounded-2xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+        <Skeleton className="h-64 md:h-80 w-full rounded-2xl bg-gray-200" />
         <div className="space-y-6">
-            <Skeleton className={`h-8 w-48 ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+            <Skeleton className="h-8 w-48 bg-gray-200" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[1, 2, 3, 4].map((i) => (
-                    <Skeleton key={i} className={`aspect-[4/5] w-full rounded-xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+                    <Skeleton key={i} className="aspect-[4/5] w-full rounded-xl bg-gray-200" />
                 ))}
             </div>
         </div>
@@ -73,9 +73,7 @@ function StudentDashboard() {
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
       {/* Welcome Banner */}
-      <div className={`relative h-64 md:h-80 rounded-2xl overflow-hidden ${
-        isDark ? "bg-gradient-to-r from-[#1a1a2e] to-[#141414]" : "bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF]"
-      } flex items-center px-8 md:px-12 shadow-2xl`}>
+      <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF] flex items-center px-8 md:px-12 shadow-2xl">
         <div className="relative z-10 space-y-4 max-w-2xl">
           <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight">
             Bem-vindo(a) de volta!
@@ -88,15 +86,15 @@ function StudentDashboard() {
       </div>
 
       <div className="space-y-6">
-        <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-[#111827]"}`}>Meus Cursos</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Meus Cursos</h2>
         
         {!cursos || cursos.length === 0 ? (
-          <Card className={`${isDark ? "bg-[#1e1e1e] border-white/10" : "bg-white border-black/5"} border-dashed`}>
+          <Card className="bg-white border-gray-200 border-dashed">
             <CardContent className="py-12 text-center space-y-4">
-              <BookOpen className={`h-12 w-12 mx-auto ${isDark ? "text-[#B3B3B3]" : "text-gray-400"}`} />
+              <BookOpen className="h-12 w-12 mx-auto text-gray-500" />
               <div className="space-y-1">
-                <p className={`font-semibold text-lg ${isDark ? "text-white" : "text-gray-900"}`}>Nenhum curso encontrado</p>
-                <p className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>Você ainda não possui matrículas ativas.</p>
+                <p className="font-semibold text-lg text-gray-900">Nenhum curso encontrado</p>
+                <p className="text-gray-500">Você ainda não possui matrículas ativas.</p>
               </div>
             </CardContent>
           </Card>
@@ -109,10 +107,8 @@ function StudentDashboard() {
               
               return (
                 <Link key={i} to="/aluno/curso/$id" params={{ id: curso.id }} className="group">
-                  <div className={`relative ${
-                    isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5"
-                  } rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border h-full flex flex-col shadow-sm`}>
-                    <div className={`aspect-video ${isDark ? "bg-[#222]" : "bg-gray-100"} flex items-center justify-center relative`}>
+                  <div className="relative bg-white border-gray-200 rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border h-full flex flex-col shadow-sm">
+                    <div className="aspect-video bg-gray-100 flex items-center justify-center relative">
                       <div className="p-4 bg-[#2D6ADF]/20 rounded-full">
                         <PlayCircle className="h-10 w-10 text-[#2D6ADF]" />
                       </div>
@@ -127,18 +123,18 @@ function StudentDashboard() {
                     
                     <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
                       <div>
-                        <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"} line-clamp-1`}>{curso.nome}</h3>
-                        <p className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-500"} mt-1 uppercase font-bold tracking-wider`}>
+                        <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{curso.nome}</h3>
+                        <p className="text-xs text-gray-500 mt-1 uppercase font-bold tracking-wider">
                             {aulasCount} {aulasCount === 1 ? 'aula' : 'aulas'}
                         </p>
                       </div>
                       
                       <div className="space-y-2">
-                        <div className={`h-1.5 w-full ${isDark ? "bg-[#333]" : "bg-gray-100"} rounded-full overflow-hidden`}>
+                        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                           <div className="h-full bg-[#2D6ADF] transition-all" style={{ width: '0%' }} />
                         </div>
                         <div className="flex items-center justify-between">
-                            <p className={`text-[10px] ${isDark ? "text-[#B3B3B3]" : "text-gray-500"} uppercase tracking-wider font-bold`}>Progresso</p>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Progresso</p>
                             <p className="text-[10px] text-[#2D6ADF] font-bold">0%</p>
                         </div>
                       </div>
