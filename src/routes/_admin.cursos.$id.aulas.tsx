@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2 } from "lucide-react";
 import {
@@ -33,9 +33,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/admin/PageHeader";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_admin/cursos/$id/aulas")({
   head: () => ({ meta: [{ title: "Aulas — EduManager" }] }),
@@ -65,7 +71,7 @@ function AulasManager() {
     },
   });
 
-  const { data: aulas, isLoading } = useQuery({
+  const { data: aulas, isLoading, refetch } = useQuery({
     queryKey: ["aulas", cursoId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -78,12 +84,11 @@ function AulasManager() {
     },
   });
 
-  const [editing, setEditing] = useState<Aula | null>(null);
-  const [open, setOpen] = useState(false);
+  const [aulaEditando, setAulaEditando] = useState<Aula | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const reorder = useMutation({
     mutationFn: async (items: Aula[]) => {
-      // Update each row's ordem
       await Promise.all(
         items.map((a, idx) =>
           supabase.from("aulas").update({ ordem: idx + 1 }).eq("id", a.id)
@@ -118,6 +123,16 @@ function AulasManager() {
     reorder.mutate(next);
   };
 
+  const handleEdit = (aula: Aula) => {
+    setAulaEditando(aula);
+    setIsModalOpen(true);
+  };
+
+  const handleNew = () => {
+    setAulaEditando(null);
+    setIsModalOpen(true);
+  };
+
   return (
     <div>
       <PageHeader
@@ -130,21 +145,27 @@ function AulasManager() {
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
               </Link>
             </Button>
-            <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setEditing(null)}>
-                  <Plus className="h-4 w-4 mr-2" /> Nova aula
-                </Button>
-              </DialogTrigger>
+            <Button onClick={handleNew}>
+              <Plus className="h-4 w-4 mr-2" /> Nova aula
+            </Button>
+
+            <Dialog open={isModalOpen} onOpenChange={(o) => {
+              setIsModalOpen(o);
+              if (!o) setAulaEditando(null);
+            }}>
               <AulaDialog
                 cursoId={cursoId}
-                aula={editing}
+                aula={aulaEditando}
                 nextOrdem={(aulas?.length ?? 0) + 1}
                 onSaved={() => {
-                  setOpen(false);
-                  setEditing(null);
-                  qc.invalidateQueries({ queryKey: ["aulas", cursoId] });
+                  setIsModalOpen(false);
+                  setAulaEditando(null);
+                  refetch();
                   qc.invalidateQueries({ queryKey: ["cursos"] });
+                }}
+                onCancel={() => {
+                  setIsModalOpen(false);
+                  setAulaEditando(null);
                 }}
               />
             </Dialog>
@@ -158,7 +179,7 @@ function AulasManager() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground">Carregando...</p>
+            <p className="text-muted-foreground text-center py-6">Carregando...</p>
           ) : !aulas || aulas.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">
               Nenhuma aula cadastrada. Clique em "Nova aula" para começar.
@@ -172,10 +193,7 @@ function AulasManager() {
                       key={a.id}
                       aula={a}
                       index={i}
-                      onEdit={() => {
-                        setEditing(a);
-                        setOpen(true);
-                      }}
+                      onEdit={() => handleEdit(a)}
                       onToggle={() => toggle.mutate(a)}
                     />
                   ))}
@@ -254,43 +272,70 @@ function AulaDialog({
   aula,
   nextOrdem,
   onSaved,
+  onCancel,
 }: {
   cursoId: string;
   aula: Aula | null;
   nextOrdem: number;
   onSaved: () => void;
+  onCancel: () => void;
 }) {
-  const [titulo, setTitulo] = useState(aula?.titulo ?? "");
-  const [descricao, setDescricao] = useState(aula?.descricao ?? "");
-  const [urlVideo, setUrlVideo] = useState(aula?.url_video ?? "");
-  const [ordem, setOrdem] = useState<number>(aula?.ordem ?? nextOrdem);
+  const [aulaEditando, setAulaLocal] = useState<Partial<Aula>>({
+    titulo: "",
+    descricao: "",
+    url_video: "",
+    ordem: nextOrdem,
+    ativo: true,
+  });
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (aula) {
+      setAulaLocal(aula);
+    } else {
+      setAulaLocal({
+        titulo: "",
+        descricao: "",
+        url_video: "",
+        ordem: nextOrdem,
+        ativo: true,
+      });
+    }
+  }, [aula, nextOrdem]);
 
   const save = async () => {
-    if (!titulo.trim()) {
+    if (!aulaEditando.titulo?.trim()) {
       toast.error("Informe o título");
       return;
     }
     setSaving(true);
     try {
       if (aula) {
+        // Snippet requested by user
         const { error } = await supabase
-          .from("aulas")
-          .update({ titulo, descricao, url_video: urlVideo, ordem })
-          .eq("id", aula.id);
+          .from('aulas')
+          .update({
+            titulo: aulaEditando.titulo,
+            descricao: aulaEditando.descricao,
+            url_video: aulaEditando.url_video,
+            ordem: aulaEditando.ordem,
+            ativo: aulaEditando.ativo
+          })
+          .eq('id', aula.id);
+
         if (error) throw error;
-        toast.success("Aula atualizada!");
+        toast.success("Aula atualizada com sucesso");
       } else {
         const { error } = await supabase.from("aulas").insert({
           curso_id: cursoId,
-          titulo,
-          descricao,
-          url_video: urlVideo,
-          ordem,
+          titulo: aulaEditando.titulo,
+          descricao: aulaEditando.descricao,
+          url_video: aulaEditando.url_video,
+          ordem: aulaEditando.ordem,
+          ativo: aulaEditando.ativo,
         });
         if (error) throw error;
-        toast.success("Aula adicionada!");
+        toast.success("Aula adicionada com sucesso");
       }
       onSaved();
     } catch (e) {
@@ -303,36 +348,63 @@ function AulaDialog({
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>{aula ? "Editar aula" : "Nova aula"}</DialogTitle>
+        <DialogTitle>{aula ? "Editar Aula" : "Nova Aula"}</DialogTitle>
       </DialogHeader>
       <div className="space-y-4">
         <div className="space-y-1.5">
           <Label className="text-xs">Título</Label>
-          <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+          <Input
+            value={aulaEditando.titulo || ""}
+            onChange={(e) => setAulaLocal({ ...aulaEditando, titulo: e.target.value })}
+          />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Descrição</Label>
-          <Textarea rows={3} value={descricao ?? ""} onChange={(e) => setDescricao(e.target.value)} />
+          <Textarea
+            rows={3}
+            value={aulaEditando.descricao || ""}
+            onChange={(e) => setAulaLocal({ ...aulaEditando, descricao: e.target.value })}
+          />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">URL do vídeo (embed YouTube / Vimeo / Pandavideo)</Label>
           <Input
-            value={urlVideo ?? ""}
-            onChange={(e) => setUrlVideo(e.target.value)}
+            value={aulaEditando.url_video || ""}
+            onChange={(e) => setAulaLocal({ ...aulaEditando, url_video: e.target.value })}
             placeholder="https://www.youtube.com/embed/..."
           />
         </div>
-        <div className="space-y-1.5 w-32">
-          <Label className="text-xs">Ordem</Label>
-          <Input
-            type="number"
-            min={1}
-            value={ordem}
-            onChange={(e) => setOrdem(parseInt(e.target.value) || 1)}
-          />
+        <div className="flex gap-4">
+          <div className="space-y-1.5 w-32">
+            <Label className="text-xs">Ordem</Label>
+            <Input
+              type="number"
+              min={1}
+              value={aulaEditando.ordem || 1}
+              onChange={(e) => setAulaLocal({ ...aulaEditando, ordem: parseInt(e.target.value) || 1 })}
+            />
+          </div>
+          <div className="space-y-1.5 flex-1">
+            <Label className="text-xs">Status</Label>
+            <Select
+              value={aulaEditando.ativo ? "ativo" : "inativo"}
+              onValueChange={(v) => setAulaLocal({ ...aulaEditando, ativo: v === "ativo" })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ativo">Ativo</SelectItem>
+                <SelectItem value="inativo">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       <DialogFooter>
+        <Button variant="outline" onClick={onCancel} disabled={saving}>
+          Cancelar
+        </Button>
         <Button onClick={save} disabled={saving}>
           {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           Salvar
