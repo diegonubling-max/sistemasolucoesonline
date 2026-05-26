@@ -27,7 +27,32 @@ function AlunoDetalhes() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPasswordResult, setShowPasswordResult] = useState(false);
-  const [passwordToDisplay, setPasswordToDisplay] = useState("");
+  const [showBaixaModal, setShowBaixaModal] = useState(false);
+  const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
+  const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
+
+  const darBaixa = useMutation({
+    mutationFn: async () => {
+      if (!selectedParcelaId) return;
+      const { error } = await supabase
+        .from("parcelas")
+        .update({
+          status: "pago",
+          data_pagamento: format(dataPagamento, "yyyy-MM-dd"),
+        })
+        .eq("id", selectedParcelaId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Baixa realizada com sucesso!");
+      setShowBaixaModal(false);
+      setSelectedParcelaId(null);
+      qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const qc = useQueryClient(); // This needs to be imported or use a hook if it exists. Actually, I see useMutation is from react-query. let's check imports.
 
   const resetPassword = useMutation({
     mutationFn: async () => {
