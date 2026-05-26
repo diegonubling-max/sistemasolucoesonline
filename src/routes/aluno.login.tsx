@@ -60,11 +60,11 @@ function AlunoLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#3B82F6]/10 via-white to-[#10B981]/10 px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 bg-primary py-10 rounded-3xl shadow-2xl">
           <h1 className="text-4xl font-black tracking-tight">
             <span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span>
           </h1>
-          <p className="text-muted-foreground mt-2 font-medium">Área do Aluno</p>
+          <p className="text-white/80 mt-2 font-medium">Área do Aluno</p>
         </div>
 
         <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-sm">
