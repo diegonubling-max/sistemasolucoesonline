@@ -19,6 +19,7 @@ export type Database = {
           ativo: boolean
           cpf: string
           created_at: string
+          ctr: number
           data_nascimento: string
           email: string
           id: string
@@ -39,6 +40,7 @@ export type Database = {
           ativo?: boolean
           cpf: string
           created_at?: string
+          ctr?: number
           data_nascimento: string
           email: string
           id?: string
@@ -59,6 +61,7 @@ export type Database = {
           ativo?: boolean
           cpf?: string
           created_at?: string
+          ctr?: number
           data_nascimento?: string
           email?: string
           id?: string
