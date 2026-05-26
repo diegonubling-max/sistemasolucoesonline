@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useStudentTheme } from "./_student";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_student/aluno/dashboard")({
   head: () => ({ meta: [{ title: "Meus Cursos — Soluções Online" }] }),
