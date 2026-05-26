@@ -1,8 +1,10 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
