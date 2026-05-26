@@ -222,6 +222,29 @@ function Financeiro() {
     }
   });
 
+  const openBaixaModal = (p: any) => {
+    const matricula = p.matriculas;
+    const pacoteTipo = matricula?.matricula_pacotes?.[0]?.pacotes?.tipo;
+    
+    if (pacoteTipo === 'cartao' && p.tipo === 'parcela') {
+      setBaixaModal({
+        id: p.id,
+        open: true,
+        date: format(today, "yyyy-MM-dd"),
+        isCard: true,
+        valor: Number(p.valor),
+        parcelas: 1
+      });
+    } else {
+      setBaixaModal({
+        id: p.id,
+        open: true,
+        date: format(today, "yyyy-MM-dd"),
+        isCard: false
+      });
+    }
+  };
+
   const exportCSV = (data: any[], filename: string, extraHeaders: string[] = [], extraFields: (p: any) => string[] = () => []) => {
     if (!data || data.length === 0) return;
     const baseHeaders = ["Aluno", "CTR", "Descricao", "Data", "Valor", "Status"];
