@@ -76,7 +76,7 @@ function AlunosList() {
       if (!student.id) throw new Error("ID do aluno não fornecido");
 
       const { error } = await supabase.rpc('delete_aluno_completo', { 
-        aluno_id: student.id 
+        p_aluno_id: student.id 
       });
 
       if (error) throw error;
