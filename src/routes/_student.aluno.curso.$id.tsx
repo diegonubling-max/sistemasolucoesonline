@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useStudentTheme } from "./_student";
 
 export const Route = createFileRoute("/_student/aluno/curso/$id")({
   head: () => ({ meta: [{ title: "Curso — EduManager" }] }),
