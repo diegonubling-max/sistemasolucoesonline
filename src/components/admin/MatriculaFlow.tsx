@@ -275,6 +275,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
               // 2. Create Auth user via RPC if email exists
               if (studentData.email) {
+                console.log('Criando acesso:', studentData.email, pass, studentData.ctr);
                 const { error: authError } = await supabase.rpc('criar_acesso_aluno', {
                   p_email: studentData.email,
                   p_senha: pass,
@@ -282,9 +283,9 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 });
 
                 if (authError) {
-                  console.error("Erro ao criar acesso:", authError);
-                  toast.error(`Aluno salvo, mas houve erro ao criar acesso: ${authError.message}`);
-                  // Proceed anyway, admin can reset later
+                  console.error('Erro ao criar acesso:', authError);
+                  toast.error('Aluno salvo, mas houve erro ao criar acesso: ' + authError.message);
+                  return;
                 }
               }
               
