@@ -76,23 +76,23 @@ function StudentLayout() {
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
       <header className="bg-primary border-b sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className=\"flex items-center gap-8\">
-            <Link to=\"/aluno/dashboard\" className=\"flex items-center gap-2\">
-              <span className=\"text-xl font-bold\"><span className=\"text-white\">Soluções</span> <span className=\"text-[#2ECC71]\">Online</span></span>
+          <div className="flex items-center gap-8">
+            <Link to="/aluno/dashboard" className="flex items-center gap-2">
+              <span className="text-xl font-bold"><span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span></span>
             </Link>
 
-            <nav className=\"hidden md:flex items-center gap-6\">
+            <nav className="hidden md:flex items-center gap-6">
               <Link 
-                to=\"/aluno/dashboard\" 
-                className=\"text-white/80 hover:text-white font-medium transition-colors\"
-                activeProps={{ className: \"text-white font-bold\" }}
+                to="/aluno/dashboard" 
+                className="text-white/80 hover:text-white font-medium transition-colors"
+                activeProps={{ className: "text-white font-bold" }}
               >
                 Meus Cursos
               </Link>
               <Link 
-                to=\"/aluno/financeiro\" 
-                className=\"text-white/80 hover:text-white font-medium transition-colors\"
-                activeProps={{ className: \"text-white font-bold\" }}
+                to="/aluno/financeiro" 
+                className="text-white/80 hover:text-white font-medium transition-colors"
+                activeProps={{ className: "text-white font-bold" }}
               >
                 Financeiro
               </Link>
