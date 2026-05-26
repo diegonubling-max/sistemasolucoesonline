@@ -97,7 +97,13 @@ function AlunosList() {
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       setStudentToDelete(null);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      if (e.message.includes("violates foreign key constraint")) {
+        toast.error("Não é possível excluir este aluno pois ele possui cursos ou matrículas vinculadas.");
+      } else {
+        toast.error(e.message);
+      }
+    },
   });
 
   const totalPages = Math.max(1, Math.ceil((data?.count ?? 0) / PAGE_SIZE));
