@@ -150,17 +150,13 @@ function StudentLayout() {
                       {userName[0]?.toUpperCase()}
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className={`${isDark ? "bg-[#1e1e1e] text-white border-white/10" : "bg-white text-gray-900"} w-48 shadow-xl`}>
+                <DropdownMenuContent align="end" className="bg-white text-gray-900 w-48 shadow-xl border-gray-200">
                   <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-                  <DropdownMenuSeparator className={isDark ? "bg-white/10" : ""} />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate({ to: "/aluno/perfil" })} className="cursor-pointer">
                     <UserIcon className="h-4 w-4 mr-2" /> Meu Perfil
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={toggleTema} className="cursor-pointer">
-                    {isDark ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
-                    {isDark ? "Tema Claro" : "Tema Escuro"}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className={isDark ? "bg-white/10" : ""} />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 focus:text-red-500">
                     <LogOut className="h-4 w-4 mr-2" /> Sair
                   </DropdownMenuItem>
