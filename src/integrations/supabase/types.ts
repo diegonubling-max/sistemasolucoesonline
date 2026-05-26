@@ -21,7 +21,7 @@ export type Database = {
           created_at: string
           ctr: number
           data_nascimento: string
-          email: string
+          email: string | null
           id: string
           menor_de_idade: boolean
           nome: string
@@ -34,7 +34,7 @@ export type Database = {
           responsavel_telefone: string | null
           sexo: Database["public"]["Enums"]["sexo_aluno"]
           telefone: string
-          vendedora: string
+          vendedora: string | null
         }
         Insert: {
           ativo?: boolean
@@ -42,7 +42,7 @@ export type Database = {
           created_at?: string
           ctr?: number
           data_nascimento: string
-          email: string
+          email?: string | null
           id?: string
           menor_de_idade?: boolean
           nome: string
@@ -55,7 +55,7 @@ export type Database = {
           responsavel_telefone?: string | null
           sexo: Database["public"]["Enums"]["sexo_aluno"]
           telefone: string
-          vendedora: string
+          vendedora?: string | null
         }
         Update: {
           ativo?: boolean
@@ -63,7 +63,7 @@ export type Database = {
           created_at?: string
           ctr?: number
           data_nascimento?: string
-          email?: string
+          email?: string | null
           id?: string
           menor_de_idade?: boolean
           nome?: string
@@ -76,7 +76,7 @@ export type Database = {
           responsavel_telefone?: string | null
           sexo?: Database["public"]["Enums"]["sexo_aluno"]
           telefone?: string
-          vendedora?: string
+          vendedora?: string | null
         }
         Relationships: []
       }
