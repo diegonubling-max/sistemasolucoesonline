@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_admin/alunos/")({
-  head: () => ({ meta: [{ title: "Alunos — Soluções Online" }] }),
+  head: () => ({ meta: [{ title: "Alunos — EduManager" }] }),
   component: AlunosList,
 });
 
@@ -147,7 +147,7 @@ function AlunosList() {
                   <TableCell>
                     <span className="text-sm font-normal text-slate-700">#{a.ctr}</span>
                   </TableCell>
-                  <TableCell className="text-sm font-medium text-slate-700 whitespace-nowrap">{a.nome}</TableCell>
+                  <TableCell className="text-sm font-bold text-slate-700 whitespace-nowrap">{a.nome}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.email}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.telefone}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.vendedora}</TableCell>
