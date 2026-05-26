@@ -104,7 +104,7 @@ function StudentLayout() {
     );
   }
 
-  const isDark = tema === "escuro";
+  const isDark = false; // Tema sempre claro conforme solicitado
 
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-300 bg-gray-50 text-gray-900">
