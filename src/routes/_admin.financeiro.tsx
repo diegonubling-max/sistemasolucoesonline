@@ -55,7 +55,7 @@ function Financeiro() {
         supabase.from("parcelas").select("valor").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")),
         supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd")),
         supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd")),
-        supabase.from("parcelas").select("valor").eq("status", "aberto"),
+        supabase.from("parcelas").select("valor").neq("status", "isento"),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
@@ -205,7 +205,7 @@ function Financeiro() {
     { label: "Total Recebido no Mês", value: formatCurrency(globalStats?.recebido), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "A Receber no Mês", value: formatCurrency(globalStats?.aReceberMes), icon: Landmark, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Em Atraso", value: formatCurrency(globalStats?.atrasado), icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10" },
-    { label: "Total Geral a Receber", value: formatCurrency(globalStats?.totalGeral), icon: Wallet, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+    { label: "Total Contratos", value: formatCurrency(globalStats?.totalGeral), icon: Wallet, color: "text-purple-500", bg: "bg-purple-500/10" },
   ];
 
   const getStatusBadge = (p: any) => {
