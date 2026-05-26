@@ -475,26 +475,36 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                         const novasParcelas = [];
                         const hoje = new Date();
                         
-                        for (let i = 1; i <= pacote.numero_parcelas; i++) {
-                          let dataVenc = addMonths(hoje, i);
-                          
-                          // Lógica para dia do mês
-                          const ultimoDia = lastDayOfMonth(dataVenc);
-                          if (dia > ultimoDia.getDate()) {
-                            dataVenc = ultimoDia;
-                          } else {
-                            dataVenc = setDate(dataVenc, dia);
-                          }
-
+                        if (pacote.tipo === 'cartao') {
+                          // Se for cartão, gera apenas uma parcela com o valor total
                           novasParcelas.push({
                             id: Math.random().toString(36).substr(2, 9),
-                            numero: i,
-                            vencimento: dataVenc,
-                            valor: pacote.valor_parcela
+                            numero: 1,
+                            vencimento: hoje, // Data combinada, mas inicia com hoje
+                            valor: pacote.valor_total
                           });
+                        } else {
+                          for (let i = 1; i <= pacote.numero_parcelas; i++) {
+                            let dataVenc = addMonths(hoje, i);
+                            
+                            // Lógica para dia do mês
+                            const ultimoDia = lastDayOfMonth(dataVenc);
+                            if (dia > ultimoDia.getDate()) {
+                              dataVenc = ultimoDia;
+                            } else {
+                              dataVenc = setDate(dataVenc, dia);
+                            }
+
+                            novasParcelas.push({
+                              id: Math.random().toString(36).substr(2, 9),
+                              numero: i,
+                              vencimento: dataVenc,
+                              valor: pacote.valor_parcela
+                            });
+                          }
                         }
                         setParcelasGeradas(novasParcelas);
-                        toast.success("Parcelas geradas com sucesso!");
+                        toast.success(pacote.tipo === 'cartao' ? "Cobrança única de cartão gerada!" : "Parcelas geradas com sucesso!");
                       }}
                     >
                       Gerar parcelas
