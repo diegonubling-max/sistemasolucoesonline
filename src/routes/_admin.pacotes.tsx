@@ -68,28 +68,40 @@ function PacotesList() {
 
   const upsertMut = useMutation({
     mutationFn: async (formData: any) => {
-      const dataToSave = {
-        nome: formData.nome,
-        tipo: formData.tipo,
-        valor_matricula: formData.valor_matricula,
-        numero_parcelas: formData.numero_parcelas,
-        valor_parcela: formData.valor_parcela,
-        valor_total: formData.valor_total,
-        descricao: formData.descricao,
-        ativo: formData.ativo ?? true
-      };
-
       if (editingPacote) {
-        const { error } = await supabase
-          .from('pacotes')
-          .update(dataToSave)
-          .eq('id', editingPacote.id);
+        console.log('Iniciando UPDATE do pacote:', editingPacote.id);
+        console.log('Dados do formulário:', formData);
         
+        const { data, error } = await supabase
+          .from('pacotes')
+          .update({ 
+            nome: formData.nome,
+            tipo: formData.tipo,
+            valor_matricula: formData.valor_matricula,
+            numero_parcelas: formData.numero_parcelas,
+            valor_parcela: formData.valor_parcela,
+            valor_total: formData.valor_total,
+            descricao: formData.descricao,
+            ativo: formData.ativo
+          })
+          .eq('id', editingPacote.id)
+          .select();
+
+        console.log('resultado:', data, error);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('pacotes')
-          .insert(dataToSave);
+          .insert({
+            nome: formData.nome,
+            tipo: formData.tipo,
+            valor_matricula: formData.valor_matricula,
+            numero_parcelas: formData.numero_parcelas,
+            valor_parcela: formData.valor_parcela,
+            valor_total: formData.valor_total,
+            descricao: formData.descricao,
+            ativo: formData.ativo ?? true
+          });
         
         if (error) throw error;
       }
@@ -100,7 +112,10 @@ function PacotesList() {
       setIsModalOpen(false);
       setEditingPacote(null);
     },
-    onError: (e: any) => toast.error(`Erro ao ${editingPacote ? 'atualizar' : 'criar'} pacote: ${e.message}`),
+    onError: (e: any) => {
+      console.error('Erro detalhado na mutação:', e);
+      toast.error(`Erro ao ${editingPacote ? 'atualizar' : 'criar'} pacote: ${e.message}`);
+    },
   });
 
   const toggleMut = useMutation({
