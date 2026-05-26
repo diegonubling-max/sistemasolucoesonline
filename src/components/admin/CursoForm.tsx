@@ -8,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThumbnailUpload } from "./ThumbnailUpload";
 
 const schema = z.object({
   nome: z.string().min(2, "Informe o nome"),
   descricao: z.string().optional().nullable(),
+  thumbnail_url: z.string().optional().nullable(),
   ativo: z.boolean(),
 });
 export type CursoFormValues = z.infer<typeof schema>;
@@ -29,7 +31,7 @@ export function CursoForm({
 }) {
   const form = useForm<CursoFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { nome: "", descricao: "", ativo: true, ...initialValues },
+    defaultValues: { nome: "", descricao: "", thumbnail_url: null, ativo: true, ...initialValues },
   });
   const errors = form.formState.errors;
 
@@ -44,6 +46,15 @@ export function CursoForm({
             <Label className="text-xs font-medium">Nome</Label>
             <Input {...form.register("nome")} />
             {errors.nome && <p className="text-xs text-destructive">{errors.nome.message}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Thumbnail do Curso</Label>
+            <ThumbnailUpload
+              value={form.watch("thumbnail_url")}
+              onChange={(url) => form.setValue("thumbnail_url", url)}
+              bucket="thumbnails-cursos"
+              recommendedSize="400x225px"
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Descrição</Label>
