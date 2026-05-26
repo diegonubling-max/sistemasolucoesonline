@@ -137,7 +137,7 @@ function StudentDashboard() {
                         <span>{aulasCount} aulas</span>
                         <span>0% concluído</span>
                       </div>
-                      <Progress value={0} className="h-1 bg-white/10" indicatorClassName="bg-[#2ECC71]" />
+                      <Progress value={0} className="h-1 bg-white/10" />
                     </div>
 
                     {/* Hover Button */}
