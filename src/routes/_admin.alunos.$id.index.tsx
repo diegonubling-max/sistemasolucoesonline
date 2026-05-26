@@ -468,7 +468,7 @@ function AlunoDetalhes() {
             <Button 
               className="w-full" 
               onClick={() => {
-                const text = `Olá ${aluno.nome.split(" ")[0]}! Seus dados de acesso foram atualizados:\nLogin: ${aluno.ctr}\nSenha: ${passwordToDisplay}\nAcesse: ${window.location.origin}/aluno/login`;
+                const text = `Olá ${aluno.nome.split(" ")[0]}! Seus dados de acesso:\nLogin: ${aluno.ctr}\nSenha: ${passwordToDisplay}\nAcesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                 navigator.clipboard.writeText(text);
                 toast.success("Dados copiados!");
               }}
