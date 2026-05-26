@@ -170,8 +170,8 @@ function StudentFinance() {
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
       <div className="space-y-2">
-        <h1 className={`text-3xl md:text-4xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-tight`}>Financeiro</h1>
-        <p className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>Acompanhe suas mensalidades e histórico de pagamentos.</p>
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Financeiro</h1>
+        <p className="text-gray-500">Acompanhe suas mensalidades e histórico de pagamentos.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
