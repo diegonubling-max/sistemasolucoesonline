@@ -192,6 +192,15 @@ function AlunosList() {
                       >
                         <Power className="h-4 w-4" />
                       </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Excluir"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => setStudentToDelete({ id: a.id, nome: a.nome, email: a.email })}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -228,6 +237,41 @@ function AlunosList() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!studentToDelete} onOpenChange={(open) => !open && setStudentToDelete(null)}>
+        <AlertDialogContent className="max-w-[400px]">
+          <AlertDialogHeader className="items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-2">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold">Excluir aluno?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              Você está prestes a excluir o aluno <span className="font-bold text-foreground">[{studentToDelete?.nome}]</span>. 
+              Esta ação não pode ser desfeita e todos os dados relacionados serão removidos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center gap-2 mt-4">
+            <AlertDialogCancel disabled={deleteMutation.isPending} className="mt-0 sm:flex-1">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (studentToDelete) deleteMutation.mutate(studentToDelete);
+              }}
+              className="bg-[#DC2626] hover:bg-red-700 text-white sm:flex-1"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Excluindo...
+                </>
+              ) : (
+                "Sim, excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
