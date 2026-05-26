@@ -19,15 +19,15 @@ const SEXOS = ["Masculino", "Feminino"] as const;
 const schema = z
   .object({
     nome: z.string().min(2, "O nome é obrigatório"),
-    sexo: z.enum(SEXOS),
+    sexo: z.string().min(1, "O sexo é obrigatório"),
     telefone: z.string().min(14, "Telefone obrigatório"),
-    email: z.string().email("E-mail inválido").optional().or(z.literal("")),
+    email: z.string().email("E-mail inválido").min(1, "O e-mail é obrigatório"),
     data_nascimento: z.string().min(1, "Data de nascimento obrigatória"),
     cpf: z.string().refine((v) => isValidCPF(v), "CPF inválido ou obrigatório"),
-    ativo: z.boolean(),
-    origem: z.enum(ORIGENS),
+    ativo: z.string().min(1, "O status é obrigatório"),
+    origem: z.string().min(1, "Selecione como nos conheceu"),
     origem_detalhe: z.string().optional().nullable(),
-    vendedora: z.string().optional().or(z.literal("")),
+    vendedora: z.string().min(1, "Selecione a vendedora"),
     observacao: z.string().optional().nullable(),
     responsavel_nome: z.string().optional().nullable(),
     responsavel_telefone: z.string().optional().nullable(),
@@ -52,15 +52,15 @@ const schema = z
 
 export type AlunoFormValues = z.infer<typeof schema>;
 
-export const defaultValues: AlunoFormValues = {
+export const defaultValues: any = {
   nome: "",
-  sexo: "Feminino",
+  sexo: "",
   telefone: "",
   email: "",
   data_nascimento: "",
   cpf: "",
-  ativo: true,
-  origem: "Google",
+  ativo: "",
+  origem: "",
   origem_detalhe: "",
   vendedora: "",
   observacao: "",
@@ -76,15 +76,27 @@ export function AlunoForm({
   submitting,
   submitLabel = "Salvar",
 }: {
-  initialValues?: Partial<AlunoFormValues>;
-  onSubmit: (values: AlunoFormValues) => Promise<void> | void;
+  initialValues?: any;
+  onSubmit: (values: any) => Promise<void> | void;
   submitting?: boolean;
   submitLabel?: string;
 }) {
-  const form = useForm<AlunoFormValues>({
+  const form = useForm<any>({
     resolver: zodResolver(schema),
-    defaultValues: { ...defaultValues, ...initialValues },
+    defaultValues: {
+      ...defaultValues,
+      ...initialValues,
+      ativo: initialValues?.ativo === undefined ? "" : (initialValues.ativo ? "Ativo" : "Inativo")
+    },
   });
+
+  const handleSubmit = (values: any) => {
+    const finalValues = {
+      ...values,
+      ativo: values.ativo === "Ativo"
+    };
+    onSubmit(finalValues);
+  };
 
   useEffect(() => {
     if (initialValues) form.reset({ ...defaultValues, ...initialValues });
