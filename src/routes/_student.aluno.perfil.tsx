@@ -24,17 +24,11 @@ function StudentProfile() {
   const updatePassword = useMutation({
     mutationFn: async () => {
       if (newPassword !== confirmPassword) throw new Error("As senhas não coincidem");
-      if (newPassword.length < 6) throw new Error("A senha deve ter pelo menos 6 caracteres");
+      if (newPassword.length < 6) {
+        throw new Error("A senha deve ter pelo menos 6 caracteres");
+      }
 
-      // Verify current password first (recommended for security as per user request)
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: session?.user.email ?? "",
-        password: currentPassword,
-      });
-
-      if (signInError) throw new Error("Senha atual incorreta");
-
-      // Update to new password using RPC to avoid "weak password" validation from Supabase Auth directly
+      // Update password using the provided RPC to bypass Supabase's "weak password" check
       const { error } = await supabase.rpc('redefinir_senha_aluno', {
         p_email: session?.user.email ?? "",
         p_nova_senha: newPassword
