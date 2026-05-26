@@ -30,6 +30,8 @@ function AlunoDetalhes() {
   const [showBaixaModal, setShowBaixaModal] = useState(false);
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
+  const qc = useQueryClient();
+  const [passwordToDisplay, setPasswordToDisplay] = useState("");
 
   const darBaixa = useMutation({
     mutationFn: async () => {
@@ -51,8 +53,6 @@ function AlunoDetalhes() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
-
-  const qc = useQueryClient(); // This needs to be imported or use a hook if it exists. Actually, I see useMutation is from react-query. let's check imports.
 
   const resetPassword = useMutation({
     mutationFn: async () => {
