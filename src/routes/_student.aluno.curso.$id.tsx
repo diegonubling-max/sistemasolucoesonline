@@ -87,17 +87,17 @@ function StudentCourse() {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="space-y-4">
-            <Skeleton className={`h-4 w-32 ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
-            <Skeleton className={`h-10 w-64 ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
-            <Skeleton className={`h-4 w-48 ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+            <Skeleton className="h-4 w-32 bg-gray-200" />
+            <Skeleton className="h-10 w-64 bg-gray-200" />
+            <Skeleton className="h-4 w-48 bg-gray-200" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
             <div className="lg:col-span-7 space-y-6">
-                <Skeleton className={`aspect-video w-full rounded-xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
-                <Skeleton className={`h-48 w-full rounded-xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+                <Skeleton className="aspect-video w-full rounded-xl bg-gray-200" />
+                <Skeleton className="h-48 w-full rounded-xl bg-gray-200" />
             </div>
             <div className="lg:col-span-3">
-                <Skeleton className={`h-[500px] w-full rounded-xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+                <Skeleton className="h-[500px] w-full rounded-xl bg-gray-200" />
             </div>
         </div>
       </div>
