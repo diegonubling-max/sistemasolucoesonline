@@ -48,14 +48,12 @@
   --card-foreground: oklch(0.18 0.03 250);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.03 250);
-  /* #1E3A5F */
   --primary: oklch(0.34 0.06 250);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.96 0.01 250);
   --secondary-foreground: oklch(0.34 0.06 250);
   --muted: oklch(0.96 0.01 250);
   --muted-foreground: oklch(0.5 0.02 250);
-  /* #2ECC71 */
   --accent: oklch(0.76 0.17 150);
   --accent-foreground: oklch(0.15 0.05 150);
   --success: oklch(0.76 0.17 150);
@@ -106,6 +104,26 @@
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.76 0.17 150);
+}
+
+.student-area {
+  --background: #141414;
+  --foreground: #FFFFFF;
+  --card: #1e1e1e;
+  --card-foreground: #FFFFFF;
+  --primary: #2ECC71;
+  --primary-foreground: #000000;
+  --muted: #1e1e1e;
+  --muted-foreground: #B3B3B3;
+  --border: #333333;
+  --secondary: #2a2a2a;
+  --secondary-foreground: #FFFFFF;
+  --ring: #2ECC71;
+}
+
+.student-area body {
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 @layer base {

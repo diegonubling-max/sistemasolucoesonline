@@ -5,8 +5,10 @@ import {
   createRootRouteWithContext,
   HeadContent,
   Scripts,
+  useLocation,
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 
@@ -68,6 +70,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useLocation();
+
+  useEffect(() => {
+    const isStudentArea = location.pathname.startsWith('/aluno');
+    if (isStudentArea) {
+      document.documentElement.classList.add('student-area');
+    } else {
+      document.documentElement.classList.remove('student-area');
+    }
+  }, [location.pathname]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
@@ -75,3 +88,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
