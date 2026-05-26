@@ -48,12 +48,12 @@ export function AppSidebar() {
   };
 
   return (
-    <aside className="w-64 bg-[#1E3A5F] text-white flex flex-col min-h-screen">
-      <div className="px-6 py-6 border-b border-white/10">
+    <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen">
+      <div className="px-6 py-6 border-b border-sidebar-border">
         <h1 className="text-2xl font-bold tracking-tight">
           <span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span>
         </h1>
-        <p className="text-xs text-white/60 mt-1">Painel Administrativo</p>
+        <p className="text-xs text-sidebar-foreground/60 mt-1">Painel Administrativo</p>
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
         {items.map((item) => {
@@ -63,13 +63,13 @@ export function AppSidebar() {
             return (
               <div
                 key={item.title}
-                className="flex items-center justify-between px-3 py-2.5 rounded-md text-white/40 cursor-not-allowed"
+                className="flex items-center justify-between px-3 py-2.5 rounded-md text-sidebar-foreground/40 cursor-not-allowed"
               >
                 <span className="flex items-center gap-3">
                   <Icon className="h-4 w-4" />
                   <span className="text-sm">{item.title}</span>
                 </span>
-                <Badge variant="secondary" className="text-[10px] bg-[#2ECC71]/20 text-[#2ECC71]">
+                <Badge variant="secondary" className="text-[10px] bg-sidebar-accent text-sidebar-accent-foreground/70">
                   Em breve
                 </Badge>
               </div>
@@ -82,7 +82,7 @@ export function AppSidebar() {
               className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
                 active
                   ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                  : "hover:bg-white/10 hover:text-white"
+                  : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -91,10 +91,10 @@ export function AppSidebar() {
           );
         })}
       </nav>
-      <div className="p-3 border-t border-white/10 space-y-1">
+      <div className="p-3 border-t border-sidebar-border space-y-1">
         <Button
           variant="ghost"
-          className="w-full justify-start text-white hover:bg-white/10 hover:text-white"
+          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           onClick={handleRecreateAdmin}
           disabled={recreating}
         >
@@ -103,7 +103,7 @@ export function AppSidebar() {
         </Button>
         <Button
           variant="ghost"
-          className="w-full justify-start text-white hover:bg-white/10 hover:text-white"
+          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4 mr-2" />

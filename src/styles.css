@@ -42,25 +42,27 @@
 
 :root {
   --radius: 0.5rem;
-  --background: #FFFFFF;
-  --foreground: #111827;
-  --card: #FFFFFF;
-  --card-foreground: #111827;
+  --background: oklch(0.99 0.003 250);
+  --foreground: oklch(0.18 0.03 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.03 250);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.03 250);
+  /* #1E3A5F */
   --primary: oklch(0.34 0.06 250);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.96 0.01 250);
   --secondary-foreground: oklch(0.34 0.06 250);
   --muted: oklch(0.96 0.01 250);
   --muted-foreground: oklch(0.5 0.02 250);
+  /* #2ECC71 */
   --accent: oklch(0.76 0.17 150);
   --accent-foreground: oklch(0.15 0.05 150);
   --success: oklch(0.76 0.17 150);
   --success-foreground: oklch(0.15 0.05 150);
   --destructive: oklch(0.6 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: #E5E7EB;
+  --border: oklch(0.92 0.01 250);
   --input: oklch(0.92 0.01 250);
   --ring: oklch(0.34 0.06 250);
 
@@ -106,21 +108,6 @@
   --sidebar-ring: oklch(0.76 0.17 150);
 }
 
-.student-area {
-  --background: #141414;
-  --foreground: #FFFFFF;
-  --card: #1e1e1e;
-  --card-foreground: #FFFFFF;
-  --primary: #1E3A5F;
-  --primary-foreground: #FFFFFF;
-  --muted: #1e1e1e;
-  --muted-foreground: #B3B3B3;
-  --border: #333333;
-  --secondary: #2a2a2a;
-  --secondary-foreground: #FFFFFF;
-  --ring: #2D6ADF;
-}
-
 @layer base {
   * {
     border-color: var(--color-border);
@@ -130,13 +117,4 @@
     color: var(--color-foreground);
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
-  /* Forçar temas claros em componentes admin se necessário */
-  .admin-panel table, 
-  .admin-panel .card,
-  .admin-panel .bg-card {
-    background-color: #FFFFFF !important;
-    border-color: #E5E7EB !important;
-    color: #111827 !important;
-  }
 }
-

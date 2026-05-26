@@ -1,17 +1,10 @@
 import { createFileRoute, Outlet, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, LogOut, User as UserIcon, BookOpen, ChevronDown, DollarSign } from "lucide-react";
+import { Loader2, LogOut, User as UserIcon, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_student")({
   component: StudentLayout,
@@ -22,7 +15,6 @@ function StudentLayout() {
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(true);
   const [userName, setUserName] = useState("");
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkRole() {
@@ -33,29 +25,34 @@ function StudentLayout() {
         return;
       }
 
+      // Check if user has 'aluno' role
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', session.user.id)
         .single();
 
-      if (error || (data?.role !== 'aluno' && data?.role !== 'admin')) {
-        toast.error("Acesso negado. Esta área é apenas para alunos.");
-        await supabase.auth.signOut();
-        navigate({ to: "/aluno/login" });
-        return;
+      if (error || data?.role !== 'aluno') {
+        // If they are admin, maybe allow them? 
+        // No, user said "separada do painel admin"
+        if (data?.role === 'admin') {
+           // Admin can see student area too? Usually yes for testing
+        } else {
+          toast.error("Acesso negado. Esta área é apenas para alunos.");
+          await supabase.auth.signOut();
+          navigate({ to: "/aluno/login" });
+          return;
+        }
       }
 
+      // Get student name
       const { data: aluno } = await supabase
         .from('alunos')
-        .select('nome, foto_perfil')
+        .select('nome')
         .eq('email', session.user.email ?? '')
         .single();
       
-      if (aluno) {
-        setUserName(aluno.nome);
-        setUserPhoto(aluno.foto_perfil);
-      }
+      if (aluno) setUserName(aluno.nome);
       setIsVerifying(false);
     }
 
@@ -69,88 +66,47 @@ function StudentLayout() {
 
   if (loading || isVerifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#141414]">
-        <Loader2 className="h-10 w-10 animate-spin text-[#2D6ADF]" />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#141414] text-white student-area">
-      <header className="bg-[#141414]/90 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/aluno/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-              <span className="text-xl font-bold tracking-tighter">
-                <span className="text-white">Soluções</span>{" "}
-                <span className="text-[#2D6ADF]">Online</span>
-              </span>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-6 ml-4">
-              <Link 
-                to="/aluno/dashboard" 
-                className="text-sm font-medium text-[#B3B3B3] hover:text-white transition-colors"
-              >
-                Cursos
-              </Link>
-              <Link 
-                to="/aluno/financeiro" 
-                className="text-sm font-medium text-[#B3B3B3] hover:text-white transition-colors"
-              >
-                Financeiro
-              </Link>
-            </nav>
-          </div>
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
+      <header className="bg-primary border-b sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link to="/aluno/dashboard" className="flex items-center gap-2">
+            <span className="text-xl font-bold"><span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span></span>
+          </Link>
 
           <div className="flex items-center gap-4">
-            <span className="hidden sm:inline text-sm text-[#B3B3B3]">
+            <span className="hidden md:inline text-sm text-white/70">
               Olá, <span className="font-semibold text-white">{userName}</span>!
             </span>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white">
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1E3A5F] flex items-center justify-center text-white font-bold text-xs border border-white/10">
-                    {userPhoto ? (
-                      <img src={userPhoto} alt={userName} className="w-full h-full object-cover" />
-                    ) : (
-                      userName.charAt(0).toUpperCase()
-                    )}
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-[#1e1e1e] border-white/10 text-white">
-                <DropdownMenuItem asChild className="focus:bg-white/10 focus:text-white cursor-pointer">
-                  <Link to="/aluno/perfil" className="flex items-center w-full">
-                    <UserIcon className="mr-2 h-4 w-4" />
-                    <span>Meu Perfil</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="focus:bg-white/10 focus:text-white cursor-pointer">
-                  <Link to="/aluno/financeiro" className="flex items-center w-full">
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    <span>Financeiro</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem onClick={handleLogout} className="focus:bg-white/10 focus:text-white cursor-pointer text-red-400">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sair</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Link to="/aluno/perfil">
+              <Button variant="ghost" size="icon" title="Meu Perfil" className="text-white hover:bg-white/10">
+                <UserIcon className="h-5 w-5" />
+              </Button>
+            </Link>
+
+            <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair" className="text-white hover:bg-white/10">
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1">
-        <Outlet />
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <Outlet />
+        </div>
       </main>
 
-      <footer className="py-10 border-t border-white/10 bg-[#141414]">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-[#B3B3B3]">
-          &copy; {new Date().getFullYear()} Soluções Online — Experiência Premium para Alunos
+      <footer className="py-6 border-t bg-white">
+        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
+          &copy; {new Date().getFullYear()} Soluções Online — Área do Aluno
         </div>
       </footer>
     </div>

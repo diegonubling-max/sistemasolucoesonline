@@ -22,7 +22,6 @@ export type Database = {
           ctr: number
           data_nascimento: string
           email: string | null
-          foto_perfil: string | null
           id: string
           menor_de_idade: boolean
           nome: string
@@ -44,7 +43,6 @@ export type Database = {
           ctr?: number
           data_nascimento: string
           email?: string | null
-          foto_perfil?: string | null
           id?: string
           menor_de_idade?: boolean
           nome: string
@@ -66,7 +64,6 @@ export type Database = {
           ctr?: number
           data_nascimento?: string
           email?: string | null
-          foto_perfil?: string | null
           id?: string
           menor_de_idade?: boolean
           nome?: string

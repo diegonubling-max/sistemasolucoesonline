@@ -100,14 +100,14 @@ function AlunosList() {
         title="Alunos"
         description={`${data?.count ?? 0} aluno(s) no total`}
         actions={
-          <Button onClick={() => navigate({ to: "/alunos/novo" })} className="bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white">
+          <Button onClick={() => navigate({ to: "/alunos/novo" })}>
             <Plus className="h-4 w-4 mr-2" /> Novo aluno
           </Button>
         }
       />
 
-      <Card className="border-none shadow-none">
-        <CardContent className="pt-0 px-0">
+      <Card>
+        <CardContent className="pt-6">
           <div className="relative mb-4 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -117,21 +117,21 @@ function AlunosList() {
                 setSearch(e.target.value);
                 setPage(0);
               }}
-              className="pl-9 border-gray-200"
+              className="pl-9"
             />
           </div>
 
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">CTR</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Nome</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">E-mail</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Telefone</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Vendedora</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Matrícula</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Cadastro</TableHead>
-                <TableHead className="text-right text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Ações</TableHead>
+              <TableRow>
+                <TableHead className="w-[80px]">CTR</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Telefone</TableHead>
+                <TableHead>Vendedora</TableHead>
+                <TableHead>Matrícula</TableHead>
+                <TableHead>Cadastro</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,32 +143,34 @@ function AlunosList() {
                 </TableRow>
               )}
               {data?.rows.map((a) => (
-                <TableRow key={a.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
+                <TableRow key={a.id}>
                   <TableCell>
-                    <span className="text-sm font-normal text-slate-700">#{a.ctr}</span>
+                    <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
+                      #{a.ctr}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="text-sm font-medium text-slate-700 whitespace-nowrap">{a.nome}</TableCell>
-                  <TableCell className="text-sm font-normal text-muted-foreground/80">{a.email}</TableCell>
-                  <TableCell className="text-sm font-normal text-muted-foreground/80">{a.telefone}</TableCell>
-                  <TableCell className="text-sm font-normal text-muted-foreground/80">{a.vendedora}</TableCell>
+                  <TableCell className="font-medium">{a.nome}</TableCell>
+                  <TableCell>{a.email}</TableCell>
+                  <TableCell>{a.telefone}</TableCell>
+                  <TableCell>{a.vendedora}</TableCell>
                   <TableCell>
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
-                      <Badge className="bg-green-500 text-white hover:bg-green-500 rounded-full px-3 font-semibold">Matriculado</Badge>
+                      <Badge className="bg-green-500 text-white hover:bg-green-600">Matriculado</Badge>
                     ) : (
-                      <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 rounded-full px-3 font-semibold">Pendente</Badge>
+                      <Badge className="bg-yellow-500 text-white hover:bg-yellow-600">Pendente</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm font-normal text-muted-foreground/80">{formatDate(a.created_at)}</TableCell>
+                  <TableCell>{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button asChild size="icon" variant="ghost" title="Ver detalhes">
+                      <Button asChild size="icon" variant="ghost" title={Array.isArray(a.matriculas) && a.matriculas.length > 0 ? "Ver matrícula" : "Ver detalhes"}>
                         <Link to="/alunos/$id" params={{ id: a.id }}>
-                          <Eye className="h-4 w-4 text-foreground" />
+                          <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
                       <Button asChild size="icon" variant="ghost" title="Editar">
                         <Link to="/alunos/$id/editar" params={{ id: a.id }}>
-                          <Pencil className="h-4 w-4 text-foreground" />
+                          <Pencil className="h-4 w-4" />
                         </Link>
                       </Button>
                       <Button
@@ -177,13 +179,13 @@ function AlunosList() {
                         title={a.ativo ? "Desativar" : "Ativar"}
                         onClick={() => toggle.mutate({ id: a.id, ativo: a.ativo })}
                       >
-                        <Power className="h-4 w-4 text-foreground" />
+                        <Power className="h-4 w-4" />
                       </Button>
                       <Button
                         size="icon"
                         variant="ghost"
                         title="Excluir"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         onClick={() => setStudentToDelete({ id: a.id, nome: a.nome, email: a.email ?? "" })}
                       >
                         <Trash2 className="h-4 w-4" />

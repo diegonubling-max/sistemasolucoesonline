@@ -92,8 +92,8 @@ function CursosList() {
         }
       />
 
-      <Card className="border-none shadow-none">
-        <CardContent className="pt-0 px-0">
+      <Card>
+        <CardContent className="pt-6">
           <div className="relative mb-4 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -106,13 +106,13 @@ function CursosList() {
 
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-gray-100">
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Nome</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Descrição</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Aulas</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Status</TableHead>
-                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Cadastro</TableHead>
-                <TableHead className="text-right text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Ações</TableHead>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Aulas</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Cadastro</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,30 +126,30 @@ function CursosList() {
               {data?.map((c) => {
                 const count = Array.isArray(c.aulas) ? (c.aulas[0]?.count ?? 0) : 0;
                 return (
-                  <TableRow key={c.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
-                    <TableCell className="text-sm font-bold text-slate-700">{c.nome}</TableCell>
-                    <TableCell className="max-w-md truncate text-sm font-normal text-muted-foreground/80">
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.nome}</TableCell>
+                    <TableCell className="max-w-md truncate text-muted-foreground">
                       {c.descricao || "—"}
                     </TableCell>
-                    <TableCell className="text-sm font-normal text-slate-700">{count}</TableCell>
+                    <TableCell>{count}</TableCell>
                     <TableCell>
                       {c.ativo ? (
-                        <Badge className="bg-green-500 text-white hover:bg-green-500 rounded-full px-3 font-semibold">Ativo</Badge>
+                        <Badge className="bg-accent text-accent-foreground hover:bg-accent">Ativo</Badge>
                       ) : (
-                        <Badge className="bg-gray-400 text-white hover:bg-gray-400 rounded-full px-3 font-semibold">Inativo</Badge>
+                        <Badge variant="secondary">Inativo</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm font-normal text-muted-foreground/80">{formatDate(c.created_at)}</TableCell>
+                    <TableCell>{formatDate(c.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button asChild size="icon" variant="ghost" title="Gerenciar aulas">
                           <Link to="/cursos/$id/aulas" params={{ id: c.id }}>
-                            <ListVideo className="h-4 w-4 text-foreground" />
+                            <ListVideo className="h-4 w-4" />
                           </Link>
                         </Button>
                         <Button asChild size="icon" variant="ghost" title="Editar">
                           <Link to="/cursos/$id/editar" params={{ id: c.id }}>
-                            <Pencil className="h-4 w-4 text-foreground" />
+                            <Pencil className="h-4 w-4" />
                           </Link>
                         </Button>
                         <Button

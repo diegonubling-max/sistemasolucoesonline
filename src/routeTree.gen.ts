@@ -18,7 +18,6 @@ import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
 import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
-import { Route as StudentAlunoFinanceiroRouteImport } from './routes/_student.aluno.financeiro'
 import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.aluno.dashboard'
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
@@ -71,11 +70,6 @@ const StudentAlunoPerfilRoute = StudentAlunoPerfilRouteImport.update({
   path: '/aluno/perfil',
   getParentRoute: () => StudentRoute,
 } as any)
-const StudentAlunoFinanceiroRoute = StudentAlunoFinanceiroRouteImport.update({
-  id: '/aluno/financeiro',
-  path: '/aluno/financeiro',
-  getParentRoute: () => StudentRoute,
-} as any)
 const StudentAlunoDashboardRoute = StudentAlunoDashboardRouteImport.update({
   id: '/aluno/dashboard',
   path: '/aluno/dashboard',
@@ -125,7 +119,6 @@ export interface FileRoutesByFullPath {
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
-  '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
   '/alunos/': typeof AdminAlunosIndexRoute
   '/cursos/': typeof AdminCursosIndexRoute
@@ -143,7 +136,6 @@ export interface FileRoutesByTo {
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
-  '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
   '/alunos': typeof AdminAlunosIndexRoute
   '/cursos': typeof AdminCursosIndexRoute
@@ -164,7 +156,6 @@ export interface FileRoutesById {
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
   '/_student/aluno/dashboard': typeof StudentAlunoDashboardRoute
-  '/_student/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/_student/aluno/perfil': typeof StudentAlunoPerfilRoute
   '/_admin/alunos/': typeof AdminAlunosIndexRoute
   '/_admin/cursos/': typeof AdminCursosIndexRoute
@@ -184,7 +175,6 @@ export interface FileRouteTypes {
     | '/alunos/novo'
     | '/cursos/novo'
     | '/aluno/dashboard'
-    | '/aluno/financeiro'
     | '/aluno/perfil'
     | '/alunos/'
     | '/cursos/'
@@ -202,7 +192,6 @@ export interface FileRouteTypes {
     | '/alunos/novo'
     | '/cursos/novo'
     | '/aluno/dashboard'
-    | '/aluno/financeiro'
     | '/aluno/perfil'
     | '/alunos'
     | '/cursos'
@@ -222,7 +211,6 @@ export interface FileRouteTypes {
     | '/_admin/alunos/novo'
     | '/_admin/cursos/novo'
     | '/_student/aluno/dashboard'
-    | '/_student/aluno/financeiro'
     | '/_student/aluno/perfil'
     | '/_admin/alunos/'
     | '/_admin/cursos/'
@@ -303,13 +291,6 @@ declare module '@tanstack/react-router' {
       path: '/aluno/perfil'
       fullPath: '/aluno/perfil'
       preLoaderRoute: typeof StudentAlunoPerfilRouteImport
-      parentRoute: typeof StudentRoute
-    }
-    '/_student/aluno/financeiro': {
-      id: '/_student/aluno/financeiro'
-      path: '/aluno/financeiro'
-      fullPath: '/aluno/financeiro'
-      preLoaderRoute: typeof StudentAlunoFinanceiroRouteImport
       parentRoute: typeof StudentRoute
     }
     '/_student/aluno/dashboard': {
@@ -401,14 +382,12 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface StudentRouteChildren {
   StudentAlunoDashboardRoute: typeof StudentAlunoDashboardRoute
-  StudentAlunoFinanceiroRoute: typeof StudentAlunoFinanceiroRoute
   StudentAlunoPerfilRoute: typeof StudentAlunoPerfilRoute
   StudentAlunoCursoIdRoute: typeof StudentAlunoCursoIdRoute
 }
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentAlunoDashboardRoute: StudentAlunoDashboardRoute,
-  StudentAlunoFinanceiroRoute: StudentAlunoFinanceiroRoute,
   StudentAlunoPerfilRoute: StudentAlunoPerfilRoute,
   StudentAlunoCursoIdRoute: StudentAlunoCursoIdRoute,
 }
