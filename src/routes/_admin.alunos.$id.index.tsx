@@ -262,49 +262,6 @@ function AlunoDetalhes() {
           </Card>
         </div>
 
-        {/* Taxa de Matrícula */}
-        {parcelas?.filter(p => p.tipo === 'taxa_matricula').map(taxa => (
-          <Card key={taxa.id}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold flex items-center justify-between">
-                Taxa de Matrícula
-                <Badge 
-                  variant={taxa.status === 'pago' ? 'default' : taxa.status === 'isento' ? 'secondary' : 'outline'}
-                  className={cn(
-                    taxa.status === 'pago' ? "bg-green-500 text-white" : 
-                    taxa.status === 'isento' ? "bg-gray-200 text-gray-700" :
-                    "bg-yellow-100 text-yellow-800 border-yellow-200"
-                  )}
-                >
-                  {taxa.status === 'pago' ? 'Pago' : taxa.status === 'isento' ? 'Isento' : 'Aberto'}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-sm">
-                <Info label="Valor" value={`R$ ${Number(taxa.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
-                <Info label="Vencimento" value={formatDate(taxa.data_vencimento)} />
-                {taxa.status === 'pago' && (
-                  <Info label="Data Pagamento" value={formatDate(taxa.data_pagamento)} />
-                )}
-              </div>
-              {taxa.status === 'aberto' && (
-                <Button 
-                  size="sm" 
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => {
-                    setSelectedParcelaId(taxa.id);
-                    setShowBaixaModal(true);
-                  }}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" /> Dar baixa
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-
-        {/* Tabela de Parcelas */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base font-bold">Mensalidades / Parcelas</CardTitle>
@@ -315,6 +272,7 @@ function AlunoDetalhes() {
                 <thead>
                   <tr className="border-b text-muted-foreground">
                     <th className="text-left py-2 font-medium">Nº</th>
+                    <th className="text-left py-2 font-medium">Descrição</th>
                     <th className="text-left py-2 font-medium">Vencimento</th>
                     <th className="text-left py-2 font-medium">Valor</th>
                     <th className="text-left py-2 font-medium">Status</th>
@@ -322,11 +280,15 @@ function AlunoDetalhes() {
                   </tr>
                 </thead>
                 <tbody>
-                  {parcelas?.filter(p => p.tipo === 'parcela').map((p) => {
+                  {parcelas?.map((p) => {
                     const isVencido = p.status === 'aberto' && isBefore(startOfDay(new Date(p.data_vencimento)), startOfDay(new Date()));
+                    const description = p.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : 'Parcela';
+                    const number = p.tipo === 'taxa_matricula' ? '-' : p.numero;
+                    
                     return (
                       <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="py-4 font-medium">{p.numero}</td>
+                        <td className="py-4 font-medium">{number}</td>
+                        <td className="py-4">{description}</td>
                         <td className="py-4">{formatDate(p.data_vencimento)}</td>
                         <td className="py-4 font-bold">R$ {Number(p.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
                         <td className="py-4">
@@ -334,11 +296,12 @@ function AlunoDetalhes() {
                             variant="secondary"
                             className={cn(
                               p.status === 'pago' ? "bg-green-100 text-green-800 border-green-200" :
+                              p.status === 'isento' ? "bg-gray-100 text-gray-700 border-gray-200" :
                               isVencido ? "bg-red-100 text-red-800 border-red-200" :
                               "bg-yellow-100 text-yellow-800 border-yellow-200"
                             )}
                           >
-                            {p.status === 'pago' ? 'Pago' : isVencido ? 'Vencido' : 'Aberto'}
+                            {p.status === 'pago' ? 'Pago' : p.status === 'isento' ? 'Isento' : isVencido ? 'Vencido' : 'Aberto'}
                             {isVencido && <AlertCircle className="h-3 w-3 ml-1 inline" />}
                           </Badge>
                         </td>
@@ -365,9 +328,9 @@ function AlunoDetalhes() {
                       </tr>
                     );
                   })}
-                  {parcelas?.filter(p => p.tipo === 'parcela').length === 0 && (
+                  {!isLoading && (!parcelas || parcelas.length === 0) && (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
                         Nenhuma parcela gerada para este aluno.
                       </td>
                     </tr>
