@@ -332,9 +332,11 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={`space-y-1.5 ${className}`}>
-      <Label className="text-xs font-medium">{label}</Label>
-      {children}
+    <div className={cn("space-y-1.5", className)}>
+      <Label className={cn("text-xs font-medium", error && "text-destructive")}>{label}</Label>
+      <div className={cn(error && "[&_input]:border-destructive [&_button]:border-destructive")}>
+        {children}
+      </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
