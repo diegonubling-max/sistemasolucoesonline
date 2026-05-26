@@ -1,16 +1,20 @@
-## Problema
-O enum `app_role` no banco só aceita `'admin'` e `'aluno'`. As policies criadas recentemente (`is_admin()`) e o botão "Recriar Admin" tentam usar `'administrador'`, que não existe no enum — daí o erro `invalid input value for enum app_role: "administrador"` ao inserir o role, e o RLS de `cursos` bloqueando o admin (que nunca recebeu o papel correto).
+## Diagnóstico
 
-## Correção (padronizar tudo em `'admin'`)
+O erro `new row violates row-level security policy for table "cursos"` acontece porque a tabela `cursos` só permite criar/editar registros quando a função `is_admin()` retorna verdadeiro.
 
-1. **Migração SQL**
-   - Recriar `is_admin()` e `is_student()` usando os valores existentes do enum (`'admin'`, `'aluno'`).
-   - (Nenhuma alteração de policies necessária — elas usam as funções.)
+Ao verificar o banco, encontrei que a tabela `user_roles` está vazia, ou seja: nenhum usuário está com o papel `admin`. Por isso, mesmo logado, o sistema não autoriza salvar cursos.
 
-2. **Edge function `manage-student-access`** (ação `recreate_admin`)
-   - Trocar o insert/select de `user_roles` de `role: 'administrador'` para `role: 'admin'`.
+## O que precisa ser feito
 
-3. **Verificação**
-   - Após o deploy, clicar em "Recriar Admin", relogar e tentar salvar um curso.
+1. Restaurar o usuário administrador correto na tabela `user_roles` com `role = 'admin'`.
+2. Manter as políticas atuais de `cursos`, especialmente `Admins full access`, sem abrir acesso público.
+3. Não alterar relacionamento entre alunos e cursos nesta correção.
+4. Verificar se o botão/ação de “Recriar Admin” continua usando `admin`, não `administrador`.
 
-Nenhuma outra funcionalidade é alterada.
+## Correção proposta
+
+Executar uma correção pontual no banco para inserir o role `admin` para o usuário configurado como administrador, usando o e-mail salvo em `ADMIN_EMAIL`/usuário admin existente.
+
+## Resultado esperado
+
+Depois disso, ao relogar como administrador, salvar curso deve voltar a funcionar, e excluir aluno não deve excluir cursos nem excluir curso deve excluir aluno.
