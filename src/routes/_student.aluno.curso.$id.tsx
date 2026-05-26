@@ -159,7 +159,7 @@ function StudentCourse() {
         {/* Main Content (Video + Info) */}
         <div className="lg:col-span-3 space-y-6">
           <Card className="overflow-hidden border-none shadow-xl bg-black aspect-video">
-            {activeAula && renderVideoPlayer(activeAula.video_url)}
+            {activeAula && renderVideoPlayer(activeAula.url_video)}
             {!activeAula && (
               <div className="w-full h-full flex items-center justify-center text-white">
                 Selecione uma aula para começar
