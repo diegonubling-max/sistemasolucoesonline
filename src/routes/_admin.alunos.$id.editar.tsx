@@ -29,7 +29,7 @@ function EditarAluno() {
   });
 
   const mut = useMutation({
-    mutationFn: async (v: AlunoFormValues) => {
+    mutationFn: async (v: any) => {
       const { error } = await supabase
         .from("alunos")
         .update({ ...v, responsavel_email: v.responsavel_email || null })
