@@ -43,3 +43,10 @@ export function formatDate(date: string | null | undefined) {
   if (!date) return "—";
   return new Date(date).toLocaleDateString("pt-BR");
 }
+
+export function generateStudentPassword(name: string): string {
+  if (!name) return "123";
+  const firstName = name.split(" ")[0].toLowerCase();
+  const normalized = firstName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  return `123${normalized}`;
+}
