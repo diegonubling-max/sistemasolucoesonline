@@ -74,9 +74,9 @@ function StudentProfile() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in duration-700">
-      <div className={`flex flex-col md:flex-row items-center gap-8 ${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-sm"} p-8 rounded-2xl border transition-colors shadow-xl`}>
+      <div className="flex flex-col md:flex-row items-center gap-8 bg-white border-gray-100 shadow-sm p-8 rounded-2xl border transition-colors shadow-xl">
         <div className="relative group">
-            <div className={`h-32 w-32 rounded-full ${isDark ? "bg-[#2D6ADF]" : "bg-[#1E3A5F]"} flex items-center justify-center text-4xl font-bold text-white shadow-2xl border-4 ${isDark ? "border-[#141414]" : "border-white"}`}>
+            <div className="h-32 w-32 rounded-full bg-[#1E3A5F] flex items-center justify-center text-4xl font-bold text-white shadow-2xl border-4 border-white">
                 {alunoData?.nome?.[0]?.toUpperCase() || session?.user.email?.[0]?.toUpperCase()}
             </div>
             <button className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-white">
@@ -84,10 +84,10 @@ function StudentProfile() {
             </button>
         </div>
         <div className="text-center md:text-left space-y-2">
-          <h1 className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-tight`}>{alunoData?.nome || "Meu Perfil"}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{alunoData?.nome || "Meu Perfil"}</h1>
           <div className="flex flex-wrap justify-center md:justify-start gap-4">
-              <span className={`${isDark ? "bg-white/5 text-[#B3B3B3] border-white/5" : "bg-gray-100 text-gray-500 border-black/5"} px-3 py-1 rounded-full text-xs border transition-colors`}>E-mail: {session?.user.email}</span>
-              <span className={`${isDark ? "bg-[#2D6ADF]/10 text-[#2D6ADF] border-[#2D6ADF]/20" : "bg-blue-50 text-blue-700 border-blue-100"} px-3 py-1 rounded-full text-xs border font-bold transition-colors`}>Aluno Verificado</span>
+              <span className="bg-gray-100 text-gray-500 border-gray-100 px-3 py-1 rounded-full text-xs border transition-colors">E-mail: {session?.user.email}</span>
+              <span className="bg-blue-50 text-blue-700 border-blue-100 px-3 py-1 rounded-full text-xs border font-bold transition-colors">Aluno Verificado</span>
           </div>
         </div>
       </div>
