@@ -16,6 +16,7 @@ const items = [
 export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
+  const [recreating, setRecreating] = useState(false);
 
   const isActive = (url: string) => {
     if (url === "/") return path === "/";
@@ -25,6 +26,25 @@ export function AppSidebar() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/login" });
+  };
+
+  const handleRecreateAdmin = async () => {
+    if (!confirm("Recriar/resetar o usuário admin com as credenciais configuradas nas variáveis do projeto?")) return;
+    setRecreating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-student-access", {
+        body: { action: "recreate_admin" },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success((data as any)?.message ?? "Admin recriado", {
+        description: (data as any)?.email,
+      });
+    } catch (e: any) {
+      toast.error("Falha ao recriar admin", { description: e?.message ?? String(e) });
+    } finally {
+      setRecreating(false);
+    }
   };
 
   return (
