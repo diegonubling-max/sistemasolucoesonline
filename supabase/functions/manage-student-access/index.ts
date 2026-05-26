@@ -119,12 +119,12 @@ serve(async (req) => {
         userId = created.user.id
       }
 
-      // Garante role de administrador
+      // Garante role de admin
       const { data: roles } = await supabaseClient
-        .from('user_roles').select('id').eq('user_id', userId).eq('role', 'administrador')
+        .from('user_roles').select('id').eq('user_id', userId).eq('role', 'admin')
       if (!roles || roles.length === 0) {
         const { error: roleErr } = await supabaseClient
-          .from('user_roles').insert({ user_id: userId, role: 'administrador' })
+          .from('user_roles').insert({ user_id: userId, role: 'admin' })
         if (roleErr) throw roleErr
       }
 
