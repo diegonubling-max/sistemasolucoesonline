@@ -141,27 +141,27 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       const currentPacote = pacotes?.find(p => p.id === selectedPacote);
       if (!currentPacote) throw new Error("Pacote não encontrado");
 
-      const allParcelas = [];
+      const allParcelas: any[] = [];
 
       // Add Taxa de Matrícula
       allParcelas.push({
         matricula_id: matriculaId,
-        tipo: 'taxa_matricula',
+        tipo: 'taxa_matricula' as const,
         numero: 0,
         valor: currentPacote.valor_matricula,
         data_vencimento: taxaStatus === 'isentar' ? format(new Date(), 'yyyy-MM-dd') : format(taxaVencimento, 'yyyy-MM-dd'),
-        status: taxaStatus === 'isentar' ? 'isento' : 'aberto'
+        status: taxaStatus === 'isentar' ? ('isento' as const) : ('aberto' as const)
       });
 
       // Add Parcelas
       parcelasGeradas.forEach(p => {
         allParcelas.push({
           matricula_id: matriculaId,
-          tipo: 'parcela',
+          tipo: 'parcela' as const,
           numero: p.numero,
           valor: p.valor,
           data_vencimento: format(p.vencimento, 'yyyy-MM-dd'),
-          status: 'aberto'
+          status: 'aberto' as const
         });
       });
 
