@@ -145,11 +145,9 @@ function AlunosList() {
               {data?.rows.map((a) => (
                 <TableRow key={a.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
                   <TableCell>
-                    <Badge variant="outline" className="bg-gray-50 text-muted-foreground/60 border-gray-200 font-normal text-xs uppercase tracking-tighter">
-                      #{a.ctr}
-                    </Badge>
+                    <span className="text-sm font-normal text-slate-700">#{a.ctr}</span>
                   </TableCell>
-                  <TableCell className="text-sm font-bold text-slate-700">{a.nome}</TableCell>
+                  <TableCell className="text-sm font-medium text-slate-700 whitespace-nowrap">{a.nome}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.email}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.telefone}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.vendedora}</TableCell>
