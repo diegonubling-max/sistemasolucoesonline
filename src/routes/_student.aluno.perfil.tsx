@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, Key, User as UserIcon, Mail, ShieldCheck, CreditCard } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Key, User as UserIcon, Mail, ShieldCheck, CreditCard, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const Route = createFileRoute("/_student/aluno/perfil")({
   head: () => ({ meta: [{ title: "Meu Perfil — Soluções Online" }] }),
@@ -21,6 +21,8 @@ function StudentProfile() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: aluno, isLoading: loadingAluno } = useQuery({
     queryKey: ["student-full-profile", session?.user.email],
@@ -70,10 +72,49 @@ function StudentProfile() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (!session?.user.id) throw new Error("Usuário não autenticado");
+
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${session.user.id}/${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("fotos-perfil")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("fotos-perfil")
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from("alunos")
+        .update({ foto_perfil: publicUrl })
+        .eq("email", session.user.email ?? "");
+
+      if (updateError) throw updateError;
+
+      toast.success("Foto de perfil atualizada!");
+      queryClient.invalidateQueries({ queryKey: ["student-full-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["student-profile"] });
+      window.location.reload(); 
+    } catch (error: any) {
+      toast.error("Erro ao carregar foto: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (loadingAluno) {
     return (
       <div className="flex justify-center py-40 bg-[#141414] min-h-screen">
-        <Loader2 className="h-10 w-10 animate-spin text-[#2ECC71]" />
+        <Loader2 className="h-10 w-10 animate-spin text-[#2D6ADF]" />
       </div>
     );
   }
@@ -82,24 +123,48 @@ function StudentProfile() {
     <div className="max-w-4xl mx-auto px-4 py-12 space-y-10 text-white font-sans bg-[#141414]">
       {/* Profile Header */}
       <div className="flex flex-col md:flex-row items-center gap-8 bg-[#1e1e1e] p-8 rounded-2xl border border-white/5 shadow-2xl">
-        <Avatar className="h-32 w-32 border-4 border-[#2ECC71] shadow-[0_0_30px_rgba(46,204,113,0.2)]">
-          <AvatarFallback className="bg-[#141414] text-[#2ECC71] text-4xl font-black">
-            {aluno?.nome?.charAt(0).toUpperCase() || "?"}
-          </AvatarFallback>
-        </Avatar>
+        <div className="relative group">
+          <Avatar className="h-32 w-32 border-4 border-[#1E3A5F] shadow-[0_0_30px_rgba(30,58,95,0.2)]">
+            <AvatarImage src={aluno?.foto_perfil || ""} className="object-cover" />
+            <AvatarFallback className="bg-[#1E3A5F] text-white text-4xl font-black uppercase">
+              {aluno?.nome?.charAt(0) || "?"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="mt-4 text-center">
+            <input
+              type="file"
+              id="photo-upload"
+              className="hidden"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              disabled={uploading}
+            />
+            <Label 
+              htmlFor="photo-upload" 
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#2D6ADF] hover:text-white cursor-pointer transition-colors"
+            >
+              {uploading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Camera className="h-4 w-4" />
+              )}
+              Alterar Foto
+            </Label>
+          </div>
+        </div>
         <div className="text-center md:text-left flex-1 space-y-2">
           <h1 className="text-4xl font-black tracking-tighter text-white">{aluno?.nome}</h1>
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-2">
              <div className="flex items-center gap-2 text-[#B3B3B3] bg-black/30 px-3 py-1.5 rounded-full text-sm">
-                <Mail className="h-4 w-4 text-[#2ECC71]" />
+                <Mail className="h-4 w-4 text-[#2D6ADF]" />
                 {aluno?.email}
              </div>
              <div className="flex items-center gap-2 text-[#B3B3B3] bg-black/30 px-3 py-1.5 rounded-full text-sm">
-                <CreditCard className="h-4 w-4 text-[#2ECC71]" />
+                <CreditCard className="h-4 w-4 text-[#2D6ADF]" />
                 CTR: <span className="text-white font-bold">{aluno?.ctr}</span>
              </div>
              <div className="flex items-center gap-2 text-[#B3B3B3] bg-black/30 px-3 py-1.5 rounded-full text-sm">
-                <ShieldCheck className="h-4 w-4 text-[#2ECC71]" />
+                <ShieldCheck className="h-4 w-4 text-[#2D6ADF]" />
                 Conta Ativa
              </div>
           </div>
@@ -111,7 +176,7 @@ function StudentProfile() {
         <Card className="border-none shadow-2xl bg-[#1e1e1e] text-white">
           <CardHeader className="border-b border-white/5 pb-6">
             <CardTitle className="flex items-center gap-3 text-xl font-bold">
-              <Key className="h-6 w-6 text-[#2ECC71]" />
+              <Key className="h-6 w-6 text-[#2D6ADF]" />
               Segurança
             </CardTitle>
             <CardDescription className="text-[#B3B3B3]">
@@ -134,7 +199,7 @@ function StudentProfile() {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Digite sua senha atual"
-                  className="bg-[#2a2a2a] border-none text-white h-12 placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2ECC71]"
+                  className="bg-[#2a2a2a] border-none text-white h-12 placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2D6ADF]"
                   required
                 />
               </div>
@@ -146,7 +211,7 @@ function StudentProfile() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Mínimo 6 caracteres"
-                  className="bg-[#2a2a2a] border-none text-white h-12 placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2ECC71]"
+                  className="bg-[#2a2a2a] border-none text-white h-12 placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2D6ADF]"
                   required
                 />
               </div>
@@ -158,7 +223,7 @@ function StudentProfile() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repita a nova senha"
-                  className="bg-[#2a2a2a] border-none text-white h-12 placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2ECC71]"
+                  className="bg-[#2a2a2a] border-none text-white h-12 placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2D6ADF]"
                   required
                 />
               </div>
@@ -167,7 +232,7 @@ function StudentProfile() {
                 <Button 
                   type="submit" 
                   disabled={updatePassword.isPending || !newPassword || !confirmPassword}
-                  className="w-full h-12 bg-[#2ECC71] hover:bg-[#27ae60] text-black font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(46,204,113,0.1)] transition-transform hover:scale-[1.02]"
+                  className="w-full h-12 bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(30,58,95,0.1)] transition-transform hover:scale-[1.02]"
                 >
                   {updatePassword.isPending ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -184,31 +249,31 @@ function StudentProfile() {
         <div className="space-y-8">
            <div className="bg-gradient-to-br from-[#1e1e1e] to-[#141414] p-8 rounded-2xl border border-white/5 shadow-xl">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
-                 <ShieldCheck className="h-6 w-6 text-[#2ECC71]" />
+                 <ShieldCheck className="h-6 w-6 text-[#2D6ADF]" />
                  Dicas de Segurança
               </h3>
               <ul className="space-y-4 text-[#B3B3B3] text-sm leading-relaxed">
                  <li className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#2ECC71] mt-1.5" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#2D6ADF] mt-1.5" />
                     Use senhas fortes com letras, números e símbolos.
                  </li>
                  <li className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#2ECC71] mt-1.5" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#2D6ADF] mt-1.5" />
                     Nunca compartilhe suas credenciais de acesso com terceiros.
                  </li>
                  <li className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#2ECC71] mt-1.5" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#2D6ADF] mt-1.5" />
                     Lembre-se de sair da sua conta ao usar dispositivos públicos.
                  </li>
               </ul>
            </div>
            
-           <div className="bg-[#2ECC71]/5 p-8 rounded-2xl border border-[#2ECC71]/20 shadow-xl">
+           <div className="bg-[#1E3A5F]/5 p-8 rounded-2xl border border-[#1E3A5F]/20 shadow-xl">
               <h3 className="text-xl font-bold mb-4 text-white">Suporte Premium</h3>
               <p className="text-[#B3B3B3] text-sm leading-relaxed mb-6">
                  Precisa de ajuda com sua conta ou cursos? Nossa equipe está pronta para te atender.
               </p>
-              <Button variant="outline" className="w-full border-[#2ECC71] text-[#2ECC71] hover:bg-[#2ECC71] hover:text-black font-bold">
+              <Button variant="outline" className="w-full border-[#2D6ADF] text-[#2D6ADF] hover:bg-[#2D6ADF] hover:text-black font-bold">
                  Falar com Suporte
               </Button>
            </div>

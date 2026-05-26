@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, LogOut, User as UserIcon, BookOpen, ChevronDown } from "lucide-react";
+import { Loader2, LogOut, User as UserIcon, BookOpen, ChevronDown, DollarSign } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ function StudentLayout() {
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(true);
   const [userName, setUserName] = useState("");
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkRole() {
@@ -47,11 +48,14 @@ function StudentLayout() {
 
       const { data: aluno } = await supabase
         .from('alunos')
-        .select('nome')
+        .select('nome, foto_perfil')
         .eq('email', session.user.email ?? '')
         .single();
       
-      if (aluno) setUserName(aluno.nome);
+      if (aluno) {
+        setUserName(aluno.nome);
+        setUserPhoto(aluno.foto_perfil);
+      }
       setIsVerifying(false);
     }
 
@@ -75,12 +79,29 @@ function StudentLayout() {
     <div className="min-h-screen flex flex-col bg-[#141414] text-white student-area">
       <header className="bg-[#141414]/90 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/aluno/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-            <span className="text-xl font-bold tracking-tighter">
-              <span className="text-white">Soluções</span>{" "}
-              <span className="text-[#2D6ADF]">Online</span>
-            </span>
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/aluno/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+              <span className="text-xl font-bold tracking-tighter">
+                <span className="text-white">Soluções</span>{" "}
+                <span className="text-[#2D6ADF]">Online</span>
+              </span>
+            </Link>
+
+            <nav className="hidden md:flex items-center gap-6 ml-4">
+              <Link 
+                to="/aluno/dashboard" 
+                className="text-sm font-medium text-[#B3B3B3] hover:text-white transition-colors"
+              >
+                Cursos
+              </Link>
+              <Link 
+                to="/aluno/financeiro" 
+                className="text-sm font-medium text-[#B3B3B3] hover:text-white transition-colors"
+              >
+                Financeiro
+              </Link>
+            </nav>
+          </div>
 
           <div className="flex items-center gap-4">
             <span className="hidden sm:inline text-sm text-[#B3B3B3]">
@@ -90,8 +111,12 @@ function StudentLayout() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white">
-                  <div className="w-8 h-8 rounded bg-[#1E3A5F] flex items-center justify-center text-white font-bold text-xs">
-                    {userName.charAt(0).toUpperCase()}
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1E3A5F] flex items-center justify-center text-white font-bold text-xs border border-white/10">
+                    {userPhoto ? (
+                      <img src={userPhoto} alt={userName} className="w-full h-full object-cover" />
+                    ) : (
+                      userName.charAt(0).toUpperCase()
+                    )}
                   </div>
                 </Button>
               </DropdownMenuTrigger>
@@ -100,6 +125,12 @@ function StudentLayout() {
                   <Link to="/aluno/perfil" className="flex items-center w-full">
                     <UserIcon className="mr-2 h-4 w-4" />
                     <span>Meu Perfil</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="focus:bg-white/10 focus:text-white cursor-pointer">
+                  <Link to="/aluno/financeiro" className="flex items-center w-full">
+                    <DollarSign className="mr-2 h-4 w-4" />
+                    <span>Financeiro</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
