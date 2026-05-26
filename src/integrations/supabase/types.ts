@@ -94,6 +94,7 @@ export type Database = {
           descricao: string | null
           id: string
           ordem: number
+          thumbnail_url: string | null
           titulo: string
           url_video: string | null
         }
@@ -104,6 +105,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           ordem?: number
+          thumbnail_url?: string | null
           titulo: string
           url_video?: string | null
         }
@@ -114,6 +116,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           ordem?: number
+          thumbnail_url?: string | null
           titulo?: string
           url_video?: string | null
         }
@@ -134,6 +137,7 @@ export type Database = {
           descricao: string | null
           id: string
           nome: string
+          thumbnail_url: string | null
         }
         Insert: {
           ativo?: boolean
@@ -141,6 +145,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome: string
+          thumbnail_url?: string | null
         }
         Update: {
           ativo?: boolean
@@ -148,6 +153,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome?: string
+          thumbnail_url?: string | null
         }
         Relationships: []
       }
