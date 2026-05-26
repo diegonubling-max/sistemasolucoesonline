@@ -786,7 +786,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
               variant="outline" 
               className="flex-1"
               onClick={() => {
-                const loginUrl = `${window.location.origin}/aluno/login`;
+                const loginUrl = "https://sistemasolucoesonline.lovable.app/aluno/login";
                 const text = `Olá ${accessData?.nome?.split(" ")[0]}! Seus dados de acesso:\nLogin: ${accessData?.ctr}\nSenha: ${accessData?.pass}\nAcesse: ${loginUrl}`;
                 navigator.clipboard.writeText(text);
                 toast.success("Dados copiados para a área de transferência!");
