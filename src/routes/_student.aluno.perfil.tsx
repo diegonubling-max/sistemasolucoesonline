@@ -34,9 +34,10 @@ function StudentProfile() {
 
       if (signInError) throw new Error("Senha atual incorreta");
 
-      // Update to new password
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
+      // Update to new password using RPC to avoid "weak password" validation from Supabase Auth directly
+      const { error } = await supabase.rpc('redefinir_senha_aluno', {
+        p_email: session?.user.email ?? "",
+        p_nova_senha: newPassword
       });
 
       if (error) throw error;
