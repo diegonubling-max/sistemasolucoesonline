@@ -42,11 +42,28 @@ function Dashboard() {
         return acc + val;
       }, 0);
 
+      // Calcular origens
+      const origensMap = (origensData.data ?? []).reduce((acc: Record<string, number>, curr) => {
+        const key = curr.origem || 'Outros';
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+
+      const totalAlunos = a.count ?? 0;
+      const origens = Object.entries(origensMap)
+        .map(([name, count]) => ({
+          name,
+          count,
+          percent: totalAlunos > 0 ? Math.round((count / totalAlunos) * 100) : 0
+        }))
+        .sort((a, b) => b.count - a.count);
+
       return {
-        alunos: a.count ?? 0,
+        alunos: totalAlunos,
         cursos: c.count ?? 0,
         matriculas: m.count ?? 0,
         ativos: aa.count ?? 0,
+        origens,
         faturamento: {
           recebido: receivedSum(pagoMes.data),
           aReceberMes: sum(abertoMes.data),
