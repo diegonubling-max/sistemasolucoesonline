@@ -50,3 +50,11 @@ export function generateStudentPassword(name: string): string {
   const normalized = firstName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
   return `123${normalized}`;
 }
+
+export function formatCurrency(value: number | string | null | undefined) {
+  const amount = Number(value ?? 0);
+  return amount.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
