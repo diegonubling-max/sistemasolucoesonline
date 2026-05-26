@@ -61,8 +61,8 @@ function AlunoLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#3B82F6]/10 via-white to-[#10B981]/10 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black tracking-tight text-primary">
-            Edu<span className="text-[#3B82F6]">Manager</span>
+          <h1 className="text-4xl font-black tracking-tight">
+            <span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span>
           </h1>
           <p className="text-muted-foreground mt-2 font-medium">Área do Aluno</p>
         </div>

@@ -13,7 +13,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/alunos/")({
-  head: () => ({ meta: [{ title: "Alunos — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Alunos — Soluções Online" }] }),
   component: AlunosList,
 });
 

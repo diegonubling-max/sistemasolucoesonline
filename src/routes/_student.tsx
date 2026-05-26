@@ -77,7 +77,7 @@ function StudentLayout() {
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/aluno/dashboard" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary">Edu<span className="text-[#3B82F6]">Manager</span></span>
+            <span className="text-xl font-bold text-primary">Soluções <span className="text-[#2ECC71]">Online</span></span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -106,7 +106,7 @@ function StudentLayout() {
 
       <footer className="py-6 border-t bg-white">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} EduManager — Área do Aluno
+          &copy; {new Date().getFullYear()} Soluções Online — Área do Aluno
         </div>
       </footer>
     </div>

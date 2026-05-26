@@ -34,7 +34,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "EduManager" },
+      { title: "Soluções Online" },
       { name: "description", content: "Sistema de gestão educacional" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
