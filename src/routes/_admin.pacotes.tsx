@@ -98,16 +98,16 @@ function PacotesList() {
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
-      // Verificar se o pacote está vinculado a alguma matrícula
-      const { data: matriculas, error: checkError } = await supabase
-        .from("matriculas")
+      // Verificar se o pacote está vinculado a alguma matrícula (via matricula_pacotes)
+      const { data: vinculos, error: checkError } = await supabase
+        .from("matricula_pacotes")
         .select("id")
         .eq("pacote_id", id)
         .limit(1);
 
       if (checkError) throw checkError;
 
-      if (matriculas && matriculas.length > 0) {
+      if (vinculos && vinculos.length > 0) {
         throw new Error("Este pacote não pode ser excluído pois está vinculado a matrículas existentes");
       }
 
