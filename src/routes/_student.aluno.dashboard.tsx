@@ -70,17 +70,17 @@ function StudentDashboard() {
       {/* Banner de Boas Vindas */}
       <section className="relative h-[300px] md:h-[400px] w-full flex items-center justify-start overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a2e] to-[#141414] z-0" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#2ECC71]/10 via-transparent to-transparent opacity-50" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#2D6ADF]/10 via-transparent to-transparent opacity-50" />
         
         <div className="relative z-10 px-4 sm:px-10 max-w-4xl space-y-4 animate-in fade-in slide-in-from-left-8 duration-1000">
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white">
-            Bem-vindo(a) de volta, <span className="text-[#2ECC71]">{userName}</span>!
+            Bem-vindo(a) de volta, <span className="text-[#2D6ADF]">{userName}</span>!
           </h1>
           <p className="text-lg md:text-xl text-[#B3B3B3] font-medium max-w-xl">
             Sua jornada de aprendizado continua aqui. Explore seus cursos e retome seus estudos agora mesmo.
           </p>
           <div className="flex gap-4 pt-4">
-             <Button className="bg-[#2ECC71] hover:bg-[#27ae60] text-black font-bold px-8 h-12 rounded-md transition-transform hover:scale-105">
+             <Button className="bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white font-bold px-8 h-12 rounded-md transition-transform hover:scale-105">
                 Continuar Assistindo
              </Button>
           </div>
@@ -90,7 +90,7 @@ function StudentDashboard() {
       {/* Seção de Cursos */}
       <div className="px-4 sm:px-10 py-12 space-y-8 bg-[#141414]">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight text-white border-l-4 border-[#2ECC71] pl-4">Meus Cursos</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-white border-l-4 border-[#2D6ADF] pl-4">Meus Cursos</h2>
         </div>
 
         {isLoading ? (
@@ -122,17 +122,17 @@ function StudentDashboard() {
               
               return (
                 <Link key={i} to="/aluno/curso/$id" params={{ id: curso.id }} className="group">
-                  <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#1e1e1e] border border-white/5 transition-all duration-500 group-hover:scale-105 group-hover:shadow-[0_0_30px_rgba(46,204,113,0.3)] group-hover:border-[#2ECC71]/30">
+                  <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#1e1e1e] border border-white/5 transition-all duration-500 group-hover:scale-105 group-hover:shadow-[0_0_30px_rgba(45,106,223,0.3)] group-hover:border-[#2D6ADF]/30">
                     {/* Placeholder Thumbnail */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
                     <div className="absolute inset-0 flex items-center justify-center">
-                       <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center border border-white/10 group-hover:bg-[#2ECC71] group-hover:border-[#2ECC71] transition-all duration-300">
-                          <Play className="h-8 w-8 text-[#2ECC71] group-hover:text-black ml-1 transition-colors" fill="currentColor" />
+                       <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center border border-white/10 group-hover:bg-[#1E3A5F] group-hover:border-[#1E3A5F] transition-all duration-300">
+                          <Play className="h-8 w-8 text-[#2D6ADF] group-hover:text-white ml-1 transition-colors" fill="currentColor" />
                        </div>
                     </div>
 
                     <div className="absolute bottom-4 left-4 right-4 z-20 space-y-1">
-                      <h3 className="text-lg font-bold text-white line-clamp-1 group-hover:text-[#2ECC71] transition-colors">{curso.nome}</h3>
+                      <h3 className="text-lg font-bold text-white line-clamp-1 group-hover:text-[#2D6ADF] transition-colors">{curso.nome}</h3>
                       <div className="flex items-center justify-between text-xs text-[#B3B3B3]">
                         <span>{aulasCount} aulas</span>
                         <span>0% concluído</span>
@@ -142,7 +142,7 @@ function StudentDashboard() {
 
                     {/* Hover Button */}
                     <div className="absolute top-0 left-0 w-full h-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30">
-                       <Button className="bg-[#2ECC71] text-black font-black uppercase tracking-widest text-xs hover:bg-[#27ae60]">
+                       <Button className="bg-[#1E3A5F] text-white font-black uppercase tracking-widest text-xs hover:bg-[#1E3A5F]/90">
                          Assistir Agora
                        </Button>
                     </div>

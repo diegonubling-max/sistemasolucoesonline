@@ -66,7 +66,7 @@ function StudentLayout() {
   if (loading || isVerifying) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#141414]">
-        <Loader2 className="h-10 w-10 animate-spin text-[#2ECC71]" />
+        <Loader2 className="h-10 w-10 animate-spin text-[#2D6ADF]" />
       </div>
     );
   }
@@ -78,7 +78,7 @@ function StudentLayout() {
           <Link to="/aluno/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-80">
             <span className="text-xl font-bold tracking-tighter">
               <span className="text-white">Soluções</span>{" "}
-              <span className="text-[#2ECC71]">Online</span>
+              <span className="text-[#2D6ADF]">Online</span>
             </span>
           </Link>
 
@@ -90,7 +90,7 @@ function StudentLayout() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white">
-                  <div className="w-8 h-8 rounded bg-[#2ECC71] flex items-center justify-center text-black font-bold text-xs">
+                  <div className="w-8 h-8 rounded bg-[#1E3A5F] flex items-center justify-center text-white font-bold text-xs">
                     {userName.charAt(0).toUpperCase()}
                   </div>
                 </Button>

@@ -111,14 +111,14 @@
   --foreground: #FFFFFF;
   --card: #1e1e1e;
   --card-foreground: #FFFFFF;
-  --primary: #2ECC71;
-  --primary-foreground: #000000;
+  --primary: #1E3A5F;
+  --primary-foreground: #FFFFFF;
   --muted: #1e1e1e;
   --muted-foreground: #B3B3B3;
   --border: #333333;
   --secondary: #2a2a2a;
   --secondary-foreground: #FFFFFF;
-  --ring: #2ECC71;
+  --ring: #2D6ADF;
 }
 
 @layer base {

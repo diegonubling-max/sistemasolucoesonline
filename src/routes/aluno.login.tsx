@@ -85,7 +85,7 @@ function AlunoLogin() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-black tracking-tighter mb-2">
             <span className="text-white">Soluções</span>{" "}
-            <span className="text-[#2ECC71]">Online</span>
+            <span className="text-[#2D6ADF]">Online</span>
           </h1>
           <p className="text-[#B3B3B3] font-medium">Área do Aluno</p>
         </div>
@@ -114,7 +114,7 @@ function AlunoLogin() {
                     placeholder="Seu CTR (ex: 1234)" 
                     value={ctr}
                     onChange={(e) => setCtr(e.target.value)}
-                    className="pl-11 h-12 bg-[#2a2a2a] border-none text-white placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2ECC71]"
+                    className="pl-11 h-12 bg-[#2a2a2a] border-none text-white placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2D6ADF]"
                     required
                   />
                 </div>
@@ -128,7 +128,7 @@ function AlunoLogin() {
                     placeholder="Sua senha" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-11 h-12 bg-[#2a2a2a] border-none text-white placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2ECC71]"
+                    className="pl-11 h-12 bg-[#2a2a2a] border-none text-white placeholder:text-[#555] focus-visible:ring-1 focus-visible:ring-[#2D6ADF]"
                     required
                   />
                 </div>
@@ -146,7 +146,7 @@ function AlunoLogin() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 text-md font-bold bg-[#2ECC71] hover:bg-[#27ae60] text-black transition-all rounded-md shadow-[0_0_20px_rgba(46,204,113,0.2)]"
+                className="w-full h-12 text-md font-bold bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white transition-all rounded-md shadow-[0_0_20px_rgba(30,58,95,0.2)]"
                 disabled={login.isPending}
               >
                 {login.isPending ? (
@@ -162,7 +162,7 @@ function AlunoLogin() {
         </Card>
         
         <p className="text-center mt-8 text-xs text-[#B3B3B3]">
-          Suporte técnico: <span className="text-[#2ECC71] cursor-pointer hover:underline">solucoesonline.com/suporte</span>
+          Suporte técnico: <span className="text-[#2D6ADF] cursor-pointer hover:underline">solucoesonline.com/suporte</span>
         </p>
       </div>
     </div>
