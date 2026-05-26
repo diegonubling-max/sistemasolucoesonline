@@ -58,82 +58,115 @@ function StudentProfile() {
   });
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <UserIcon className="h-6 w-6 text-primary" />
+    <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row items-center gap-8 bg-[#1e1e1e] p-8 rounded-2xl border border-white/5 shadow-xl">
+        <div className="relative group">
+            <div className="h-32 w-32 rounded-full bg-[#2D6ADF] flex items-center justify-center text-4xl font-bold text-white shadow-2xl border-4 border-[#141414]">
+                {session?.user.email?.[0].toUpperCase()}
+            </div>
+            <button className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-white">
+                Alterar foto
+            </button>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Meu Perfil</h1>
-          <p className="text-muted-foreground">{session?.user.email}</p>
+        <div className="text-center md:text-left space-y-2">
+          <h1 className="text-3xl font-bold text-white tracking-tight">Meu Perfil</h1>
+          <div className="flex flex-wrap justify-center md:justify-start gap-4">
+              <span className="bg-white/5 px-3 py-1 rounded-full text-xs text-[#B3B3B3] border border-white/5">E-mail: {session?.user.email}</span>
+              <span className="bg-[#2D6ADF]/10 px-3 py-1 rounded-full text-xs text-[#2D6ADF] border border-[#2D6ADF]/20 font-bold">Aluno Verificado</span>
+          </div>
         </div>
       </div>
 
-      <Card className="border-none shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
-            Alterar Senha
-          </CardTitle>
-          <CardDescription>
-            Mantenha sua conta segura trocando sua senha periodicamente
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              updatePassword.mutate();
-            }}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="current-pass">Senha Atual</Label>
-              <Input
-                id="current-pass"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Sua senha atual"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-pass">Nova Senha</Label>
-              <Input
-                id="new-pass"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-pass">Confirmar Nova Senha</Label>
-              <Input
-                id="confirm-pass"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repita a nova senha"
-                required
-              />
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <Card className="bg-[#1e1e1e] border-none shadow-xl border border-white/5">
+            <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+                <UserIcon className="h-5 w-5 text-[#2D6ADF]" />
+                Dados da Conta
+            </CardTitle>
+            <CardDescription className="text-[#B3B3B3]">Informações básicas do seu registro</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="p-4 bg-white/5 rounded-lg border border-white/5">
+                    <p className="text-xs text-[#B3B3B3] uppercase font-bold tracking-wider">E-mail</p>
+                    <p className="text-white font-medium">{session?.user.email}</p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-lg border border-white/5">
+                    <p className="text-xs text-[#B3B3B3] uppercase font-bold tracking-wider">CTR</p>
+                    <p className="text-white font-medium">---</p>
+                </div>
+            </CardContent>
+        </Card>
 
-            <div className="flex justify-end pt-4">
-              <Button 
-                type="submit" 
-                disabled={updatePassword.isPending || !newPassword || !confirmPassword}
-                className="bg-[#3B82F6] hover:bg-[#3B82F6]/90"
-              >
-                {updatePassword.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Salvar Nova Senha
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        <Card className="bg-[#1e1e1e] border-none shadow-xl border border-white/5">
+            <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+                <Key className="h-5 w-5 text-[#2D6ADF]" />
+                Segurança
+            </CardTitle>
+            <CardDescription className="text-[#B3B3B3]">
+                Altere sua senha de acesso
+            </CardDescription>
+            </CardHeader>
+            <CardContent>
+            <form 
+                onSubmit={(e) => {
+                e.preventDefault();
+                updatePassword.mutate();
+                }}
+                className="space-y-4"
+            >
+                <div className="space-y-2">
+                <Label htmlFor="current-pass" className="text-white">Senha Atual</Label>
+                <Input
+                    id="current-pass"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Sua senha atual"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-[#555] focus-visible:ring-[#2D6ADF]"
+                    required
+                />
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="new-pass" className="text-white">Nova Senha</Label>
+                <Input
+                    id="new-pass"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-[#555] focus-visible:ring-[#2D6ADF]"
+                    required
+                />
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="confirm-pass" className="text-white">Confirmar Nova Senha</Label>
+                <Input
+                    id="confirm-pass"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repita a nova senha"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-[#555] focus-visible:ring-[#2D6ADF]"
+                    required
+                />
+                </div>
+
+                <div className="pt-4">
+                <Button 
+                    type="submit" 
+                    disabled={updatePassword.isPending || !newPassword || !confirmPassword}
+                    className="w-full bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white font-bold"
+                >
+                    {updatePassword.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Salvar Alterações
+                </Button>
+                </div>
+            </form>
+            </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
