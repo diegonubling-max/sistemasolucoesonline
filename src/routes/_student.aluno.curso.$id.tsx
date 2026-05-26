@@ -251,8 +251,8 @@ function StudentCourse() {
                           />
                         </div>
                       ) : (
-                        <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors shrink-0 ${isActive ? 'bg-[#2D6ADF] text-white' : 'bg-gray-100 text-gray-500'}`}>
-                          {index + 1}
+                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center transition-colors shrink-0 bg-gray-100 text-gray-500`}>
+                          <PlayCircle className="h-5 w-5" />
                         </div>
                       )}
                       <div className="flex-1">
