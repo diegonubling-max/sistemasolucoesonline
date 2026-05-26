@@ -67,22 +67,40 @@ function PacotesList() {
   });
 
   const upsertMut = useMutation({
-    mutationFn: async (values: any) => {
+    mutationFn: async (formData: any) => {
+      const dataToSave = {
+        nome: formData.nome,
+        tipo: formData.tipo,
+        valor_matricula: formData.valor_matricula,
+        numero_parcelas: formData.numero_parcelas,
+        valor_parcela: formData.valor_parcela,
+        valor_total: formData.valor_total,
+        descricao: formData.descricao,
+        ativo: formData.ativo ?? true
+      };
+
       if (editingPacote) {
-        const { error } = await supabase.from("pacotes").update(values).eq("id", editingPacote.id);
+        const { error } = await supabase
+          .from('pacotes')
+          .update(dataToSave)
+          .eq('id', editingPacote.id);
+        
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("pacotes").insert(values);
+        const { error } = await supabase
+          .from('pacotes')
+          .insert(dataToSave);
+        
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      toast.success(editingPacote ? "Pacote atualizado" : "Pacote criado");
+      toast.success(editingPacote ? "Pacote atualizado com sucesso" : "Pacote criado com sucesso");
       qc.invalidateQueries({ queryKey: ["pacotes"] });
       setIsModalOpen(false);
       setEditingPacote(null);
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(`Erro ao ${editingPacote ? 'atualizar' : 'criar'} pacote: ${e.message}`),
   });
 
   const toggleMut = useMutation({
