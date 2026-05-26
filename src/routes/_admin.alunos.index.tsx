@@ -73,22 +73,29 @@ function AlunosList() {
 
   const deleteMutation = useMutation({
     mutationFn: async (student: { id: string; email: string }) => {
-      // 1. Delete aluno record first (this will fail if there are restrictions like matriculas)
-      const { error: dbError } = await supabase.from('alunos').delete().eq('id', student.id);
-      if (dbError) throw dbError;
+      if (!student.id) throw new Error("ID do aluno não fornecido");
 
-      // 2. Delete Auth user via Edge Function if the DB delete was successful
+      // 1. Delete Auth user via Edge Function first
+      // We do this first so if it fails, the DB record still exists for retry
       if (student.email) {
         try {
-          await supabase.functions.invoke('manage-student-access', {
+          const { error: authError } = await supabase.functions.invoke('manage-student-access', {
             body: { action: 'delete_user', email: student.email }
           });
+          if (authError) console.error('Error calling edge function:', authError);
         } catch (err) {
           console.error('Error deleting auth user:', err);
-          // We don't throw here because the student record is already gone,
-          // but we log it.
         }
       }
+
+      // 2. Delete aluno record
+      // The WHERE clause is strictly using the provided student.id
+      const { error: dbError } = await supabase
+        .from('alunos')
+        .delete()
+        .eq('id', student.id);
+      
+      if (dbError) throw dbError;
     },
     onSuccess: () => {
       toast.success("Aluno excluído com sucesso");
