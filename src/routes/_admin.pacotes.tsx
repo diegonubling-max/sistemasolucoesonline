@@ -237,7 +237,7 @@ function PacotesList() {
 
 function PacoteFormModal({ open, onOpenChange, pacote, onSubmit, submitting }: any) {
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
-    defaultValues: pacote || {
+    defaultValues: {
       nome: "",
       tipo: "boleto",
       valor_matricula: 0,
@@ -253,9 +253,24 @@ function PacoteFormModal({ open, onOpenChange, pacote, onSubmit, submitting }: a
   const installments = watch("numero_parcelas") || 0;
   const value = watch("valor_parcela") || 0;
 
-  useState(() => {
-    if (pacote) reset(pacote);
-  });
+  useEffect(() => {
+    if (open) {
+      if (pacote) {
+        reset(pacote);
+      } else {
+        reset({
+          nome: "",
+          tipo: "boleto",
+          valor_matricula: 0,
+          valor_parcela: 0,
+          numero_parcelas: 1,
+          valor_total: 0,
+          descricao: "",
+          ativo: true,
+        });
+      }
+    }
+  }, [open, pacote, reset]);
 
   // Effect to calculate total
   const total = Number(entry) + (Number(installments) * Number(value));
