@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addMonths, setDate, lastDayOfMonth } from "date-fns";
+import { format, addMonths, setDate, lastDayOfMonth, compareAsc } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AlunoForm, type AlunoFormValues } from "./AlunoForm";
 import { maskCPF, maskPhone, isValidCPF, calcAge, generateStudentPassword } from "@/lib/format";
@@ -142,26 +142,16 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       if (!currentPacote) throw new Error("Pacote não encontrado");
 
       const allParcelas: any[] = [];
+      const sortedItems = getSortedParcelas();
 
-      // Add Taxa de Matrícula
-      allParcelas.push({
-        matricula_id: matriculaId,
-        tipo: 'taxa_matricula' as const,
-        numero: 0,
-        valor: currentPacote.valor_matricula,
-        data_vencimento: taxaStatus === 'isentar' ? format(new Date(), 'yyyy-MM-dd') : format(taxaVencimento, 'yyyy-MM-dd'),
-        status: taxaStatus === 'isentar' ? ('isento' as const) : ('aberto' as const)
-      });
-
-      // Add Parcelas
-      parcelasGeradas.forEach(p => {
+      sortedItems.forEach((p) => {
         allParcelas.push({
           matricula_id: matriculaId,
-          tipo: 'parcela' as const,
-          numero: p.numero,
+          tipo: p.tipo,
+          numero: p.tipo === 'taxa_matricula' ? 0 : p.numero,
           valor: p.valor,
           data_vencimento: format(p.vencimento, 'yyyy-MM-dd'),
-          status: 'aberto' as const
+          status: p.status
         });
       });
 
@@ -176,6 +166,44 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     },
     onError: (e: any) => toast.error(e.message)
   });
+
+  const getSortedParcelas = () => {
+    const currentPacote = pacotes?.find(p => p.id === selectedPacote);
+    const items = [];
+
+    // Taxa de Matrícula
+    if (currentPacote) {
+      items.push({
+        id: 'taxa-row',
+        tipo: 'taxa_matricula' as const,
+        numero: 0,
+        vencimento: taxaVencimento,
+        valor: taxaStatus === 'isentar' ? 0 : currentPacote.valor_matricula,
+        status: taxaStatus === 'isentar' ? ('isento' as const) : ('aberto' as const)
+      });
+    }
+
+    // Outras parcelas
+    parcelasGeradas.forEach(p => {
+      items.push({
+        ...p,
+        tipo: 'parcela' as const,
+        status: 'aberto' as const
+      });
+    });
+
+    // Ordenar por data crescente
+    const sorted = [...items].sort((a, b) => compareAsc(a.vencimento, b.vencimento));
+
+    // Reatribuir números após ordenação (exceto taxa se for para manter numeração cronológica)
+    let parcelaCount = 1;
+    return sorted.map((item) => {
+      if (item.tipo === 'parcela') {
+        return { ...item, numero: parcelaCount++ };
+      }
+      return item;
+    });
+  };
 
   const filteredCursos = (cursos || []).filter(c => 
     c.nome.toLowerCase().includes(searchCurso.toLowerCase())
@@ -501,14 +529,18 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {parcelasGeradas.map((p, idx) => (
+                      {getSortedParcelas().map((p) => (
                         <tr key={p.id} className="border-b last:border-0">
-                          <td className="py-3">{p.numero}</td>
+                          <td className="py-3">
+                            {p.tipo === 'taxa_matricula' ? (
+                              <Badge variant="outline" className="font-bold border-primary text-primary">Taxa</Badge>
+                            ) : p.numero}
+                          </td>
                           <td className="py-3">
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button variant="outline" size="sm" className="h-8 text-xs font-normal">
-                                  {format(p.vencimento, "dd/MM/yyyy")}
+                                  {p.status === 'isento' ? '—' : format(p.vencimento, "dd/MM/yyyy")}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
@@ -517,9 +549,14 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                                   selected={p.vencimento}
                                   onSelect={(d) => {
                                     if (!d) return;
-                                    const updated = [...parcelasGeradas];
-                                    updated[idx].vencimento = d;
-                                    setParcelasGeradas(updated);
+                                    if (p.tipo === 'taxa_matricula') {
+                                      setTaxaVencimento(d);
+                                    } else {
+                                      const updated = parcelasGeradas.map(item => 
+                                        item.id === p.id ? { ...item, vencimento: d } : item
+                                      );
+                                      setParcelasGeradas(updated);
+                                    }
                                   }}
                                   initialFocus
                                 />
@@ -527,35 +564,48 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             </Popover>
                           </td>
                           <td className="py-3">
-                            <div className="flex items-center gap-1">
-                              <span className="text-muted-foreground">R$</span>
-                              <Input 
-                                className="h-8 w-24 text-xs"
-                                type="number"
-                                step="0.01"
-                                value={p.valor}
-                                onChange={(e) => {
-                                  const updated = [...parcelasGeradas];
-                                  updated[idx].valor = parseFloat(e.target.value) || 0;
-                                  setParcelasGeradas(updated);
-                                }}
-                              />
-                            </div>
+                            {p.status === 'isento' ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <span className="text-muted-foreground">R$</span>
+                                <Input 
+                                  className="h-8 w-24 text-xs"
+                                  type="number"
+                                  step="0.01"
+                                  value={p.valor}
+                                  readOnly={p.tipo === 'taxa_matricula'}
+                                  onChange={(e) => {
+                                    if (p.tipo === 'taxa_matricula') return;
+                                    const updated = parcelasGeradas.map(item => 
+                                      item.id === p.id ? { ...item, valor: parseFloat(e.target.value) || 0 } : item
+                                    );
+                                    setParcelasGeradas(updated);
+                                  }}
+                                />
+                              </div>
+                            )}
                           </td>
                           <td className="py-3">
-                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Aberto</Badge>
+                            {p.status === 'isento' ? (
+                              <Badge variant="secondary" className="bg-gray-100 text-gray-800 border-gray-200">Isento</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Aberto</Badge>
+                            )}
                           </td>
                           <td className="py-3 text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-destructive"
-                              onClick={() => {
-                                setParcelasGeradas(prev => prev.filter(item => item.id !== p.id));
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {p.tipo === 'parcela' && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-destructive"
+                                onClick={() => {
+                                  setParcelasGeradas(prev => prev.filter(item => item.id !== p.id));
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       ))}
