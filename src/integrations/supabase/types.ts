@@ -35,6 +35,7 @@ export type Database = {
           responsavel_telefone: string | null
           sexo: Database["public"]["Enums"]["sexo_aluno"]
           telefone: string
+          tema: string | null
           vendedora: string | null
         }
         Insert: {
@@ -57,6 +58,7 @@ export type Database = {
           responsavel_telefone?: string | null
           sexo: Database["public"]["Enums"]["sexo_aluno"]
           telefone: string
+          tema?: string | null
           vendedora?: string | null
         }
         Update: {
@@ -79,6 +81,7 @@ export type Database = {
           responsavel_telefone?: string | null
           sexo?: Database["public"]["Enums"]["sexo_aluno"]
           telefone?: string
+          tema?: string | null
           vendedora?: string | null
         }
         Relationships: []
