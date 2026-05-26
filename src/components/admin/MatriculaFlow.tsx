@@ -61,7 +61,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     queryKey: ["aluno-matricula", alunoId as string],
     enabled: !!alunoId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("alunos").select("*").eq("id", alunoId).single();
+      const { data, error } = await supabase.from("alunos").select("*").eq("id", alunoId!).single();
       if (error) throw error;
       return data;
     },
