@@ -50,7 +50,7 @@ const schema = z
     }
   });
 
-export type AlunoFormValues = z.infer<typeof schema>;
+export type AlunoFormValues = any;
 
 export const defaultValues: any = {
   nome: "",
