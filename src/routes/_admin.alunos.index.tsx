@@ -147,7 +147,7 @@ function AlunosList() {
                   <TableCell>
                     <span className="text-sm font-normal text-slate-700">#{a.ctr}</span>
                   </TableCell>
-                  <TableCell className="text-sm font-bold text-slate-700 whitespace-nowrap">{a.nome}</TableCell>
+                  <TableCell className="text-sm font-bold text-slate-700">{a.nome}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.email}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.telefone}</TableCell>
                   <TableCell className="text-sm font-normal text-muted-foreground/80">{a.vendedora}</TableCell>
