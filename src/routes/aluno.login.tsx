@@ -83,20 +83,20 @@ function AlunoLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#3B82F6]/10 via-white to-[#10B981]/10 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#141414] px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8 bg-primary py-10 rounded-3xl shadow-2xl">
+        <div className="text-center mb-8">
           <h1 className="text-4xl font-black tracking-tight">
-            <span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span>
+            <span className="text-white">Soluções</span> <span className="text-[#2D6ADF]">Online</span>
           </h1>
-          <p className="text-white/80 mt-2 font-medium">Área do Aluno</p>
+          <p className="text-[#B3B3B3] mt-2 font-medium">Área do Aluno</p>
         </div>
 
-        <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-sm">
+        <Card className="border-none shadow-2xl bg-[#1e1e1e] border border-white/5">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-bold">Entrar</CardTitle>
-            <CardDescription>
-              Acesse sua plataforma de cursos
+            <CardTitle className="text-2xl font-bold text-white">Entrar</CardTitle>
+            <CardDescription className="text-[#B3B3B3]">
+              Acesse sua plataforma de estudos
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -105,31 +105,32 @@ function AlunoLogin() {
                 e.preventDefault();
                 login.mutate();
               }}
-              className="space-y-4"
+              className="space-y-6"
             >
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Login (seu CTR)</label>
+                <label className="text-sm font-medium text-white">Seu CTR</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B3B3B3]" />
                   <Input 
                     type="text" 
                     placeholder="Ex: 1627" 
                     value={ctr}
                     onChange={(e) => setCtr(e.target.value)}
-                    className="pl-10 h-12 border-muted focus:border-primary transition-all"
+                    className="pl-10 h-12 bg-[#333] border-none text-white placeholder:text-[#B3B3B3] focus-visible:ring-1 focus-visible:ring-[#2D6ADF]"
                     required
                   />
                 </div>
               </div>
               <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Sua senha</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B3B3B3]" />
                   <Input 
                     type="password" 
                     placeholder="Sua senha" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 border-muted focus:border-primary transition-all"
+                    className="pl-10 h-12 bg-[#333] border-none text-white placeholder:text-[#B3B3B3] focus-visible:ring-1 focus-visible:ring-[#2D6ADF]"
                     required
                   />
                 </div>
@@ -139,7 +140,7 @@ function AlunoLogin() {
                 <button 
                   type="button"
                   onClick={handleResetPassword}
-                  className="text-xs font-semibold text-[#3B82F6] hover:underline"
+                  className="text-xs font-semibold text-[#B3B3B3] hover:text-white transition-colors"
                 >
                   Esqueci minha senha
                 </button>
@@ -147,22 +148,20 @@ function AlunoLogin() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                className="w-full h-12 text-lg font-bold bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white transition-all"
                 disabled={login.isPending}
               >
                 {login.isPending ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  <>
-                    Entrar <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
+                  "Entrar"
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
         
-        <p className="text-center mt-8 text-sm text-muted-foreground">
+        <p className="text-center mt-8 text-sm text-[#B3B3B3]">
           Problemas com o acesso? Entre em contato com o suporte.
         </p>
       </div>

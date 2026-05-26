@@ -1,10 +1,21 @@
 import { createFileRoute, Outlet, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Loader2, LogOut, User as UserIcon, BookOpen, Wallet, Menu, X } from "lucide-react";
+import { useEffect, useState, createContext, useContext } from "react";
+import { Loader2, LogOut, User as UserIcon, BookOpen, Wallet, Menu, X, Sun, Moon, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const StudentThemeContext = createContext<{ isDark: boolean }>({ isDark: true });
+export const useStudentTheme = () => useContext(StudentThemeContext);
 
 export const Route = createFileRoute("/_student")({
   component: StudentLayout,
@@ -16,6 +27,20 @@ function StudentLayout() {
   const [isVerifying, setIsVerifying] = useState(true);
   const [userName, setUserName] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tema, setTema] = useState<"claro" | "escuro">("escuro");
+  const [alunoId, setAlunoId] = useState<string | null>(null);
+
+  const toggleTema = async () => {
+    const novoTema = tema === "escuro" ? "claro" : "escuro";
+    setTema(novoTema);
+    
+    if (alunoId) {
+      await supabase
+        .from('alunos')
+        .update({ tema: novoTema })
+        .eq('id', alunoId);
+    }
+  };
 
   useEffect(() => {
     async function checkRole() {
@@ -46,14 +71,20 @@ function StudentLayout() {
         }
       }
 
-      // Get student name
+      // Get student data
       const { data: aluno } = await supabase
         .from('alunos')
-        .select('nome')
+        .select('id, nome, tema')
         .eq('email', session.user.email ?? '')
         .single();
       
-      if (aluno) setUserName(aluno.nome);
+      if (aluno) {
+        setUserName(aluno.nome);
+        setAlunoId(aluno.id);
+        if (aluno.tema === 'claro' || aluno.tema === 'escuro') {
+          setTema(aluno.tema);
+        }
+      }
       setIsVerifying(false);
     }
 
@@ -73,113 +104,121 @@ function StudentLayout() {
     );
   }
 
+  const isDark = tema === "escuro";
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
-      <header className="bg-primary border-b sticky top-0 z-20 shadow-sm">
+    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
+      isDark ? "bg-[#141414] text-white" : "bg-[#F5F5F5] text-[#111827]"
+    }`}>
+      <header className={`${
+        isDark ? "bg-[#1e1e1e] border-white/10" : "bg-[#1E3A5F] border-black/5"
+      } border-b sticky top-0 z-20 transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link to="/aluno/dashboard" className="flex items-center gap-2">
               <span className="text-xl font-bold">
                 <span className="text-white">Soluções</span>{" "}
-                <span className="text-[#2ECC71]">Online</span>
+                <span className="text-[#2D6ADF]">Online</span>
               </span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 to="/aluno/dashboard"
-                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
+                className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-white/80 hover:text-white"} font-medium transition-colors flex items-center gap-2`}
                 activeProps={{ className: "text-white font-bold" }}
               >
-                <BookOpen className="h-4 w-4" />
+                Início
+              </Link>
+              <Link
+                to="/aluno/dashboard"
+                className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-white/80 hover:text-white"} font-medium transition-colors flex items-center gap-2`}
+              >
                 Meus Cursos
               </Link>
               <Link
                 to="/aluno/financeiro"
-                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
+                className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-white/80 hover:text-white"} font-medium transition-colors flex items-center gap-2`}
                 activeProps={{ className: "text-white font-bold" }}
               >
-                <Wallet className="h-4 w-4" />
                 Financeiro
               </Link>
             </nav>
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden md:flex items-center gap-4">
-              <span className="text-sm text-white/70">
-                Olá, <span className="font-semibold text-white">{userName}</span>!
-              </span>
-
-              <Link to="/aluno/perfil">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Meu Perfil"
-                  className="text-white hover:bg-white/10"
-                >
-                  <UserIcon className="h-5 w-5" />
-                </Button>
-              </Link>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="h-9 w-9 rounded-full bg-[#2D6ADF] flex items-center justify-center font-bold text-white cursor-pointer hover:scale-105 transition-transform">
+                      {userName[0]?.toUpperCase()}
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className={`${isDark ? "bg-[#1e1e1e] text-white border-white/10" : "bg-white text-gray-900"} w-48 shadow-xl`}>
+                  <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                  <DropdownMenuSeparator className={isDark ? "bg-white/10" : ""} />
+                  <DropdownMenuItem onClick={() => navigate({ to: "/aluno/perfil" })} className="cursor-pointer">
+                    <UserIcon className="h-4 w-4 mr-2" /> Meu Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={toggleTema} className="cursor-pointer">
+                    {isDark ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+                    {isDark ? "Tema Claro" : "Tema Escuro"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className={isDark ? "bg-white/10" : ""} />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 focus:text-red-500">
+                    <LogOut className="h-4 w-4 mr-2" /> Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleLogout}
-                title="Sair"
-                className="text-white hover:bg-white/10"
+                className="md:hidden text-white"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
-                <LogOut className="h-5 w-5" />
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </Button>
             </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden text-white"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
           </div>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-primary border-t border-white/10 py-4 px-4 space-y-4 animate-in slide-in-from-top duration-200">
+          <div className={`md:hidden ${isDark ? "bg-[#1e1e1e] border-white/10" : "bg-[#1E3A5F] border-white/10"} border-t py-4 px-4 space-y-4 animate-in slide-in-from-top duration-200`}>
             <div className="flex flex-col gap-2">
               <Link
                 to="/aluno/dashboard"
-                className="text-white/80 hover:text-white font-medium p-2 flex items-center gap-3"
-                activeProps={{ className: "bg-white/10 text-white rounded-md" }}
+                className="text-white/80 hover:text-white font-medium p-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <BookOpen className="h-5 w-5" />
+                Início
+              </Link>
+              <Link
+                to="/aluno/dashboard"
+                className="text-white/80 hover:text-white font-medium p-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Meus Cursos
               </Link>
               <Link
                 to="/aluno/financeiro"
-                className="text-white/80 hover:text-white font-medium p-2 flex items-center gap-3"
-                activeProps={{ className: "bg-white/10 text-white rounded-md" }}
+                className="text-white/80 hover:text-white font-medium p-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <Wallet className="h-5 w-5" />
                 Financeiro
               </Link>
               <Link
                 to="/aluno/perfil"
-                className="text-white/80 hover:text-white font-medium p-2 flex items-center gap-3"
-                activeProps={{ className: "bg-white/10 text-white rounded-md" }}
+                className="text-white/80 hover:text-white font-medium p-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <UserIcon className="h-5 w-5" />
                 Meu Perfil
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-white/80 hover:text-white font-medium p-2 flex items-center gap-3 w-full text-left"
+                className="text-white/80 hover:text-white font-medium p-2 text-left"
               >
-                <LogOut className="h-5 w-5" />
                 Sair
               </button>
             </div>
@@ -189,15 +228,11 @@ function StudentLayout() {
 
       <main className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <Outlet />
+          <StudentThemeContext.Provider value={{ isDark }}>
+            <Outlet />
+          </StudentThemeContext.Provider>
         </div>
       </main>
-
-      <footer className="py-6 border-t bg-white">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Soluções Online — Área do Aluno
-        </div>
-      </footer>
     </div>
   );
 }
