@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_student/aluno/dashboard")({
 
 function StudentDashboard() {
   const { session } = useAuth();
+  const { isDark } = useStudentTheme();
 
   const { data: cursos, isLoading } = useQuery({
     queryKey: ["student-courses", session?.user.email],
