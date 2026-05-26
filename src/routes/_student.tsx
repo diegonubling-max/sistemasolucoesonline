@@ -16,6 +16,20 @@ function StudentLayout() {
   const [isVerifying, setIsVerifying] = useState(true);
   const [userName, setUserName] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tema, setTema] = useState<"claro" | "escuro">("escuro");
+  const [alunoId, setAlunoId] = useState<string | null>(null);
+
+  const toggleTema = async () => {
+    const novoTema = tema === "escuro" ? "claro" : "escuro";
+    setTema(novoTema);
+    
+    if (alunoId) {
+      await supabase
+        .from('alunos')
+        .update({ tema: novoTema })
+        .eq('id', alunoId);
+    }
+  };
 
   useEffect(() => {
     async function checkRole() {
