@@ -107,12 +107,8 @@ function StudentLayout() {
   const isDark = tema === "escuro";
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
-      isDark ? "bg-[#141414] text-white" : "bg-[#F5F5F5] text-[#111827] border-[#E5E7EB]"
-    }`}>
-      <header className={`${
-        isDark ? "bg-[#1e1e1e] border-white/10" : "bg-[#1E3A5F] border-black/5"
-      } border-b sticky top-0 z-20 transition-colors duration-300`}>
+    <div className="min-h-screen flex flex-col transition-colors duration-300 bg-gray-50 text-gray-900">
+      <header className="bg-[#1E3A5F] border-b border-black/5 sticky top-0 z-20 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link to="/aluno/dashboard" className="flex items-center gap-2">
