@@ -123,18 +123,18 @@ function StudentDashboard() {
                     
                     <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
                       <div>
-                        <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"} line-clamp-1`}>{curso.nome}</h3>
-                        <p className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-500"} mt-1 uppercase font-bold tracking-wider`}>
+                        <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{curso.nome}</h3>
+                        <p className="text-xs text-gray-500 mt-1 uppercase font-bold tracking-wider">
                             {aulasCount} {aulasCount === 1 ? 'aula' : 'aulas'}
                         </p>
                       </div>
                       
                       <div className="space-y-2">
-                        <div className={`h-1.5 w-full ${isDark ? "bg-[#333]" : "bg-gray-100"} rounded-full overflow-hidden`}>
+                        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                           <div className="h-full bg-[#2D6ADF] transition-all" style={{ width: '0%' }} />
                         </div>
                         <div className="flex items-center justify-between">
-                            <p className={`text-[10px] ${isDark ? "text-[#B3B3B3]" : "text-gray-500"} uppercase tracking-wider font-bold`}>Progresso</p>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Progresso</p>
                             <p className="text-[10px] text-[#2D6ADF] font-bold">0%</p>
                         </div>
                       </div>
