@@ -569,6 +569,133 @@ function AlunoDetalhes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <div className="mt-12 space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <ShoppingBag className="h-6 w-6 text-primary" />
+            Cursos na Vitrine
+          </h2>
+          <Button onClick={() => setShowVitrineModal(true)} variant="outline">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar curso à vitrine
+          </Button>
+        </div>
+
+        <Card>
+          <CardContent className="pt-6">
+            {!vitrine || vitrine.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground">Nenhum curso na vitrine deste aluno.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-muted-foreground">
+                      <th className="text-left py-2 font-medium">Curso</th>
+                      <th className="text-left py-2 font-medium">Preço PIX</th>
+                      <th className="text-left py-2 font-medium">Preço Cartão</th>
+                      <th className="text-left py-2 font-medium">Parcelas</th>
+                      <th className="text-right py-2 font-medium">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vitrine.map((item) => (
+                      <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="py-4 font-medium">{(item.cursos as any)?.nome}</td>
+                        <td className="py-4">{formatCurrency(item.preco_pix)}</td>
+                        <td className="py-4">{formatCurrency(item.preco_cartao)}</td>
+                        <td className="py-4">{item.max_parcelas}x</td>
+                        <td className="py-4 text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => {
+                              if (confirm("Deseja remover este curso da vitrine?")) {
+                                removeFromVitrine.mutate(item.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Dialog open={showVitrineModal} onOpenChange={setShowVitrineModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Curso à Vitrine</DialogTitle>
+            <DialogDescription>
+              Escolha um curso e defina os preços personalizados para este aluno.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Curso</Label>
+              <select 
+                className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                value={vitrineCursoId}
+                onChange={(e) => setVitrineCursoId(e.target.value)}
+              >
+                <option value="">Selecione um curso...</option>
+                {allCourses?.filter(c => 
+                  !cursos?.some(mc => (mc.cursos as any)?.id === c.id) && 
+                  !vitrine?.some(v => v.curso_id === c.id)
+                ).map(c => (
+                  <option key={c.id} value={c.id}>{c.nome}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Preço PIX</Label>
+                <Input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={vitrinePrecoPix}
+                  onChange={(e) => setVitrinePrecoPix(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Preço Cartão</Label>
+                <Input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={vitrinePrecoCartao}
+                  onChange={(e) => setVitrinePrecoCartao(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Máx. parcelas</Label>
+              <Input 
+                type="number" 
+                min="1" 
+                max="12" 
+                value={vitrineMaxParcelas}
+                onChange={(e) => setVitrineMaxParcelas(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowVitrineModal(false)}>Cancelar</Button>
+            <Button 
+              onClick={() => addToVitrine.mutate()}
+              disabled={addToVitrine.isPending || !vitrineCursoId || !vitrinePrecoPix || !vitrinePrecoCartao}
+            >
+              {addToVitrine.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
