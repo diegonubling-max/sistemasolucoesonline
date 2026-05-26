@@ -272,15 +272,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 return;
               }
 
-              // 2. Create Auth user via Edge Function if email exists
+              // 2. Create Auth user via RPC if email exists
               if (studentData.email) {
-                const { error: authError } = await supabase.functions.invoke("manage-student-access", {
-                  body: {
-                    email: studentData.email,
-                    nome: studentData.nome,
-                    password: pass,
-                    action: "create"
-                  }
+                const { error: authError } = await supabase.rpc('criar_acesso_aluno', {
+                  p_email: studentData.email,
+                  p_senha: pass,
+                  p_ctr: studentData.ctr
                 });
 
                 if (authError) {
