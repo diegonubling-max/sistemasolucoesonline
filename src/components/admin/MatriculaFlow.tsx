@@ -58,7 +58,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   });
 
   const { data: aluno } = useQuery({
-    queryKey: ["aluno-matricula", alunoId],
+    queryKey: ["aluno-matricula", alunoId as string],
     enabled: !!alunoId,
     queryFn: async () => {
       const { data, error } = await supabase.from("alunos").select("*").eq("id", alunoId).single();
