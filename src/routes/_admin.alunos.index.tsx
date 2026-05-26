@@ -124,14 +124,14 @@ function AlunosList() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[80px] text-muted-foreground font-normal text-xs uppercase tracking-wider">CTR</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Nome</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">E-mail</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Telefone</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Vendedora</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Matrícula</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Cadastro</TableHead>
-                <TableHead className="text-right text-muted-foreground font-normal text-xs uppercase tracking-wider">Ações</TableHead>
+                <TableHead className="w-[80px] text-xs font-medium text-gray-500 uppercase tracking-wider">CTR</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedora</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Matrícula</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Cadastro</TableHead>
+                <TableHead className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -145,14 +145,14 @@ function AlunosList() {
               {data?.rows.map((a) => (
                 <TableRow key={a.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
                   <TableCell>
-                    <Badge variant="outline" className="bg-gray-50 text-muted-foreground border-gray-200 font-normal">
+                    <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200 font-normal text-sm">
                       #{a.ctr}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-bold text-foreground">{a.nome}</TableCell>
-                  <TableCell className="font-normal text-muted-foreground">{a.email}</TableCell>
-                  <TableCell className="font-normal text-muted-foreground">{a.telefone}</TableCell>
-                  <TableCell className="font-normal text-muted-foreground">{a.vendedora}</TableCell>
+                  <TableCell className="text-sm font-medium text-gray-900">{a.nome}</TableCell>
+                  <TableCell className="text-sm text-gray-500">{a.email}</TableCell>
+                  <TableCell className="text-sm text-gray-500">{a.telefone}</TableCell>
+                  <TableCell className="text-sm text-gray-500">{a.vendedora}</TableCell>
                   <TableCell>
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
                       <Badge className="bg-green-500 text-white hover:bg-green-500 rounded-full px-3 font-semibold">Matriculado</Badge>
@@ -160,7 +160,7 @@ function AlunosList() {
                       <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 rounded-full px-3 font-semibold">Pendente</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-muted-foreground font-normal">{formatDate(a.created_at)}</TableCell>
+                  <TableCell className="text-sm text-gray-500 font-normal">{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button asChild size="icon" variant="ghost" title="Ver detalhes">
