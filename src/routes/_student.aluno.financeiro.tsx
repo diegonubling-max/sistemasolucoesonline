@@ -40,6 +40,7 @@ export const Route = createFileRoute("/_student/aluno/financeiro")({
 
 function StudentFinance() {
   const { session } = useAuth();
+  const { isDark } = useStudentTheme();
 
   const { data: financeData, isLoading } = useQuery({
     queryKey: ["student-finance", session?.user.email],
