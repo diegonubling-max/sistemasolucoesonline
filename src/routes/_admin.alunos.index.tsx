@@ -100,38 +100,38 @@ function AlunosList() {
         title="Alunos"
         description={`${data?.count ?? 0} aluno(s) no total`}
         actions={
-          <Button onClick={() => navigate({ to: "/alunos/novo" })}>
+          <Button onClick={() => navigate({ to: "/alunos/novo" })} className="bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white">
             <Plus className="h-4 w-4 mr-2" /> Novo aluno
           </Button>
         }
       />
 
-      <Card>
-        <CardContent className="pt-6">
+      <Card className="border-none shadow-none">
+        <CardContent className="pt-0 px-0">
           <div className="relative mb-4 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, e-mail ou CTR..."
+              placeholder="Buscar curso..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(0);
               }}
-              className="pl-9"
+              className="pl-9 border-gray-200"
             />
           </div>
 
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[80px]">CTR</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Vendedora</TableHead>
-                <TableHead>Matrícula</TableHead>
-                <TableHead>Cadastro</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-[80px] text-muted-foreground font-medium">CTR</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Nome</TableHead>
+                <TableHead className="text-muted-foreground font-medium">E-mail</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Telefone</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Vendedora</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Matrícula</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Cadastro</TableHead>
+                <TableHead className="text-right text-muted-foreground font-medium">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,7 +143,7 @@ function AlunosList() {
                 </TableRow>
               )}
               {data?.rows.map((a) => (
-                <TableRow key={a.id}>
+                <TableRow key={a.id} className="border-b border-gray-100">
                   <TableCell>
                     <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
                       #{a.ctr}
@@ -155,12 +155,12 @@ function AlunosList() {
                   <TableCell>{a.vendedora}</TableCell>
                   <TableCell>
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
-                      <Badge className="bg-green-500 text-white hover:bg-green-600">Matriculado</Badge>
+                      <Badge className="bg-green-500 text-white hover:bg-green-600 rounded-full px-3">Matriculado</Badge>
                     ) : (
-                      <Badge className="bg-yellow-500 text-white hover:bg-yellow-600">Pendente</Badge>
+                      <Badge className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full px-3">Pendente</Badge>
                     )}
                   </TableCell>
-                  <TableCell>{formatDate(a.created_at)}</TableCell>
+                  <TableCell className="text-muted-foreground">{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button asChild size="icon" variant="ghost" title={Array.isArray(a.matriculas) && a.matriculas.length > 0 ? "Ver matrícula" : "Ver detalhes"}>
