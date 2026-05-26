@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Power, ListVideo } from "lucide-react";
+import { Plus, Search, Pencil, Power, ListVideo, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,31 @@ function CursosList() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const deleteCurso = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("cursos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Curso excluído com sucesso");
+      qc.invalidateQueries({ queryKey: ["cursos"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
+    onError: (e: Error) => {
+      if (e.message.includes("violates foreign key constraint")) {
+        toast.error("Não é possível excluir este curso pois ele possui vínculos (aulas ou matrículas).");
+      } else {
+        toast.error(e.message);
+      }
+    },
+  });
+
+  const handleDelete = (id: string, nome: string) => {
+    if (confirm(`Tem certeza que deseja excluir o curso "${nome}"? Esta ação não pode ser desfeita.`)) {
+      deleteCurso.mutate(id);
+    }
+  };
 
   return (
     <div>
@@ -124,10 +149,11 @@ function CursosList() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          title={c.ativo ? "Desativar" : "Ativar"}
-                          onClick={() => toggle.mutate({ id: c.id, ativo: c.ativo })}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Excluir"
+                          onClick={() => handleDelete(c.id, c.nome)}
                         >
-                          <Power className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
