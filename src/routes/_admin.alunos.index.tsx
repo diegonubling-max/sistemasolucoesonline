@@ -163,7 +163,7 @@ function AlunosList() {
                   <TableCell className="text-muted-foreground font-normal">{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button asChild size="icon" variant="ghost" title={Array.isArray(a.matriculas) && a.matriculas.length > 0 ? "Ver matrícula" : "Ver detalhes"}>
+                      <Button asChild size="icon" variant="ghost" title="Ver detalhes">
                         <Link to="/alunos/$id" params={{ id: a.id }}>
                           <Eye className="h-4 w-4 text-foreground" />
                         </Link>
@@ -185,7 +185,7 @@ function AlunosList() {
                         size="icon"
                         variant="ghost"
                         title="Excluir"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => setStudentToDelete({ id: a.id, nome: a.nome, email: a.email ?? "" })}
                       >
                         <Trash2 className="h-4 w-4" />
