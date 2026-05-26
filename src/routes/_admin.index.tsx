@@ -75,7 +75,7 @@ function Dashboard() {
     { label: "Total Recebido no Mês", value: formatCurrency(stats?.faturamento?.recebido ?? 0), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "A Receber no Mês", value: formatCurrency(stats?.faturamento?.aReceberMes ?? 0), icon: Landmark, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Em Atraso", value: formatCurrency(stats?.faturamento?.atrasado ?? 0), icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10" },
-    { label: "Total Contratos", value: formatCurrency(stats?.faturamento?.totalGeral ?? 0), icon: Wallet, color: "text-purple-600", bg: "bg-purple-600/10" },
+    { label: "Total Contratos", value: formatCurrency(stats?.faturamento?.totalGeral ?? 0), icon: Wallet, color: "text-purple-500", bg: "bg-purple-500/10" },
   ];
 
   return (
