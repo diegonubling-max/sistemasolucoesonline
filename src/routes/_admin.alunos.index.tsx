@@ -155,7 +155,7 @@ function AlunosList() {
                   <TableCell className="font-normal text-muted-foreground">{a.vendedora}</TableCell>
                   <TableCell>
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
-                      <Badge className="bg-green-500 text-white hover:bg-green-600 rounded-full px-3">Matriculado</Badge>
+                      <Badge className="bg-green-500 text-white hover:bg-green-500 rounded-full px-3 font-semibold">Matriculado</Badge>
                     ) : (
                       <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 rounded-full px-3 font-semibold">Pendente</Badge>
                     )}
