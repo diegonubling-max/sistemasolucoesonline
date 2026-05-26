@@ -111,7 +111,7 @@ function AlunosList() {
           <div className="relative mb-4 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar curso..."
+              placeholder="Buscar por nome, e-mail ou CTR..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
