@@ -294,11 +294,14 @@ export type Database = {
           created_at: string
           data_pagamento: string | null
           data_vencimento: string
+          forma_pagamento: string | null
           id: string
           matricula_id: string
           numero: number
           observacao: string | null
+          parcelas_cartao: number | null
           status: Database["public"]["Enums"]["payment_status"]
+          taxa_cartao: number | null
           tipo: Database["public"]["Enums"]["payment_type"]
           valor: number
           valor_bruto: number | null
@@ -310,11 +313,14 @@ export type Database = {
           created_at?: string
           data_pagamento?: string | null
           data_vencimento: string
+          forma_pagamento?: string | null
           id?: string
           matricula_id: string
           numero: number
           observacao?: string | null
+          parcelas_cartao?: number | null
           status?: Database["public"]["Enums"]["payment_status"]
+          taxa_cartao?: number | null
           tipo: Database["public"]["Enums"]["payment_type"]
           valor: number
           valor_bruto?: number | null
@@ -326,11 +332,14 @@ export type Database = {
           created_at?: string
           data_pagamento?: string | null
           data_vencimento?: string
+          forma_pagamento?: string | null
           id?: string
           matricula_id?: string
           numero?: number
           observacao?: string | null
+          parcelas_cartao?: number | null
           status?: Database["public"]["Enums"]["payment_status"]
+          taxa_cartao?: number | null
           tipo?: Database["public"]["Enums"]["payment_type"]
           valor?: number
           valor_bruto?: number | null
