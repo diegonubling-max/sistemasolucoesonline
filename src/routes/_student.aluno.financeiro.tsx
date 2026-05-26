@@ -100,7 +100,7 @@ function StudentFinance() {
     }
 
     const isVencido = isBefore(new Date(vencimento), startOfDay(new Date()));
-    if (isVencido || status === 'vencido') {
+    if (isVencido) {
       return (
         <Badge className="bg-red-100 text-red-700 hover:bg-red-200 border-none w-fit">
           Vencido
@@ -115,7 +115,7 @@ function StudentFinance() {
     );
   };
 
-  const getPaymentMethodBadge = (method: string, parcelasCartao?: number) => {
+  const getPaymentMethodBadge = (method: string | null, parcelasCartao?: number | null) => {
     if (!method) return null;
     
     if (method.toLowerCase().includes('cartão')) {
@@ -158,7 +158,7 @@ function StudentFinance() {
     .reduce((acc, p) => acc + Number(p.valor), 0);
   
   const totalEmAberto = parcelas
-    .filter(p => p.status === 'aberto' || p.status === 'vencido')
+    .filter(p => p.status === 'aberto')
     .reduce((acc, p) => acc + Number(p.valor), 0);
     
   const totalContrato = parcelas
@@ -221,7 +221,7 @@ function StudentFinance() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border border-gray-100">
+          <div className="rounded-md border border-gray-100 overflow-hidden">
             <Table>
               <TableHeader className="bg-gray-50/50">
                 <TableRow>
@@ -243,7 +243,6 @@ function StudentFinance() {
                   parcelas.map((parcela) => {
                     const status = parcela.status;
                     const isPago = status === 'pago';
-                    const isVencido = isBefore(new Date(parcela.data_vencimento), startOfDay(new Date())) && status === 'aberto';
                     
                     return (
                       <TableRow key={parcela.id} className="hover:bg-gray-50/50 transition-colors">
@@ -251,19 +250,21 @@ function StudentFinance() {
                           {parcela.descricao || (parcela.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${parcela.numero}`)}
                         </TableCell>
                         <TableCell>
-                          {format(new Date(parcela.data_vencimento), "dd/MM/yyyy")}
+                          {format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
                         <TableCell className="font-semibold">
                           {formatCurrency(Number(parcela.valor))}
                         </TableCell>
-                        <TableCell className="text-center flex justify-center">
-                          {getStatusBadge(status, parcela.data_vencimento)}
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            {getStatusBadge(status, parcela.data_vencimento)}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           {isPago ? (
                             <div className="flex flex-col items-end gap-1">
                               <span className="text-xs text-green-600 font-medium">
-                                Pago em {parcela.data_pagamento ? format(new Date(parcela.data_pagamento), "dd/MM/yyyy") : '--/--/----'}
+                                Pago em {parcela.data_pagamento ? format(new Date(parcela.data_pagamento), "dd/MM/yyyy", { locale: ptBR }) : '--/--/----'}
                               </span>
                               {getPaymentMethodBadge(parcela.forma_pagamento, parcela.parcelas_cartao)}
                             </div>
