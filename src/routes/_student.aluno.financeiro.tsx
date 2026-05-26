@@ -209,20 +209,20 @@ function StudentFinance() {
         </div>
       </div>
 
-      <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-md"} border rounded-xl overflow-hidden`}>
-        <div className={`p-6 border-b ${isDark ? "border-white/5" : "border-black/5"} flex items-center gap-3`}>
+      <div className="bg-white border-gray-200 shadow-md border rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-gray-100 flex items-center gap-3">
           <Receipt className="h-5 w-5 text-[#2D6ADF]" />
-          <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Minhas Cobranças</h2>
+          <h2 className="text-xl font-bold text-gray-900">Minhas Cobranças</h2>
         </div>
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className={isDark ? "bg-white/5" : "bg-gray-50"}>
-              <TableRow className={`${isDark ? "border-white/5" : "border-black/5"} hover:bg-transparent`}>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold`}>Descrição</TableHead>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold`}>Vencimento</TableHead>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold`}>Valor</TableHead>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold text-center`}>Status</TableHead>
-                <TableHead className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-bold text-right`}>Ação</TableHead>
+            <TableHeader className="bg-gray-50">
+              <TableRow className="border-gray-100 hover:bg-transparent">
+                <TableHead className="text-gray-500 font-bold">Descrição</TableHead>
+                <TableHead className="text-gray-500 font-bold">Vencimento</TableHead>
+                <TableHead className="text-gray-500 font-bold">Valor</TableHead>
+                <TableHead className="text-gray-500 font-bold text-center">Status</TableHead>
+                <TableHead className="text-gray-500 font-bold text-right">Ação</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
