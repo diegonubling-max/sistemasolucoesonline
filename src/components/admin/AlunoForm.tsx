@@ -103,10 +103,10 @@ export function AlunoForm({
           <CardTitle>Dados pessoais</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Nome completo" error={errors.nome?.message}>
+          <Field label="Nome completo *" error={errors.nome?.message}>
             <Input {...form.register("nome")} />
           </Field>
-          <Field label="Telefone" error={errors.telefone?.message}>
+          <Field label="Telefone *" error={errors.telefone?.message}>
             <Input
               value={form.watch("telefone")}
               onChange={(e) => form.setValue("telefone", maskPhone(e.target.value), { shouldValidate: true })}
@@ -116,14 +116,14 @@ export function AlunoForm({
           <Field label="E-mail" error={errors.email?.message}>
             <Input type="email" {...form.register("email")} />
           </Field>
-          <Field label="CPF" error={errors.cpf?.message}>
+          <Field label="CPF *" error={errors.cpf?.message}>
             <Input
               value={form.watch("cpf")}
               onChange={(e) => form.setValue("cpf", maskCPF(e.target.value), { shouldValidate: true })}
               placeholder="000.000.000-00"
             />
           </Field>
-          <Field label="Data de nascimento" error={errors.data_nascimento?.message}>
+          <Field label="Data de nascimento *" error={errors.data_nascimento?.message}>
             <Input type="date" {...form.register("data_nascimento")} />
             {dob && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -131,7 +131,7 @@ export function AlunoForm({
               </p>
             )}
           </Field>
-          <Field label="Como nos conheceu?" error={errors.origem?.message}>
+          <Field label="Como nos conheceu? *" error={errors.origem?.message}>
             <Select
               value={form.watch("origem")}
               onValueChange={(v: any) => form.setValue("origem", v, { shouldValidate: true })}
