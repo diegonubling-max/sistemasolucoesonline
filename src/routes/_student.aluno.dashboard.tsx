@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useStudentTheme } from "./_student";
 
 export const Route = createFileRoute("/_student/aluno/dashboard")({
   head: () => ({ meta: [{ title: "Meus Cursos — Soluções Online" }] }),
