@@ -73,11 +73,16 @@ function RootComponent() {
   const location = useLocation();
 
   useEffect(() => {
-    const isStudentArea = location.pathname.startsWith('/aluno');
+    const isStudentArea = location.pathname.startsWith('/aluno') || location.pathname === '/_student';
+    const body = document.body;
     if (isStudentArea) {
       document.documentElement.classList.add('student-area');
+      body.style.backgroundColor = '#141414';
+      body.style.color = '#FFFFFF';
     } else {
       document.documentElement.classList.remove('student-area');
+      body.style.backgroundColor = '';
+      body.style.color = '';
     }
   }, [location.pathname]);
 
