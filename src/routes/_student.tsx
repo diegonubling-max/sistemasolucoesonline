@@ -121,20 +121,20 @@ function StudentLayout() {
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 to="/aluno/dashboard"
-                className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-white/80 hover:text-white"} font-medium transition-colors flex items-center gap-2`}
+                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
                 activeProps={{ className: "text-white font-bold" }}
               >
                 Início
               </Link>
               <Link
                 to="/aluno/dashboard"
-                className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-white/80 hover:text-white"} font-medium transition-colors flex items-center gap-2`}
+                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
               >
                 Meus Cursos
               </Link>
               <Link
                 to="/aluno/financeiro"
-                className={`${isDark ? "text-[#B3B3B3] hover:text-white" : "text-white/80 hover:text-white"} font-medium transition-colors flex items-center gap-2`}
+                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
                 activeProps={{ className: "text-white font-bold" }}
               >
                 Financeiro
