@@ -393,6 +393,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      criar_acesso_aluno: {
+        Args: { p_ctr: number; p_email: string; p_senha: string }
+        Returns: undefined
+      }
       delete_aluno_completo: {
         Args: { p_aluno_id: string }
         Returns: undefined
