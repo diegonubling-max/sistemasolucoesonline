@@ -42,10 +42,10 @@
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.99 0.003 250);
-  --foreground: oklch(0.18 0.03 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 250);
+  --background: #FFFFFF;
+  --foreground: #111827;
+  --card: #FFFFFF;
+  --card-foreground: #111827;
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.03 250);
   --primary: oklch(0.34 0.06 250);
@@ -60,7 +60,7 @@
   --success-foreground: oklch(0.15 0.05 150);
   --destructive: oklch(0.6 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.01 250);
+  --border: #E5E7EB;
   --input: oklch(0.92 0.01 250);
   --ring: oklch(0.34 0.06 250);
 
@@ -129,6 +129,14 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  /* Forçar temas claros em componentes admin se necessário */
+  .admin-panel table, 
+  .admin-panel .card,
+  .admin-panel .bg-card {
+    background-color: #FFFFFF !important;
+    border-color: #E5E7EB !important;
+    color: #111827 !important;
   }
 }
 

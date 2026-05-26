@@ -74,13 +74,17 @@ function RootComponent() {
 
   useEffect(() => {
     const isStudentArea = location.pathname.startsWith('/aluno') || location.pathname === '/_student';
+    const html = document.documentElement;
     const body = document.body;
+
     if (isStudentArea) {
-      document.documentElement.classList.add('student-area');
+      html.classList.add('student-area');
+      html.classList.add('dark');
       body.style.backgroundColor = '#141414';
       body.style.color = '#FFFFFF';
     } else {
-      document.documentElement.classList.remove('student-area');
+      html.classList.remove('student-area');
+      html.classList.remove('dark');
       body.style.backgroundColor = '';
       body.style.color = '';
     }
