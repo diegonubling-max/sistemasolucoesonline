@@ -124,14 +124,14 @@ function AlunosList() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[80px] text-muted-foreground font-medium">CTR</TableHead>
-                <TableHead className="text-muted-foreground font-medium">Nome</TableHead>
-                <TableHead className="text-muted-foreground font-medium">E-mail</TableHead>
-                <TableHead className="text-muted-foreground font-medium">Telefone</TableHead>
-                <TableHead className="text-muted-foreground font-medium">Vendedora</TableHead>
-                <TableHead className="text-muted-foreground font-medium">Matrícula</TableHead>
-                <TableHead className="text-muted-foreground font-medium">Cadastro</TableHead>
-                <TableHead className="text-right text-muted-foreground font-medium">Ações</TableHead>
+                <TableHead className="w-[80px]">CTR</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Telefone</TableHead>
+                <TableHead>Vendedora</TableHead>
+                <TableHead>Matrícula</TableHead>
+                <TableHead>Cadastro</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
