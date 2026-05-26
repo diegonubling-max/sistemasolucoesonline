@@ -244,7 +244,6 @@ function Financeiro() {
     { label: "Total Recebido no Mês", value: formatCurrency(globalStats?.recebido), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "A Receber no Mês", value: formatCurrency(globalStats?.aReceberMes), icon: Landmark, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Em Atraso", value: formatCurrency(globalStats?.atrasado), icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10" },
-    { label: "Total Contratos", value: formatCurrency(globalStats?.totalGeral), icon: Wallet, color: "text-purple-500", bg: "bg-purple-500/10" },
   ];
 
   const getStatusBadge = (p: any) => {
