@@ -196,10 +196,14 @@ function Financeiro() {
   });
 
   const darBaixaMutation = useMutation({
-    mutationFn: async ({ id, date }: { id: string; date: string }) => {
+    mutationFn: async ({ id, date, ...extra }: { id: string; date: string; [key: string]: any }) => {
       const { error } = await supabase
         .from("parcelas")
-        .update({ status: "pago", data_pagamento: date })
+        .update({ 
+          status: "pago", 
+          data_pagamento: date,
+          ...extra
+        })
         .eq("id", id);
       if (error) throw error;
     },
