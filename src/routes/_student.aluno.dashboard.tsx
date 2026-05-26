@@ -107,10 +107,8 @@ function StudentDashboard() {
               
               return (
                 <Link key={i} to="/aluno/curso/$id" params={{ id: curso.id }} className="group">
-                  <div className={`relative ${
-                    isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5"
-                  } rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border h-full flex flex-col shadow-sm`}>
-                    <div className={`aspect-video ${isDark ? "bg-[#222]" : "bg-gray-100"} flex items-center justify-center relative`}>
+                  <div className="relative bg-white border-gray-200 rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border h-full flex flex-col shadow-sm">
+                    <div className="aspect-video bg-gray-100 flex items-center justify-center relative">
                       <div className="p-4 bg-[#2D6ADF]/20 rounded-full">
                         <PlayCircle className="h-10 w-10 text-[#2D6ADF]" />
                       </div>
