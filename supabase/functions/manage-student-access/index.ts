@@ -88,6 +88,53 @@ serve(async (req) => {
       })
     }
 
+    if (action === 'recreate_admin') {
+      const adminEmail = Deno.env.get('ADMIN_EMAIL') ?? ''
+      const adminPassword = Deno.env.get('ADMIN_PASSWORD') ?? ''
+      if (!adminEmail || !adminPassword) {
+        return new Response(JSON.stringify({ error: 'ADMIN_EMAIL/ADMIN_PASSWORD não configurados' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { data: users, error: listError } = await supabaseClient.auth.admin.listUsers()
+      if (listError) throw listError
+      const existing = users.users.find(u => u.email === adminEmail)
+
+      let userId: string
+      if (existing) {
+        const { error: updErr } = await supabaseClient.auth.admin.updateUserById(existing.id, {
+          password: adminPassword,
+          email_confirm: true,
+        })
+        if (updErr) throw updErr
+        userId = existing.id
+      } else {
+        const { data: created, error: createErr } = await supabaseClient.auth.admin.createUser({
+          email: adminEmail,
+          password: adminPassword,
+          email_confirm: true,
+        })
+        if (createErr) throw createErr
+        userId = created.user.id
+      }
+
+      // Garante role de administrador
+      const { data: roles } = await supabaseClient
+        .from('user_roles').select('id').eq('user_id', userId).eq('role', 'administrador')
+      if (!roles || roles.length === 0) {
+        const { error: roleErr } = await supabaseClient
+          .from('user_roles').insert({ user_id: userId, role: 'administrador' })
+        if (roleErr) throw roleErr
+      }
+
+      return new Response(JSON.stringify({
+        message: existing ? 'Admin resetado com sucesso' : 'Admin criado com sucesso',
+        email: adminEmail,
+        user_id: userId,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     return new Response(JSON.stringify({ error: 'Ação inválida' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
