@@ -76,7 +76,7 @@ function AlunoLogin() {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(aluno.email, {
-      redirectTo: `${window.location.origin}/aluno/perfil`,
+      redirectTo: `https://sistemasolucoesonline.lovable.app/aluno/perfil`,
     });
     if (error) toast.error(error.message);
     else toast.success("E-mail de recuperação enviado para " + aluno.email);
