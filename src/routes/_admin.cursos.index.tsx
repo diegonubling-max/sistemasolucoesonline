@@ -107,12 +107,12 @@ function CursosList() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-gray-100">
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Nome</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Descrição</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Aulas</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Status</TableHead>
-                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Cadastro</TableHead>
-                <TableHead className="text-right text-muted-foreground font-normal text-xs uppercase tracking-wider">Ações</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Nome</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Descrição</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Aulas</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Status</TableHead>
+                <TableHead className="text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Cadastro</TableHead>
+                <TableHead className="text-right text-xs font-normal text-muted-foreground/70 uppercase tracking-wider">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -127,11 +127,11 @@ function CursosList() {
                 const count = Array.isArray(c.aulas) ? (c.aulas[0]?.count ?? 0) : 0;
                 return (
                   <TableRow key={c.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
-                    <TableCell className="font-bold text-foreground">{c.nome}</TableCell>
-                    <TableCell className="max-w-md truncate font-normal text-muted-foreground">
+                    <TableCell className="text-sm font-bold text-slate-700">{c.nome}</TableCell>
+                    <TableCell className="max-w-md truncate text-sm font-normal text-muted-foreground/80">
                       {c.descricao || "—"}
                     </TableCell>
-                    <TableCell className="font-normal text-foreground">{count}</TableCell>
+                    <TableCell className="text-sm font-normal text-slate-700">{count}</TableCell>
                     <TableCell>
                       {c.ativo ? (
                         <Badge className="bg-green-500 text-white hover:bg-green-500 rounded-full px-3 font-semibold">Ativo</Badge>
@@ -139,7 +139,7 @@ function CursosList() {
                         <Badge className="bg-gray-400 text-white hover:bg-gray-400 rounded-full px-3 font-semibold">Inativo</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground font-normal">{formatDate(c.created_at)}</TableCell>
+                    <TableCell className="text-sm font-normal text-muted-foreground/80">{formatDate(c.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button asChild size="icon" variant="ghost" title="Gerenciar aulas">
