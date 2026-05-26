@@ -27,7 +27,7 @@ function StudentLayout() {
   const [isVerifying, setIsVerifying] = useState(true);
   const [userName, setUserName] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [tema, setTema] = useState<"claro" | "escuro">("escuro");
+  const [tema, setTema] = useState<"claro" | "escuro">("claro");
   const [alunoId, setAlunoId] = useState<string | null>(null);
 
   const toggleTema = async () => {
