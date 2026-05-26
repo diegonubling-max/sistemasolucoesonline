@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap } from "lucide-react";
 import { AlunoForm, type AlunoFormValues } from "./AlunoForm";
+import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -184,11 +185,13 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             onSubmit={async (v) => {
               const { data, error } = await supabase.from("alunos").insert({
                 ...v,
-                responsavel_email: v.responsavel_email || null
+                responsavel_email: v.responsavel_email || null,
+                menor_de_idade: calcAge(v.data_nascimento) < 18
               }).select("id").single();
               
               if (error) {
-                toast.error(error.message);
+                console.error("Erro ao salvar aluno:", error);
+                toast.error(`Erro ao salvar: ${error.message}`);
                 return;
               }
               
