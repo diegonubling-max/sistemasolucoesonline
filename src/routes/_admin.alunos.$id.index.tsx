@@ -16,6 +16,7 @@ import { formatDate } from "@/lib/format";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BaixaModal } from "@/components/admin/BaixaModal";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
   head: () => ({ meta: [{ title: "Aluno — Soluções Online" }] }),
@@ -29,18 +30,25 @@ function AlunoDetalhes() {
   const [showPasswordResult, setShowPasswordResult] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
+  const [selectedParcelaValor, setSelectedParcelaValor] = useState<number>(0);
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
   const qc = useQueryClient();
   const [passwordToDisplay, setPasswordToDisplay] = useState("");
 
   const darBaixa = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: {
+      data_pagamento: string;
+      forma_pagamento: string;
+      parcelas_cartao?: number;
+      taxa_cartao?: number;
+      valor_liquido?: number;
+    }) => {
       if (!selectedParcelaId) return;
       const { error } = await supabase
         .from("parcelas")
         .update({
           status: "pago",
-          data_pagamento: format(dataPagamento, "yyyy-MM-dd"),
+          ...data
         })
         .eq("id", selectedParcelaId);
       if (error) throw error;
@@ -277,6 +285,7 @@ function AlunoDetalhes() {
                   <tr className="border-b text-muted-foreground">
                     <th className="text-left py-2 font-medium">Nº</th>
                     <th className="text-left py-2 font-medium">Descrição</th>
+                    <th className="text-left py-2 font-medium">Forma Pag.</th>
                     <th className="text-left py-2 font-medium">Vencimento</th>
                     <th className="text-left py-2 font-medium">Valor</th>
                     <th className="text-left py-2 font-medium">Status</th>
@@ -293,6 +302,22 @@ function AlunoDetalhes() {
                       <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="py-4 font-medium">{number}</td>
                         <td className="py-4">{description}</td>
+                        <td className="py-4">
+                          {p.status === 'pago' && p.forma_pagamento && (
+                            <Badge 
+                              className={cn(
+                                "font-bold",
+                                p.forma_pagamento === 'boleto' ? "bg-blue-100 text-blue-700 hover:bg-blue-100" :
+                                p.forma_pagamento === 'pix' ? "bg-green-100 text-green-700 hover:bg-green-100" :
+                                "bg-purple-100 text-purple-700 hover:bg-purple-100"
+                              )}
+                            >
+                              {p.forma_pagamento === 'boleto' ? 'Boleto' : 
+                               p.forma_pagamento === 'pix' ? 'PIX' : 
+                               `Cartão ${p.parcelas_cartao}x`}
+                            </Badge>
+                          )}
+                        </td>
                         <td className="py-4">{formatDate(p.data_vencimento)}</td>
                         <td className="py-4 font-bold">R$ {Number(p.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
                         <td className="py-4">
@@ -317,6 +342,7 @@ function AlunoDetalhes() {
                               className="text-green-600 hover:text-green-700 hover:bg-green-50"
                               onClick={() => {
                                 setSelectedParcelaId(p.id);
+                                setSelectedParcelaValor(Number(p.valor));
                                 setShowBaixaModal(true);
                               }}
                             >
@@ -346,54 +372,13 @@ function AlunoDetalhes() {
         </Card>
       </div>
 
-      <Dialog open={showBaixaModal} onOpenChange={setShowBaixaModal}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Confirmar Pagamento</DialogTitle>
-            <DialogDescription>
-              Informe a data em que o pagamento foi realizado.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label>Data do Pagamento</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dataPagamento && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dataPagamento ? format(dataPagamento, "dd/MM/yyyy") : <span>Selecione a data</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dataPagamento}
-                    onSelect={(d) => d && setDataPagamento(d)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBaixaModal(false)}>Cancelar</Button>
-            <Button 
-              className="bg-green-600 hover:bg-green-700"
-              disabled={darBaixa.isPending}
-              onClick={() => darBaixa.mutate()}
-            >
-              {darBaixa.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Confirmar Baixa
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BaixaModal 
+        open={showBaixaModal}
+        onOpenChange={setShowBaixaModal}
+        isLoading={darBaixa.isPending}
+        valorOriginal={selectedParcelaValor}
+        onConfirm={(data) => darBaixa.mutate(data)}
+      />
 
       <Dialog open={showResetDefaultModal} onOpenChange={setShowResetDefaultModal}>
         <DialogContent>
