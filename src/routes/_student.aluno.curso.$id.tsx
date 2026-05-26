@@ -58,7 +58,7 @@ function StudentCourse() {
             id,
             titulo,
             descricao,
-            video_url,
+            url_video,
             ordem,
             ativo
           )
