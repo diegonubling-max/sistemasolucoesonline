@@ -111,7 +111,7 @@ function AlunosList() {
           <div className="relative mb-4 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar curso..."
+              placeholder="Buscar por nome, e-mail ou CTR..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -155,7 +155,7 @@ function AlunosList() {
                   <TableCell className="font-normal text-muted-foreground">{a.vendedora}</TableCell>
                   <TableCell>
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
-                      <Badge className="bg-green-500 text-white hover:bg-green-600 rounded-full px-3">Matriculado</Badge>
+                      <Badge className="bg-green-500 text-white hover:bg-green-500 rounded-full px-3 font-semibold">Matriculado</Badge>
                     ) : (
                       <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 rounded-full px-3 font-semibold">Pendente</Badge>
                     )}
@@ -163,7 +163,7 @@ function AlunosList() {
                   <TableCell className="text-muted-foreground font-normal">{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button asChild size="icon" variant="ghost" title={Array.isArray(a.matriculas) && a.matriculas.length > 0 ? "Ver matrícula" : "Ver detalhes"}>
+                      <Button asChild size="icon" variant="ghost" title="Ver detalhes">
                         <Link to="/alunos/$id" params={{ id: a.id }}>
                           <Eye className="h-4 w-4 text-foreground" />
                         </Link>
@@ -185,7 +185,7 @@ function AlunosList() {
                         size="icon"
                         variant="ghost"
                         title="Excluir"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => setStudentToDelete({ id: a.id, nome: a.nome, email: a.email ?? "" })}
                       >
                         <Trash2 className="h-4 w-4" />
