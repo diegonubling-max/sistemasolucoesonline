@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Login — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Login — Soluções Online" }] }),
   component: LoginPage,
 });
 
@@ -33,7 +33,7 @@ function LoginPage() {
       toast.error("Falha no login", { description: error.message });
       return;
     }
-    toast.success("Bem-vindo ao EduManager!");
+    toast.success("Bem-vindo ao Soluções Online!");
     navigate({ to: "/" });
   };
 
@@ -48,14 +48,14 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground mb-4">
+        <div className="text-center mb-8 bg-primary py-8 rounded-2xl shadow-xl">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 text-white mb-4">
             <GraduationCap className="h-7 w-7" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Edu<span className="text-accent">Manager</span>
+          <h1 className="text-3xl font-bold">
+            <span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">Acesse o painel administrativo</p>
+          <p className="text-sm text-white/70 mt-2">Acesse o painel administrativo</p>
         </div>
 
         <div className="bg-card rounded-xl shadow-sm border p-6">

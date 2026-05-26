@@ -29,7 +29,7 @@ export function AppSidebar() {
     <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen">
       <div className="px-6 py-6 border-b border-sidebar-border">
         <h1 className="text-2xl font-bold tracking-tight">
-          Edu<span className="text-sidebar-primary">Manager</span>
+          <span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span>
         </h1>
         <p className="text-xs text-sidebar-foreground/60 mt-1">Painel Administrativo</p>
       </div>

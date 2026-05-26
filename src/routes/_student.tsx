@@ -74,24 +74,24 @@ function StudentLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
-      <header className="bg-white border-b sticky top-0 z-10">
+      <header className="bg-primary border-b sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/aluno/dashboard" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary">Edu<span className="text-[#3B82F6]">Manager</span></span>
+            <span className="text-xl font-bold"><span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span></span>
           </Link>
 
           <div className="flex items-center gap-4">
-            <span className="hidden md:inline text-sm text-muted-foreground">
-              Olá, <span className="font-semibold text-foreground">{userName}</span>!
+            <span className="hidden md:inline text-sm text-white/70">
+              Olá, <span className="font-semibold text-white">{userName}</span>!
             </span>
             
             <Link to="/aluno/perfil">
-              <Button variant="ghost" size="icon" title="Meu Perfil">
+              <Button variant="ghost" size="icon" title="Meu Perfil" className="text-white hover:bg-white/10">
                 <UserIcon className="h-5 w-5" />
               </Button>
             </Link>
 
-            <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair">
+            <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair" className="text-white hover:bg-white/10">
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
@@ -106,7 +106,7 @@ function StudentLayout() {
 
       <footer className="py-6 border-t bg-white">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} EduManager — Área do Aluno
+          &copy; {new Date().getFullYear()} Soluções Online — Área do Aluno
         </div>
       </footer>
     </div>

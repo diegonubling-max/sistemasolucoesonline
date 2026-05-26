@@ -41,6 +41,26 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+    
+    if (action === 'delete_user') {
+      // Find user by email
+      const { data: users, error: listError } = await supabaseClient.auth.admin.listUsers()
+      if (listError) throw listError
+      
+      const user = users.users.find(u => u.email === email)
+      if (!user) {
+        return new Response(JSON.stringify({ message: 'Usuário não encontrado no Auth, ignorando' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(user.id)
+      if (deleteError) throw deleteError
+
+      return new Response(JSON.stringify({ message: 'Usuário removido do Auth com sucesso' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     // Default: Check/Create access
     // 1. Check if user exists
