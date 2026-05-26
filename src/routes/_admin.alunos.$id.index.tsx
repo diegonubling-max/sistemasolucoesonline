@@ -159,6 +159,20 @@ function AlunoDetalhes() {
   const totalAberto = parcelas?.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
   const totalGeral = parcelas?.filter(p => p.status !== 'isento').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyAccessData = () => {
+    if (!aluno) return;
+    const primeiroNome = aluno.nome.split(" ")[0];
+    const senhaPadrao = `123${primeiroNome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}`;
+    const text = `Olá ${primeiroNome}! Seus dados de acesso:\nLogin: ${aluno.ctr}\nSenha: ${senhaPadrao}\nAcesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+    
+    navigator.clipboard.writeText(text);
+    toast.success("Dados copiados para a área de transferência!");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!aluno) return <p className="text-muted-foreground">Aluno não encontrado.</p>;
 
@@ -174,6 +188,14 @@ function AlunoDetalhes() {
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar
               </Link>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-blue-500 text-blue-600 hover:bg-blue-50"
+              onClick={handleCopyAccessData}
+            >
+              {copied ? <CheckCircle2 className="h-4 w-4 mr-2" /> : <Key className="h-4 w-4 mr-2" />}
+              {copied ? "Copiado!" : "Copiar dados de acesso"}
             </Button>
             <Button variant="outline" onClick={() => setShowResetDefaultModal(true)}>
               <Key className="h-4 w-4 mr-2" />
