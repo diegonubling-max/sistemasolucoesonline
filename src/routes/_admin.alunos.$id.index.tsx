@@ -115,7 +115,7 @@ function AlunoDetalhes() {
         .from("parcelas")
         .select("*")
         .in("matricula_id", ids)
-        .order("numero", { ascending: true });
+        .order("data_vencimento", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
@@ -123,7 +123,7 @@ function AlunoDetalhes() {
 
   const totalPago = parcelas?.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
   const totalAberto = parcelas?.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
-  const totalGeral = parcelas?.reduce((acc, p) => acc + Number(p.valor), 0) || 0;
+  const totalGeral = parcelas?.filter(p => p.status !== 'isento').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
 
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!aluno) return <p className="text-muted-foreground">Aluno não encontrado.</p>;
