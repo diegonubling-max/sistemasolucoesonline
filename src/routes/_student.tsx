@@ -60,14 +60,20 @@ function StudentLayout() {
         }
       }
 
-      // Get student name
+      // Get student data
       const { data: aluno } = await supabase
         .from('alunos')
-        .select('nome')
+        .select('id, nome, tema')
         .eq('email', session.user.email ?? '')
         .single();
       
-      if (aluno) setUserName(aluno.nome);
+      if (aluno) {
+        setUserName(aluno.nome);
+        setAlunoId(aluno.id);
+        if (aluno.tema === 'claro' || aluno.tema === 'escuro') {
+          setTema(aluno.tema);
+        }
+      }
       setIsVerifying(false);
     }
 
