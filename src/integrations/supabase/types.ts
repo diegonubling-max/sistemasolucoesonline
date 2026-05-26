@@ -410,7 +410,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_aluno: { Args: never; Returns: boolean }
       redefinir_senha_aluno: {
         Args: { p_email: string; p_nova_senha: string }
         Returns: undefined
