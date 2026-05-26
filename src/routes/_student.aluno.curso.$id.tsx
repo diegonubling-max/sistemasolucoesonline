@@ -185,7 +185,7 @@ function StudentCourse() {
                         ⬅ Anterior
                     </Button>
                     <Button 
-                        variant="primary" 
+                        variant="default" 
                         size="sm" 
                         className="bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white"
                         disabled
