@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock } from "lucide-react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,6 +31,7 @@ function AlunoDetalhes() {
   const [showResetDefaultModal, setShowResetDefaultModal] = useState(false);
   const [showPasswordResult, setShowPasswordResult] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
+  const [showVitrineModal, setShowVitrineModal] = useState(false);
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
   const [selectedParcelaValor, setSelectedParcelaValor] = useState<number>(0);
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
@@ -44,6 +45,12 @@ function AlunoDetalhes() {
   } | null>(null);
   const qc = useQueryClient();
   const [passwordToDisplay, setPasswordToDisplay] = useState("");
+
+  // Vitrine fields
+  const [vitrineCursoId, setVitrineCursoId] = useState("");
+  const [vitrinePrecoPix, setVitrinePrecoPix] = useState("");
+  const [vitrinePrecoCartao, setVitrinePrecoCartao] = useState("");
+  const [vitrineMaxParcelas, setVitrineMaxParcelas] = useState("12");
 
   const darBaixa = useMutation({
     mutationFn: async (data: {
@@ -107,6 +114,62 @@ function AlunoDetalhes() {
       setPasswordToDisplay(senhaGerada);
       setShowResetDefaultModal(false);
       setShowPasswordResult(true);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const { data: allCourses } = useQuery({
+    queryKey: ["all-courses"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("cursos").select("id, nome").order("nome");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: vitrine } = useQuery({
+    queryKey: ["aluno-vitrine", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cursos_vitrine")
+        .select("*, cursos(nome)")
+        .eq("aluno_id", id);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addToVitrine = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("cursos_vitrine").insert({
+        aluno_id: id,
+        curso_id: vitrineCursoId,
+        preco_pix: Number(vitrinePrecoPix),
+        preco_cartao: Number(vitrinePrecoCartao),
+        max_parcelas: Number(vitrineMaxParcelas),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Curso adicionado à vitrine!");
+      setShowVitrineModal(false);
+      setVitrineCursoId("");
+      setVitrinePrecoPix("");
+      setVitrinePrecoCartao("");
+      setVitrineMaxParcelas("12");
+      qc.invalidateQueries({ queryKey: ["aluno-vitrine", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeFromVitrine = useMutation({
+    mutationFn: async (vitrineId: string) => {
+      const { error } = await supabase.from("cursos_vitrine").delete().eq("id", vitrineId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Curso removido da vitrine!");
+      qc.invalidateQueries({ queryKey: ["aluno-vitrine", id] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
