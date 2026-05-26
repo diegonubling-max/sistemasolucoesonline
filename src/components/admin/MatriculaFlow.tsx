@@ -35,6 +35,13 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   
   // State for Step 3: Pacotes
   const [selectedPacote, setSelectedPacote] = useState<string | null>(null);
+
+  // State for Step 4: Pagamentos
+  const [taxaStatus, setTaxaStatus] = useState<"cobrar" | "isentar">("cobrar");
+  const [taxaVencimento, setTaxaVencimento] = useState<Date>(new Date());
+  const [melhorDia, setMelhorDia] = useState<string>("");
+  const [parcelasGeradas, setParcelasGeradas] = useState<any[]>([]);
+
   const [showConclusion, setShowConclusion] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
