@@ -633,6 +633,12 @@ function Financeiro() {
           }
         }}
       />
+
+      <ResumoBaixaModal 
+        open={!!resumoBaixa}
+        onOpenChange={(open) => !open && setResumoBaixa(null)}
+        data={resumoBaixa}
+      />
     </div>
   );
 }
