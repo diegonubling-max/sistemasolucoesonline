@@ -126,6 +126,48 @@ function Dashboard() {
         })}
       </div>
 
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">Origem das Matrículas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {(stats?.origens ?? []).map((o) => {
+              let Icon = Pin;
+              if (o.name.toLowerCase().includes("google")) Icon = Search;
+              else if (o.name.toLowerCase().includes("meta") || o.name.toLowerCase().includes("facebook") || o.name.toLowerCase().includes("instagram")) Icon = Smartphone;
+              else if (o.name.toLowerCase().includes("indicação") || o.name.toLowerCase().includes("indicacao")) Icon = UserGroup;
+
+              return (
+                <div key={o.name} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-gray-100 rounded-md">
+                        <Icon className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <span className="font-medium text-gray-700">{o.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-muted-foreground">{o.count} {o.count === 1 ? 'aluno' : 'alunos'}</span>
+                      <span className="font-bold text-gray-900 w-10 text-right">{o.percent}%</span>
+                    </div>
+                  </div>
+                  <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-200">
+                    <div 
+                      className="h-full bg-[#1E3A5F] transition-all duration-1000 ease-out" 
+                      style={{ width: `${o.percent}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {(!stats?.origens || stats.origens.length === 0) && (
+              <p className="text-center text-muted-foreground py-4">Nenhuma origem registrada.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map((c) => {
           const Icon = c.icon;
