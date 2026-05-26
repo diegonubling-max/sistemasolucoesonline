@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { startOfMonth, endOfMonth, format, isBefore, parseISO, startOfDay } from "date-fns";
-import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle } from "lucide-react";
+import { startOfMonth, endOfMonth, format, isBefore, parseISO, startOfDay, differenceInDays } from "date-fns";
+import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, Calendar, Hash, UserX } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -20,16 +20,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
   component: Financeiro,
 });
 
+type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | null;
+
 function Financeiro() {
   const queryClient = useQueryClient();
   const today = new Date();
   
+  const [activeFilter, setActiveFilter] = useState<FilterType>(null);
+
   // States for filters
   const [recPeriod, setRecPeriod] = useState({ 
     start: format(startOfMonth(today), "yyyy-MM-dd"), 
@@ -41,6 +46,10 @@ function Financeiro() {
   });
   const [primeirasMonth, setPrimeirasMonth] = useState(format(today, "yyyy-MM"));
   const [ultimasMonth, setUltimasMonth] = useState(format(today, "yyyy-MM"));
+  const [atrasoPeriod, setAtrasoPeriod] = useState({
+    start: format(startOfMonth(today), "yyyy-MM-dd"),
+    end: format(today, "yyyy-MM-dd")
+  });
 
   // Lowering status modal state
   const [baixaModal, setBaixaModal] = useState<{ id: string; open: boolean; date: string } | null>(null);
@@ -69,13 +78,12 @@ function Financeiro() {
     },
   });
 
-  // Queries for the 4 filters
   const { data: recebimentos, refetch: refetchRecebimentos } = useQuery({
     queryKey: ["financeiro-recebimentos", recPeriod],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr))")
+        .select("*, matriculas(alunos(nome, ctr, telefone))")
         .eq("status", "pago")
         .gte("data_pagamento", recPeriod.start)
         .lte("data_pagamento", recPeriod.end)
@@ -83,6 +91,7 @@ function Financeiro() {
       if (error) throw error;
       return data;
     },
+    enabled: activeFilter === "recebimentos"
   });
 
   const { data: aReceber, refetch: refetchAReceber } = useQuery({
@@ -90,7 +99,7 @@ function Financeiro() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr))")
+        .select("*, matriculas(alunos(nome, ctr, telefone))")
         .eq("status", "aberto")
         .gte("data_vencimento", aRecPeriod.start)
         .lte("data_vencimento", aRecPeriod.end)
@@ -98,6 +107,7 @@ function Financeiro() {
       if (error) throw error;
       return data;
     },
+    enabled: activeFilter === "a_receber"
   });
 
   const { data: primeiras, refetch: refetchPrimeiras } = useQuery({
@@ -109,7 +119,7 @@ function Financeiro() {
       
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr))")
+        .select("*, matriculas(alunos(nome, ctr, telefone))")
         .eq("numero", 1)
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
@@ -117,6 +127,7 @@ function Financeiro() {
       if (error) throw error;
       return data;
     },
+    enabled: activeFilter === "primeiras"
   });
 
   const { data: ultimas, refetch: refetchUltimas } = useQuery({
@@ -142,7 +153,7 @@ function Financeiro() {
 
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr))")
+        .select("*, matriculas(alunos(nome, ctr, telefone))")
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
         .order("data_vencimento", { ascending: true });
@@ -151,6 +162,28 @@ function Financeiro() {
 
       return data.filter(p => p.numero === maxNums[p.matricula_id]);
     },
+    enabled: activeFilter === "ultimas"
+  });
+
+  const { data: atraso, refetch: refetchAtraso } = useQuery({
+    queryKey: ["financeiro-atraso", atrasoPeriod],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("parcelas")
+        .select("*, matriculas(alunos(nome, ctr, telefone))")
+        .eq("status", "aberto")
+        .lt("data_vencimento", format(today, "yyyy-MM-dd"))
+        .gte("data_vencimento", atrasoPeriod.start)
+        .lte("data_vencimento", atrasoPeriod.end)
+        .order("data_vencimento", { ascending: true });
+      if (error) throw error;
+
+      return data.map(p => ({
+        ...p,
+        diasAtraso: differenceInDays(startOfDay(today), startOfDay(parseISO(p.data_vencimento)))
+      })).sort((a, b) => b.diasAtraso - a.diasAtraso);
+    },
+    enabled: activeFilter === "atraso"
   });
 
   const darBaixaMutation = useMutation({
@@ -169,25 +202,31 @@ function Financeiro() {
       queryClient.invalidateQueries({ queryKey: ["financeiro-a-receber"] });
       queryClient.invalidateQueries({ queryKey: ["financeiro-primeiras"] });
       queryClient.invalidateQueries({ queryKey: ["financeiro-ultimas"] });
+      queryClient.invalidateQueries({ queryKey: ["financeiro-atraso"] });
     },
     onError: (e) => {
       toast.error("Erro ao registrar pagamento: " + e.message);
     }
   });
 
-  const exportCSV = (data: any[], filename: string) => {
+  const exportCSV = (data: any[], filename: string, extraHeaders: string[] = [], extraFields: (p: any) => string[] = () => []) => {
     if (!data || data.length === 0) return;
-    const headers = ["Aluno", "CTR", "Descricao", "Data", "Valor", "Status"];
+    const baseHeaders = ["Aluno", "CTR", "Descricao", "Data", "Valor", "Status"];
+    const headers = [...baseHeaders, ...extraHeaders];
+    
     const csvContent = [
       headers.join(","),
-      ...data.map(p => [
-        `"${p.matriculas?.alunos?.nome || ""}"`,
-        `"${p.matriculas?.alunos?.ctr || ""}"`,
-        `"${p.tipo || ""}"`,
-        p.data_pagamento || p.data_vencimento,
-        p.valor,
-        p.status
-      ].join(","))
+      ...data.map(p => {
+        const base = [
+          `"${p.matriculas?.alunos?.nome || ""}"`,
+          `"${p.matriculas?.alunos?.ctr || ""}"`,
+          `"${p.tipo || ""}"`,
+          p.data_pagamento || p.data_vencimento,
+          p.valor,
+          p.status
+        ];
+        return [...base, ...extraFields(p)].join(",");
+      })
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -201,7 +240,7 @@ function Financeiro() {
     document.body.removeChild(link);
   };
 
-  const cards = [
+  const summaryCards = [
     { label: "Total Recebido no Mês", value: formatCurrency(globalStats?.recebido), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "A Receber no Mês", value: formatCurrency(globalStats?.aReceberMes), icon: Landmark, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Em Atraso", value: formatCurrency(globalStats?.atrasado), icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10" },
@@ -215,12 +254,20 @@ function Financeiro() {
     return <Badge className="bg-yellow-500">Aberto</Badge>;
   };
 
+  const filterButtons = [
+    { id: "recebimentos", label: "Recebimentos", sub: "por período", icon: TrendingUp },
+    { id: "a_receber", label: "A Receber", sub: "por período", icon: Landmark },
+    { id: "primeiras", label: "Primeiras", sub: "Parcelas", icon: Hash },
+    { id: "ultimas", label: "Últimas", sub: "Parcelas", icon: Calendar },
+    { id: "atraso", label: "Alunos em", sub: "Atraso", icon: UserX },
+  ];
+
   return (
     <div className="space-y-8">
       <PageHeader title="Financeiro" description="Controle de recebimentos e cobranças" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((c) => {
+        {summaryCards.map((c) => {
           const Icon = c.icon;
           return (
             <Card key={c.label}>
@@ -240,261 +287,278 @@ function Financeiro() {
         })}
       </div>
 
-      {/* FILTRO 1: Recebimentos */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-              Recebimentos
-            </h3>
-            <div className="flex flex-wrap items-center gap-2">
-              <Input 
-                type="date" 
-                className="w-40" 
-                value={recPeriod.start} 
-                onChange={(e) => setRecPeriod(prev => ({ ...prev, start: e.target.value }))} 
-              />
-              <span className="text-muted-foreground">até</span>
-              <Input 
-                type="date" 
-                className="w-40" 
-                value={recPeriod.end} 
-                onChange={(e) => setRecPeriod(prev => ({ ...prev, end: e.target.value }))} 
-              />
-              <Button size="sm" onClick={() => refetchRecebimentos()}>
-                <Filter className="h-4 w-4 mr-2" /> Filtrar
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => exportCSV(recebimentos || [], "recebimentos")}>
-                <FileDown className="h-4 w-4 mr-2" /> Exportar
-              </Button>
-            </div>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Aluno</TableHead>
-                <TableHead>CTR</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Data Pagamento</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(recebimentos ?? []).map((p: any) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                  <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
-                  <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
-                  <TableCell>{formatDate(p.data_pagamento)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
-                </TableRow>
-              ))}
-              {recebimentos?.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum recebimento no período.</TableCell>
-                </TableRow>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {filterButtons.map((btn) => {
+          const Icon = btn.icon;
+          const isSelected = activeFilter === btn.id;
+          return (
+            <button
+              key={btn.id}
+              onClick={() => setActiveFilter(isSelected ? null : btn.id as FilterType)}
+              className={cn(
+                "flex flex-col items-center justify-center p-4 rounded-xl border transition-all text-center",
+                isSelected 
+                  ? "bg-[#1E3A5F] text-white border-[#1E3A5F] shadow-lg" 
+                  : "bg-white text-[#1E3A5F] border-gray-200 hover:border-[#1E3A5F]/50"
               )}
-            </TableBody>
-          </Table>
-          <div className="mt-4 pt-4 border-t text-right font-bold">
-            Total recebido no período: {formatCurrency((recebimentos ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}
-          </div>
-        </CardContent>
-      </Card>
+            >
+              <Icon className={cn("h-6 w-6 mb-2", isSelected ? "text-white" : "text-[#1E3A5F]")} />
+              <p className="font-bold text-sm leading-tight">{btn.label}</p>
+              <p className={cn("text-xs", isSelected ? "text-white/80" : "text-muted-foreground")}>{btn.sub}</p>
+            </button>
+          );
+        })}
+      </div>
 
-      {/* FILTRO 2: A Receber */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Landmark className="h-5 w-5 text-blue-500" />
-              A Receber
-            </h3>
-            <div className="flex flex-wrap items-center gap-2">
-              <Input 
-                type="date" 
-                className="w-40" 
-                value={aRecPeriod.start} 
-                onChange={(e) => setARecPeriod(prev => ({ ...prev, start: e.target.value }))} 
-              />
-              <span className="text-muted-foreground">até</span>
-              <Input 
-                type="date" 
-                className="w-40" 
-                value={aRecPeriod.end} 
-                onChange={(e) => setARecPeriod(prev => ({ ...prev, end: e.target.value }))} 
-              />
-              <Button size="sm" onClick={() => refetchAReceber()}>
-                <Filter className="h-4 w-4 mr-2" /> Filtrar
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => exportCSV(aReceber || [], "a-receber")}>
-                <FileDown className="h-4 w-4 mr-2" /> Exportar
-              </Button>
-            </div>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Aluno</TableHead>
-                <TableHead>CTR</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Vencimento</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(aReceber ?? []).map((p: any) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                  <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
-                  <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
-                  <TableCell>{formatDate(p.data_vencimento)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
-                  <TableCell>{getStatusBadge(p)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                      onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {aReceber?.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nada a receber no período.</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          <div className="mt-4 pt-4 border-t text-right font-bold">
-            Total a receber no período: {formatCurrency((aReceber ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* FILTRO 3: Primeiras Parcelas */}
-        <Card>
+      {activeFilter === "recebimentos" && (
+        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">Primeiras Parcelas</h3>
-              <div className="flex items-center gap-2">
-                <Input 
-                  type="month" 
-                  className="w-40" 
-                  value={primeirasMonth} 
-                  onChange={(e) => setPrimeirasMonth(e.target.value)} 
-                />
-                <Button size="sm" variant="outline" onClick={() => exportCSV(primeiras || [], "primeiras-parcelas")}>
-                  <FileDown className="h-4 w-4" />
-                </Button>
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-500" />
+                Recebimentos por Período
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input type="date" className="w-40" value={recPeriod.start} onChange={(e) => setRecPeriod(p => ({ ...p, start: e.target.value }))} />
+                <span className="text-muted-foreground">até</span>
+                <Input type="date" className="w-40" value={recPeriod.end} onChange={(e) => setRecPeriod(p => ({ ...p, end: e.target.value }))} />
+                <Button size="sm" onClick={() => refetchRecebimentos()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
               </div>
             </div>
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aluno</TableHead>
-                  <TableHead>Venc.</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeader><TableRow>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {(recebimentos ?? []).map((p: any) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
+                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell>{formatDate(p.data_pagamento)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
+                  </TableRow>
+                ))}
+                {recebimentos?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum recebimento no período.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <p className="font-bold">Total recebido: {formatCurrency((recebimentos ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
+              <Button variant="outline" size="sm" onClick={() => exportCSV(recebimentos || [], "recebimentos")}>
+                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeFilter === "a_receber" && (
+        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Landmark className="h-5 w-5 text-blue-500" />
+                A Receber por Período
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input type="date" className="w-40" value={aRecPeriod.start} onChange={(e) => setARecPeriod(p => ({ ...p, start: e.target.value }))} />
+                <span className="text-muted-foreground">até</span>
+                <Input type="date" className="w-40" value={aRecPeriod.end} onChange={(e) => setARecPeriod(p => ({ ...p, end: e.target.value }))} />
+                <Button size="sm" onClick={() => refetchAReceber()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
+              </div>
+            </div>
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {(aReceber ?? []).map((p: any) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
+                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell>{formatDate(p.data_vencimento)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
+                    <TableCell>{getStatusBadge(p)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}>
+                        <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {aReceber?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nada a receber no período.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <p className="font-bold">Total a receber: {formatCurrency((aReceber ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
+              <Button variant="outline" size="sm" onClick={() => exportCSV(aReceber || [], "a-receber")}>
+                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeFilter === "primeiras" && (
+        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Hash className="h-5 w-5 text-orange-500" />
+                Primeiras Parcelas
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input type="month" className="w-40" value={primeirasMonth} onChange={(e) => setPrimeirasMonth(e.target.value)} />
+                <Button size="sm" onClick={() => refetchPrimeiras()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">{primeiras?.length || 0} primeiras parcelas encontradas</p>
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
+              </TableRow></TableHeader>
               <TableBody>
                 {(primeiras ?? []).map((p: any) => (
                   <TableRow key={p.id}>
-                    <TableCell className="font-medium max-w-[120px] truncate">{p.matriculas?.alunos?.nome}</TableCell>
+                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
+                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
+                    <TableCell className="text-right">
+                      {p.status === 'aberto' && (
+                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}>
+                          <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-            <div className="mt-4 flex justify-between items-center text-sm font-semibold">
-              <span className="text-muted-foreground">{primeiras?.length || 0} primeiras parcelas encontradas</span>
-              <span>Total: {formatCurrency((primeiras ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</span>
+            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <p className="font-bold">Total: {formatCurrency((primeiras ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
+              <Button variant="outline" size="sm" onClick={() => exportCSV(primeiras || [], "primeiras-parcelas")}>
+                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
             </div>
           </CardContent>
         </Card>
+      )}
 
-        {/* FILTRO 4: Últimas Parcelas */}
-        <Card>
+      {activeFilter === "ultimas" && (
+        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">Últimas Parcelas</h3>
-              <div className="flex items-center gap-2">
-                <Input 
-                  type="month" 
-                  className="w-40" 
-                  value={ultimasMonth} 
-                  onChange={(e) => setUltimasMonth(e.target.value)} 
-                />
-                <Button size="sm" variant="outline" onClick={() => exportCSV(ultimas || [], "ultimas-parcelas")}>
-                  <FileDown className="h-4 w-4" />
-                </Button>
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-purple-500" />
+                Últimas Parcelas
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input type="month" className="w-40" value={ultimasMonth} onChange={(e) => setUltimasMonth(e.target.value)} />
+                <Button size="sm" onClick={() => refetchUltimas()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
               </div>
             </div>
+            <p className="text-sm text-muted-foreground mb-4">{ultimas?.length || 0} últimas parcelas encontradas</p>
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aluno</TableHead>
-                  <TableHead>Venc.</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeader><TableRow>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
+              </TableRow></TableHeader>
               <TableBody>
                 {(ultimas ?? []).map((p: any) => (
                   <TableRow key={p.id}>
-                    <TableCell className="font-medium max-w-[120px] truncate">{p.matriculas?.alunos?.nome}</TableCell>
+                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
+                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
+                    <TableCell className="text-right">
+                      {p.status === 'aberto' && (
+                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}>
+                          <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-            <div className="mt-4 flex justify-between items-center text-sm font-semibold">
-              <span className="text-muted-foreground">{ultimas?.length || 0} últimas parcelas encontradas</span>
-              <span>Total: {formatCurrency((ultimas ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</span>
+            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <p className="font-bold">Total: {formatCurrency((ultimas ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
+              <Button variant="outline" size="sm" onClick={() => exportCSV(ultimas || [], "ultimas-parcelas")}>
+                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
+
+      {activeFilter === "atraso" && (
+        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <UserX className="h-5 w-5 text-red-500" />
+                Alunos em Atraso
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input type="date" className="w-40" value={atrasoPeriod.start} onChange={(e) => setAtrasoPeriod(p => ({ ...p, start: e.target.value }))} />
+                <span className="text-muted-foreground">até</span>
+                <Input type="date" className="w-40" value={atrasoPeriod.end} onChange={(e) => setAtrasoPeriod(p => ({ ...p, end: e.target.value }))} />
+                <Button size="sm" onClick={() => refetchAtraso()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
+              </div>
+            </div>
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Telefone</TableHead><TableHead>Descrição</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Dias em Atraso</TableHead><TableHead className="text-right">Ações</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {(atraso ?? []).map((p: any) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
+                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell>{p.matriculas?.alunos?.telefone}</TableCell>
+                    <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell>{formatDate(p.data_vencimento)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
+                    <TableCell><Badge variant="destructive">{p.diasAtraso} dias</Badge></TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}>
+                        <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {atraso?.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum aluno em atraso no período selecionado.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">{atraso?.length || 0} alunos em atraso</p>
+                <p className="font-bold">Total em atraso: {formatCurrency((atraso ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => exportCSV(atraso || [], "alunos-em-atraso", ["Dias em Atraso"], (p) => [String(p.diasAtraso)])}>
+                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Modal Baixa */}
       <Dialog open={!!baixaModal?.open} onOpenChange={(open) => !open && setBaixaModal(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar Pagamento</DialogTitle>
-            <DialogDescription>
-              Informe a data em que o pagamento foi realizado.
-            </DialogDescription>
+            <DialogDescription>Informe a data em que o pagamento foi realizado.</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Input 
-              type="date" 
-              value={baixaModal?.date || ""} 
-              onChange={(e) => setBaixaModal(prev => prev ? { ...prev, date: e.target.value } : null)} 
-            />
+            <Input type="date" value={baixaModal?.date || ""} onChange={(e) => setBaixaModal(prev => prev ? { ...prev, date: e.target.value } : null)} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBaixaModal(null)}>Cancelar</Button>
-            <Button 
-              onClick={() => baixaModal && darBaixaMutation.mutate({ id: baixaModal.id, date: baixaModal.date })}
-              disabled={darBaixaMutation.isPending}
-            >
-              Confirmar
-            </Button>
+            <Button onClick={() => baixaModal && darBaixaMutation.mutate({ id: baixaModal.id, date: baixaModal.date })} disabled={darBaixaMutation.isPending}>Confirmar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
