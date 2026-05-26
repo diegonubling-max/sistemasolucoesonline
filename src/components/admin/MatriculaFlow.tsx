@@ -856,8 +856,20 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button className="w-full" onClick={() => navigate({ to: "/alunos" })}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => {
+                const loginUrl = "https://sistemasolucoesonline.lovable.app/aluno/login";
+                const text = `Olá ${aluno?.nome?.split(" ")[0]}! Seus dados de acesso:\nLogin: ${accessData?.ctr}\nSenha: ${accessData?.pass}\nAcesse: ${loginUrl}`;
+                navigator.clipboard.writeText(text);
+                toast.success("Dados copiados para a área de transferência!");
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Copiar dados
+            </Button>
+            <Button className="flex-1" onClick={() => navigate({ to: "/alunos" })}>
               Fechar e ir para lista de alunos
             </Button>
           </DialogFooter>
