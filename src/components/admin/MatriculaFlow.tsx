@@ -113,9 +113,9 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     onError: (e: any) => toast.error(e.message)
   });
 
-  const concludeMatricula = useMutation({
+  const saveStep3 = useMutation({
     mutationFn: async () => {
-      if (!matriculaId || !selectedPacote || !aluno) throw new Error("Dados incompletos");
+      if (!matriculaId || !selectedPacote) throw new Error("Dados incompletos");
 
       // 1. Save package
       const { error: pe } = await supabase.from("matricula_pacotes").insert({
@@ -123,6 +123,50 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         pacote_id: selectedPacote
       });
       if (pe) throw pe;
+
+      return true;
+    },
+    onSuccess: () => {
+      setUnlockedSteps(prev => [...prev, 4]);
+      setStep(4);
+      toast.success("Pacote selecionado!");
+    },
+    onError: (e: any) => toast.error(e.message)
+  });
+
+  const concludeMatricula = useMutation({
+    mutationFn: async () => {
+      if (!matriculaId || !aluno) throw new Error("Dados incompletos");
+
+      const currentPacote = pacotes?.find(p => p.id === selectedPacote);
+      if (!currentPacote) throw new Error("Pacote não encontrado");
+
+      const allParcelas = [];
+
+      // Add Taxa de Matrícula
+      allParcelas.push({
+        matricula_id: matriculaId,
+        tipo: 'taxa_matricula',
+        numero: 0,
+        valor: currentPacote.valor_matricula,
+        data_vencimento: taxaStatus === 'isentar' ? format(new Date(), 'yyyy-MM-dd') : format(taxaVencimento, 'yyyy-MM-dd'),
+        status: taxaStatus === 'isentar' ? 'isento' : 'aberto'
+      });
+
+      // Add Parcelas
+      parcelasGeradas.forEach(p => {
+        allParcelas.push({
+          matricula_id: matriculaId,
+          tipo: 'parcela',
+          numero: p.numero,
+          valor: p.valor,
+          data_vencimento: format(p.vencimento, 'yyyy-MM-dd'),
+          status: 'aberto'
+        });
+      });
+
+      const { error } = await supabase.from('parcelas').insert(allParcelas);
+      if (error) throw error;
 
       return true;
     },
