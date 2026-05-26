@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, Key, User as UserIcon, Mail, ShieldCheck, CreditCard } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Key, User as UserIcon, Mail, ShieldCheck, CreditCard, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const Route = createFileRoute("/_student/aluno/perfil")({
   head: () => ({ meta: [{ title: "Meu Perfil — Soluções Online" }] }),
@@ -21,6 +21,8 @@ function StudentProfile() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: aluno, isLoading: loadingAluno } = useQuery({
     queryKey: ["student-full-profile", session?.user.email],
