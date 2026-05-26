@@ -6,9 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap } from "lucide-react";
+import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap, Copy } from "lucide-react";
 import { AlunoForm, type AlunoFormValues } from "./AlunoForm";
-import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
+import { maskCPF, maskPhone, isValidCPF, calcAge, generateStudentPassword } from "@/lib/format";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -30,7 +30,8 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   // State for Step 3: Pacotes
   const [selectedPacote, setSelectedPacote] = useState<string | null>(null);
   const [showConclusion, setShowConclusion] = useState(false);
-  const [accessData, setAccessData] = useState<{ email: string; pass: string } | null>(null);
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
 
   const { data: cursos } = useQuery({
     queryKey: ["cursos-ativos"],
@@ -110,21 +111,9 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       });
       if (pe) throw pe;
 
-      // 2. Generate access (using the logic already defined in Edge Function)
-      const pass = Math.random().toString(36).slice(-8);
-      const { data, error: ae } = await supabase.functions.invoke("manage-student-access", {
-        body: {
-          email: aluno.email,
-          action: "create",
-          password: pass
-        }
-      });
-      if (ae) throw ae;
-
-      return { email: aluno.email, pass };
+      return true;
     },
-    onSuccess: (data) => {
-      setAccessData(data);
+    onSuccess: () => {
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
     },
@@ -183,22 +172,45 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
           <AlunoForm
             submitLabel="Salvar e continuar"
             onSubmit={async (v) => {
-              const { data, error } = await supabase.from("alunos").insert({
+              const pass = generateStudentPassword(v.nome);
+              
+              // 1. Create student record
+              const { data: studentData, error: studentError } = await supabase.from("alunos").insert({
                 ...v,
                 responsavel_email: v.responsavel_email || null,
                 menor_de_idade: calcAge(v.data_nascimento) < 18
-              }).select("id").single();
+              }).select("id, nome, email, ctr").single();
               
-              if (error) {
-                console.error("Erro ao salvar aluno:", error);
-                toast.error(`Erro ao salvar: ${error.message}`);
+              if (studentError) {
+                console.error("Erro ao salvar aluno:", studentError);
+                toast.error(`Erro ao salvar: ${studentError.message}`);
                 return;
               }
+
+              // 2. Create Auth user via Edge Function
+              const { error: authError } = await supabase.functions.invoke("manage-student-access", {
+                body: {
+                  email: studentData.email,
+                  nome: studentData.nome,
+                  password: pass,
+                  action: "create"
+                }
+              });
+
+              if (authError) {
+                console.error("Erro ao criar acesso:", authError);
+                toast.error(`Aluno salvo, mas houve erro ao criar acesso: ${authError.message}`);
+                // Proceed anyway, admin can reset later
+              }
               
-              setAlunoId(data.id);
-              setUnlockedSteps(prev => [...prev, 2]);
-              setStep(2);
-              toast.success("Aluno salvo!");
+              setAlunoId(studentData.id);
+              setAccessData({
+                email: studentData.email,
+                pass: pass,
+                ctr: studentData.ctr,
+                nome: studentData.nome
+              });
+              setShowAccessModal(true);
             }}
           />
         </div>
@@ -319,6 +331,73 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
           </div>
         </div>
       )}
+
+      <Dialog open={showAccessModal} onOpenChange={(o) => {
+        if (!o) {
+          setShowAccessModal(false);
+          setUnlockedSteps(prev => prev.includes(2) ? prev : [...prev, 2]);
+          setStep(2);
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">✅ Aluno cadastrado com sucesso!</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+              <p className="text-center font-bold text-sm border-b pb-2">Dados de acesso do aluno</p>
+              
+              <div className="space-y-1">
+                <p className="text-sm"><strong>Nome:</strong> {accessData?.nome}</p>
+                <p className="text-sm"><strong>CTR:</strong> {accessData?.ctr}</p>
+              </div>
+
+              <div className="space-y-1 pt-2">
+                <p className="text-sm flex justify-between">
+                  <span>🔑 <strong>Login:</strong></span>
+                  <span className="font-mono">{accessData?.ctr}</span>
+                </p>
+                <p className="text-sm flex justify-between">
+                  <span>🔒 <strong>Senha:</strong></span>
+                  <span className="font-mono text-primary font-bold">{accessData?.pass}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-md text-center">
+              <p className="text-[11px] text-yellow-800 font-medium">
+                ⚠️ Anote e envie esses dados ao aluno. A senha não será exibida novamente.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => {
+                const loginUrl = `${window.location.origin}/aluno/login`;
+                const text = `Olá ${accessData?.nome?.split(" ")[0]}! Seus dados de acesso:\nLogin: ${accessData?.ctr}\nSenha: ${accessData?.pass}\nAcesse: ${loginUrl}`;
+                navigator.clipboard.writeText(text);
+                toast.success("Dados copiados para a área de transferência!");
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Copiar dados
+            </Button>
+            <Button 
+              className="flex-1"
+              onClick={() => {
+                setShowAccessModal(false);
+                setUnlockedSteps(prev => prev.includes(2) ? prev : [...prev, 2]);
+                setStep(2);
+              }}
+            >
+              Continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showConclusion} onOpenChange={(o) => !o && navigate({ to: "/alunos" })}>
         <DialogContent className="max-w-md">

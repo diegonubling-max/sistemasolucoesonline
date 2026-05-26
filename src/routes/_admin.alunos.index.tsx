@@ -41,10 +41,17 @@ function AlunosList() {
     queryFn: async () => {
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, ativo, created_at, vendedora, matriculas(id)", { count: "exact" })
-        .order("created_at", { ascending: false })
+        .select("id, nome, email, telefone, ativo, created_at, vendedora, ctr, matriculas(id)", { count: "exact" })
+        .order("ctr", { ascending: true })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
-      if (search) q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+      if (search) {
+        const isNumeric = /^\d+$/.test(search);
+        if (isNumeric) {
+          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%,ctr.eq.${search}`);
+        } else {
+          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+        }
+      }
       const { data, error, count } = await q;
       if (error) throw error;
       return { rows: data ?? [], count: count ?? 0 };
@@ -128,7 +135,7 @@ function AlunosList() {
           <div className="relative mb-4 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome ou e-mail..."
+              placeholder="Buscar por nome, e-mail ou CTR..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -141,6 +148,7 @@ function AlunosList() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[80px]">CTR</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>E-mail</TableHead>
                 <TableHead>Telefone</TableHead>
@@ -153,13 +161,18 @@ function AlunosList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
               )}
               {data?.rows.map((a) => (
                 <TableRow key={a.id}>
+                  <TableCell>
+                    <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
+                      #{a.ctr}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="font-medium">{a.nome}</TableCell>
                   <TableCell>{a.email}</TableCell>
                   <TableCell>{a.telefone}</TableCell>
@@ -207,7 +220,7 @@ function AlunosList() {
               ))}
               {!isLoading && data?.rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhum aluno encontrado.
                   </TableCell>
                 </TableRow>

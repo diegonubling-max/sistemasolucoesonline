@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
-  head: () => ({ meta: [{ title: "Aluno — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Aluno — Soluções Online" }] }),
   component: AlunoDetalhes,
 });
 
@@ -23,6 +23,8 @@ function AlunoDetalhes() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPasswordResult, setShowPasswordResult] = useState(false);
+  const [passwordToDisplay, setPasswordToDisplay] = useState("");
 
   const resetPassword = useMutation({
     mutationFn: async () => {
@@ -41,7 +43,9 @@ function AlunoDetalhes() {
     },
     onSuccess: () => {
       toast.success("Senha redefinida com sucesso");
+      setPasswordToDisplay(newPassword);
       setShowResetModal(false);
+      setShowPasswordResult(true);
       setNewPassword("");
       setConfirmPassword("");
     },
@@ -78,7 +82,7 @@ function AlunoDetalhes() {
   return (
     <div>
       <PageHeader
-        title={aluno.nome}
+        title={`${aluno.nome} | CTR #${aluno.ctr}`}
         description={aluno.email}
         actions={
           <>
@@ -220,6 +224,39 @@ function AlunoDetalhes() {
               {resetPassword.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Confirmar Redefinição
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPasswordResult} onOpenChange={setShowPasswordResult}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Senha redefinida com sucesso!</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-muted p-4 rounded-lg space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm">Login:</span>
+                <span className="text-sm font-bold">{aluno.ctr}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Nova senha:</span>
+                <span className="text-sm font-bold text-primary">{passwordToDisplay}</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              className="w-full" 
+              onClick={() => {
+                const text = `Olá ${aluno.nome.split(" ")[0]}! Seus dados de acesso foram atualizados:\nLogin: ${aluno.ctr}\nSenha: ${passwordToDisplay}\nAcesse: ${window.location.origin}/aluno/login`;
+                navigator.clipboard.writeText(text);
+                toast.success("Dados copiados!");
+              }}
+            >
+              Copiar dados
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => setShowPasswordResult(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
