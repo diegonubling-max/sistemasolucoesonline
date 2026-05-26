@@ -124,14 +124,14 @@ function AlunosList() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[80px]">CTR</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Vendedora</TableHead>
-                <TableHead>Matrícula</TableHead>
-                <TableHead>Cadastro</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="w-[80px] text-muted-foreground font-normal">CTR</TableHead>
+                <TableHead className="text-muted-foreground font-normal">Nome</TableHead>
+                <TableHead className="text-muted-foreground font-normal">E-mail</TableHead>
+                <TableHead className="text-muted-foreground font-normal">Telefone</TableHead>
+                <TableHead className="text-muted-foreground font-normal">Vendedora</TableHead>
+                <TableHead className="text-muted-foreground font-normal">Matrícula</TableHead>
+                <TableHead className="text-muted-foreground font-normal">Cadastro</TableHead>
+                <TableHead className="text-right text-muted-foreground font-normal">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -149,10 +149,10 @@ function AlunosList() {
                       #{a.ctr}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium">{a.nome}</TableCell>
-                  <TableCell>{a.email}</TableCell>
-                  <TableCell>{a.telefone}</TableCell>
-                  <TableCell>{a.vendedora}</TableCell>
+                  <TableCell className="font-normal text-foreground">{a.nome}</TableCell>
+                  <TableCell className="font-normal text-muted-foreground">{a.email}</TableCell>
+                  <TableCell className="font-normal text-muted-foreground">{a.telefone}</TableCell>
+                  <TableCell className="font-normal text-muted-foreground">{a.vendedora}</TableCell>
                   <TableCell>
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
                       <Badge className="bg-green-500 text-white hover:bg-green-600 rounded-full px-3">Matriculado</Badge>
@@ -160,7 +160,7 @@ function AlunosList() {
                       <Badge className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full px-3">Pendente</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(a.created_at)}</TableCell>
+                  <TableCell className="text-foreground font-normal">{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button asChild size="icon" variant="ghost" title={Array.isArray(a.matriculas) && a.matriculas.length > 0 ? "Ver matrícula" : "Ver detalhes"}>
