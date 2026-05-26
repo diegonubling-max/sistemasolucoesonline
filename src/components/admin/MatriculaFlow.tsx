@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   const navigate = useNavigate();
