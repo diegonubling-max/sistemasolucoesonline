@@ -74,52 +74,56 @@ function StudentProfile() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row items-center gap-8 bg-[#1e1e1e] p-8 rounded-2xl border border-white/5 shadow-xl">
+      <div className={`flex flex-col md:flex-row items-center gap-8 ${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-sm"} p-8 rounded-2xl border transition-colors shadow-xl`}>
         <div className="relative group">
-            <div className="h-32 w-32 rounded-full bg-[#2D6ADF] flex items-center justify-center text-4xl font-bold text-white shadow-2xl border-4 border-[#141414]">
-                {session?.user.email?.[0].toUpperCase()}
+            <div className={`h-32 w-32 rounded-full ${isDark ? "bg-[#2D6ADF]" : "bg-[#1E3A5F]"} flex items-center justify-center text-4xl font-bold text-white shadow-2xl border-4 ${isDark ? "border-[#141414]" : "border-white"}`}>
+                {alunoData?.nome?.[0]?.toUpperCase() || session?.user.email?.[0]?.toUpperCase()}
             </div>
             <button className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-white">
                 Alterar foto
             </button>
         </div>
         <div className="text-center md:text-left space-y-2">
-          <h1 className="text-3xl font-bold text-white tracking-tight">Meu Perfil</h1>
+          <h1 className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-tight`}>{alunoData?.nome || "Meu Perfil"}</h1>
           <div className="flex flex-wrap justify-center md:justify-start gap-4">
-              <span className="bg-white/5 px-3 py-1 rounded-full text-xs text-[#B3B3B3] border border-white/5">E-mail: {session?.user.email}</span>
-              <span className="bg-[#2D6ADF]/10 px-3 py-1 rounded-full text-xs text-[#2D6ADF] border border-[#2D6ADF]/20 font-bold">Aluno Verificado</span>
+              <span className={`${isDark ? "bg-white/5 text-[#B3B3B3] border-white/5" : "bg-gray-100 text-gray-500 border-black/5"} px-3 py-1 rounded-full text-xs border transition-colors`}>E-mail: {session?.user.email}</span>
+              <span className={`${isDark ? "bg-[#2D6ADF]/10 text-[#2D6ADF] border-[#2D6ADF]/20" : "bg-blue-50 text-blue-700 border-blue-100"} px-3 py-1 rounded-full text-xs border font-bold transition-colors`}>Aluno Verificado</span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="bg-[#1e1e1e] border-none shadow-xl border border-white/5">
+        <Card className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-md"} border-none shadow-xl border`}>
             <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className={`${isDark ? "text-white" : "text-gray-900"} flex items-center gap-2`}>
                 <UserIcon className="h-5 w-5 text-[#2D6ADF]" />
                 Dados da Conta
             </CardTitle>
-            <CardDescription className="text-[#B3B3B3]">Informações básicas do seu registro</CardDescription>
+            <CardDescription className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>Informações básicas do seu registro</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="p-4 bg-white/5 rounded-lg border border-white/5">
-                    <p className="text-xs text-[#B3B3B3] uppercase font-bold tracking-wider">E-mail</p>
-                    <p className="text-white font-medium">{session?.user.email}</p>
+                <div className={`${isDark ? "bg-white/5 border-white/5" : "bg-gray-50 border-black/5"} p-4 rounded-lg border transition-colors`}>
+                    <p className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-400"} uppercase font-bold tracking-wider`}>Nome Completo</p>
+                    <p className={`${isDark ? "text-white" : "text-gray-900"} font-medium`}>{alunoData?.nome || "---"}</p>
                 </div>
-                <div className="p-4 bg-white/5 rounded-lg border border-white/5">
-                    <p className="text-xs text-[#B3B3B3] uppercase font-bold tracking-wider">CTR</p>
-                    <p className="text-white font-medium">---</p>
+                <div className={`${isDark ? "bg-white/5 border-white/5" : "bg-gray-50 border-black/5"} p-4 rounded-lg border transition-colors`}>
+                    <p className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-400"} uppercase font-bold tracking-wider`}>E-mail</p>
+                    <p className={`${isDark ? "text-white" : "text-gray-900"} font-medium`}>{session?.user.email}</p>
+                </div>
+                <div className={`${isDark ? "bg-white/5 border-white/5" : "bg-gray-50 border-black/5"} p-4 rounded-lg border transition-colors`}>
+                    <p className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-400"} uppercase font-bold tracking-wider`}>CTR</p>
+                    <p className={`${isDark ? "text-white" : "text-gray-900"} font-medium`}>{alunoData?.ctr || "---"}</p>
                 </div>
             </CardContent>
         </Card>
 
-        <Card className="bg-[#1e1e1e] border-none shadow-xl border border-white/5">
+        <Card className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-md"} border-none shadow-xl border`}>
             <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className={`${isDark ? "text-white" : "text-gray-900"} flex items-center gap-2`}>
                 <Key className="h-5 w-5 text-[#2D6ADF]" />
                 Segurança
             </CardTitle>
-            <CardDescription className="text-[#B3B3B3]">
+            <CardDescription className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>
                 Altere sua senha de acesso
             </CardDescription>
             </CardHeader>
@@ -132,38 +136,38 @@ function StudentProfile() {
                 className="space-y-4"
             >
                 <div className="space-y-2">
-                <Label htmlFor="current-pass" className="text-white">Senha Atual</Label>
+                <Label htmlFor="current-pass" className={isDark ? "text-white" : "text-gray-700"}>Senha Atual</Label>
                 <Input
                     id="current-pass"
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="Sua senha atual"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-[#555] focus-visible:ring-[#2D6ADF]"
+                    className={`${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-[#555]" : "bg-white border-gray-200"} focus-visible:ring-[#2D6ADF] transition-colors`}
                     required
                 />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="new-pass" className="text-white">Nova Senha</Label>
+                <Label htmlFor="new-pass" className={isDark ? "text-white" : "text-gray-700"}>Nova Senha</Label>
                 <Input
                     id="new-pass"
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Mínimo 6 caracteres"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-[#555] focus-visible:ring-[#2D6ADF]"
+                    className={`${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-[#555]" : "bg-white border-gray-200"} focus-visible:ring-[#2D6ADF] transition-colors`}
                     required
                 />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="confirm-pass" className="text-white">Confirmar Nova Senha</Label>
+                <Label htmlFor="confirm-pass" className={isDark ? "text-white" : "text-gray-700"}>Confirmar Nova Senha</Label>
                 <Input
                     id="confirm-pass"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repita a nova senha"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-[#555] focus-visible:ring-[#2D6ADF]"
+                    className={`${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-[#555]" : "bg-white border-gray-200"} focus-visible:ring-[#2D6ADF] transition-colors`}
                     required
                 />
                 </div>
@@ -172,7 +176,7 @@ function StudentProfile() {
                 <Button 
                     type="submit" 
                     disabled={updatePassword.isPending || !newPassword || !confirmPassword}
-                    className="w-full bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white font-bold"
+                    className="w-full bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white font-bold transition-all shadow-lg shadow-[#2D6ADF]/20"
                 >
                     {updatePassword.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                     Salvar Alterações
