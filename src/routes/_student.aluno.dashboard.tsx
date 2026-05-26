@@ -57,12 +57,12 @@ function StudentDashboard() {
   if (isLoading) {
     return (
       <div className="space-y-12">
-        <Skeleton className={`h-64 md:h-80 w-full rounded-2xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+        <Skeleton className="h-64 md:h-80 w-full rounded-2xl bg-gray-200" />
         <div className="space-y-6">
-            <Skeleton className={`h-8 w-48 ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+            <Skeleton className="h-8 w-48 bg-gray-200" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[1, 2, 3, 4].map((i) => (
-                    <Skeleton key={i} className={`aspect-[4/5] w-full rounded-xl ${isDark ? 'bg-[#1e1e1e]' : 'bg-gray-200'}`} />
+                    <Skeleton key={i} className="aspect-[4/5] w-full rounded-xl bg-gray-200" />
                 ))}
             </div>
         </div>
