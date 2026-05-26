@@ -594,7 +594,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             )}
                           </td>
                           <td className="py-3 text-right">
-                            {p.tipo === 'parcela' && (
+                            {p.tipo === ('parcela' as any) && (
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
