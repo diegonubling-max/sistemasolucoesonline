@@ -1,15 +1,17 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { ChevronLeft, PlayCircle, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ChevronLeft, PlayCircle, Loader2, AlertCircle, Play, CheckCircle2, ChevronRight, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_student/aluno/curso/$id")({
-  head: () => ({ meta: [{ title: "Curso — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Assistir Curso — Soluções Online" }] }),
   component: StudentCourse,
 });
 
@@ -18,11 +20,11 @@ function StudentCourse() {
   const { session } = useAuth();
   const navigate = useNavigate();
   const [activeAulaId, setActiveAulaId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const { data: curso, isLoading: loadingCurso, error: cursoError } = useQuery({
     queryKey: ["student-course", id, session?.user.email],
     queryFn: async () => {
-      // 1. Check enrollment
       const { data: aluno } = await supabase
         .from("alunos")
         .select("id")
@@ -47,7 +49,6 @@ function StudentCourse() {
       
       if (!enrollment) throw new Error("Você não tem acesso a este curso");
 
-      // 2. Get course and lessons
       const { data: cursoData, error } = await supabase
         .from("cursos")
         .select(`
@@ -68,7 +69,6 @@ function StudentCourse() {
 
       if (error) throw error;
       
-      // Filter only active lessons and sort by order
       const activeAulas = (cursoData.aulas as any[])
         .filter(a => a.ativo)
         .sort((a, b) => a.ordem - b.ordem);
@@ -78,139 +78,186 @@ function StudentCourse() {
     enabled: !!session?.user.email,
   });
 
-  const activeAula = curso?.aulas?.find(a => a.id === (activeAulaId || curso.aulas[0]?.id));
+  const activeAulaIndex = useMemo(() => {
+    if (!curso?.aulas) return -1;
+    return curso.aulas.findIndex(a => a.id === (activeAulaId || curso.aulas[0]?.id));
+  }, [curso, activeAulaId]);
+
+  const activeAula = curso?.aulas?.[activeAulaIndex];
+
+  const handleNext = () => {
+    if (curso?.aulas && activeAulaIndex < curso.aulas.length - 1) {
+      setActiveAulaId(curso.aulas[activeAulaIndex + 1].id);
+    }
+  };
+
+  const handlePrev = () => {
+    if (curso?.aulas && activeAulaIndex > 0) {
+      setActiveAulaId(curso.aulas[activeAulaIndex - 1].id);
+    }
+  };
 
   if (loadingCurso) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <div className="flex justify-center py-40 bg-[#141414] min-h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-[#2ECC71]" />
       </div>
     );
   }
 
   if (cursoError) {
     return (
-      <div className="max-w-md mx-auto py-20 text-center space-y-4">
-        <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
-        <h2 className="text-xl font-bold">Erro de Acesso</h2>
-        <p className="text-muted-foreground">{cursoError.message}</p>
-        <Button onClick={() => navigate({ to: "/aluno/dashboard" })}>Voltar para Meus Cursos</Button>
+      <div className="max-w-md mx-auto py-20 text-center space-y-6 bg-[#141414] text-white">
+        <AlertCircle className="h-16 w-16 mx-auto text-red-500" />
+        <div className="space-y-2">
+           <h2 className="text-2xl font-bold tracking-tight">Ops! Acesso Negado</h2>
+           <p className="text-[#B3B3B3]">{cursoError.message}</p>
+        </div>
+        <Button onClick={() => navigate({ to: "/aluno/dashboard" })} className="bg-[#2ECC71] hover:bg-[#27ae60] text-black font-bold">
+           Voltar para Meus Cursos
+        </Button>
       </div>
     );
   }
 
   const renderVideoPlayer = (url: string) => {
-    if (!url) return <div className="aspect-video bg-black flex items-center justify-center text-white">URL de vídeo não fornecida</div>;
+    if (!url) return <div className="aspect-video bg-black flex items-center justify-center text-white">Vídeo não disponível</div>;
 
-    // YouTube
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
       const id = url.includes('v=') ? url.split('v=')[1]?.split('&')[0] : url.split('/').pop();
-      return (
-        <iframe
-          className="w-full h-full"
-          src={`https://www.youtube.com/embed/${id}`}
-          allowFullScreen
-        ></iframe>
-      );
+      return <iframe className="w-full h-full" src={`https://www.youtube.com/embed/${id}?autoplay=1`} allow="autoplay; encrypted-media" allowFullScreen></iframe>;
     }
 
-    // Vimeo
     if (url.includes('vimeo.com')) {
       const id = url.split('/').pop();
-      return (
-        <iframe
-          className="w-full h-full"
-          src={`https://player.vimeo.com/video/${id}`}
-          allowFullScreen
-        ></iframe>
-      );
+      return <iframe className="w-full h-full" src={`https://player.vimeo.com/video/${id}?autoplay=1`} allow="autoplay; fullscreen" allowFullScreen></iframe>;
     }
 
-    // Pandavideo (example pattern)
     if (url.includes('pandavideo.com.br')) {
-      return (
-        <iframe
-          className="w-full h-full"
-          src={url}
-          allowFullScreen
-        ></iframe>
-      );
+      return <iframe className="w-full h-full" src={url} allow="autoplay; fullscreen" allowFullScreen></iframe>;
     }
 
     return (
-       <div className="aspect-video bg-black flex items-center justify-center text-white px-4 text-center">
-         Vídeo incorporado via link: <a href={url} target="_blank" className="underline ml-2">{url}</a>
+       <div className="aspect-video bg-[#1e1e1e] flex flex-col items-center justify-center text-white p-8 text-center gap-4">
+         <p className="text-[#B3B3B3]">Este vídeo deve ser acessado pelo link externo:</p>
+         <a href={url} target="_blank" className="bg-[#2ECC71] text-black px-6 py-2 rounded-md font-bold transition-transform hover:scale-105">{url}</a>
        </div>
     );
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link to="/aluno/dashboard">
-          <Button variant="ghost" size="sm">
-            <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
-          </Button>
-        </Link>
-        <h1 className="text-2xl font-bold tracking-tight">{curso?.nome}</h1>
+    <div className="flex flex-col min-h-screen bg-[#141414] text-white">
+      {/* Course Header */}
+      <div className="bg-[#1e1e1e]/50 border-b border-white/5 px-4 sm:px-8 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+           <Link to="/aluno/dashboard" className="text-[#B3B3B3] hover:text-white transition-colors">
+              <ChevronLeft className="h-6 w-6" />
+           </Link>
+           <div>
+              <h1 className="text-xl font-bold tracking-tight text-white">{curso?.nome}</h1>
+              <div className="flex items-center gap-3 mt-1">
+                 <span className="text-xs text-[#B3B3B3] uppercase font-bold tracking-wider">{curso?.aulas?.length} aulas</span>
+                 <div className="w-24 h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#2ECC71]" style={{ width: '0%' }} />
+                 </div>
+              </div>
+           </div>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="border-white/10 text-white hover:bg-white/5">
+           <Menu className="h-4 w-4 mr-2" />
+           {sidebarOpen ? 'Ocultar Aulas' : 'Mostrar Aulas'}
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Content (Video + Info) */}
-        <div className="lg:col-span-3 space-y-6">
-          <Card className="overflow-hidden border-none shadow-xl bg-black aspect-video">
-            {activeAula && renderVideoPlayer(activeAula.url_video)}
-            {!activeAula && (
-              <div className="w-full h-full flex items-center justify-center text-white">
-                Selecione uma aula para começar
-              </div>
-            )}
-          </Card>
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-y-auto bg-black custom-scrollbar">
+          <div className="max-w-[1200px] mx-auto p-0 lg:p-6 space-y-6">
+            <div className="aspect-video bg-[#000] shadow-2xl overflow-hidden rounded-none lg:rounded-xl border border-white/5 group relative">
+              {activeAula && renderVideoPlayer(activeAula.url_video)}
+            </div>
 
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">{activeAula?.titulo}</h2>
-            <div className="prose prose-sm max-w-none text-muted-foreground">
-              {activeAula?.descricao || "Sem descrição para esta aula."}
+            <div className="px-4 lg:px-0 space-y-6 pb-12">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white tracking-tight">{activeAula?.titulo}</h2>
+                  <p className="text-[#B3B3B3] mt-2 text-sm leading-relaxed max-w-2xl">
+                    {activeAula?.descricao || "Aproveite esta aula do curso " + curso?.nome + "."}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                   <Button 
+                     variant="outline" 
+                     onClick={handlePrev} 
+                     disabled={activeAulaIndex === 0}
+                     className="bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                   >
+                     Anterior
+                   </Button>
+                   <Button 
+                     onClick={handleNext} 
+                     disabled={activeAulaIndex === (curso?.aulas?.length || 0) - 1}
+                     className="bg-[#2ECC71] hover:bg-[#27ae60] text-black font-bold"
+                   >
+                     Próxima Aula <ChevronRight className="ml-2 h-4 w-4" />
+                   </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Sidebar (Lesson List) */}
-        <div className="lg:col-span-1">
-          <Card className="h-full max-h-[calc(100vh-12rem)] flex flex-col border-none shadow-lg">
-            <div className="p-4 border-b font-bold">Conteúdo do Curso</div>
-            <ScrollArea className="flex-1">
-              <div className="p-2 space-y-1">
-                {curso?.aulas?.map((aula: any, index: number) => {
-                  const isActive = activeAula?.id === aula.id;
-                  return (
-                    <button
-                      key={aula.id}
-                      onClick={() => setActiveAulaId(aula.id)}
-                      className={`w-full text-left p-3 rounded-lg flex items-start gap-3 transition-colors ${
-                        isActive 
-                        ? "bg-primary/10 text-primary border-l-4 border-primary" 
-                        : "hover:bg-muted"
-                      }`}
-                    >
-                      <div className="mt-0.5">
-                        {isActive ? (
-                          <CheckCircle2 className="h-4 w-4" />
-                        ) : (
-                          <PlayCircle className="h-4 w-4 text-muted-foreground" />
-                        )}
+        {/* Lesson Sidebar */}
+        <div className={cn(
+          "bg-[#1e1e1e] border-l border-white/5 flex flex-col transition-all duration-300 ease-in-out",
+          sidebarOpen ? "w-full lg:w-[350px]" : "w-0 overflow-hidden lg:opacity-0 lg:w-0"
+        )}>
+          <div className="p-4 border-b border-white/5 font-bold tracking-tight text-[#B3B3B3] uppercase text-xs flex items-center justify-between">
+             <span>Conteúdo do Curso</span>
+             <span className="text-[#2ECC71]">0%</span>
+          </div>
+          <ScrollArea className="flex-1 custom-scrollbar">
+            <div className="p-0">
+              {curso?.aulas?.map((aula: any, index: number) => {
+                const isActive = activeAula?.id === aula.id;
+                return (
+                  <button
+                    key={aula.id}
+                    onClick={() => setActiveAulaId(aula.id)}
+                    className={cn(
+                      "w-full text-left px-6 py-6 border-b border-white/5 transition-all flex items-start gap-4 hover:bg-white/5 group",
+                      isActive ? "bg-[#2ECC71]/5 border-l-4 border-l-[#2ECC71]" : ""
+                    )}
+                  >
+                    <div className="mt-1 shrink-0">
+                       <div className={cn(
+                         "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                         isActive ? "bg-[#2ECC71] text-black" : "bg-[#2a2a2a] text-[#B3B3B3] group-hover:bg-[#333]"
+                       )}>
+                          {isActive ? <Play className="h-4 w-4 fill-current" /> : <PlayCircle className="h-5 w-5" />}
+                       </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={cn(
+                          "text-xs font-black tracking-widest uppercase mb-1",
+                          isActive ? "text-[#2ECC71]" : "text-[#555]"
+                        )}>
+                          Aula {index + 1}
+                        </span>
                       </div>
-                      <div className="flex-1">
-                        <p className={`text-sm font-medium leading-tight ${isActive ? 'font-bold' : ''}`}>
-                          {index + 1}. {aula.titulo}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          </Card>
+                      <p className={cn(
+                        "text-sm font-bold leading-snug transition-colors",
+                        isActive ? "text-[#2ECC71]" : "text-white group-hover:text-white"
+                      )}>
+                        {aula.titulo}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </ScrollArea>
         </div>
       </div>
     </div>
