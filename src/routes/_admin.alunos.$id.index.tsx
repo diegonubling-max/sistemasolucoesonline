@@ -164,8 +164,13 @@ function AlunoDetalhes() {
   const handleCopyAccessData = () => {
     if (!aluno) return;
     const primeiroNome = aluno.nome.split(" ")[0];
-    const senhaPadrao = `123${primeiroNome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}`;
-    const text = `Olá ${primeiroNome}! Seus dados de acesso:\nLogin: ${aluno.ctr}\nSenha: ${senhaPadrao}\nAcesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+    const senhaGerada = '123' + primeiroNome
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .split(' ')[0];
+      
+    const text = `Olá ${primeiroNome}! Seus dados de acesso:\nLogin: ${aluno.ctr}\nSenha: ${senhaGerada}\nAcesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
     
     navigator.clipboard.writeText(text);
     toast.success("Dados copiados para a área de transferência!");
