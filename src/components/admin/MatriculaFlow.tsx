@@ -340,6 +340,293 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         </div>
       )}
 
+      {step === 4 && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Seção 1: Taxa de Matrícula */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-primary" />
+                  Taxa de Matrícula
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-muted/30 rounded-lg flex justify-between items-center">
+                  <span className="text-sm font-medium">Valor da Taxa</span>
+                  <span className="text-xl font-bold text-primary">
+                    R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+
+                <RadioGroup 
+                  value={taxaStatus} 
+                  onValueChange={(v: any) => setTaxaStatus(v)}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <div>
+                    <RadioGroupItem value="cobrar" id="cobrar" className="peer sr-only" />
+                    <Label
+                      htmlFor="cobrar"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <span className="text-sm font-semibold">Cobrar</span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="isentar" id="isentar" className="peer sr-only" />
+                    <Label
+                      htmlFor="isentar"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <span className="text-sm font-semibold">Isentar</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                {taxaStatus === "cobrar" && (
+                  <div className="space-y-2">
+                    <Label>Data de Vencimento</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !taxaVencimento && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {taxaVencimento ? format(taxaVencimento, "dd/MM/yyyy") : <span>Selecione uma data</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={taxaVencimento}
+                          onSelect={(d) => d && setTaxaVencimento(d)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Seção 2: Parcelas Control */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5 text-primary" />
+                  Geração de Parcelas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="melhorDia">Melhor dia de vencimento (1 a 31)</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      id="melhorDia"
+                      type="number"
+                      min="1"
+                      max="31"
+                      placeholder="Ex: 10"
+                      value={melhorDia}
+                      onChange={(e) => setMelhorDia(e.target.value)}
+                    />
+                    <Button 
+                      onClick={() => {
+                        const pacote = pacotes?.find(p => p.id === selectedPacote);
+                        if (!pacote) return;
+                        const dia = parseInt(melhorDia);
+                        if (isNaN(dia) || dia < 1 || dia > 31) {
+                          toast.error("Informe um dia válido entre 1 e 31");
+                          return;
+                        }
+
+                        const novasParcelas = [];
+                        const hoje = new Date();
+                        
+                        for (let i = 1; i <= pacote.numero_parcelas; i++) {
+                          let dataVenc = addMonths(hoje, i);
+                          
+                          // Lógica para dia do mês
+                          const ultimoDia = lastDayOfMonth(dataVenc);
+                          if (dia > ultimoDia.getDate()) {
+                            dataVenc = ultimoDia;
+                          } else {
+                            dataVenc = setDate(dataVenc, dia);
+                          }
+
+                          novasParcelas.push({
+                            id: Math.random().toString(36).substr(2, 9),
+                            numero: i,
+                            vencimento: dataVenc,
+                            valor: pacote.valor_parcela
+                          });
+                        }
+                        setParcelasGeradas(novasParcelas);
+                        toast.success("Parcelas geradas com sucesso!");
+                      }}
+                    >
+                      Gerar parcelas
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-muted/30 rounded-lg flex justify-between items-center">
+                  <span className="text-sm font-medium">Configuração do Pacote</span>
+                  <span className="text-sm font-bold">
+                    {pacotes?.find(p => p.id === selectedPacote)?.numero_parcelas}x de R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Tabela de Parcelas */}
+          {parcelasGeradas.length > 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 font-bold">Nº</th>
+                        <th className="text-left py-2 font-bold">Vencimento</th>
+                        <th className="text-left py-2 font-bold">Valor</th>
+                        <th className="text-left py-2 font-bold">Status</th>
+                        <th className="text-right py-2 font-bold">Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {parcelasGeradas.map((p, idx) => (
+                        <tr key={p.id} className="border-b last:border-0">
+                          <td className="py-3">{p.numero}</td>
+                          <td className="py-3">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-8 text-xs font-normal">
+                                  {format(p.vencimento, "dd/MM/yyyy")}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={p.vencimento}
+                                  onSelect={(d) => {
+                                    if (!d) return;
+                                    const updated = [...parcelasGeradas];
+                                    updated[idx].vencimento = d;
+                                    setParcelasGeradas(updated);
+                                  }}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </td>
+                          <td className="py-3">
+                            <div className="flex items-center gap-1">
+                              <span className="text-muted-foreground">R$</span>
+                              <Input 
+                                className="h-8 w-24 text-xs"
+                                type="number"
+                                step="0.01"
+                                value={p.valor}
+                                onChange={(e) => {
+                                  const updated = [...parcelasGeradas];
+                                  updated[idx].valor = parseFloat(e.target.value) || 0;
+                                  setParcelasGeradas(updated);
+                                }}
+                              />
+                            </div>
+                          </td>
+                          <td className="py-3">
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Aberto</Badge>
+                          </td>
+                          <td className="py-3 text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive"
+                              onClick={() => {
+                                setParcelasGeradas(prev => prev.filter(item => item.id !== p.id));
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      const lastNum = parcelasGeradas.length > 0 ? parcelasGeradas[parcelasGeradas.length - 1].numero : 0;
+                      const lastDate = parcelasGeradas.length > 0 ? parcelasGeradas[parcelasGeradas.length - 1].vencimento : new Date();
+                      const lastVal = parcelasGeradas.length > 0 ? parcelasGeradas[parcelasGeradas.length - 1].valor : 0;
+                      
+                      setParcelasGeradas([
+                        ...parcelasGeradas,
+                        {
+                          id: Math.random().toString(36).substr(2, 9),
+                          numero: lastNum + 1,
+                          vencimento: addMonths(lastDate, 1),
+                          valor: lastVal
+                        }
+                      ]);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Adicionar parcela
+                  </Button>
+                </div>
+
+                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-muted/50 rounded-xl border-2 border-dashed border-muted-foreground/20">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-semibold">Total de parcelas</p>
+                    <p className="text-xl font-bold">{parcelasGeradas.length}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-semibold">Valor das parcelas</p>
+                    <p className="text-xl font-bold">R$ {parcelasGeradas.reduce((acc, p) => acc + p.valor, 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-semibold">Taxa de matrícula</p>
+                    <p className="text-xl font-bold">{taxaStatus === 'isentar' ? "Isenta" : `R$ ${pacotes?.find(p => p.id === selectedPacote)?.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase font-semibold">Total Geral</p>
+                    <p className="text-2xl font-black text-primary">
+                      R$ {(parcelasGeradas.reduce((acc, p) => acc + p.valor, 0) + (taxaStatus === 'cobrar' ? (pacotes?.find(p => p.id === selectedPacote)?.valor_matricula || 0) : 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex justify-between">
+            <Button variant="ghost" onClick={() => setStep(3)}>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+            </Button>
+            <Button 
+              disabled={parcelasGeradas.length === 0 || concludeMatricula.isPending}
+              className="bg-green-600 hover:bg-green-700 h-12 px-8 text-lg"
+              onClick={() => concludeMatricula.mutate()}
+            >
+              {concludeMatricula.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Concluir Matrícula
+            </Button>
+          </div>
+        </div>
+      )}
+
       {step === 3 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
