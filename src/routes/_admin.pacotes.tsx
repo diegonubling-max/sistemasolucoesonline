@@ -152,7 +152,7 @@ function PacotesList() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         pacote={editingPacote}
-        onSubmit={(v) => upsertMut.mutate(v)}
+        onSubmit={(v: any) => upsertMut.mutate(v)}
         submitting={upsertMut.isPending}
       />
     </div>

@@ -112,7 +112,7 @@ function AlunosList() {
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
                       <Badge className="bg-green-500 text-white hover:bg-green-600">Matriculado</Badge>
                     ) : (
-                      <Badge variant="warning" className="bg-yellow-500 text-white">Pendente</Badge>
+                      <Badge className="bg-yellow-500 text-white hover:bg-yellow-600">Pendente</Badge>
                     )}
                   </TableCell>
                   <TableCell>{formatDate(a.created_at)}</TableCell>
