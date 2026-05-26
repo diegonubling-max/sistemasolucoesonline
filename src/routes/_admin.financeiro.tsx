@@ -23,6 +23,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { BaixaModal } from "@/components/admin/BaixaModal";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
@@ -196,13 +197,12 @@ function Financeiro() {
   });
 
   const darBaixaMutation = useMutation({
-    mutationFn: async ({ id, date, ...extra }: { id: string; date: string; [key: string]: any }) => {
+    mutationFn: async ({ id, ...data }: { id: string; [key: string]: any }) => {
       const { error } = await supabase
         .from("parcelas")
         .update({ 
           status: "pago", 
-          data_pagamento: date,
-          ...extra
+          ...data
         })
         .eq("id", id);
       if (error) throw error;
@@ -223,26 +223,12 @@ function Financeiro() {
   });
 
   const openBaixaModal = (p: any) => {
-    const matricula = p.matriculas;
-    const pacoteTipo = matricula?.matricula_pacotes?.[0]?.pacotes?.tipo;
-    
-    if (pacoteTipo === 'cartao' && p.tipo === 'parcela') {
-      setBaixaModal({
-        id: p.id,
-        open: true,
-        date: format(today, "yyyy-MM-dd"),
-        isCard: true,
-        valor: Number(p.valor),
-        parcelas: 1
-      });
-    } else {
-      setBaixaModal({
-        id: p.id,
-        open: true,
-        date: format(today, "yyyy-MM-dd"),
-        isCard: false
-      });
-    }
+    setBaixaModal({
+      id: p.id,
+      open: true,
+      date: format(today, "yyyy-MM-dd"),
+      valor: Number(p.valor)
+    });
   };
 
   const exportCSV = (data: any[], filename: string, extraHeaders: string[] = [], extraFields: (p: any) => string[] = () => []) => {
@@ -362,7 +348,7 @@ function Financeiro() {
             </div>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(recebimentos ?? []).map((p: any) => (
@@ -370,6 +356,22 @@ function Financeiro() {
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell>
+                      {p.forma_pagamento && (
+                        <Badge 
+                          className={cn(
+                            "font-bold",
+                            p.forma_pagamento === 'boleto' ? "bg-blue-100 text-blue-700 hover:bg-blue-100" :
+                            p.forma_pagamento === 'pix' ? "bg-green-100 text-green-700 hover:bg-green-100" :
+                            "bg-purple-100 text-purple-700 hover:bg-purple-100"
+                          )}
+                        >
+                          {p.forma_pagamento === 'boleto' ? 'Boleto' : 
+                           p.forma_pagamento === 'pix' ? 'PIX' : 
+                           `Cartão ${p.parcelas_cartao}x`}
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>{formatDate(p.data_pagamento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                   </TableRow>
@@ -404,7 +406,7 @@ function Financeiro() {
             </div>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(aReceber ?? []).map((p: any) => (
@@ -412,6 +414,7 @@ function Financeiro() {
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell>—</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
@@ -451,13 +454,14 @@ function Financeiro() {
             <p className="text-sm text-muted-foreground mb-4">{primeiras?.length || 0} primeiras parcelas encontradas</p>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(primeiras ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
@@ -498,13 +502,14 @@ function Financeiro() {
             <p className="text-sm text-muted-foreground mb-4">{ultimas?.length || 0} últimas parcelas encontradas</p>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(ultimas ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
@@ -581,89 +586,17 @@ function Financeiro() {
         </Card>
       )}
 
-      {/* Modal Baixa */}
-      <Dialog open={!!baixaModal?.open} onOpenChange={(open) => !open && setBaixaModal(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{baixaModal?.isCard ? "Pagamento no Cartão" : "Confirmar Pagamento"}</DialogTitle>
-            <DialogDescription>
-              {baixaModal?.isCard ? "Selecione o parcelamento utilizado pelo aluno." : "Informe a data em que o pagamento foi realizado."}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {baixaModal?.isCard && (
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label>Parcelas</Label>
-                  <Select 
-                    value={String(baixaModal.parcelas)} 
-                    onValueChange={(v) => setBaixaModal(prev => prev ? { ...prev, parcelas: parseInt(v) } : null)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione as parcelas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
-                        <SelectItem key={num} value={String(num)}>{num}x</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="p-4 bg-muted/30 rounded-lg space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Valor bruto:</span>
-                    <span className="font-medium">{formatCurrency(baixaModal.valor || 0)}</span>
-                  </div>
-                  <div className="flex justify-between text-red-500">
-                    <span>Taxa (8%):</span>
-                    <span>- {formatCurrency((baixaModal.valor || 0) * 0.08)}</span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2 font-bold text-base">
-                    <span>Valor líquido:</span>
-                    <span className="text-green-600">{formatCurrency((baixaModal.valor || 0) * 0.92)}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <Label>{baixaModal?.isCard ? "Data do recebimento" : "Data do pagamento"}</Label>
-              <Input 
-                type="date" 
-                value={baixaModal?.date || ""} 
-                onChange={(e) => setBaixaModal(prev => prev ? { ...prev, date: e.target.value } : null)} 
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBaixaModal(null)}>Cancelar</Button>
-            <Button 
-              onClick={() => {
-                if (!baixaModal) return;
-                const extra = baixaModal.isCard ? {
-                  valor_bruto: baixaModal.valor,
-                  valor_taxa: (baixaModal.valor || 0) * 0.08,
-                  valor_liquido: (baixaModal.valor || 0) * 0.92,
-                  cartao_parcelas: baixaModal.parcelas,
-                  observacao: `Pagamento em ${baixaModal.parcelas}x no cartão`
-                } : {};
-                
-                darBaixaMutation.mutate({ 
-                  id: baixaModal.id, 
-                  date: baixaModal.date,
-                  ...extra
-                });
-              }} 
-              disabled={darBaixaMutation.isPending}
-            >
-              {baixaModal?.isCard ? "Confirmar baixa" : "Confirmar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BaixaModal 
+        open={baixaModal?.open || false}
+        onOpenChange={(o) => !o && setBaixaModal(null)}
+        isLoading={darBaixaMutation.isPending}
+        valorOriginal={baixaModal?.valor || 0}
+        onConfirm={(data) => {
+          if (baixaModal?.id) {
+            darBaixaMutation.mutate({ id: baixaModal.id, ...data });
+          }
+        }}
+      />
     </div>
   );
 }
