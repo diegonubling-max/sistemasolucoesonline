@@ -98,24 +98,19 @@ function PacotesList() {
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
-      // Verificar se o pacote está vinculado a alguma matrícula (via matricula_pacotes)
-      const { data: vinculos, error: checkError } = await supabase
-        .from("matricula_pacotes")
-        .select("id")
-        .eq("pacote_id", id)
-        .limit(1);
+      const { error } = await supabase.rpc('delete_pacote', { 
+        p_pacote_id: id 
+      });
 
-      if (checkError) throw checkError;
-
-      if (vinculos && vinculos.length > 0) {
-        throw new Error("Este pacote não pode ser excluído pois está vinculado a matrículas existentes");
+      if (error) {
+        if (error.message.includes('vinculado')) {
+          throw new Error('Este pacote não pode ser excluído pois está vinculado a matrículas existentes');
+        }
+        throw error;
       }
-
-      const { error } = await supabase.from("pacotes").delete().eq("id", id);
-      if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Pacote excluído com sucesso");
+      toast.success('Pacote excluído com sucesso');
       qc.invalidateQueries({ queryKey: ["pacotes"] });
       setPacoteToDelete(null);
     },
