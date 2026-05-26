@@ -24,7 +24,7 @@ const schema = z
     email: z.string().email("E-mail inválido").min(1, "O e-mail é obrigatório"),
     data_nascimento: z.string().min(1, "Data de nascimento obrigatória"),
     cpf: z.string().refine((v) => isValidCPF(v), "CPF inválido ou obrigatório"),
-    ativo: z.string().min(1, "O status é obrigatório"),
+    ativo: z.string().optional(),
     origem: z.string().min(1, "Selecione como nos conheceu"),
     origem_detalhe: z.string().optional().nullable(),
     vendedora: z.string().min(1, "Selecione a vendedora"),
@@ -59,7 +59,7 @@ export const defaultValues: any = {
   email: "",
   data_nascimento: "",
   cpf: "",
-  ativo: "",
+  ativo: "Ativo",
   origem: "",
   origem_detalhe: "",
   vendedora: "",
@@ -75,18 +75,20 @@ export function AlunoForm({
   onSubmit,
   submitting,
   submitLabel = "Salvar",
+  isEdit,
 }: {
   initialValues?: any;
   onSubmit: (values: any) => Promise<void> | void;
   submitting?: boolean;
   submitLabel?: string;
+  isEdit?: boolean;
 }) {
   const form = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
       ...defaultValues,
       ...initialValues,
-      ativo: initialValues?.ativo === undefined ? "" : (initialValues.ativo ? "Ativo" : "Inativo")
+      ativo: initialValues?.ativo === undefined ? "Ativo" : (initialValues.ativo ? "Ativo" : "Inativo")
     },
   });
 
@@ -103,7 +105,7 @@ export function AlunoForm({
       form.reset({
         ...defaultValues,
         ...initialValues,
-        ativo: initialValues.ativo === undefined ? "" : (initialValues.ativo ? "Ativo" : "Inativo")
+        ativo: initialValues.ativo === undefined ? "Ativo" : (initialValues.ativo ? "Ativo" : "Inativo")
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -242,22 +244,23 @@ export function AlunoForm({
             </Select>
           </Field>
 
-          {/* 9. Status */}
-          <Field label="Status *" error={errors.ativo?.message as string}>
-            <Select
-              value={form.watch("ativo")}
-              onValueChange={(v) => form.setValue("ativo", v, { shouldValidate: true })}
-            >
-              <SelectTrigger data-name="ativo">
-                <SelectValue placeholder="selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_placeholder" disabled>selecione...</SelectItem>
-                <SelectItem value="Ativo">Ativo</SelectItem>
-                <SelectItem value="Inativo">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
+          {/* 9. Status (Only on Edit) */}
+          {isEdit && (
+            <Field label="Status *" error={errors.ativo?.message as string}>
+              <Select
+                value={form.watch("ativo")}
+                onValueChange={(v) => form.setValue("ativo", v, { shouldValidate: true })}
+              >
+                <SelectTrigger data-name="ativo">
+                  <SelectValue placeholder="selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
         </CardContent>
       </Card>
 
