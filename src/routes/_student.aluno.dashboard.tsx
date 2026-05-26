@@ -73,9 +73,7 @@ function StudentDashboard() {
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
       {/* Welcome Banner */}
-      <div className={`relative h-64 md:h-80 rounded-2xl overflow-hidden ${
-        isDark ? "bg-gradient-to-r from-[#1a1a2e] to-[#141414]" : "bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF]"
-      } flex items-center px-8 md:px-12 shadow-2xl`}>
+      <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF] flex items-center px-8 md:px-12 shadow-2xl">
         <div className="relative z-10 space-y-4 max-w-2xl">
           <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight">
             Bem-vindo(a) de volta!
