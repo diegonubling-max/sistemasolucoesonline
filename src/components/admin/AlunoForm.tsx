@@ -18,16 +18,16 @@ const SEXOS = ["Masculino", "Feminino"] as const;
 
 const schema = z
   .object({
-    nome: z.string().min(2, "Informe o nome"),
+    nome: z.string().min(2, "O nome é obrigatório"),
     sexo: z.enum(SEXOS),
-    telefone: z.string().min(14, "Telefone inválido"),
-    email: z.string().email("E-mail inválido"),
-    data_nascimento: z.string().min(1, "Informe a data"),
-    cpf: z.string().refine((v) => isValidCPF(v), "CPF inválido"),
+    telefone: z.string().min(14, "Telefone obrigatório"),
+    email: z.string().email("E-mail inválido").optional().or(z.literal("")),
+    data_nascimento: z.string().min(1, "Data de nascimento obrigatória"),
+    cpf: z.string().refine((v) => isValidCPF(v), "CPF inválido ou obrigatório"),
     ativo: z.boolean(),
     origem: z.enum(ORIGENS),
     origem_detalhe: z.string().optional().nullable(),
-    vendedora: z.string().min(1, "Selecione a vendedora"),
+    vendedora: z.string().optional().or(z.literal("")),
     observacao: z.string().optional().nullable(),
     responsavel_nome: z.string().optional().nullable(),
     responsavel_telefone: z.string().optional().nullable(),
