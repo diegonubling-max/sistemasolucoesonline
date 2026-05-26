@@ -212,8 +212,8 @@ function StudentCourse() {
             </div>
             
             <div className="space-y-3">
-                <h3 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Sobre esta aula</h3>
-                <div className={`${isDark ? "text-[#B3B3B3]" : "text-gray-600"} leading-relaxed`}>
+                <h3 className="text-lg font-semibold text-gray-900">Sobre esta aula</h3>
+                <div className="text-gray-600 leading-relaxed">
                 {activeAula?.descricao || "Sem descrição para esta aula."}
                 </div>
             </div>
