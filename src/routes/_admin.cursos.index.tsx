@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Power, ListVideo, Trash2 } from "lucide-react";
+import { Plus, Search, Pencil, Power, ListVideo, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { formatDate } from "@/lib/format";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_admin/cursos/")({
   head: () => ({ meta: [{ title: "Cursos — EduManager" }] }),
@@ -21,6 +31,7 @@ function CursosList() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [cursoToDelete, setCursoToDelete] = useState<{ id: string; nome: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["cursos", search],
@@ -58,6 +69,7 @@ function CursosList() {
       toast.success("Curso excluído com sucesso");
       qc.invalidateQueries({ queryKey: ["cursos"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      setCursoToDelete(null);
     },
     onError: (e: Error) => {
       if (e.message.includes("violates foreign key constraint")) {
@@ -67,12 +79,6 @@ function CursosList() {
       }
     },
   });
-
-  const handleDelete = (id: string, nome: string) => {
-    if (confirm(`Tem certeza que deseja excluir o curso "${nome}"? Esta ação não pode ser desfeita.`)) {
-      deleteCurso.mutate(id);
-    }
-  };
 
   return (
     <div>
@@ -151,7 +157,7 @@ function CursosList() {
                           variant="ghost"
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           title="Excluir"
-                          onClick={() => handleDelete(c.id, c.nome)}
+                          onClick={() => setCursoToDelete({ id: c.id, nome: c.nome })}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -171,6 +177,41 @@ function CursosList() {
           </Table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!cursoToDelete} onOpenChange={(open) => !open && setCursoToDelete(null)}>
+        <AlertDialogContent className="max-w-[400px]">
+          <AlertDialogHeader className="items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-2">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold">Excluir curso?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              Você está prestes a excluir o curso <span className="font-bold text-foreground">[{cursoToDelete?.nome}]</span>. 
+              Esta ação não pode ser desfeita e todos os dados relacionados serão removidos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center gap-2 mt-4">
+            <AlertDialogCancel disabled={deleteCurso.isPending} className="mt-0 sm:flex-1">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (cursoToDelete) deleteCurso.mutate(cursoToDelete.id);
+              }}
+              className="bg-[#DC2626] hover:bg-red-700 text-white sm:flex-1"
+              disabled={deleteCurso.isPending}
+            >
+              {deleteCurso.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Excluindo...
+                </>
+              ) : (
+                "Sim, excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
