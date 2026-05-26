@@ -258,7 +258,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
           <AlunoForm
             submitLabel="Salvar e continuar"
             onSubmit={async (v) => {
-              const pass = generateStudentPassword(v.nome);
+              const primeiroNome = v.nome.split(' ')[0];
+              const senhaGerada = '123' + primeiroNome
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .split(' ')[0];
               
               // 1. Create student record
               const { data: studentData, error: studentError } = await supabase.from("alunos").insert({
@@ -275,24 +280,25 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
               // 2. Create Auth user via RPC if email exists
               if (studentData.email) {
-                console.log('Criando acesso:', studentData.email, pass, studentData.ctr);
-                const { error: authError } = await supabase.rpc('criar_acesso_aluno', {
+                console.log('Criando acesso:', studentData.email, senhaGerada, studentData.ctr);
+                const { error: erroAcesso } = await supabase.rpc('criar_acesso_aluno', {
                   p_email: studentData.email,
-                  p_senha: pass,
+                  p_senha: senhaGerada,
                   p_ctr: studentData.ctr
                 });
 
-                if (authError) {
-                  console.error('Erro ao criar acesso:', authError);
-                  toast.error('Aluno salvo, mas houve erro ao criar acesso: ' + authError.message);
-                  return;
+                if (erroAcesso) {
+                  console.error('Erro RPC:', erroAcesso);
+                  toast.error('Aluno salvo, mas erro ao criar acesso: ' + erroAcesso.message);
+                } else {
+                  toast.success('Aluno cadastrado com sucesso!');
                 }
               }
               
               setAlunoId(studentData.id);
               setAccessData({
                 email: studentData.email ?? "",
-                pass: pass,
+                pass: senhaGerada,
                 ctr: studentData.ctr,
                 nome: studentData.nome
               });
