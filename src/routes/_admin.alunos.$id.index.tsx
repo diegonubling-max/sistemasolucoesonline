@@ -102,7 +102,25 @@ function AlunoDetalhes() {
       if (error) throw error;
       return data ?? [];
     },
+  const { data: parcelas } = useQuery({
+    queryKey: ["aluno-parcelas", id],
+    queryFn: async () => {
+      const { data: ms } = await supabase.from("matriculas").select("id").eq("aluno_id", id);
+      const ids = (ms ?? []).map((m) => m.id);
+      if (ids.length === 0) return [];
+      const { data, error } = await supabase
+        .from("parcelas")
+        .select("*")
+        .in("matricula_id", ids)
+        .order("numero", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
   });
+
+  const totalPago = parcelas?.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
+  const totalAberto = parcelas?.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
+  const totalGeral = parcelas?.reduce((acc, p) => acc + Number(p.valor), 0) || 0;
 
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!aluno) return <p className="text-muted-foreground">Aluno não encontrado.</p>;
