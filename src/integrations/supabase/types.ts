@@ -285,6 +285,53 @@ export type Database = {
         }
         Relationships: []
       }
+      parcelas: {
+        Row: {
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          id: string
+          matricula_id: string
+          numero: number
+          observacao: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          tipo: Database["public"]["Enums"]["payment_type"]
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          id?: string
+          matricula_id: string
+          numero: number
+          observacao?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          tipo: Database["public"]["Enums"]["payment_type"]
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          id?: string
+          matricula_id?: string
+          numero?: number
+          observacao?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          tipo?: Database["public"]["Enums"]["payment_type"]
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcelas_matricula_id_fkey"
+            columns: ["matricula_id"]
+            isOneToOne: false
+            referencedRelation: "matriculas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfis_alunos: {
         Row: {
           aluno_id: string
@@ -359,6 +406,8 @@ export type Database = {
     Enums: {
       app_role: "admin" | "aluno"
       origem_aluno: "Google" | "Meta" | "Indicação" | "Outros"
+      payment_status: "aberto" | "pago" | "isento"
+      payment_type: "taxa_matricula" | "parcela"
       sexo_aluno: "Masculino" | "Feminino"
       tipo_pacote: "boleto" | "cartao" | "pix"
     }
@@ -490,6 +539,8 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "aluno"],
       origem_aluno: ["Google", "Meta", "Indicação", "Outros"],
+      payment_status: ["aberto", "pago", "isento"],
+      payment_type: ["taxa_matricula", "parcela"],
       sexo_aluno: ["Masculino", "Feminino"],
       tipo_pacote: ["boleto", "cartao", "pix"],
     },
