@@ -26,7 +26,7 @@ function AlunoLogin() {
         .eq('ctr', parseInt(ctr))
         .maybeSingle();
 
-      if (alunoError || !aluno) {
+      if (alunoError || !aluno || !aluno.email) {
         throw new Error('CTR não encontrado');
       }
 
@@ -70,7 +70,7 @@ function AlunoLogin() {
       .eq('ctr', parseInt(ctr))
       .maybeSingle();
 
-    if (alunoError || !aluno) {
+    if (alunoError || !aluno || !aluno.email) {
       toast.error("CTR não encontrado");
       return;
     }
