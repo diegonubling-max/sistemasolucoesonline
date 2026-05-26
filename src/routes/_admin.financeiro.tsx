@@ -23,6 +23,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { BaixaModal } from "@/components/admin/BaixaModal";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
@@ -196,13 +197,12 @@ function Financeiro() {
   });
 
   const darBaixaMutation = useMutation({
-    mutationFn: async ({ id, date, ...extra }: { id: string; date: string; [key: string]: any }) => {
+    mutationFn: async ({ id, ...data }: { id: string; [key: string]: any }) => {
       const { error } = await supabase
         .from("parcelas")
         .update({ 
           status: "pago", 
-          data_pagamento: date,
-          ...extra
+          ...data
         })
         .eq("id", id);
       if (error) throw error;
@@ -223,26 +223,12 @@ function Financeiro() {
   });
 
   const openBaixaModal = (p: any) => {
-    const matricula = p.matriculas;
-    const pacoteTipo = matricula?.matricula_pacotes?.[0]?.pacotes?.tipo;
-    
-    if (pacoteTipo === 'cartao' && p.tipo === 'parcela') {
-      setBaixaModal({
-        id: p.id,
-        open: true,
-        date: format(today, "yyyy-MM-dd"),
-        isCard: true,
-        valor: Number(p.valor),
-        parcelas: 1
-      });
-    } else {
-      setBaixaModal({
-        id: p.id,
-        open: true,
-        date: format(today, "yyyy-MM-dd"),
-        isCard: false
-      });
-    }
+    setBaixaModal({
+      id: p.id,
+      open: true,
+      date: format(today, "yyyy-MM-dd"),
+      valor: Number(p.valor)
+    });
   };
 
   const exportCSV = (data: any[], filename: string, extraHeaders: string[] = [], extraFields: (p: any) => string[] = () => []) => {
@@ -362,7 +348,7 @@ function Financeiro() {
             </div>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(recebimentos ?? []).map((p: any) => (
@@ -370,6 +356,22 @@ function Financeiro() {
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell>
+                      {p.forma_pagamento && (
+                        <Badge 
+                          className={cn(
+                            "font-bold",
+                            p.forma_pagamento === 'boleto' ? "bg-blue-100 text-blue-700 hover:bg-blue-100" :
+                            p.forma_pagamento === 'pix' ? "bg-green-100 text-green-700 hover:bg-green-100" :
+                            "bg-purple-100 text-purple-700 hover:bg-purple-100"
+                          )}
+                        >
+                          {p.forma_pagamento === 'boleto' ? 'Boleto' : 
+                           p.forma_pagamento === 'pix' ? 'PIX' : 
+                           `Cartão ${p.parcelas_cartao}x`}
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>{formatDate(p.data_pagamento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                   </TableRow>
@@ -404,7 +406,7 @@ function Financeiro() {
             </div>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(aReceber ?? []).map((p: any) => (
@@ -412,6 +414,7 @@ function Financeiro() {
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell>—</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
