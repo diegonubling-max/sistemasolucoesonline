@@ -18,6 +18,20 @@ export const Route = createFileRoute("/_student/aluno/perfil")({
 
 function StudentProfile() {
   const { session } = useAuth();
+  const { isDark } = useStudentTheme();
+  
+  const { data: alunoData } = useQuery({
+    queryKey: ["student-profile", session?.user.email],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("alunos")
+        .select("nome, ctr, email")
+        .eq("email", session?.user.email ?? "")
+        .single();
+      return data;
+    },
+    enabled: !!session?.user.email,
+  });
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
