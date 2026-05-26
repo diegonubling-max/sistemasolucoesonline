@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Eye, Power } from "lucide-react";
+import { Plus, Search, Pencil, Eye, Power, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { formatDate } from "@/lib/format";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_admin/alunos/")({
   head: () => ({ meta: [{ title: "Alunos — Soluções Online" }] }),
@@ -24,6 +34,7 @@ function AlunosList() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const [studentToDelete, setStudentToDelete] = useState<{ id: string; nome: string; email: string } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["alunos", search, page],
@@ -49,6 +60,51 @@ function AlunosList() {
       toast.success("Situação atualizada");
       qc.invalidateQueries({ queryKey: ["alunos"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (student: { id: string; email: string }) => {
+      // 1. Get matricula IDs
+      const { data: matriculas } = await supabase
+        .from('matriculas')
+        .select('id')
+        .eq('aluno_id', student.id);
+      
+      const matriculaIds = matriculas?.map(m => m.id) || [];
+
+      if (matriculaIds.length > 0) {
+        // 2. Delete related records
+        await supabase.from('matricula_cursos').delete().in('matricula_id', matriculaIds);
+        await supabase.from('matricula_pacotes').delete().in('matricula_id', matriculaIds);
+        await supabase.from('matriculas').delete().eq('aluno_id', student.id);
+      }
+
+      // 3. Delete from other related tables
+      await supabase.from('perfis_alunos').delete().eq('aluno_id', student.id);
+
+      // 4. Delete Auth user via Edge Function if email exists
+      if (student.email) {
+        try {
+          await supabase.functions.invoke('manage-student-access', {
+            body: { action: 'delete_user', email: student.email }
+          });
+        } catch (err) {
+          console.error('Error deleting auth user:', err);
+          // Continue with student deletion even if auth deletion fails
+        }
+      }
+
+      // 5. Delete aluno record
+      const { error } = await supabase.from('alunos').delete().eq('id', student.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Aluno excluído com sucesso");
+      qc.invalidateQueries({ queryKey: ["alunos"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      setStudentToDelete(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
