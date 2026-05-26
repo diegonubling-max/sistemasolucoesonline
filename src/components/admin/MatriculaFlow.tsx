@@ -169,17 +169,17 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
   const getSortedParcelas = () => {
     const currentPacote = pacotes?.find(p => p.id === selectedPacote);
-    const items = [];
+    const items: any[] = [];
 
     // Taxa de Matrícula
     if (currentPacote) {
       items.push({
         id: 'taxa-row',
-        tipo: 'taxa_matricula' as const,
+        tipo: 'taxa_matricula',
         numero: 0,
         vencimento: taxaVencimento,
         valor: taxaStatus === 'isentar' ? 0 : currentPacote.valor_matricula,
-        status: taxaStatus === 'isentar' ? ('isento' as const) : ('aberto' as const)
+        status: taxaStatus === 'isentar' ? 'isento' : 'aberto'
       });
     }
 
@@ -187,8 +187,8 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     parcelasGeradas.forEach(p => {
       items.push({
         ...p,
-        tipo: 'parcela' as const,
-        status: 'aberto' as const
+        tipo: 'parcela',
+        status: 'aberto'
       });
     });
 
