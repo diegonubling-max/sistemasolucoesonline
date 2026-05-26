@@ -306,11 +306,11 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
     
     const newParcela = {
       matricula_id: matriculaId,
-      tipo: 'parcela',
+      tipo: 'parcela' as const,
       numero: maxNum + 1,
       valor: 0,
       data_vencimento: format(new Date(), 'yyyy-MM-dd'),
-      status: 'aberto'
+      status: 'aberto' as const
     };
 
     const { data, error } = await supabase.from("parcelas").insert(newParcela).select().single();
