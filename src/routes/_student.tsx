@@ -74,29 +74,36 @@ function StudentLayout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
-      <header className="bg-primary border-b sticky top-0 z-20 shadow-sm">
+    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${userName ? 'bg-[#141414] text-white' : 'bg-background text-foreground'}`}>
+      <header className="bg-[#1e1e1e] border-b border-white/10 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link to="/aluno/dashboard" className="flex items-center gap-2">
               <span className="text-xl font-bold">
                 <span className="text-white">Soluções</span>{" "}
-                <span className="text-[#2ECC71]">Online</span>
+                <span className="text-[#2D6ADF]">Online</span>
               </span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 to="/aluno/dashboard"
-                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
+                className="text-[#B3B3B3] hover:text-white font-medium transition-colors flex items-center gap-2"
                 activeProps={{ className: "text-white font-bold" }}
+              >
+                <BookOpen className="h-4 w-4" />
+                Início
+              </Link>
+              <Link
+                to="/aluno/dashboard"
+                className="text-[#B3B3B3] hover:text-white font-medium transition-colors flex items-center gap-2"
               >
                 <BookOpen className="h-4 w-4" />
                 Meus Cursos
               </Link>
               <Link
                 to="/aluno/financeiro"
-                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
+                className="text-[#B3B3B3] hover:text-white font-medium transition-colors flex items-center gap-2"
                 activeProps={{ className: "text-white font-bold" }}
               >
                 <Wallet className="h-4 w-4" />
@@ -105,86 +112,23 @@ function StudentLayout() {
             </nav>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden md:flex items-center gap-4">
-              <span className="text-sm text-white/70">
-                Olá, <span className="font-semibold text-white">{userName}</span>!
-              </span>
-
-              <Link to="/aluno/perfil">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Meu Perfil"
-                  className="text-white hover:bg-white/10"
-                >
-                  <UserIcon className="h-5 w-5" />
-                </Button>
-              </Link>
-
-              <Button
+          <div className="flex items-center gap-4">
+            <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleLogout}
-                title="Sair"
-                className="text-white hover:bg-white/10"
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden text-white"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-[#B3B3B3] hover:text-white"
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                🌙
             </Button>
+            <div className="flex items-center gap-4">
+              <Link to="/aluno/perfil">
+                <div className="h-8 w-8 rounded-full bg-[#2D6ADF] flex items-center justify-center font-bold text-white">
+                    {userName[0]?.toUpperCase()}
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-primary border-t border-white/10 py-4 px-4 space-y-4 animate-in slide-in-from-top duration-200">
-            <div className="flex flex-col gap-2">
-              <Link
-                to="/aluno/dashboard"
-                className="text-white/80 hover:text-white font-medium p-2 flex items-center gap-3"
-                activeProps={{ className: "bg-white/10 text-white rounded-md" }}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <BookOpen className="h-5 w-5" />
-                Meus Cursos
-              </Link>
-              <Link
-                to="/aluno/financeiro"
-                className="text-white/80 hover:text-white font-medium p-2 flex items-center gap-3"
-                activeProps={{ className: "bg-white/10 text-white rounded-md" }}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Wallet className="h-5 w-5" />
-                Financeiro
-              </Link>
-              <Link
-                to="/aluno/perfil"
-                className="text-white/80 hover:text-white font-medium p-2 flex items-center gap-3"
-                activeProps={{ className: "bg-white/10 text-white rounded-md" }}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <UserIcon className="h-5 w-5" />
-                Meu Perfil
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="text-white/80 hover:text-white font-medium p-2 flex items-center gap-3 w-full text-left"
-              >
-                <LogOut className="h-5 w-5" />
-                Sair
-              </button>
-            </div>
-          </div>
-        )}
       </header>
 
       <main className="flex-1 overflow-auto">
@@ -192,12 +136,6 @@ function StudentLayout() {
           <Outlet />
         </div>
       </main>
-
-      <footer className="py-6 border-t bg-white">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Soluções Online — Área do Aluno
-        </div>
-      </footer>
     </div>
   );
 }
