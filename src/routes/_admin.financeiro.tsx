@@ -119,7 +119,7 @@ function Financeiro() {
       
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone))")
+        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("numero", 1)
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
