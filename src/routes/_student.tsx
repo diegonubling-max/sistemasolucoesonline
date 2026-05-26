@@ -177,7 +177,7 @@ function StudentLayout() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className={`md:hidden ${isDark ? "bg-[#1e1e1e] border-white/10" : "bg-[#1E3A5F] border-white/10"} border-t py-4 px-4 space-y-4 animate-in slide-in-from-top duration-200`}>
+          <div className="md:hidden bg-[#1E3A5F] border-t border-white/10 py-4 px-4 space-y-4 animate-in slide-in-from-top duration-200">
             <div className="flex flex-col gap-2">
               <Link
                 to="/aluno/dashboard"
