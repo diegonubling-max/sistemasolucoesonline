@@ -175,36 +175,36 @@ function StudentFinance() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-sm"} border p-6 rounded-xl relative overflow-hidden group transition-all`}>
+        <div className="bg-white border-gray-200 shadow-sm border p-6 rounded-xl relative overflow-hidden group transition-all">
           <div className="flex items-center justify-between relative z-10">
-            <span className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-medium`}>Total Pago</span>
+            <span className="text-gray-500 font-medium">Total Pago</span>
             <div className="p-2 bg-green-500/10 rounded-lg">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             </div>
           </div>
-          <div className={`mt-4 text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"} relative z-10`}>{formatCurrency(totalPago)}</div>
+          <div className="mt-4 text-3xl font-bold text-gray-900 relative z-10">{formatCurrency(totalPago)}</div>
           <div className="absolute bottom-0 left-0 h-1 w-full bg-green-500 transform translate-y-1 group-hover:translate-y-0 transition-transform" />
         </div>
 
-        <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-sm"} border p-6 rounded-xl relative overflow-hidden group transition-all`}>
+        <div className="bg-white border-gray-200 shadow-sm border p-6 rounded-xl relative overflow-hidden group transition-all">
           <div className="flex items-center justify-between relative z-10">
-            <span className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-medium`}>Em Aberto</span>
+            <span className="text-gray-500 font-medium">Em Aberto</span>
             <div className="p-2 bg-yellow-500/10 rounded-lg">
               <Clock className="h-5 w-5 text-yellow-500" />
             </div>
           </div>
-          <div className={`mt-4 text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"} relative z-10`}>{formatCurrency(totalEmAberto)}</div>
+          <div className="mt-4 text-3xl font-bold text-gray-900 relative z-10">{formatCurrency(totalEmAberto)}</div>
           <div className="absolute bottom-0 left-0 h-1 w-full bg-yellow-500 transform translate-y-1 group-hover:translate-y-0 transition-transform" />
         </div>
 
-        <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-sm"} border p-6 rounded-xl relative overflow-hidden group transition-all`}>
+        <div className="bg-white border-gray-200 shadow-sm border p-6 rounded-xl relative overflow-hidden group transition-all">
           <div className="flex items-center justify-between relative z-10">
-            <span className={`${isDark ? "text-[#B3B3B3]" : "text-gray-500"} font-medium`}>Total do Contrato</span>
+            <span className="text-gray-500 font-medium">Total do Contrato</span>
             <div className="p-2 bg-[#2D6ADF]/10 rounded-lg">
               <Wallet className="h-5 w-5 text-[#2D6ADF]" />
             </div>
           </div>
-          <div className={`mt-4 text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"} relative z-10`}>{formatCurrency(totalContrato)}</div>
+          <div className="mt-4 text-3xl font-bold text-gray-900 relative z-10">{formatCurrency(totalContrato)}</div>
           <div className="absolute bottom-0 left-0 h-1 w-full bg-[#2D6ADF] transform translate-y-1 group-hover:translate-y-0 transition-transform" />
         </div>
       </div>
