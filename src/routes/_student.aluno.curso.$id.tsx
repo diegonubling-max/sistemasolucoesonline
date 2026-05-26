@@ -222,10 +222,10 @@ function StudentCourse() {
 
         {/* Sidebar (Lesson List) */}
         <div className="lg:col-span-3">
-          <div className={`${isDark ? "bg-[#1e1e1e] border-white/5" : "bg-white border-black/5 shadow-lg"} rounded-xl border overflow-hidden flex flex-col h-full max-h-[calc(100vh-12rem)] transition-colors`}>
-            <div className={`p-4 border-b ${isDark ? "border-white/5" : "border-black/5"} flex items-center justify-between`}>
-                <span className={`font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Lista de aulas</span>
-                <span className={`text-xs ${isDark ? "text-[#B3B3B3]" : "text-gray-500"}`}>{curso?.aulas?.length} vídeos</span>
+          <div className="bg-white border-gray-200 shadow-lg rounded-xl border overflow-hidden flex flex-col h-full max-h-[calc(100vh-12rem)] transition-colors">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                <span className="font-bold text-gray-900">Lista de aulas</span>
+                <span className="text-xs text-gray-500">{curso?.aulas?.length} vídeos</span>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-2 space-y-1">
@@ -238,14 +238,14 @@ function StudentCourse() {
                       className={`w-full text-left p-4 rounded-lg flex items-center gap-4 transition-all duration-200 group ${
                         isActive 
                         ? "bg-[#2D6ADF]/10 border border-[#2D6ADF]/20" 
-                        : isDark ? "hover:bg-white/5 border border-transparent" : "hover:bg-gray-50 border border-transparent"
+                        : "hover:bg-gray-50 border border-transparent"
                       }`}
                     >
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isActive ? 'bg-[#2D6ADF] text-white' : isDark ? 'bg-[#333] text-[#B3B3B3]' : 'bg-gray-100 text-gray-400'}`}>
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isActive ? 'bg-[#2D6ADF] text-white' : 'bg-gray-100 text-gray-400'}`}>
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <p className={`text-sm font-medium leading-tight transition-colors ${isActive ? (isDark ? 'text-white font-bold' : 'text-[#2D6ADF] font-bold') : isDark ? 'text-[#B3B3B3] group-hover:text-white' : 'text-gray-600 group-hover:text-gray-900'}`}>
+                        <p className={`text-sm font-medium leading-tight transition-colors ${isActive ? 'text-[#2D6ADF] font-bold' : 'text-gray-600 group-hover:text-gray-900'}`}>
                           {aula.titulo}
                         </p>
                       </div>
