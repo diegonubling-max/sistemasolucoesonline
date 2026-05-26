@@ -91,7 +91,7 @@ function StudentDashboard() {
         {!cursos || cursos.length === 0 ? (
           <Card className="bg-white border-gray-200 border-dashed">
             <CardContent className="py-12 text-center space-y-4">
-              <BookOpen className="h-12 w-12 mx-auto text-gray-400" />
+              <BookOpen className="h-12 w-12 mx-auto text-gray-500" />
               <div className="space-y-1">
                 <p className="font-semibold text-lg text-gray-900">Nenhum curso encontrado</p>
                 <p className="text-gray-500">Você ainda não possui matrículas ativas.</p>

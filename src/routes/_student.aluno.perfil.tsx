@@ -103,15 +103,15 @@ function StudentProfile() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
-                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Nome Completo</p>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Nome Completo</p>
                     <p className="text-gray-900 font-medium">{alunoData?.nome || "---"}</p>
                 </div>
                 <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
-                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">E-mail</p>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">E-mail</p>
                     <p className="text-gray-900 font-medium">{session?.user.email}</p>
                 </div>
                 <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
-                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">CTR</p>
+                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">CTR</p>
                     <p className="text-gray-900 font-medium">{alunoData?.ctr || "---"}</p>
                 </div>
             </CardContent>

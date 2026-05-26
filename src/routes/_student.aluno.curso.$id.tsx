@@ -182,7 +182,7 @@ function StudentCourse() {
           <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-black/5 group">
             {activeAula && renderVideoPlayer(activeAula.url_video)}
             {!activeAula && (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
                 Selecione uma aula para começar
               </div>
             )}
@@ -241,7 +241,7 @@ function StudentCourse() {
                         : "hover:bg-gray-50 border border-transparent"
                       }`}
                     >
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isActive ? 'bg-[#2D6ADF] text-white' : 'bg-gray-100 text-gray-400'}`}>
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isActive ? 'bg-[#2D6ADF] text-white' : 'bg-gray-100 text-gray-500'}`}>
                         {index + 1}
                       </div>
                       <div className="flex-1">

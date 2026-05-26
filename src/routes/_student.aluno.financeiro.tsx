@@ -228,7 +228,7 @@ function StudentFinance() {
             <TableBody>
               {parcelas.length === 0 ? (
                 <TableRow className="border-gray-100">
-                  <TableCell colSpan={5} className="h-32 text-center text-gray-400">
+                  <TableCell colSpan={5} className="h-32 text-center text-gray-500">
                     Nenhuma cobrança encontrada.
                   </TableCell>
                 </TableRow>
