@@ -43,6 +43,7 @@ function StudentDashboard() {
             id,
             nome,
             descricao,
+            thumbnail_url,
             aulas (count)
           )
         `)
@@ -108,10 +109,18 @@ function StudentDashboard() {
               return (
                 <Link key={i} to="/aluno/curso/$id" params={{ id: curso.id }} className="group">
                   <div className="relative bg-white border-gray-200 rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border h-full flex flex-col shadow-sm">
-                    <div className="aspect-video bg-gray-100 flex items-center justify-center relative">
-                      <div className="p-4 bg-[#2D6ADF]/20 rounded-full">
-                        <PlayCircle className="h-10 w-10 text-[#2D6ADF]" />
-                      </div>
+                    <div className="aspect-video bg-gray-100 flex items-center justify-center relative overflow-hidden">
+                      {curso.thumbnail_url ? (
+                        <img 
+                          src={curso.thumbnail_url} 
+                          alt={curso.nome}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="p-4 bg-[#2D6ADF]/20 rounded-full">
+                          <BookOpen className="h-10 w-10 text-[#2D6ADF]" />
+                        </div>
+                      )}
                       
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="flex items-center gap-2 bg-[#2D6ADF] px-4 py-2 rounded-full text-white font-bold text-sm">
