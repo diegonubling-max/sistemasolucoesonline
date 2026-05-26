@@ -435,8 +435,8 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
               </div>
               <div className="bg-white p-3 rounded border space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span>E-mail:</span>
-                  <span className="font-mono font-bold">{accessData?.email}</span>
+                  <span>Login:</span>
+                  <span className="font-mono font-bold">{accessData?.ctr}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span>Senha:</span>
