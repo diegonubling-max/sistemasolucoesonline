@@ -17,6 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BaixaModal } from "@/components/admin/BaixaModal";
+import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { formatCurrency } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
   head: () => ({ meta: [{ title: "Aluno — Soluções Online" }] }),
@@ -32,6 +34,14 @@ function AlunoDetalhes() {
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
   const [selectedParcelaValor, setSelectedParcelaValor] = useState<number>(0);
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
+  const [resumoBaixa, setResumoBaixa] = useState<{
+    formaPagamento: string;
+    parcelas?: number;
+    valorBruto: number;
+    taxa?: number;
+    valorLiquido: number;
+    dataPagamento: string;
+  } | null>(null);
   const qc = useQueryClient();
   const [passwordToDisplay, setPasswordToDisplay] = useState("");
 
@@ -52,9 +62,21 @@ function AlunoDetalhes() {
         })
         .eq("id", selectedParcelaId);
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
-      toast.success("Baixa realizada com sucesso!");
+    onSuccess: (data: any) => {
+      if (data.forma_pagamento === 'cartao') {
+        setResumoBaixa({
+          formaPagamento: 'cartao',
+          parcelas: data.parcelas_cartao,
+          valorBruto: selectedParcelaValor,
+          taxa: data.taxa_cartao,
+          valorLiquido: data.valor_liquido,
+          dataPagamento: data.data_pagamento,
+        });
+      } else {
+        toast.success("Baixa realizada com sucesso!");
+      }
       setShowBaixaModal(false);
       setSelectedParcelaId(null);
       qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
@@ -129,7 +151,11 @@ function AlunoDetalhes() {
     },
   });
 
-  const totalPago = parcelas?.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
+  const totalPago = parcelas?.filter(p => p.status === 'pago').reduce((acc, p) => {
+    const isCartao = p.forma_pagamento === 'cartao';
+    const val = isCartao && p.valor_liquido ? Number(p.valor_liquido) : Number(p.valor);
+    return acc + val;
+  }, 0) || 0;
   const totalAberto = parcelas?.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
   const totalGeral = parcelas?.filter(p => p.status !== 'isento').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
 
@@ -319,7 +345,16 @@ function AlunoDetalhes() {
                           )}
                         </td>
                         <td className="py-4">{formatDate(p.data_vencimento)}</td>
-                        <td className="py-4 font-bold">R$ {Number(p.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                        <td className="py-4 font-bold">
+                          {p.forma_pagamento === 'cartao' && p.valor_liquido ? (
+                            <div className="flex flex-col">
+                              <span className="text-xs text-muted-foreground line-through">{formatCurrency(p.valor)}</span>
+                              <span className="text-green-600">{formatCurrency(p.valor_liquido)}</span>
+                            </div>
+                          ) : (
+                            formatCurrency(p.valor)
+                          )}
+                        </td>
                         <td className="py-4">
                           <Badge 
                             variant="secondary"
@@ -378,6 +413,12 @@ function AlunoDetalhes() {
         isLoading={darBaixa.isPending}
         valorOriginal={selectedParcelaValor}
         onConfirm={(data) => darBaixa.mutate(data)}
+      />
+
+      <ResumoBaixaModal 
+        open={!!resumoBaixa}
+        onOpenChange={(open) => !open && setResumoBaixa(null)}
+        data={resumoBaixa}
       />
 
       <Dialog open={showResetDefaultModal} onOpenChange={setShowResetDefaultModal}>

@@ -18,6 +18,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { BaixaModal } from "@/components/admin/BaixaModal";
+import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { formatCurrency } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/alunos/$id/editar")({
   head: () => ({ meta: [{ title: "Editar aluno — EduManager" }] }),
@@ -261,7 +264,15 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
   const [localParcelas, setLocalParcelas] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
-  const [baixaData, setBaixaData] = useState<{ id: string, date: Date } | null>(null);
+  const [baixaData, setBaixaData] = useState<{ id: string, valor: number } | null>(null);
+  const [resumoBaixa, setResumoBaixa] = useState<{
+    formaPagamento: string;
+    parcelas?: number;
+    valorBruto: number;
+    taxa?: number;
+    valorLiquido: number;
+    dataPagamento: string;
+  } | null>(null);
 
   useEffect(() => {
     setLocalParcelas(parcelas);
@@ -323,20 +334,32 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
     toast.success("Nova parcela adicionada!");
   };
 
-  const confirmBaixa = async () => {
+  const confirmBaixa = async (data: any) => {
     if (!baixaData) return;
     try {
       const { error } = await supabase
         .from("parcelas")
         .update({
           status: 'pago',
-          data_pagamento: format(baixaData.date, 'yyyy-MM-dd')
+          ...data
         })
         .eq("id", baixaData.id);
       
       if (error) throw error;
       
-      toast.success("Baixa realizada!");
+      if (data.forma_pagamento === 'cartao') {
+        setResumoBaixa({
+          formaPagamento: 'cartao',
+          parcelas: data.parcelas_cartao,
+          valorBruto: baixaData.valor,
+          taxa: data.taxa_cartao,
+          valorLiquido: data.valor_liquido,
+          dataPagamento: data.data_pagamento,
+        });
+      } else {
+        toast.success("Baixa realizada!");
+      }
+      
       setShowBaixaModal(false);
       setBaixaData(null);
       onSuccess();
@@ -417,7 +440,7 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
                       variant="ghost" 
                       className="h-8 w-8 text-green-600"
                       onClick={() => {
-                        setBaixaData({ id: p.id, date: new Date() });
+                        setBaixaData({ id: p.id, valor: Number(p.valor) });
                         setShowBaixaModal(true);
                       }}
                     >
@@ -431,38 +454,19 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
         </table>
       </div>
 
-      <Dialog open={showBaixaModal} onOpenChange={setShowBaixaModal}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Confirmar Pagamento</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label>Data do Pagamento</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {baixaData?.date ? format(baixaData.date, "dd/MM/yyyy") : "Selecione"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={baixaData?.date}
-                    onSelect={(d) => d && setBaixaData(prev => prev ? { ...prev, date: d } : null)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBaixaModal(false)}>Cancelar</Button>
-            <Button onClick={confirmBaixa}>Confirmar Baixa</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BaixaModal 
+        open={showBaixaModal}
+        onOpenChange={setShowBaixaModal}
+        isLoading={saving}
+        valorOriginal={baixaData?.valor || 0}
+        onConfirm={confirmBaixa}
+      />
+
+      <ResumoBaixaModal 
+        open={!!resumoBaixa}
+        onOpenChange={(open) => !open && setResumoBaixa(null)}
+        data={resumoBaixa}
+      />
     </div>
   );
 }
