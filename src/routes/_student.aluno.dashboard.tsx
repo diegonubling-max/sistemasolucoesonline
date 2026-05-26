@@ -86,15 +86,15 @@ function StudentDashboard() {
       </div>
 
       <div className="space-y-6">
-        <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-[#111827]"}`}>Meus Cursos</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Meus Cursos</h2>
         
         {!cursos || cursos.length === 0 ? (
-          <Card className={`${isDark ? "bg-[#1e1e1e] border-white/10" : "bg-white border-black/5"} border-dashed`}>
+          <Card className="bg-white border-gray-200 border-dashed">
             <CardContent className="py-12 text-center space-y-4">
-              <BookOpen className={`h-12 w-12 mx-auto ${isDark ? "text-[#B3B3B3]" : "text-gray-400"}`} />
+              <BookOpen className="h-12 w-12 mx-auto text-gray-400" />
               <div className="space-y-1">
-                <p className={`font-semibold text-lg ${isDark ? "text-white" : "text-gray-900"}`}>Nenhum curso encontrado</p>
-                <p className={isDark ? "text-[#B3B3B3]" : "text-gray-500"}>Você ainda não possui matrículas ativas.</p>
+                <p className="font-semibold text-lg text-gray-900">Nenhum curso encontrado</p>
+                <p className="text-gray-500">Você ainda não possui matrículas ativas.</p>
               </div>
             </CardContent>
           </Card>
