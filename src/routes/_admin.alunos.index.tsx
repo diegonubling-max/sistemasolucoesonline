@@ -73,7 +73,11 @@ function AlunosList() {
 
   const deleteMutation = useMutation({
     mutationFn: async (student: { id: string; email: string }) => {
-      // 1. Delete Auth user via Edge Function if email exists
+      // 1. Delete aluno record first (this will fail if there are restrictions like matriculas)
+      const { error: dbError } = await supabase.from('alunos').delete().eq('id', student.id);
+      if (dbError) throw dbError;
+
+      // 2. Delete Auth user via Edge Function if the DB delete was successful
       if (student.email) {
         try {
           await supabase.functions.invoke('manage-student-access', {
@@ -81,15 +85,10 @@ function AlunosList() {
           });
         } catch (err) {
           console.error('Error deleting auth user:', err);
+          // We don't throw here because the student record is already gone,
+          // but we log it.
         }
       }
-
-      // 2. Delete aluno record
-      // The database is configured with ON DELETE CASCADE for:
-      // - matriculas (which cascades to matricula_cursos and matricula_pacotes)
-      // - perfis_alunos
-      const { error } = await supabase.from('alunos').delete().eq('id', student.id);
-      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Aluno excluído com sucesso");
