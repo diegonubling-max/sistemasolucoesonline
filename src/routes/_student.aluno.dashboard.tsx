@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_student/aluno/dashboard")({
-  head: () => ({ meta: [{ title: "Meus Cursos — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Meus Cursos — Soluções Online" }] }),
   component: StudentDashboard,
 });
 
