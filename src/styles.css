@@ -130,5 +130,13 @@
     color: var(--color-foreground);
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
+  /* Forçar temas claros em componentes admin se necessário */
+  .admin-panel table, 
+  .admin-panel .card,
+  .admin-panel .bg-card {
+    background-color: #FFFFFF !important;
+    border-color: #E5E7EB !important;
+    color: #111827 !important;
+  }
 }
 
