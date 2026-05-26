@@ -20,6 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_admin/financeiro")({
@@ -52,7 +54,14 @@ function Financeiro() {
   });
 
   // Lowering status modal state
-  const [baixaModal, setBaixaModal] = useState<{ id: string; open: boolean; date: string } | null>(null);
+  const [baixaModal, setBaixaModal] = useState<{ 
+    id: string; 
+    open: boolean; 
+    date: string;
+    isCard?: boolean;
+    valor?: number;
+    parcelas?: number;
+  } | null>(null);
 
   const { data: globalStats } = useQuery({
     queryKey: ["financeiro-global-stats"],
@@ -83,7 +92,7 @@ function Financeiro() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone))")
+        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("status", "pago")
         .gte("data_pagamento", recPeriod.start)
         .lte("data_pagamento", recPeriod.end)
@@ -99,7 +108,7 @@ function Financeiro() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone))")
+        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("status", "aberto")
         .gte("data_vencimento", aRecPeriod.start)
         .lte("data_vencimento", aRecPeriod.end)
@@ -119,7 +128,7 @@ function Financeiro() {
       
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone))")
+        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("numero", 1)
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
@@ -153,7 +162,7 @@ function Financeiro() {
 
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone))")
+        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
         .order("data_vencimento", { ascending: true });
@@ -170,7 +179,7 @@ function Financeiro() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone))")
+        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("status", "aberto")
         .lt("data_vencimento", format(today, "yyyy-MM-dd"))
         .gte("data_vencimento", atrasoPeriod.start)
@@ -187,10 +196,14 @@ function Financeiro() {
   });
 
   const darBaixaMutation = useMutation({
-    mutationFn: async ({ id, date }: { id: string; date: string }) => {
+    mutationFn: async ({ id, date, ...extra }: { id: string; date: string; [key: string]: any }) => {
       const { error } = await supabase
         .from("parcelas")
-        .update({ status: "pago", data_pagamento: date })
+        .update({ 
+          status: "pago", 
+          data_pagamento: date,
+          ...extra
+        })
         .eq("id", id);
       if (error) throw error;
     },
@@ -208,6 +221,29 @@ function Financeiro() {
       toast.error("Erro ao registrar pagamento: " + e.message);
     }
   });
+
+  const openBaixaModal = (p: any) => {
+    const matricula = p.matriculas;
+    const pacoteTipo = matricula?.matricula_pacotes?.[0]?.pacotes?.tipo;
+    
+    if (pacoteTipo === 'cartao' && p.tipo === 'parcela') {
+      setBaixaModal({
+        id: p.id,
+        open: true,
+        date: format(today, "yyyy-MM-dd"),
+        isCard: true,
+        valor: Number(p.valor),
+        parcelas: 1
+      });
+    } else {
+      setBaixaModal({
+        id: p.id,
+        open: true,
+        date: format(today, "yyyy-MM-dd"),
+        isCard: false
+      });
+    }
+  };
 
   const exportCSV = (data: any[], filename: string, extraHeaders: string[] = [], extraFields: (p: any) => string[] = () => []) => {
     if (!data || data.length === 0) return;
@@ -380,7 +416,7 @@ function Financeiro() {
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
                     <TableCell className="text-right">
-                      <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}>
+                      <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
                         <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
                       </Button>
                     </TableCell>
@@ -427,7 +463,7 @@ function Financeiro() {
                     <TableCell>{getStatusBadge(p)}</TableCell>
                     <TableCell className="text-right">
                       {p.status === 'aberto' && (
-                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}>
+                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
                           <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
                         </Button>
                       )}
@@ -474,7 +510,7 @@ function Financeiro() {
                     <TableCell>{getStatusBadge(p)}</TableCell>
                     <TableCell className="text-right">
                       {p.status === 'aberto' && (
-                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}>
+                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
                           <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
                         </Button>
                       )}
@@ -523,7 +559,7 @@ function Financeiro() {
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell><Badge variant="destructive">{p.diasAtraso} dias</Badge></TableCell>
                     <TableCell className="text-right">
-                      <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => setBaixaModal({ id: p.id, open: true, date: format(today, "yyyy-MM-dd") })}>
+                      <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
                         <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
                       </Button>
                     </TableCell>
@@ -549,15 +585,82 @@ function Financeiro() {
       <Dialog open={!!baixaModal?.open} onOpenChange={(open) => !open && setBaixaModal(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmar Pagamento</DialogTitle>
-            <DialogDescription>Informe a data em que o pagamento foi realizado.</DialogDescription>
+            <DialogTitle>{baixaModal?.isCard ? "Pagamento no Cartão" : "Confirmar Pagamento"}</DialogTitle>
+            <DialogDescription>
+              {baixaModal?.isCard ? "Selecione o parcelamento utilizado pelo aluno." : "Informe a data em que o pagamento foi realizado."}
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <Input type="date" value={baixaModal?.date || ""} onChange={(e) => setBaixaModal(prev => prev ? { ...prev, date: e.target.value } : null)} />
+          
+          <div className="space-y-4 py-4">
+            {baixaModal?.isCard && (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>Parcelas</Label>
+                  <Select 
+                    value={String(baixaModal.parcelas)} 
+                    onValueChange={(v) => setBaixaModal(prev => prev ? { ...prev, parcelas: parseInt(v) } : null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione as parcelas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
+                        <SelectItem key={num} value={String(num)}>{num}x</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="p-4 bg-muted/30 rounded-lg space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Valor bruto:</span>
+                    <span className="font-medium">{formatCurrency(baixaModal.valor || 0)}</span>
+                  </div>
+                  <div className="flex justify-between text-red-500">
+                    <span>Taxa (8%):</span>
+                    <span>- {formatCurrency((baixaModal.valor || 0) * 0.08)}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2 font-bold text-base">
+                    <span>Valor líquido:</span>
+                    <span className="text-green-600">{formatCurrency((baixaModal.valor || 0) * 0.92)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label>{baixaModal?.isCard ? "Data do recebimento" : "Data do pagamento"}</Label>
+              <Input 
+                type="date" 
+                value={baixaModal?.date || ""} 
+                onChange={(e) => setBaixaModal(prev => prev ? { ...prev, date: e.target.value } : null)} 
+              />
+            </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setBaixaModal(null)}>Cancelar</Button>
-            <Button onClick={() => baixaModal && darBaixaMutation.mutate({ id: baixaModal.id, date: baixaModal.date })} disabled={darBaixaMutation.isPending}>Confirmar</Button>
+            <Button 
+              onClick={() => {
+                if (!baixaModal) return;
+                const extra = baixaModal.isCard ? {
+                  valor_bruto: baixaModal.valor,
+                  valor_taxa: (baixaModal.valor || 0) * 0.08,
+                  valor_liquido: (baixaModal.valor || 0) * 0.92,
+                  cartao_parcelas: baixaModal.parcelas,
+                  observacao: `Pagamento em ${baixaModal.parcelas}x no cartão`
+                } : {};
+                
+                darBaixaMutation.mutate({ 
+                  id: baixaModal.id, 
+                  date: baixaModal.date,
+                  ...extra
+                });
+              }} 
+              disabled={darBaixaMutation.isPending}
+            >
+              {baixaModal?.isCard ? "Confirmar baixa" : "Confirmar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

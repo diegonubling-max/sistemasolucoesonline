@@ -290,6 +290,7 @@ export type Database = {
       }
       parcelas: {
         Row: {
+          cartao_parcelas: number | null
           created_at: string
           data_pagamento: string | null
           data_vencimento: string
@@ -300,8 +301,12 @@ export type Database = {
           status: Database["public"]["Enums"]["payment_status"]
           tipo: Database["public"]["Enums"]["payment_type"]
           valor: number
+          valor_bruto: number | null
+          valor_liquido: number | null
+          valor_taxa: number | null
         }
         Insert: {
+          cartao_parcelas?: number | null
           created_at?: string
           data_pagamento?: string | null
           data_vencimento: string
@@ -312,8 +317,12 @@ export type Database = {
           status?: Database["public"]["Enums"]["payment_status"]
           tipo: Database["public"]["Enums"]["payment_type"]
           valor: number
+          valor_bruto?: number | null
+          valor_liquido?: number | null
+          valor_taxa?: number | null
         }
         Update: {
+          cartao_parcelas?: number | null
           created_at?: string
           data_pagamento?: string | null
           data_vencimento?: string
@@ -324,6 +333,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["payment_status"]
           tipo?: Database["public"]["Enums"]["payment_type"]
           valor?: number
+          valor_bruto?: number | null
+          valor_liquido?: number | null
+          valor_taxa?: number | null
         }
         Relationships: [
           {
