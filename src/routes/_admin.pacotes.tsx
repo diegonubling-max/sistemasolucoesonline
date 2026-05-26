@@ -137,18 +137,18 @@ function PacotesList() {
         }
       />
 
-      <Card>
-        <CardContent className="pt-6">
+      <Card className="border-none shadow-none">
+        <CardContent className="pt-0 px-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Taxa de Matrícula</TableHead>
-                <TableHead>Parcelas</TableHead>
-                <TableHead>Valor Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+              <TableRow className="hover:bg-transparent border-b border-gray-100">
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Nome</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Tipo</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Taxa de Matrícula</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Parcelas</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Valor Total</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Status</TableHead>
+                <TableHead className="text-right text-muted-foreground font-normal text-xs uppercase tracking-wider">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -158,26 +158,26 @@ function PacotesList() {
                 </TableRow>
               )}
               {pacotes?.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.nome}</TableCell>
-                  <TableCell><Badge variant="outline" className="capitalize">{p.tipo}</Badge></TableCell>
-                  <TableCell>R$ {p.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
-                  <TableCell>{p.numero_parcelas}x R$ {p.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
-                  <TableCell className="font-bold text-primary">R$ {p.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                <TableRow key={p.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
+                  <TableCell className="font-bold text-foreground">{p.nome}</TableCell>
+                  <TableCell><Badge variant="outline" className="capitalize bg-gray-50 text-muted-foreground border-gray-200 font-normal">{p.tipo}</Badge></TableCell>
+                  <TableCell className="font-normal text-muted-foreground">R$ {p.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                  <TableCell className="font-normal text-muted-foreground">{p.numero_parcelas}x R$ {p.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                  <TableCell className="font-normal text-foreground">R$ {p.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
                   <TableCell>
                     {p.ativo ? (
-                      <Badge className="bg-accent text-accent-foreground">Ativo</Badge>
+                      <Badge className="bg-green-500 text-white hover:bg-green-500 rounded-full px-3 font-semibold">Ativo</Badge>
                     ) : (
-                      <Badge variant="secondary">Inativo</Badge>
+                      <Badge className="bg-gray-400 text-white hover:bg-gray-400 rounded-full px-3 font-semibold">Inativo</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button size="icon" variant="ghost" onClick={() => setPacoteEditando(p)}>
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-4 w-4 text-foreground" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => toggleAtivo(p)}>
-                        <Power className="h-4 w-4" />
+                        <Power className="h-4 w-4 text-foreground" />
                       </Button>
                       <Button size="icon" variant="ghost" className="text-[#DC2626]" onClick={() => setPacoteToDelete(p)}>
                         <Trash2 className="h-4 w-4" />

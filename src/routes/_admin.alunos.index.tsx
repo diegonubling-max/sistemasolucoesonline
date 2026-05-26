@@ -124,14 +124,14 @@ function AlunosList() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[80px] text-muted-foreground font-normal">CTR</TableHead>
-                <TableHead className="text-muted-foreground font-normal">Nome</TableHead>
-                <TableHead className="text-muted-foreground font-normal">E-mail</TableHead>
-                <TableHead className="text-muted-foreground font-normal">Telefone</TableHead>
-                <TableHead className="text-muted-foreground font-normal">Vendedora</TableHead>
-                <TableHead className="text-muted-foreground font-normal">Matrícula</TableHead>
-                <TableHead className="text-muted-foreground font-normal">Cadastro</TableHead>
-                <TableHead className="text-right text-muted-foreground font-normal">Ações</TableHead>
+                <TableHead className="w-[80px] text-muted-foreground font-normal text-xs uppercase tracking-wider">CTR</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Nome</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">E-mail</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Telefone</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Vendedora</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Matrícula</TableHead>
+                <TableHead className="text-muted-foreground font-normal text-xs uppercase tracking-wider">Cadastro</TableHead>
+                <TableHead className="text-right text-muted-foreground font-normal text-xs uppercase tracking-wider">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -145,11 +145,11 @@ function AlunosList() {
               {data?.rows.map((a) => (
                 <TableRow key={a.id} className="border-b border-gray-100 hover:bg-[#F9FAFB] transition-colors">
                   <TableCell>
-                    <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
+                    <Badge variant="outline" className="bg-gray-50 text-muted-foreground border-gray-200 font-normal">
                       #{a.ctr}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-normal text-foreground">{a.nome}</TableCell>
+                  <TableCell className="font-bold text-foreground">{a.nome}</TableCell>
                   <TableCell className="font-normal text-muted-foreground">{a.email}</TableCell>
                   <TableCell className="font-normal text-muted-foreground">{a.telefone}</TableCell>
                   <TableCell className="font-normal text-muted-foreground">{a.vendedora}</TableCell>
@@ -157,20 +157,20 @@ function AlunosList() {
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
                       <Badge className="bg-green-500 text-white hover:bg-green-600 rounded-full px-3">Matriculado</Badge>
                     ) : (
-                      <Badge className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full px-3">Pendente</Badge>
+                      <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 rounded-full px-3 font-semibold">Pendente</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-foreground font-normal">{formatDate(a.created_at)}</TableCell>
+                  <TableCell className="text-muted-foreground font-normal">{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button asChild size="icon" variant="ghost" title={Array.isArray(a.matriculas) && a.matriculas.length > 0 ? "Ver matrícula" : "Ver detalhes"}>
                         <Link to="/alunos/$id" params={{ id: a.id }}>
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4 text-foreground" />
                         </Link>
                       </Button>
                       <Button asChild size="icon" variant="ghost" title="Editar">
                         <Link to="/alunos/$id/editar" params={{ id: a.id }}>
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-4 w-4 text-foreground" />
                         </Link>
                       </Button>
                       <Button
@@ -179,7 +179,7 @@ function AlunosList() {
                         title={a.ativo ? "Desativar" : "Ativar"}
                         onClick={() => toggle.mutate({ id: a.id, ativo: a.ativo })}
                       >
-                        <Power className="h-4 w-4" />
+                        <Power className="h-4 w-4 text-foreground" />
                       </Button>
                       <Button
                         size="icon"
