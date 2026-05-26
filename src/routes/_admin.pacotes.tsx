@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Trash2, Power } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Power, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,6 +55,7 @@ function PacotesList() {
   const qc = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPacote, setEditingPacote] = useState<Pacote | null>(null);
+  const [pacoteToDelete, setPacoteToDelete] = useState<Pacote | null>(null);
 
   const { data: pacotes, isLoading } = useQuery({
     queryKey: ["pacotes"],
@@ -76,6 +94,32 @@ function PacotesList() {
       toast.success("Status atualizado");
       qc.invalidateQueries({ queryKey: ["pacotes"] });
     },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      // Verificar se o pacote está vinculado a alguma matrícula
+      const { data: matriculas, error: checkError } = await supabase
+        .from("matriculas")
+        .select("id")
+        .eq("pacote_id", id)
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      if (matriculas && matriculas.length > 0) {
+        throw new Error("Este pacote não pode ser excluído pois está vinculado a matrículas existentes");
+      }
+
+      const { error } = await supabase.from("pacotes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Pacote excluído com sucesso");
+      qc.invalidateQueries({ queryKey: ["pacotes"] });
+      setPacoteToDelete(null);
+    },
+    onError: (e: any) => toast.error(e.message),
   });
 
   return (
@@ -134,6 +178,14 @@ function PacotesList() {
                       <Button size="icon" variant="ghost" onClick={() => toggleMut.mutate({ id: p.id, ativo: p.ativo })}>
                         <Power className="h-4 w-4" />
                       </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-[#DC2626] hover:text-[#DC2626] hover:bg-red-50"
+                        onClick={() => setPacoteToDelete(p)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -155,6 +207,35 @@ function PacotesList() {
         onSubmit={(v: any) => upsertMut.mutate(v)}
         submitting={upsertMut.isPending}
       />
+
+      <AlertDialog open={!!pacoteToDelete} onOpenChange={(open) => !open && setPacoteToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-6 w-6 text-[#DC2626]" />
+              <AlertDialogTitle>Excluir pacote?</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              Você está prestes a excluir o pacote{" "}
+              <span className="font-bold text-foreground">[{pacoteToDelete?.nome}]</span>. Esta ação não pode ser
+              desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMut.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-[#DC2626] hover:bg-[#B91C1C] text-white"
+              disabled={deleteMut.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (pacoteToDelete) deleteMut.mutate(pacoteToDelete.id);
+              }}
+            >
+              {deleteMut.isPending ? "Excluindo..." : "Sim, excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
