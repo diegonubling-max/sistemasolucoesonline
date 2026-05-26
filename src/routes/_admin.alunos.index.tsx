@@ -75,27 +75,65 @@ function AlunosList() {
     mutationFn: async (student: { id: string; email: string }) => {
       if (!student.id) throw new Error("ID do aluno não fornecido");
 
-      // 1. Delete Auth user via Edge Function first
-      // We do this first so if it fails, the DB record still exists for retry
-      if (student.email) {
-        try {
-          const { error: authError } = await supabase.functions.invoke('manage-student-access', {
-            body: { action: 'delete_user', email: student.email }
-          });
-          if (authError) console.error('Error calling edge function:', authError);
-        } catch (err) {
-          console.error('Error deleting auth user:', err);
-        }
+      // 1. Obter os IDs das matrículas do aluno
+      const { data: matriculas, error: matriculasError } = await supabase
+        .from('matriculas')
+        .select('id')
+        .eq('aluno_id', student.id);
+      
+      if (matriculasError) throw matriculasError;
+      
+      const matriculaIds = matriculas?.map(m => m.id) || [];
+
+      if (matriculaIds.length > 0) {
+        // a. DELETE FROM parcelas
+        const { error: parcelasError } = await supabase
+          .from('parcelas')
+          .delete()
+          .in('matricula_id', matriculaIds);
+        if (parcelasError) throw parcelasError;
+
+        // b. DELETE FROM matricula_cursos
+        const { error: matCursosError } = await supabase
+          .from('matricula_cursos')
+          .delete()
+          .in('matricula_id', matriculaIds);
+        if (matCursosError) throw matCursosError;
+
+        // c. DELETE FROM matricula_pacotes
+        const { error: matPacotesError } = await supabase
+          .from('matricula_pacotes')
+          .delete()
+          .in('matricula_id', matriculaIds);
+        if (matPacotesError) throw matPacotesError;
+
+        // d. DELETE FROM matriculas
+        const { error: deleteMatriculasError } = await supabase
+          .from('matriculas')
+          .delete()
+          .eq('aluno_id', student.id);
+        if (deleteMatriculasError) throw deleteMatriculasError;
       }
 
-      // 2. Delete aluno record
-      // The WHERE clause is strictly using the provided student.id
+      // e. DELETE FROM alunos
       const { error: dbError } = await supabase
         .from('alunos')
         .delete()
         .eq('id', student.id);
       
       if (dbError) throw dbError;
+
+      // f. Remover usuário do Supabase Auth
+      if (student.email) {
+        try {
+          const { error: authError } = await supabase.functions.invoke('manage-student-access', {
+            body: { action: 'delete_user', email: student.email }
+          });
+          if (authError) console.error('Erro ao remover usuário do Auth:', authError);
+        } catch (err) {
+          console.error('Erro ao chamar Edge Function:', err);
+        }
+      }
     },
     onSuccess: () => {
       toast.success("Aluno excluído com sucesso");
@@ -104,11 +142,7 @@ function AlunosList() {
       setStudentToDelete(null);
     },
     onError: (e: Error) => {
-      if (e.message.includes("violates foreign key constraint")) {
-        toast.error("Não é possível excluir este aluno pois ele possui cursos ou matrículas vinculadas.");
-      } else {
-        toast.error(e.message);
-      }
+      toast.error(e.message);
     },
   });
 
