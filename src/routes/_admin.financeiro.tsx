@@ -54,7 +54,14 @@ function Financeiro() {
   });
 
   // Lowering status modal state
-  const [baixaModal, setBaixaModal] = useState<{ id: string; open: boolean; date: string } | null>(null);
+  const [baixaModal, setBaixaModal] = useState<{ 
+    id: string; 
+    open: boolean; 
+    date: string;
+    isCard?: boolean;
+    valor?: number;
+    parcelas?: number;
+  } | null>(null);
 
   const { data: globalStats } = useQuery({
     queryKey: ["financeiro-global-stats"],
