@@ -75,6 +75,12 @@ export function AlunoForm({
   onSubmit,
   submitting,
   submitLabel = "Salvar",
+  isEdit,
+}: {
+  initialValues?: any;
+  onSubmit: (values: any) => Promise<void> | void;
+  submitting?: boolean;
+  submitLabel?: string;
   isEdit?: boolean;
 }) {
   const form = useForm<any>({
