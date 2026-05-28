@@ -188,6 +188,16 @@ serve(async (req) => {
 
     if (!paymentResponse.ok) throw new Error(`Erro ao criar cobrança: ${paymentData.errors?.[0]?.description}`);
 
+    let paymentDetail = paymentData;
+    if (tipo === 'BOLETO') {
+      console.log("Buscando detalhes do boleto para obter código de barras...");
+      const detailResponse = await fetch(`${asaasBaseUrl}/payments/${paymentData.id}`, {
+        headers: { "access_token": asaas_api_key }
+      });
+      paymentDetail = await detailResponse.json();
+      console.log("DETALHE BOLETO:", JSON.stringify(paymentDetail));
+    }
+
     let pixData = null;
     if (tipo === 'PIX') {
       const pixResponse = await fetch(`${asaasBaseUrl}/payments/${paymentData.id}/pixQrCode`, {
@@ -198,7 +208,7 @@ serve(async (req) => {
 
     const updateParcela: any = {
       asaas_id: paymentData.id,
-      asaas_url: paymentData.bankSlipUrl || paymentData.invoiceUrl,
+      asaas_url: paymentDetail.bankSlipUrl || paymentDetail.invoiceUrl,
       forma_pagamento: tipo.toLowerCase()
     };
 
@@ -207,7 +217,8 @@ serve(async (req) => {
       updateParcela.asaas_pix_qrcode = pixData.encodedImage;
     } else if (tipo === 'BOLETO') {
       // Garantindo identificationField (47 dígitos)
-      updateParcela.asaas_barcode = paymentData.identificationField || paymentData.fullCycleCode;
+      updateParcela.asaas_barcode = paymentDetail.identificationField || paymentDetail.fullCycleCode;
+      console.log(`Salvando código de barras: ${updateParcela.asaas_barcode}`);
     }
 
     await supabaseClient.from("parcelas").update(updateParcela).eq("id", parcela_id);
