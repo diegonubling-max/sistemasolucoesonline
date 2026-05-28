@@ -44,6 +44,7 @@ function AlunoDetalhes() {
   const [showAsaasResultModal, setShowAsaasResultModal] = useState(false);
   const [asaasResult, setAsaasResult] = useState<any>(null);
   const [isGeneratingAsaas, setIsGeneratingAsaas] = useState(false);
+  const [isFetchingAsaas, setIsFetchingAsaas] = useState<string | null>(null);
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
   const [resumoBaixa, setResumoBaixa] = useState<{
     formaPagamento: string;
@@ -228,7 +229,7 @@ function AlunoDetalhes() {
         ...payment, 
         pixData,
         // Garantir que identificationField venha de onde quer que o Asaas tenha enviado
-        identificationField: payment.fullCycleCode || payment.identificationField || payment.nossoNumero,
+        identificationField: payment.identificationField || payment.fullCycleCode || payment.nossoNumero,
         bankSlipUrl: payment.bankSlipUrl || payment.invoiceUrl
       };
 
@@ -554,21 +555,34 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                                 size="sm"
                                 variant="outline"
                                 className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                                onClick={() => {
-                                  setAsaasResult({
-                                    id: p.asaas_id,
-                                    invoiceUrl: p.asaas_url,
-                                    bankSlipUrl: p.asaas_url,
-                                    pixData: p.asaas_pix_chave ? { payload: p.asaas_pix_chave, encodedImage: p.asaas_pix_qrcode } : null,
-                                    identificationField: p.asaas_barcode,
-                                    value: p.valor,
-                                    dueDate: p.data_vencimento,
-                                    description: p.descricao || `Parcela ${p.numero}`
-                                  });
-                                  setShowAsaasResultModal(true);
+                                onClick={async () => {
+                                  setIsFetchingAsaas(p.id);
+                                  try {
+                                    const response = await generateAsaasCobrar(p.id, null, 'fetch');
+                                    if (response.error) throw new Error(response.error);
+                                    
+                                    const { payment, pixData } = response;
+                                    setAsaasResult({
+                                      id: payment.id,
+                                      invoiceUrl: payment.invoiceUrl,
+                                      bankSlipUrl: payment.bankSlipUrl,
+                                      pixData,
+                                      identificationField: payment.identificationField || payment.fullCycleCode,
+                                      value: payment.value,
+                                      dueDate: payment.dueDate,
+                                      description: payment.description
+                                    });
+                                    setShowAsaasResultModal(true);
+                                    qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
+                                  } catch (error: any) {
+                                    toast.error("Erro ao carregar cobrança: " + error.message);
+                                  } finally {
+                                    setIsFetchingAsaas(null);
+                                  }
                                 }}
+                                disabled={isFetchingAsaas === p.id}
                               >
-                                <Receipt className="h-4 w-4 mr-1" />
+                                {isFetchingAsaas === p.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Receipt className="h-4 w-4 mr-1" />}
                                 Cobrança
                               </Button>
                             )}

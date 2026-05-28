@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const generateAsaasCobrar = async (parcelaId: string, tipo: 'PIX' | 'BOLETO') => {
+export const generateAsaasCobrar = async (parcelaId: string, tipo: 'PIX' | 'BOLETO' | null = null, action: 'create' | 'fetch' = 'create') => {
   const { data, error } = await supabase.functions.invoke('asaas-cobrar', {
-    body: { parcela_id: parcelaId, tipo }
+    body: { parcela_id: parcelaId, tipo, action }
   });
 
   if (error) {
