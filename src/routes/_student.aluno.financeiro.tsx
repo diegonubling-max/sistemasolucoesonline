@@ -52,7 +52,7 @@ function StudentFinance() {
       // 1. Find student by email
       const { data: aluno } = await supabase
         .from("alunos")
-        .select("id")
+        .select("id, asaas_customer_id")
         .eq("email", session?.user.email ?? "")
         .single();
       
