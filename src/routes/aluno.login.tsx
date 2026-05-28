@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, Lock, User, ArrowRight } from "lucide-react";
+import { Loader2, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,23 +83,28 @@ function AlunoLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-black tracking-tight">
-            <span className="text-[#1E3A5F]">Soluções</span> <span className="text-[#2D6ADF]">Online</span>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F5F5] px-4 py-8">
+      <div className="w-full max-w-[440px] flex flex-col gap-6">
+        {/* Card Superior Azul */}
+        <div className="bg-[#1E3A5F] rounded-[24px] pt-10 pb-8 px-6 text-center shadow-xl relative overflow-hidden">
+          <div className="flex justify-center mb-6">
+            <div className="bg-[#3D5270] p-4 rounded-2xl">
+              <GraduationCap className="h-10 w-10 text-white" />
+            </div>
+          </div>
+          
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2">
+            <span className="text-white">Soluções</span>{" "}
+            <span className="text-[#2ECC71]">Online</span>
           </h1>
-          <p className="text-gray-500 mt-2 font-medium">Área do Aluno</p>
+          <p className="text-white/70 font-medium text-lg">
+            Acesse sua área de estudos
+          </p>
         </div>
 
-        <Card className="border-none shadow-xl bg-white border border-gray-200">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-bold text-gray-900">Entrar</CardTitle>
-            <CardDescription className="text-gray-500">
-              Acesse sua plataforma de estudos
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Card Inferior Branco */}
+        <Card className="border-none shadow-xl bg-white rounded-[24px] overflow-hidden">
+          <CardContent className="p-8">
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
@@ -108,62 +113,54 @@ function AlunoLogin() {
               className="space-y-6"
             >
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-900">Seu CTR</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                  <Input 
-                    type="text" 
-                    placeholder="Ex: 1627" 
-                    value={ctr}
-                    onChange={(e) => setCtr(e.target.value)}
-                    className="pl-10 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 focus-visible:ring-1 focus-visible:ring-[#2D6ADF]"
-                    required
-                  />
-                </div>
+                <label className="text-sm font-bold text-gray-900 ml-1">Login (seu CTR)</label>
+                <Input 
+                  type="text" 
+                  placeholder="Digite seu CTR" 
+                  value={ctr}
+                  onChange={(e) => setCtr(e.target.value)}
+                  className="h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-[#1E3A5F] rounded-xl"
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-900">Sua senha</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                  <Input 
-                    type="password" 
-                    placeholder="Sua senha" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 focus-visible:ring-1 focus-visible:ring-[#2D6ADF]"
-                    required
-                  />
+                <label className="text-sm font-bold text-gray-900 ml-1">Senha</label>
+                <Input 
+                  type="password" 
+                  placeholder="" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-[#1E3A5F] rounded-xl"
+                  required
+                />
+              </div>
+
+              <div className="space-y-4">
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 text-lg font-bold bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white transition-all shadow-md rounded-xl"
+                  disabled={login.isPending}
+                >
+                  {login.isPending ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    "Entrar"
+                  )}
+                </Button>
+
+                <div className="text-center">
+                  <button 
+                    type="button"
+                    onClick={handleResetPassword}
+                    className="text-sm font-medium text-gray-500 hover:text-[#1E3A5F] transition-colors"
+                  >
+                    Esqueci minha senha
+                  </button>
                 </div>
               </div>
-
-              <div className="flex justify-end">
-                <button 
-                  type="button"
-                  onClick={handleResetPassword}
-                  className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                  Esqueci minha senha
-                </button>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full h-12 text-lg font-bold bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white transition-all shadow-md"
-                disabled={login.isPending}
-              >
-                {login.isPending ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  "Entrar"
-                )}
-              </Button>
             </form>
           </CardContent>
         </Card>
-        
-        <p className="text-center mt-8 text-sm text-gray-500">
-          Problemas com o acesso? Entre em contato com o suporte.
-        </p>
       </div>
     </div>
   );
