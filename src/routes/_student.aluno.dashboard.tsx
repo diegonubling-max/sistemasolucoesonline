@@ -395,7 +395,7 @@ function StudentDashboard() {
                         href={`https://wa.me/${whatsappSuporte}?text=${encodeURIComponent(
                           mensagemPadrao
                             .replace("[nome]", studentData?.nome || "")
-                            .replace("[ctr]", studentData?.ctr || "")
+                            .replace("[ctr]", String(studentData?.ctr || ""))
                         )}`} 
                         target="_blank" 
                         rel="noopener noreferrer"

@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { formatCurrency } from "@/lib/format";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
   head: () => ({ meta: [{ title: "Aluno — Soluções Online" }] }),
@@ -32,6 +33,8 @@ function AlunoDetalhes() {
   const [showPasswordResult, setShowPasswordResult] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
   const [showVitrineModal, setShowVitrineModal] = useState(false);
+  const [showEditVitrineModal, setShowEditVitrineModal] = useState(false);
+  const [editingVitrineItem, setEditingVitrineItem] = useState<any>(null);
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
   const [selectedParcelaValor, setSelectedParcelaValor] = useState<number>(0);
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
@@ -51,6 +54,10 @@ function AlunoDetalhes() {
   const [vitrinePrecoPix, setVitrinePrecoPix] = useState("");
   const [vitrinePrecoCartao, setVitrinePrecoCartao] = useState("");
   const [vitrineMaxParcelas, setVitrineMaxParcelas] = useState("12");
+  const [editVitrinePrecoPix, setEditVitrinePrecoPix] = useState("");
+  const [editVitrinePrecoCartao, setEditVitrinePrecoCartao] = useState("");
+  const [editVitrineMaxParcelas, setEditVitrineMaxParcelas] = useState("12");
+  const [editVitrineAtivo, setEditVitrineAtivo] = useState(true);
 
   const darBaixa = useMutation({
     mutationFn: async (data: {
@@ -169,6 +176,29 @@ function AlunoDetalhes() {
     },
     onSuccess: () => {
       toast.success("Curso removido da vitrine!");
+      qc.invalidateQueries({ queryKey: ["aluno-vitrine", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateVitrine = useMutation({
+    mutationFn: async () => {
+      if (!editingVitrineItem) return;
+      const { error } = await supabase
+        .from("cursos_vitrine")
+        .update({
+          preco_pix: Number(editVitrinePrecoPix),
+          preco_cartao: Number(editVitrinePrecoCartao),
+          max_parcelas: Number(editVitrineMaxParcelas),
+          ativo: editVitrineAtivo,
+        })
+        .eq("id", editingVitrineItem.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Vitrine atualizada com sucesso!");
+      setShowEditVitrineModal(false);
+      setEditingVitrineItem(null);
       qc.invalidateQueries({ queryKey: ["aluno-vitrine", id] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -611,24 +641,42 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                       <div className="flex items-center gap-2">
                         <span className="text-lg">📚</span>
                         <h3 className="font-bold text-gray-900">{(item.cursos as any)?.nome}</h3>
+                        {!item.ativo && <Badge variant="secondary" className="text-[10px] h-5">Inativo</Badge>}
                       </div>
                       <p className="text-sm text-muted-foreground">
                         PIX: <span className="font-semibold">{formatCurrency(item.preco_pix)}</span> | 
                         Cartão: <span className="font-semibold">até {item.max_parcelas}x</span>
                       </p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => {
-                        if (confirm("Deseja remover este curso da vitrine?")) {
-                          removeFromVitrine.mutate(item.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                        onClick={() => {
+                          setEditingVitrineItem(item);
+                          setEditVitrinePrecoPix(item.preco_pix?.toString() || "");
+                          setEditVitrinePrecoCartao(item.preco_cartao?.toString() || "");
+                          setEditVitrineMaxParcelas(item.max_parcelas?.toString() || "12");
+                          setEditVitrineAtivo(item.ativo ?? true);
+                          setShowEditVitrineModal(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          if (confirm("Deseja remover este curso da vitrine?")) {
+                            removeFromVitrine.mutate(item.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -703,6 +751,80 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
             >
               {addToVitrine.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showEditVitrineModal} onOpenChange={setShowEditVitrineModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Vitrine</DialogTitle>
+            <DialogDescription>
+              Ajuste as configurações do curso na vitrine deste aluno.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Curso</Label>
+              <Input 
+                value={(editingVitrineItem?.cursos as any)?.nome || ""} 
+                disabled 
+                className="bg-muted"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Preço PIX</Label>
+                <Input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={editVitrinePrecoPix}
+                  onChange={(e) => setEditVitrinePrecoPix(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Preço Cartão</Label>
+                <Input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={editVitrinePrecoCartao}
+                  onChange={(e) => setEditVitrinePrecoCartao(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Máx. parcelas</Label>
+              <select 
+                className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                value={editVitrineMaxParcelas}
+                onChange={(e) => setEditVitrineMaxParcelas(e.target.value)}
+              >
+                {[...Array(12)].map((_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}x</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium">Status do Curso</Label>
+                <p className="text-xs text-muted-foreground">
+                  {editVitrineAtivo ? "Visível na vitrine do aluno" : "Oculto na vitrine do aluno"}
+                </p>
+              </div>
+              <Switch 
+                checked={editVitrineAtivo}
+                onCheckedChange={setEditVitrineAtivo}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditVitrineModal(false)}>Cancelar</Button>
+            <Button 
+              onClick={() => updateVitrine.mutate()}
+              disabled={updateVitrine.isPending || !editVitrinePrecoPix || !editVitrinePrecoCartao}
+            >
+              {updateVitrine.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar alterações
             </Button>
           </DialogFooter>
         </DialogContent>
