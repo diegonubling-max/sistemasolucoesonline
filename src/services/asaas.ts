@@ -1,49 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const getAsaasConfig = async () => {
-  const { data, error } = await supabase
-    .from('configuracoes')
-    .select('chave, valor')
-    .in('chave', ['asaas_api_key', 'asaas_ambiente']);
-  
-  if (error) {
-    console.error('Erro ao buscar configurações do Asaas:', error);
-    throw new Error('Falha ao carregar configurações de pagamento.');
-  }
-
-  const config = Object.fromEntries(
-    data.map(d => [d.chave, d.valor])
-  );
-  
-  const baseUrl = config.asaas_ambiente === 'sandbox' 
-    ? 'https://sandbox.asaas.com/api/v3'
-    : 'https://api.asaas.com/api/v3';
-    
-  return { apiKey: config.asaas_api_key, baseUrl };
-};
-
-export const asaasRequest = async (path: string, options: RequestInit = {}) => {
-  const { apiKey, baseUrl } = await getAsaasConfig();
-  
-  if (!apiKey) {
-    throw new Error('Chave de API do Asaas não configurada.');
-  }
-
-  const response = await fetch(`${baseUrl}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'access_token': apiKey,
-      ...options.headers,
-    },
+export const asaasRequest = async (path: string, options: any = {}) => {
+  const { data, error } = await supabase.functions.invoke('asaas-api', {
+    body: {
+      path,
+      method: options.method || 'GET',
+      body: options.body ? JSON.parse(options.body) : undefined
+    }
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ errors: [{ description: 'Erro desconhecido na API do Asaas' }] }));
-    throw new Error(errorData.errors?.[0]?.description || 'Erro na requisição ao Asaas');
+  if (error) {
+    console.error('Erro na chamada da Edge Function Asaas:', error);
+    throw new Error(error.message || 'Erro na comunicação com o servidor de pagamentos');
   }
 
-  return response.json();
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  return data;
 };
 
 export const createOrGetAsaasCustomer = async (aluno: { nome: string; cpf: string; email: string; telefone: string; id: string }) => {
