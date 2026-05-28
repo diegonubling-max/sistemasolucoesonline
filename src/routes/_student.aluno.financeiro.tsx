@@ -340,7 +340,7 @@ function StudentFinance() {
                                       variant="outline" 
                                       size="sm" 
                                       className="h-8 border-green-200 text-green-600 hover:bg-green-50"
-                                      onClick={() => setShowPixDialog({ qrcode: parcela.asaas_pix_qrcode, key: parcela.asaas_pix_chave })}
+                                      onClick={() => setShowPixDialog({ qrcode: parcela.asaas_pix_qrcode || "", key: parcela.asaas_pix_chave || "" })}
                                     >
                                       <CreditCard className="h-3 w-3 mr-1" /> Ver QR Code
                                     </Button>
