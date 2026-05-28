@@ -289,6 +289,7 @@ function StudentProfile() {
               </Button>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
     </div>
