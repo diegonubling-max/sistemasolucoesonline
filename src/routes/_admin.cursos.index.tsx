@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Power, ListVideo, Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Power, ListVideo, Trash2, AlertTriangle, Loader2, Folder } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,6 @@ function CursosList() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
-  const [selectedSegmento, setSelectedSegmento] = useState<string | null>(null);
   const [cursoToDelete, setCursoToDelete] = useState<{ id: string; nome: string } | null>(null);
 
   const { data: segmentos } = useQuery({
@@ -48,19 +47,40 @@ function CursosList() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["cursos", search, selectedSegmento],
+    queryKey: ["cursos", search],
     queryFn: async () => {
       let q = supabase
         .from("cursos")
         .select("id, nome, descricao, ativo, created_at, segmento_id, segmentos(nome), aulas(count)")
-        .order("created_at", { ascending: false });
+        .order("nome", { ascending: true });
+      
       if (search) q = q.ilike("nome", `%${search}%`);
-      if (selectedSegmento) q = q.eq("segmento_id", selectedSegmento);
+      
       const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
   });
+
+  const groupedCursos = (data || []).reduce((acc: any, curso: any) => {
+    const segmentoId = curso.segmento_id || "outros";
+    const segmentoNome = curso.segmentos?.nome || "Outros";
+    
+    if (!acc[segmentoId]) {
+      acc[segmentoId] = {
+        id: segmentoId,
+        nome: segmentoNome,
+        cursos: []
+      };
+    }
+    acc[segmentoId].cursos.push(curso);
+    return acc;
+  }, {});
+
+  const orderedGroups = [
+    ...(segmentos || []).map(s => groupedCursos[s.id]).filter(Boolean),
+    groupedCursos["outros"]
+  ].filter(Boolean);
 
   const toggle = useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
@@ -119,111 +139,96 @@ function CursosList() {
                 className="pl-9"
               />
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={selectedSegmento === null ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedSegmento(null)}
-              >
-                Todos
-              </Button>
-              {segmentos?.map((s) => (
-                <Button
-                  key={s.id}
-                  variant={selectedSegmento === s.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedSegmento(s.id)}
-                >
-                  {s.nome}
-                </Button>
-              ))}
-            </div>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Segmento</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Aulas</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Cadastro</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                    Carregando...
-                  </TableCell>
-                </TableRow>
-              )}
-              {data?.map((c: any) => {
-                const count = Array.isArray(c.aulas) ? (c.aulas[0]?.count ?? 0) : 0;
-                const segmentoNome = Array.isArray(c.segmentos) ? (c.segmentos[0]?.nome || "—") : (c.segmentos?.nome || "—");
-                
-                return (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.nome}</TableCell>
-                    <TableCell>{segmentoNome}</TableCell>
-                    <TableCell className="max-w-md truncate text-muted-foreground">
-                      {c.descricao || "—"}
-                    </TableCell>
-                    <TableCell>{count}</TableCell>
-                    <TableCell>
-                      {c.ativo ? (
-                        <Badge className="bg-accent text-accent-foreground hover:bg-accent">Ativo</Badge>
-                      ) : (
-                        <Badge variant="secondary">Inativo</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>{formatDate(c.created_at)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title={c.ativo ? "Desativar" : "Ativar"}
-                          onClick={() => toggle.mutate({ id: c.id, ativo: c.ativo })}
-                        >
-                          <Power className={`h-4 w-4 ${c.ativo ? "text-green-600" : "text-gray-400"}`} />
-                        </Button>
-                        <Button asChild size="icon" variant="ghost" title="Gerenciar aulas">
-                          <Link to="/cursos/$id/aulas" params={{ id: c.id }}>
-                            <ListVideo className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button asChild size="icon" variant="ghost" title="Editar">
-                          <Link to="/cursos/$id/editar" params={{ id: c.id }}>
-                            <Pencil className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          title="Excluir"
-                          onClick={() => setCursoToDelete({ id: c.id, nome: c.nome })}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {!isLoading && data?.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Nenhum curso cadastrado.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <div className="space-y-8">
+            {isLoading && (
+              <div className="text-center py-6 text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Carregando...
+              </div>
+            )}
+
+            {!isLoading && orderedGroups.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
+                Nenhum curso cadastrado.
+              </div>
+            )}
+
+            {orderedGroups.map((group) => (
+              <div key={group.id} className="border rounded-lg overflow-hidden">
+                <div className="bg-gray-100 px-4 py-3 flex items-center justify-between border-b">
+                  <div className="flex items-center gap-2 font-semibold text-gray-700">
+                    <Folder className="h-4 w-4 text-gray-500" />
+                    <span>{group.nome}</span>
+                    <span className="text-sm font-normal text-gray-500">
+                      ({group.cursos.length} {group.cursos.length === 1 ? "curso" : "cursos"})
+                    </span>
+                  </div>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-white hover:bg-white">
+                      <TableHead>Nome</TableHead>
+                      <TableHead className="w-24">Aulas</TableHead>
+                      <TableHead className="w-32">Status</TableHead>
+                      <TableHead className="text-right w-40">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.cursos.map((c: any) => {
+                      const count = Array.isArray(c.aulas) ? (c.aulas[0]?.count ?? 0) : 0;
+                      
+                      return (
+                        <TableRow key={c.id} className="bg-white">
+                          <TableCell className="font-medium">{c.nome}</TableCell>
+                          <TableCell>{count}</TableCell>
+                          <TableCell>
+                            {c.ativo ? (
+                              <Badge className="bg-accent text-accent-foreground hover:bg-accent">Ativo</Badge>
+                            ) : (
+                              <Badge variant="secondary">Inativo</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                title={c.ativo ? "Desativar" : "Ativar"}
+                                onClick={() => toggle.mutate({ id: c.id, ativo: c.ativo })}
+                              >
+                                <Power className={`h-4 w-4 ${c.ativo ? "text-green-600" : "text-gray-400"}`} />
+                              </Button>
+                              <Button asChild size="icon" variant="ghost" title="Gerenciar aulas">
+                                <Link to="/cursos/$id/aulas" params={{ id: c.id }}>
+                                  <ListVideo className="h-4 w-4" />
+                                </Link>
+                              </Button>
+                              <Button asChild size="icon" variant="ghost" title="Editar">
+                                <Link to="/cursos/$id/editar" params={{ id: c.id }}>
+                                  <Pencil className="h-4 w-4" />
+                                </Link>
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                title="Excluir"
+                                onClick={() => setCursoToDelete({ id: c.id, nome: c.nome })}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
