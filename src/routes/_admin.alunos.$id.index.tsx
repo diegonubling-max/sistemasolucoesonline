@@ -827,6 +827,7 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
             </Button>
           </DialogFooter>
         </DialogContent>
+      </Dialog>
     </div>
   );
 }
