@@ -349,34 +349,34 @@ function StudentDashboard() {
           
           {selectedVitrine && (
             <div className="space-y-6 py-4">
-              <div className=\"text-center space-y-2\">
-                <h3 className=\"text-xl font-bold text-gray-900\">{selectedVitrine.cursos?.nome}</h3>
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-bold text-gray-900">{selectedVitrine.cursos?.nome}</h3>
               </div>
 
-              <div className=\"bg-gray-50 p-6 rounded-xl space-y-4 border border-gray-100\">
-                <div className=\"flex items-center justify-between\">
-                  <div className=\"flex items-center gap-3\">
-                    <div className=\"p-2 bg-blue-100 rounded-lg text-blue-600\">
-                      <Smartphone className=\"h-5 w-5\" />
+              <div className="bg-gray-50 p-6 rounded-xl space-y-4 border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                      <Smartphone className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className=\"text-xs text-gray-500 uppercase font-bold tracking-wider\">Preço PIX</p>
-                      <p className=\"text-lg font-bold text-gray-900\">{formatCurrency(selectedVitrine.preco_pix)}</p>
+                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Preço PIX</p>
+                      <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedVitrine.preco_pix)}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className=\"flex items-center justify-between pt-2 border-t\">
-                  <div className=\"flex items-center gap-3\">
-                    <div className=\"p-2 bg-purple-100 rounded-lg text-purple-600\">
-                      <Smartphone className=\"h-5 w-5\" />
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                      <Smartphone className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className=\"text-xs text-gray-500 uppercase font-bold tracking-wider\">Preço Cartão</p>
-                      <p className=\"text-lg font-bold text-gray-900\">
+                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Preço Cartão</p>
+                      <p className="text-lg font-bold text-gray-900">
                         {formatCurrency(selectedVitrine.preco_cartao)}
                       </p>
-                      <p className=\"text-sm text-purple-600 font-medium\">
+                      <p className="text-sm text-purple-600 font-medium">
                         em até {selectedVitrine.max_parcelas}x de {formatCurrency(selectedVitrine.preco_cartao / selectedVitrine.max_parcelas)}
                       </p>
                     </div>
