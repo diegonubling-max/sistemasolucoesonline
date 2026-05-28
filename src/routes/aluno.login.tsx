@@ -109,8 +109,8 @@ function AlunoLogin() {
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2">
-            <span className="text-white">Soluções</span>{" "}
-            <span className="text-[#2ECC71]">Online</span>
+            <span className="text-white">{nomeEscola.split(' ')[0]}</span>{" "}
+            <span className="text-[#2ECC71]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
           </h1>
           <p className="text-white/70 font-medium text-lg">
             Acesse sua área de estudos
