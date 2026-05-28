@@ -12,6 +12,17 @@ serve(async (req) => {
   }
 
   try {
+    const webhookToken = Deno.env.get("ASAAS_WEBHOOK_TOKEN");
+    const receivedToken = req.headers.get("asaas-access-token");
+
+    if (webhookToken && receivedToken !== webhookToken) {
+      console.error("Token de webhook inválido");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+      });
+    }
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
