@@ -175,7 +175,7 @@ serve(async (req) => {
     });
 
     const paymentData = await paymentResponse.json();
-    console.log("Resposta cobrança:", JSON.stringify(paymentData));
+    console.log("RESPOSTA COMPLETA ASAAS:", JSON.stringify(paymentData, null, 2));
 
     if (!paymentResponse.ok) {
       throw new Error(`Erro ao criar cobrança no Asaas: ${paymentData.errors?.[0]?.description || paymentResponse.statusText}`);
@@ -196,7 +196,7 @@ serve(async (req) => {
     console.log("Atualizando parcela no banco de dados...");
     const updateParcela: any = {
       asaas_id: paymentData.id,
-      asaas_url: paymentData.invoiceUrl || paymentData.bankSlipUrl,
+      asaas_url: paymentData.bankSlipUrl || paymentData.invoiceUrl,
       forma_pagamento: tipo.toLowerCase()
     };
 
@@ -204,7 +204,8 @@ serve(async (req) => {
       updateParcela.asaas_pix_chave = pixData.payload;
       updateParcela.asaas_pix_qrcode = pixData.encodedImage;
     } else if (tipo === 'BOLETO') {
-      updateParcela.asaas_barcode = paymentData.identificationField || paymentData.nossoNumero;
+      // Priorizando fullCycleCode se existir, senão identificationField (linha digitável)
+      updateParcela.asaas_barcode = paymentData.fullCycleCode || paymentData.identificationField || paymentData.nossoNumero;
     }
 
     const { error: updateParcelaError } = await supabaseClient

@@ -222,8 +222,17 @@ function AlunoDetalhes() {
       }
 
       const { payment, pixData } = response;
+      
+      // Mapear campos para garantir que o modal exiba corretamente
+      const result = { 
+        ...payment, 
+        pixData,
+        // Garantir que identificationField venha de onde quer que o Asaas tenha enviado
+        identificationField: payment.fullCycleCode || payment.identificationField || payment.nossoNumero,
+        bankSlipUrl: payment.bankSlipUrl || payment.invoiceUrl
+      };
 
-      setAsaasResult({ ...payment, pixData });
+      setAsaasResult(result);
       setShowAsaasModal(false);
       setShowAsaasResultModal(true);
       qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
