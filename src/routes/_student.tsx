@@ -87,6 +87,17 @@ function StudentLayout() {
           setTema(aluno.tema);
         }
       }
+      // Get School Name
+      const { data: configNome } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'nome_escola')
+        .single();
+      
+      if (configNome?.valor) {
+        setNomeEscola(configNome.valor);
+      }
+
       setIsVerifying(false);
     }
 
