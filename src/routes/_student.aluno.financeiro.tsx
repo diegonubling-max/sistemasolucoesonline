@@ -54,6 +54,56 @@ export const Route = createFileRoute("/_student/aluno/financeiro")({
 function StudentFinance() {
   const { session } = useAuth();
   const { isDark } = useStudentTheme();
+  const queryClient = useQueryClient();
+  const [showPixDialog, setShowPixDialog] = useState<{ qrcode: string, key: string } | null>(null);
+
+  const generatePaymentMutation = useMutation({
+    mutationFn: async ({ parcela, type }: { parcela: any, type: 'PIX' | 'BOLETO' }) => {
+      if (!financeData?.aluno?.asaas_customer_id) {
+        throw new Error("ID do cliente Asaas não encontrado. Verifique seu cadastro.");
+      }
+
+      const response = await createAsaasPayment({
+        customer: financeData.aluno.asaas_customer_id,
+        billingType: type,
+        value: Number(parcela.valor),
+        dueDate: parcela.data_vencimento,
+        description: parcela.descricao || (parcela.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${parcela.numero}`),
+        externalReference: parcela.id,
+      });
+
+      const updateData: any = {
+        asaas_id: response.payment.id,
+        asaas_url: response.payment.bankSlipUrl || response.payment.invoiceUrl,
+      };
+
+      if (type === 'PIX' && response.pixData) {
+        updateData.asaas_pix_qrcode = response.pixData.encodedImage;
+        updateData.asaas_pix_chave = response.pixData.payload;
+      } else if (type === 'BOLETO') {
+        updateData.asaas_barcode = response.payment.identificationField;
+      }
+
+      const { error } = await supabase
+        .from('parcelas')
+        .update(updateData)
+        .eq('id', parcela.id);
+
+      if (error) throw error;
+      
+      return { ...updateData, type };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["student-finance"] });
+      toast.success("Cobrança gerada com sucesso!");
+      if (data.type === 'PIX' && data.asaas_pix_qrcode) {
+        setShowPixDialog({ qrcode: data.asaas_pix_qrcode, key: data.asaas_pix_chave });
+      }
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao gerar cobrança: ${error.message}`);
+    }
+  });
 
   const { data: financeData, isLoading } = useQuery({
     queryKey: ["student-finance", session?.user.email],
