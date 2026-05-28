@@ -66,12 +66,12 @@ function StudentDashboard() {
   });
 
   const { data: studentData } = useQuery({
-    queryKey: [\"student-data\", session?.user.email],
+    queryKey: ["student-data", session?.user.email],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from(\"alunos\")
-        .select(\"id, nome, ctr\")
-        .eq(\"email\", session?.user.email ?? \"\")
+        .from("alunos")
+        .select("id, nome, ctr")
+        .eq("email", session?.user.email ?? "")
         .single();
       if (error) throw error;
       return data;
@@ -80,26 +80,26 @@ function StudentDashboard() {
   });
 
   const { data: configs } = useQuery({
-    queryKey: [\"student-configs\"],
+    queryKey: ["student-configs"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from(\"configuracoes\")
-        .select(\"chave, valor\");
+        .from("configuracoes")
+        .select("chave, valor");
       if (error) throw error;
       return data;
     },
   });
 
-  const whatsappSuporte = configs?.find(c => c.chave === \"whatsapp_suporte\")?.valor || \"\";
-  const mensagemPadrao = configs?.find(c => c.chave === \"mensagem_whatsapp\")?.valor || \"\";
+  const whatsappSuporte = configs?.find(c => c.chave === "whatsapp_suporte")?.valor || "";
+  const mensagemPadrao = configs?.find(c => c.chave === "mensagem_whatsapp")?.valor || "";
 
   const { data: vitrine } = useQuery({
-    queryKey: [\"student-vitrine\", session?.user.email],
+    queryKey: ["student-vitrine", session?.user.email],
     queryFn: async () => {
       if (!studentData?.id) return [];
 
       const { data, error } = await supabase
-        .from(\"cursos_vitrine\")
+        .from("cursos_vitrine")
         .select(`
           *,
           cursos (
@@ -108,8 +108,8 @@ function StudentDashboard() {
             thumbnail_url
           )
         `)
-        .eq(\"aluno_id\", studentData.id)
-        .eq(\"ativo\", true);
+        .eq("aluno_id", studentData.id)
+        .eq("ativo", true);
 
       if (error) throw error;
       return data ?? [];
@@ -384,23 +384,23 @@ function StudentDashboard() {
                 </div>
               </div>
 
-              <div className=\"space-y-4 text-center\">
+              <div className="space-y-4 text-center">
                 {!whatsappSuporte ? (
-                  <p className=\"text-sm text-red-500 font-medium\">Suporte temporariamente indisponível</p>
+                  <p className="text-sm text-red-500 font-medium">Suporte temporariamente indisponível</p>
                 ) : (
                   <>
-                    <p className=\"text-sm text-gray-600\">Para adquirir este curso entre em contato conosco!</p>
-                    <Button className=\"w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2\" asChild>
+                    <p className="text-sm text-gray-600">Para adquirir este curso entre em contato conosco!</p>
+                    <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2" asChild>
                       <a 
                         href={`https://wa.me/${whatsappSuporte}?text=${encodeURIComponent(
                           mensagemPadrao
-                            .replace(\"[nome]\", studentData?.nome || \"\")
-                            .replace(\"[ctr]\", studentData?.ctr || \"\")
+                            .replace("[nome]", studentData?.nome || "")
+                            .replace("[ctr]", studentData?.ctr || "")
                         )}`} 
-                        target=\"_blank\" 
-                        rel=\"noopener noreferrer\"
+                        target="_blank" 
+                        rel="noopener noreferrer"
                       >
-                        <Smartphone className=\"h-4 w-4\" />
+                        <Smartphone className="h-4 w-4" />
                         💬 Falar no WhatsApp
                       </a>
                     </Button>
