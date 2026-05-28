@@ -232,6 +232,10 @@ function AlunoDetalhes() {
         });
       }
 
+      if (!customerId) {
+        throw new Error("Não foi possível obter ou criar o cliente no Asaas.");
+      }
+
       const { payment, pixData } = await createAsaasPayment({
         customer: customerId,
         billingType: type,
