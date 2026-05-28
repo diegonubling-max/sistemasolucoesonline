@@ -19,6 +19,20 @@ export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
   const [recreating, setRecreating] = useState(false);
+  const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+
+  useQuery({
+    queryKey: ["admin-sidebar-config"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'nome_escola')
+        .single();
+      if (data?.valor) setNomeEscola(data.valor);
+      return data;
+    },
+  });
 
   const isActive = (url: string) => {
     if (url === "/") return path === "/";
