@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { formatCurrency } from "@/lib/format";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
   head: () => ({ meta: [{ title: "Aluno — Soluções Online" }] }),
