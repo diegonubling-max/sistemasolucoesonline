@@ -56,7 +56,13 @@ function EditarCurso() {
         <p className="text-muted-foreground">Carregando...</p>
       ) : (
         <CursoForm
-          initialValues={{ nome: curso.nome, descricao: curso.descricao ?? "", ativo: curso.ativo }}
+          initialValues={{ 
+            nome: curso.nome, 
+            segmento_id: curso.segmento_id || "", 
+            descricao: curso.descricao ?? "", 
+            thumbnail_url: curso.thumbnail_url,
+            ativo: curso.ativo 
+          }}
           submitting={mut.isPending}
           submitLabel="Salvar alterações"
           onSubmit={(v) => mut.mutateAsync(v)}
