@@ -1,6 +1,23 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export const generateAsaasCobrar = async (parcelaId: string, tipo: 'PIX' | 'BOLETO') => {
+  const { data, error } = await supabase.functions.invoke('asaas-cobrar', {
+    body: { parcela_id: parcelaId, tipo }
+  });
+
+  if (error) {
+    console.error('Erro ao gerar cobrança via Edge Function:', error);
+    throw new Error(error.message || 'Erro ao gerar cobrança no Asaas');
+  }
+
+  return data;
+};
+
+// Mantendo para compatibilidade ou se necessário para outras partes do sistema
+// Mas recomendando o uso da Edge Function asaas-cobrar
 export const asaasRequest = async (path: string, options: any = {}) => {
+  // Se asaas-api não existe, isso vai falhar. 
+  // O usuário disse que só existe asaas-webhook e manage-student-access.
   const { data, error } = await supabase.functions.invoke('asaas-api', {
     body: {
       path,
@@ -10,20 +27,16 @@ export const asaasRequest = async (path: string, options: any = {}) => {
   });
 
   if (error) {
-    console.error('Erro na chamada da Edge Function Asaas:', error);
     throw new Error(error.message || 'Erro na comunicação com o servidor de pagamentos');
-  }
-
-  if (data.error) {
-    throw new Error(data.error);
   }
 
   return data;
 };
 
 export const createOrGetAsaasCustomer = async (aluno: { nome: string; cpf: string; email: string; telefone: string; id: string }) => {
+  // Note: This still relies on asaas-api which might not exist.
+  // Ideally, we should migrate everything to edge functions or a single gateway.
   try {
-    // Primeiro tenta buscar por CPF
     const existing = await asaasRequest(`/customers?cpfCnpj=${aluno.cpf.replace(/\D/g, '')}`);
     if (existing.totalCount > 0) {
       const customerId = existing.data[0].id;
@@ -31,7 +44,6 @@ export const createOrGetAsaasCustomer = async (aluno: { nome: string; cpf: strin
       return customerId;
     }
 
-    // Se não existir, cria
     const customer = await asaasRequest('/customers', {
       method: 'POST',
       body: JSON.stringify({

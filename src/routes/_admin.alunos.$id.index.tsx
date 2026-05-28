@@ -20,7 +20,7 @@ import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
-import { createAsaasPayment, createOrGetAsaasCustomer } from "@/services/asaas";
+import { generateAsaasCobrar } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
@@ -215,49 +215,13 @@ function AlunoDetalhes() {
     if (!selectedParcela || !id) return;
     setIsGeneratingAsaas(true);
     try {
-      let customerId = aluno?.asaas_customer_id;
+      const response = await generateAsaasCobrar(selectedParcela.id, type);
 
-      if (!customerId) {
-        if (!aluno?.cpf || !aluno?.email || !aluno?.nome || !aluno?.telefone) {
-          throw new Error("Cadastro do aluno incompleto (Nome, CPF, Telefone e E-mail são obrigatórios para o Asaas).");
-        }
-        
-        toast.info("Configurando cliente no Asaas...");
-        customerId = await createOrGetAsaasCustomer({
-          id: aluno.id,
-          nome: aluno.nome,
-          cpf: aluno.cpf,
-          email: aluno.email,
-          telefone: aluno.telefone
-        });
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      if (!customerId) {
-        throw new Error("Não foi possível obter ou criar o cliente no Asaas.");
-      }
-
-      const { payment, pixData } = await createAsaasPayment({
-        customer: customerId,
-        billingType: type,
-        value: Number(selectedParcela.valor),
-        dueDate: selectedParcela.data_vencimento,
-        description: selectedParcela.descricao || `Parcela ${selectedParcela.numero}`,
-        externalReference: selectedParcela.id,
-      });
-
-      // Update parcela with asaas info
-      const { error: updateError } = await supabase
-        .from('parcelas')
-        .update({
-          asaas_id: payment.id,
-          asaas_url: payment.bankSlipUrl || payment.invoiceUrl,
-          asaas_pix_chave: pixData?.payload,
-          asaas_pix_qrcode: pixData?.encodedImage,
-          asaas_barcode: payment.identificationField
-        })
-        .eq('id', selectedParcela.id);
-
-      if (updateError) throw updateError;
+      const { payment, pixData } = response;
 
       setAsaasResult({ ...payment, pixData });
       setShowAsaasModal(false);

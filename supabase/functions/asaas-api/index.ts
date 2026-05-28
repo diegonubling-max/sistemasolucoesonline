@@ -2,98 +2,63 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    // 1. Get Asaas config from database
-    const { data: configs, error: configError } = await supabaseClient
-      .from('configuracoes')
-      .select('chave, valor')
-      .in('chave', ['asaas_api_key', 'asaas_ambiente'])
+    const { path, method, body } = await req.json();
 
-    if (configError || !configs) {
-      console.error('Error fetching Asaas config:', configError)
-      throw new Error('Could not fetch Asaas configuration')
-    }
+    // Buscar configurações
+    const { data: configs } = await supabaseClient
+      .from("configuracoes")
+      .select("chave, valor")
+      .in("chave", ["asaas_api_key", "asaas_ambiente"]);
 
-    const configMap = Object.fromEntries(configs.map(c => [c.chave, c.valor]))
-    const apiKey = configMap.asaas_api_key
-    const ambiente = configMap.asaas_ambiente
+    const asaas_api_key = configs?.find(c => c.chave === "asaas_api_key")?.valor;
+    const asaas_ambiente = configs?.find(c => c.chave === "asaas_ambiente")?.valor || "sandbox";
 
-    if (!apiKey) {
-      throw new Error('Asaas API key not found in configuration')
-    }
+    if (!asaas_api_key) throw new Error("API Key do Asaas não configurada");
 
-    const baseUrl = ambiente === 'sandbox' 
-      ? 'https://sandbox.asaas.com/api/v3'
-      : 'https://api.asaas.com/v3'
+    const asaasBaseUrl = asaas_ambiente === "producao" 
+      ? "https://api.asaas.com/v1" 
+      : "https://sandbox.asaas.com/api/v1";
 
-    // 2. Parse request body
-    let requestData;
-    try {
-      requestData = await req.json();
-    } catch (e) {
-      console.error('Error parsing request body:', e);
-      throw new Error('Invalid JSON in request body');
-    }
+    const url = `${asaasBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 
-    const { path, method, body } = requestData;
+    console.log(`Proxying ${method} request to Asaas: ${url}`);
 
-    console.log(`Forwarding ${method} request to Asaas: ${path}`)
-
-    // 3. Proxy request to Asaas
-    const response = await fetch(`${baseUrl}${path}`, {
+    const response = await fetch(url, {
       method: method || 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'access_token': apiKey,
+        "Content-Type": "application/json",
+        "access_token": asaas_api_key
       },
-      body: body ? JSON.stringify(body) : undefined,
-    })
+      body: body ? JSON.stringify(body) : undefined
+    });
 
-    const responseText = await response.text();
-    let data;
-    try {
-      data = responseText ? JSON.parse(responseText) : {};
-    } catch (e) {
-      console.error('Error parsing Asaas response as JSON:', responseText);
-      throw new Error(`Asaas returned non-JSON response: ${responseText.substring(0, 100)}`);
-    }
-
-    if (!response.ok) {
-      console.error('Asaas API error:', data)
-      return new Response(JSON.stringify({ 
-        error: data.errors?.[0]?.description || 'Error from Asaas API',
-        details: data 
-      }), {
-        status: response.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    const data = await response.json();
 
     return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: response.status,
+    });
 
   } catch (error: any) {
-    console.error('Edge Function error:', error.message)
+    console.error("Erro na asaas-api:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
   }
-})
+});
