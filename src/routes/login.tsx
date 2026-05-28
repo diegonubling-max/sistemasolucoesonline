@@ -19,6 +19,19 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+
+  useEffect(() => {
+    async function fetchConfig() {
+      const { data } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'nome_escola')
+        .single();
+      if (data?.valor) setNomeEscola(data.valor);
+    }
+    fetchConfig();
+  }, []);
 
   useEffect(() => {
     if (session) navigate({ to: "/" });
