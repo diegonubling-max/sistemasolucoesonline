@@ -754,6 +754,79 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={showEditVitrineModal} onOpenChange={setShowEditVitrineModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Vitrine</DialogTitle>
+            <DialogDescription>
+              Ajuste as configurações do curso na vitrine deste aluno.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Curso</Label>
+              <Input 
+                value={(editingVitrineItem?.cursos as any)?.nome || ""} 
+                disabled 
+                className="bg-muted"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Preço PIX</Label>
+                <Input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={editVitrinePrecoPix}
+                  onChange={(e) => setEditVitrinePrecoPix(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Preço Cartão</Label>
+                <Input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={editVitrinePrecoCartao}
+                  onChange={(e) => setEditVitrinePrecoCartao(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Máx. parcelas</Label>
+              <select 
+                className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                value={editVitrineMaxParcelas}
+                onChange={(e) => setEditVitrineMaxParcelas(e.target.value)}
+              >
+                {[...Array(12)].map((_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}x</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium">Status do Curso</Label>
+                <p className="text-xs text-muted-foreground">
+                  {editVitrineAtivo ? "Visível na vitrine do aluno" : "Oculto na vitrine do aluno"}
+                </p>
+              </div>
+              <Switch 
+                checked={editVitrineAtivo}
+                onCheckedChange={setEditVitrineAtivo}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditVitrineModal(false)}>Cancelar</Button>
+            <Button 
+              onClick={() => updateVitrine.mutate()}
+              disabled={updateVitrine.isPending || !editVitrinePrecoPix || !editVitrinePrecoCartao}
+            >
+              {updateVitrine.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
     </div>
   );
 }
