@@ -641,6 +641,7 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                       <div className="flex items-center gap-2">
                         <span className="text-lg">📚</span>
                         <h3 className="font-bold text-gray-900">{(item.cursos as any)?.nome}</h3>
+                        {!item.ativo && <Badge variant="secondary" className="text-[10px] h-5">Inativo</Badge>}
                       </div>
                       <p className="text-sm text-muted-foreground">
                         PIX: <span className="font-semibold">{formatCurrency(item.preco_pix)}</span> | 
