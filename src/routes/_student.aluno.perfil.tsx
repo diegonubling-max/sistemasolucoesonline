@@ -32,6 +32,18 @@ function StudentProfile() {
     },
     enabled: !!session?.user.email,
   });
+
+  const { data: configs } = useQuery({
+    queryKey: ["global-configs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .select("chave, valor");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -104,17 +116,6 @@ function StudentProfile() {
     onError: (error: any) => {
       toast.error("Erro ao atualizar foto: " + error.message);
     }
-  });
-
-  const { data: configs } = useQuery({
-    queryKey: ["global-configs"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("configuracoes")
-        .select("chave, valor");
-      if (error) throw error;
-      return data;
-    },
   });
 
   const handleWhatsAppSupport = () => {
