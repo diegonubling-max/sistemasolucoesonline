@@ -425,6 +425,37 @@ function StudentFinance() {
           </Table>
         </div>
       </div>
+
+      <Dialog open={!!showPixDialog} onOpenChange={(open) => !open && setShowPixDialog(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pagamento via PIX</DialogTitle>
+            <DialogDescription>
+              Escaneie o QR Code abaixo ou copie a chave PIX para pagar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center space-y-4 py-4">
+            {showPixDialog?.qrcode && (
+              <div className="bg-white p-4 rounded-xl border">
+                <img 
+                  src={`data:image/png;base64,${showPixDialog.qrcode}`} 
+                  alt="QR Code PIX" 
+                  className="w-48 h-48"
+                />
+              </div>
+            )}
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => {
+                navigator.clipboard.writeText(showPixDialog?.key || "");
+                toast.success("Chave PIX copiada!");
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Copiar Código PIX
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
