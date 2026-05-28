@@ -62,24 +62,34 @@ function StudentFinance() {
       let customerId = financeData?.aluno?.asaas_customer_id;
 
       if (!customerId) {
-        // Buscar dados completos do aluno para criar no Asaas
+        const alunoId = financeData?.aluno?.id;
+        if (!alunoId) throw new Error("ID do aluno não encontrado.");
+
         const { data: alunoCompleto, error: alunoError } = await supabase
           .from("alunos")
           .select("id, nome, cpf, email, telefone")
-          .eq("id", financeData?.aluno?.id)
+          .eq("id", alunoId)
           .single();
 
         if (alunoError || !alunoCompleto) {
           throw new Error("Erro ao carregar dados do aluno para integração.");
         }
 
-        if (!alunoCompleto.cpf || !alunoCompleto.email) {
-          throw new Error("Seu cadastro está incompleto (CPF e E-mail são obrigatórios).");
+        if (!alunoCompleto.cpf || !alunoCompleto.email || !alunoCompleto.nome || !alunoCompleto.telefone) {
+          throw new Error("Seu cadastro está incompleto (Nome, CPF, Telefone e E-mail são obrigatórios).");
         }
 
         toast.info("Configurando sua conta de pagamento...");
-        customerId = await createOrGetAsaasCustomer(alunoCompleto);
+        customerId = await createOrGetAsaasCustomer({
+          id: alunoCompleto.id,
+          nome: alunoCompleto.nome,
+          cpf: alunoCompleto.cpf,
+          email: alunoCompleto.email,
+          telefone: alunoCompleto.telefone
+        });
       }
+
+      if (!customerId) throw new Error("Não foi possível obter o ID do cliente Asaas.");
 
       const response = await createAsaasPayment({
         customer: customerId,
