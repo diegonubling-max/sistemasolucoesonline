@@ -569,59 +569,59 @@ function AlunoDetalhes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className=\"mt-12 space-y-6\">
-        <div className=\"space-y-1\">
-          <h2 className=\"text-2xl font-bold flex items-center gap-2\">
-            <Lock className=\"h-6 w-6 text-primary\" />
+      <div className="mt-12 space-y-6">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Lock className="h-6 w-6 text-primary" />
             🔒 Vitrine de Cursos
           </h2>
-          <p className=\"text-sm text-muted-foreground\">
+          <p className="text-sm text-muted-foreground">
             Cursos bloqueados visíveis para o aluno na área de membros
           </p>
         </div>
 
-        <div className=\"flex justify-end\">
-          <Button onClick={() => setShowVitrineModal(true)} className=\"gap-2\">
-            <Plus className=\"h-4 w-4\" />
+        <div className="flex justify-end">
+          <Button onClick={() => setShowVitrineModal(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
             Adicionar curso à vitrine
           </Button>
         </div>
 
-        <div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4\">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {!vitrine || vitrine.length === 0 ? (
-            <div className=\"col-span-full\">
+            <div className="col-span-full">
               <Card>
-                <CardContent className=\"pt-6\">
-                  <p className=\"text-center py-8 text-muted-foreground\">Nenhum curso na vitrine deste aluno.</p>
+                <CardContent className="pt-6">
+                  <p className="text-center py-8 text-muted-foreground">Nenhum curso na vitrine deste aluno.</p>
                 </CardContent>
               </Card>
             </div>
           ) : (
             vitrine.map((item) => (
-              <Card key={item.id} className=\"relative group\">
-                <CardContent className=\"pt-6\">
-                  <div className=\"flex items-start justify-between\">
-                    <div className=\"space-y-1\">
-                      <div className=\"flex items-center gap-2\">
-                        <span className=\"text-lg\">📚</span>
-                        <h3 className=\"font-bold text-gray-900\">{(item.cursos as any)?.nome}</h3>
+              <Card key={item.id} className="relative group">
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">📚</span>
+                        <h3 className="font-bold text-gray-900">{(item.cursos as any)?.nome}</h3>
                       </div>
-                      <p className=\"text-sm text-muted-foreground\">
-                        PIX: <span className=\"font-semibold\">{formatCurrency(item.preco_pix)}</span> | 
-                        Cartão: <span className=\"font-semibold\">até {item.max_parcelas}x</span>
+                      <p className="text-sm text-muted-foreground">
+                        PIX: <span className="font-semibold">{formatCurrency(item.preco_pix)}</span> | 
+                        Cartão: <span className="font-semibold">até {item.max_parcelas}x</span>
                       </p>
                     </div>
                     <Button 
-                      variant=\"ghost\" 
-                      size=\"icon\" 
-                      className=\"text-red-500 hover:text-red-600 hover:bg-red-50\"
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
                       onClick={() => {
-                        if (confirm(\"Deseja remover este curso da vitrine?\")) {
+                        if (confirm("Deseja remover este curso da vitrine?")) {
                           removeFromVitrine.mutate(item.id);
                         }
                       }}
                     >
-                      <Trash2 className=\"h-4 w-4\" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardContent>

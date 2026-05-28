@@ -279,54 +279,54 @@ function StudentDashboard() {
                 <div 
                   key={item.id} 
                   onClick={() => setSelectedVitrine(item)}
-                  className=\"group cursor-pointer block w-full\"
+                  className="group cursor-pointer block w-full"
                 >
-                  <div className=\"relative w-full aspect-[220/320] bg-white rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm\">
-                    <div className=\"absolute inset-0\">
+                  <div className="relative w-full aspect-[220/320] bg-white rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm">
+                    <div className="absolute inset-0">
                       {curso.thumbnail_url ? (
                         <img 
                           src={curso.thumbnail_url} 
                           alt={curso.nome}
-                          className=\"w-full h-full object-cover filter grayscale transition-transform duration-500 group-hover:scale-105\"
+                          className="w-full h-full object-cover filter grayscale transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
                         <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center filter grayscale`}>
-                          <BookOpen className=\"h-12 w-12 text-white/40 mb-2\" />
-                          <span className=\"text-white font-bold text-sm line-clamp-2\">{curso.nome}</span>
+                          <BookOpen className="h-12 w-12 text-white/40 mb-2" />
+                          <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
                         </div>
                       )}
-                      <div className=\"absolute inset-0 bg-black/40\" />
+                      <div className="absolute inset-0 bg-black/40" />
                     </div>
 
-                    <div className=\"absolute top-3 left-3\">
-                      <div className=\"bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider\">
-                        <div className=\"w-1.5 h-1.5 rounded-full bg-green-500\" />
+                    <div className="absolute top-3 left-3">
+                      <div className="bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
                         Disponível
                       </div>
                     </div>
 
-                    <div className=\"absolute inset-0 flex items-center justify-center\">
-                      <div className=\"p-3 bg-white/20 backdrop-blur-sm rounded-full\">
-                        <Lock className=\"h-10 w-10 text-white\" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
+                        <Lock className="h-10 w-10 text-white" />
                       </div>
                     </div>
 
-                    <div className=\"absolute bottom-0 left-0 right-0 p-4\">
-                      <h3 className=\"text-white font-bold text-base leading-tight line-clamp-2\">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <h3 className="text-white font-bold text-base leading-tight line-clamp-2">
                         {curso.nome}
                       </h3>
-                      <div className=\"mt-2 space-y-0.5\">
-                        <p className=\"text-white font-bold text-sm\">
+                      <div className="mt-2 space-y-0.5">
+                        <p className="text-white font-bold text-sm">
                           PIX: {formatCurrency(item.preco_pix)}
                         </p>
-                        <p className=\"text-white/80 text-[10px] font-medium\">
+                        <p className="text-white/80 text-[10px] font-medium">
                           Cartão: até {item.max_parcelas}x de {formatCurrency(item.preco_cartao / item.max_parcelas)}
                         </p>
                       </div>
                     </div>
 
-                    <div className=\"absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity\">
-                      <span className=\"text-white font-bold text-xs uppercase tracking-widest bg-[#1E3A5F] px-3 py-2 rounded-lg\">
+                    <div className="absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-white font-bold text-xs uppercase tracking-widest bg-[#1E3A5F] px-3 py-2 rounded-lg">
                         Ver Detalhes
                       </span>
                     </div>
