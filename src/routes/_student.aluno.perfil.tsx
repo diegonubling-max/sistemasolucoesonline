@@ -118,18 +118,47 @@ function StudentProfile() {
     <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row items-center gap-8 bg-white border-gray-100 shadow-sm p-8 rounded-2xl border transition-colors shadow-xl">
         <div className="relative group">
-            <div className="h-32 w-32 rounded-full bg-[#1E3A5F] flex items-center justify-center text-4xl font-bold text-white shadow-2xl border-4 border-white">
-                {alunoData?.nome?.[0]?.toUpperCase() || session?.user.email?.[0]?.toUpperCase()}
-            </div>
-            <button className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-white">
-                Alterar foto
-            </button>
+            {alunoData?.foto_perfil ? (
+              <img 
+                src={alunoData.foto_perfil} 
+                alt={alunoData.nome}
+                className="h-32 w-32 rounded-full object-cover shadow-2xl border-4 border-white"
+              />
+            ) : (
+              <div className="h-32 w-32 rounded-full bg-[#1E3A5F] flex items-center justify-center text-4xl font-bold text-white shadow-2xl border-4 border-white">
+                  {alunoData?.nome?.[0]?.toUpperCase() || session?.user.email?.[0]?.toUpperCase()}
+              </div>
+            )}
+            <label className="absolute inset-0 bg-black/40 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-center p-2">
+                <Camera className="h-6 w-6 mb-1" />
+                <span className="text-[10px] font-bold uppercase">Alterar foto</span>
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadPhoto.mutate(file);
+                  }}
+                  disabled={uploadPhoto.isPending}
+                />
+            </label>
+            {uploadPhoto.isPending && (
+              <div className="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
+              </div>
+            )}
         </div>
         <div className="text-center md:text-left space-y-2">
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{alunoData?.nome || "Meu Perfil"}</h1>
           <div className="flex flex-wrap justify-center md:justify-start gap-4">
-              <span className="bg-gray-100 text-gray-500 border-gray-100 px-3 py-1 rounded-full text-xs border transition-colors">E-mail: {session?.user.email}</span>
-              <span className="bg-blue-50 text-blue-700 border-blue-100 px-3 py-1 rounded-full text-xs border font-bold transition-colors">Aluno Verificado</span>
+              <span className="bg-gray-100 text-gray-500 border-gray-100 px-3 py-1 rounded-full text-xs border transition-colors flex items-center gap-1">
+                E-mail: {session?.user.email}
+              </span>
+              <span className="bg-blue-50 text-blue-700 border-blue-100 px-3 py-1 rounded-full text-xs border font-bold transition-colors flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3" />
+                Aluno Verificado
+              </span>
           </div>
         </div>
       </div>
