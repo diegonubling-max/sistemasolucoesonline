@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, asaas-access-token",
 };
 
 serve(async (req) => {
@@ -29,59 +29,110 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    console.log("Webhook Asaas recebido:", body);
+    console.log("Webhook Asaas recebido:", JSON.stringify(body));
 
     const { event, payment } = body;
 
-    if (event === "PAYMENT_RECEIVED" || event === "PAYMENT_CONFIRMED") {
-      const parcelaId = payment.externalReference;
-      
-      if (!parcelaId) {
-        return new Response(JSON.stringify({ message: "externalReference não encontrado" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        });
-      }
-
-      // Buscar parcela para confirmar existência
-      const { data: parcela, error: fetchError } = await supabaseClient
-        .from("parcelas")
-        .select("id, status")
-        .eq("id", parcelaId)
-        .single();
-
-      if (fetchError || !parcela) {
-        console.error("Parcela não encontrada:", parcelaId, fetchError);
-        return new Response(JSON.stringify({ message: "Parcela não encontrada" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 404,
-        });
-      }
-
-      // Atualizar status da parcela
-      const { error: updateError } = await supabaseClient
-        .from("parcelas")
-        .update({
-          status: "pago",
-          data_pagamento: payment.confirmedDate || new Date().toISOString().split('T')[0],
-          forma_pagamento: payment.billingType?.toLowerCase(),
-          asaas_id: payment.id
-        })
-        .eq("id", parcelaId);
-
-      if (updateError) {
-        console.error("Erro ao atualizar parcela:", updateError);
-        throw updateError;
-      }
-
-      console.log(`Parcela ${parcelaId} baixada com sucesso via webhook.`);
+    if (!payment) {
+      return new Response(JSON.stringify({ message: "Payload sem payment" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
-    return new Response(JSON.stringify({ received: true }), {
+    // Localizar parcela por externalReference ou asaas_id
+    const parcelaId = payment.externalReference;
+    let query = supabaseClient.from("parcelas").select("id, status").limit(1);
+    if (parcelaId) {
+      query = query.eq("id", parcelaId);
+    } else if (payment.id) {
+      query = query.eq("asaas_id", payment.id);
+    } else {
+      return new Response(JSON.stringify({ message: "Sem referência" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    const { data: parcelas, error: fetchError } = await query;
+    const parcela = parcelas?.[0];
+
+    if (fetchError || !parcela) {
+      console.error("Parcela não encontrada:", parcelaId, payment.id, fetchError);
+      return new Response(JSON.stringify({ message: "Parcela não encontrada" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Montar payload base com detalhes da cobrança
+    const updateData: Record<string, any> = {
+      asaas_id: payment.id,
+      asaas_url: payment.bankSlipUrl || payment.invoiceUrl || null,
+    };
+
+    if (payment.billingType) {
+      updateData.forma_pagamento = String(payment.billingType).toLowerCase();
+    }
+    if (payment.identificationField) {
+      updateData.asaas_barcode = payment.identificationField;
+    }
+    if (payment.netValue != null) {
+      updateData.valor_liquido = Number(payment.netValue);
+    }
+
+    // Tratar evento
+    switch (event) {
+      case "PAYMENT_CONFIRMED":
+      case "PAYMENT_RECEIVED":
+      case "PAYMENT_RECEIVED_IN_CASH":
+        updateData.status = "pago";
+        updateData.data_pagamento =
+          payment.paymentDate ||
+          payment.confirmedDate ||
+          payment.clientPaymentDate ||
+          new Date().toISOString().split("T")[0];
+        break;
+
+      case "PAYMENT_REFUNDED":
+      case "PAYMENT_REFUND_IN_PROGRESS":
+      case "PAYMENT_CHARGEBACK_REQUESTED":
+      case "PAYMENT_CHARGEBACK_DISPUTE":
+      case "PAYMENT_AWAITING_CHARGEBACK_REVERSAL":
+      case "PAYMENT_DELETED":
+      case "PAYMENT_RESTORED":
+      case "PAYMENT_OVERDUE":
+        updateData.status = "aberto";
+        updateData.data_pagamento = null;
+        break;
+
+      case "PAYMENT_CREATED":
+      case "PAYMENT_UPDATED":
+      case "PAYMENT_AWAITING_RISK_ANALYSIS":
+      case "PAYMENT_APPROVED_BY_RISK_ANALYSIS":
+      case "PAYMENT_REPROVED_BY_RISK_ANALYSIS":
+      default:
+        // Apenas atualiza detalhes da cobrança, sem alterar status
+        break;
+    }
+
+    const { error: updateError } = await supabaseClient
+      .from("parcelas")
+      .update(updateData)
+      .eq("id", parcela.id);
+
+    if (updateError) {
+      console.error("Erro ao atualizar parcela:", updateError);
+      throw updateError;
+    }
+
+    console.log(`Parcela ${parcela.id} atualizada via webhook (${event}).`);
+
+    return new Response(JSON.stringify({ received: true, event, parcela_id: parcela.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro no webhook:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
