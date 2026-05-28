@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { createAsaasPayment } from "@/services/asaas";
 import { useStudentTheme } from "./_student";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
