@@ -204,8 +204,8 @@ serve(async (req) => {
       updateParcela.asaas_pix_chave = pixData.payload;
       updateParcela.asaas_pix_qrcode = pixData.encodedImage;
     } else if (tipo === 'BOLETO') {
-      // Priorizando fullCycleCode se existir, senão identificationField (linha digitável)
-      updateParcela.asaas_barcode = paymentData.fullCycleCode || paymentData.identificationField || paymentData.nossoNumero;
+      // Priorizando identificationField (linha digitável de 47 dígitos) conforme solicitado
+      updateParcela.asaas_barcode = paymentData.identificationField || paymentData.fullCycleCode || paymentData.nossoNumero;
     }
 
     const { error: updateParcelaError } = await supabaseClient
