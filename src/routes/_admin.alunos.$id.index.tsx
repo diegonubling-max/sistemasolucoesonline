@@ -561,13 +561,13 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                                     const response = await generateAsaasCobrar(p.id, null, 'fetch');
                                     if (response.error) throw new Error(response.error);
                                     
-                                    const { payment, pixData } = response;
+                                    const { payment, pixData, updateParcela } = response;
                                     setAsaasResult({
                                       id: payment.id,
                                       invoiceUrl: payment.invoiceUrl,
-                                      bankSlipUrl: payment.bankSlipUrl,
+                                      bankSlipUrl: updateParcela?.asaas_url || payment.bankSlipUrl,
                                       pixData,
-                                      identificationField: payment.identificationField || payment.fullCycleCode,
+                                      identificationField: updateParcela?.asaas_barcode || payment.identificationField || payment.fullCycleCode,
                                       value: payment.value,
                                       dueDate: payment.dueDate,
                                       description: payment.description
