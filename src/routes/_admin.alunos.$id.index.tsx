@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock } from "lucide-react";
+import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy } from "lucide-react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -539,20 +539,60 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                           </Badge>
                         </td>
                         <td className="py-4 text-right">
-                          {p.status === 'aberto' && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                              onClick={() => {
-                                setSelectedParcelaId(p.id);
-                                setSelectedParcelaValor(Number(p.valor));
-                                setShowBaixaModal(true);
-                              }}
-                            >
-                              <CheckCircle2 className="h-4 w-4 mr-2" /> Dar baixa
-                            </Button>
-                          )}
+                          <div className="flex justify-end gap-2">
+                            {p.status === 'aberto' && !p.asaas_id && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                onClick={() => {
+                                  setSelectedParcela(p);
+                                  setShowAsaasModal(true);
+                                }}
+                              >
+                                <Receipt className="h-4 w-4 mr-1" />
+                                Asaas
+                              </Button>
+                            )}
+                            {p.asaas_id && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                                onClick={() => {
+                                  setAsaasResult({
+                                    id: p.asaas_id,
+                                    invoiceUrl: p.asaas_url,
+                                    bankSlipUrl: p.asaas_url,
+                                    pixData: p.asaas_pix_chave ? { payload: p.asaas_pix_chave, encodedImage: p.asaas_pix_qrcode } : null,
+                                    identificationField: p.asaas_barcode,
+                                    value: p.valor,
+                                    dueDate: p.data_vencimento,
+                                    description: p.descricao || `Parcela ${p.numero}`
+                                  });
+                                  setShowAsaasResultModal(true);
+                                }}
+                              >
+                                <Receipt className="h-4 w-4 mr-1" />
+                                Cobrança
+                              </Button>
+                            )}
+                            {p.status === 'aberto' && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={() => {
+                                  setSelectedParcelaId(p.id);
+                                  setSelectedParcelaValor(Number(p.valor));
+                                  setShowBaixaModal(true);
+                                }}
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-1" />
+                                Baixa
+                              </Button>
+                            )}
+                          </div>
                           {p.status === 'pago' && (
                             <span className="text-xs text-muted-foreground flex items-center justify-end">
                               Pago em {formatDate(p.data_pagamento)}

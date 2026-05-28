@@ -281,7 +281,7 @@ function StudentFinance() {
                                     size="sm" 
                                     className="h-8 border-green-200 text-green-600 hover:bg-green-50"
                                     onClick={() => {
-                                      navigator.clipboard.writeText(parcela.asaas_pix_chave);
+                                      navigator.clipboard.writeText(parcela.asaas_pix_chave || "");
                                       toast.success("Chave PIX copiada!");
                                     }}
                                   >
@@ -295,7 +295,7 @@ function StudentFinance() {
                                       className="h-8 border-blue-200 text-blue-600 hover:bg-blue-50"
                                       asChild
                                     >
-                                      <a href={parcela.asaas_url} target="_blank" rel="noreferrer">
+                                      <a href={parcela.asaas_url || "#"} target="_blank" rel="noreferrer">
                                         <ExternalLink className="h-3 w-3 mr-1" /> Ver Boleto
                                       </a>
                                     </Button>
