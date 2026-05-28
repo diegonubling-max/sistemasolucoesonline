@@ -31,7 +31,6 @@ function CursosList() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
-  const [selectedSegmento, setSelectedSegmento] = useState<string | null>(null);
   const [cursoToDelete, setCursoToDelete] = useState<{ id: string; nome: string } | null>(null);
 
   const { data: segmentos } = useQuery({
@@ -48,19 +47,40 @@ function CursosList() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["cursos", search, selectedSegmento],
+    queryKey: ["cursos", search],
     queryFn: async () => {
       let q = supabase
         .from("cursos")
         .select("id, nome, descricao, ativo, created_at, segmento_id, segmentos(nome), aulas(count)")
-        .order("created_at", { ascending: false });
+        .order("nome", { ascending: true });
+      
       if (search) q = q.ilike("nome", `%${search}%`);
-      if (selectedSegmento) q = q.eq("segmento_id", selectedSegmento);
+      
       const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
   });
+
+  const groupedCursos = (data || []).reduce((acc: any, curso: any) => {
+    const segmentoId = curso.segmento_id || "outros";
+    const segmentoNome = curso.segmentos?.nome || "Outros";
+    
+    if (!acc[segmentoId]) {
+      acc[segmentoId] = {
+        id: segmentoId,
+        nome: segmentoNome,
+        cursos: []
+      };
+    }
+    acc[segmentoId].cursos.push(curso);
+    return acc;
+  }, {});
+
+  const orderedGroups = [
+    ...(segmentos || []).map(s => groupedCursos[s.id]).filter(Boolean),
+    groupedCursos["outros"]
+  ].filter(Boolean);
 
   const toggle = useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
