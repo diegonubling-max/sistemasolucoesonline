@@ -1,12 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Save, Loader2, MessageSquare, School, Phone } from "lucide-react";
+import { Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
@@ -32,12 +39,17 @@ function AdminSettings() {
   const [whatsappSuporte, setWhatsappSuporte] = useState("");
   const [mensagemWhatsapp, setMensagemWhatsapp] = useState("");
   const [nomeEscola, setNomeEscola] = useState("");
+  const [asaasApiKey, setAsaasApiKey] = useState("");
+  const [asaasAmbiente, setAsaasAmbiente] = useState("producao");
+  const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
     if (configs) {
       setWhatsappSuporte(configs.find(c => c.chave === "whatsapp_suporte")?.valor || "");
       setMensagemWhatsapp(configs.find(c => c.chave === "mensagem_whatsapp")?.valor || "");
       setNomeEscola(configs.find(c => c.chave === "nome_escola")?.valor || "");
+      setAsaasApiKey(configs.find(c => c.chave === "asaas_api_key")?.valor || "");
+      setAsaasAmbiente(configs.find(c => c.chave === "asaas_ambiente")?.valor || "producao");
     }
   }, [configs]);
 
@@ -185,6 +197,88 @@ function AdminSettings() {
               </div>
             </CardContent>
           </Card>
+        </section>
+
+        <section className="space-y-4 pb-12">
+          <div className="flex items-center gap-2 px-1">
+            <Link2 className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-gray-800">Integração Asaas</h2>
+          </div>
+          
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Chave API Asaas</CardTitle>
+                <CardDescription>Insira sua chave de API para integração de pagamentos</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="asaas-key">Chave API</Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        id="asaas-key"
+                        type={showApiKey ? "text" : "password"}
+                        placeholder="$aact_prod_..."
+                        value={asaasApiKey}
+                        onChange={(e) => setAsaasApiKey(e.target.value)}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <Button 
+                      onClick={() => updateConfig.mutate({ chave: "asaas_api_key", valor: asaasApiKey })}
+                      disabled={updateConfig.isPending}
+                    >
+                      {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      Salvar
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Ambiente</CardTitle>
+                <CardDescription>Selecione entre o ambiente de testes ou produção</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="asaas-env">Ambiente do Asaas</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Select 
+                        value={asaasAmbiente} 
+                        onValueChange={(value) => setAsaasAmbiente(value)}
+                      >
+                        <SelectTrigger id="asaas-env">
+                          <SelectValue placeholder="Selecione o ambiente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="producao">Produção</SelectItem>
+                          <SelectItem value="sandbox">Sandbox/Testes</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button 
+                      onClick={() => updateConfig.mutate({ chave: "asaas_ambiente", valor: asaasAmbiente })}
+                      disabled={updateConfig.isPending}
+                    >
+                      {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      Salvar
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </section>
       </div>
     </div>
