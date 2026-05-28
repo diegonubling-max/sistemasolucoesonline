@@ -946,6 +946,18 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
               Escolha a forma de cobrança para "{selectedParcela?.descricao || (selectedParcela?.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${selectedParcela?.numero}`)}".
             </DialogDescription>
           </DialogHeader>
+          {!aluno?.asaas_customer_id && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4 flex gap-3 items-start">
+              <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-amber-900">ID Asaas Ausente</p>
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  O sistema tentará criar o cliente automaticamente ao clicar nos botões abaixo, 
+                  mas certifique-se de que o CPF e E-mail do aluno estão preenchidos corretamente.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4 py-4">
             <Button 
               variant="outline" 
