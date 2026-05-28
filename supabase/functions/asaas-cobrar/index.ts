@@ -19,7 +19,8 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { parcela_id, tipo } = await req.json();
+    const body = await req.json();
+    const { parcela_id, tipo } = body;
     console.log(`Recebido: parcela_id=${parcela_id}, tipo=${tipo}`);
 
     if (!parcela_id || !tipo) {
@@ -30,8 +31,7 @@ serve(async (req) => {
     console.log("Buscando configurações do Asaas...");
     const { data: configs, error: configError } = await supabaseClient
       .from("configuracoes")
-      .select("chave, valor")
-      .in("chave", ["asaas_api_key", "asaas_ambiente"]);
+      .select("chave, valor");
 
     if (configError) {
       console.error("Erro ao buscar configurações:", configError);
@@ -73,12 +73,19 @@ serve(async (req) => {
       throw new Error("Parcela não encontrada.");
     }
 
+    console.log("Dados da parcela encontrados:", JSON.stringify({
+      id: parcela.id,
+      valor: parcela.valor,
+      data_vencimento: parcela.data_vencimento,
+      matricula_id: parcela.matricula_id
+    }));
+
     const matricula = parcela.matriculas;
     const aluno = Array.isArray(matricula) ? matricula[0]?.alunos : matricula?.alunos;
 
     if (!aluno) {
-      console.error("Aluno não encontrado para a parcela", parcela_id);
-      throw new Error("Aluno não encontrado para esta parcela.");
+      console.error("Aluno não encontrado para a parcela", parcela_id, "Estrutura matriculas:", JSON.stringify(matricula));
+      throw new Error("Aluno não encontrado para esta parcela. Verifique o vínculo da matrícula.");
     }
 
     let asaas_customer_id = aluno.asaas_customer_id;
@@ -138,14 +145,20 @@ serve(async (req) => {
       console.log(`Aluno já possui ID Asaas: ${asaas_customer_id}`);
     }
 
+    // 5. Preparar data de vencimento (Asaas exige YYYY-MM-DD)
+    let dueDate = parcela.data_vencimento;
+    if (dueDate && dueDate.includes('T')) {
+      dueDate = dueDate.split('T')[0];
+    }
+
     // 5. Criar cobrança no Asaas
-    console.log(`Gerando cobrança ${tipo} para parcela ${parcela_id} no valor de ${parcela.valor}`);
+    console.log(`Gerando cobrança ${tipo} para parcela ${parcela_id} no valor de ${parcela.valor} e vencimento ${dueDate}`);
     
     const paymentPayload = {
       customer: asaas_customer_id,
       billingType: tipo === 'PIX' ? 'PIX' : 'BOLETO',
       value: Number(parcela.valor),
-      dueDate: parcela.data_vencimento,
+      dueDate: dueDate,
       description: parcela.descricao || `Parcela ${parcela.numero || ''}`,
       externalReference: parcela.id,
     };
