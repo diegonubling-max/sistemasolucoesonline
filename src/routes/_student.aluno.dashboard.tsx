@@ -65,19 +65,41 @@ function StudentDashboard() {
     enabled: !!session?.user.email,
   });
 
-  const { data: vitrine } = useQuery({
-    queryKey: ["student-vitrine", session?.user.email],
+  const { data: studentData } = useQuery({
+    queryKey: [\"student-data\", session?.user.email],
     queryFn: async () => {
-      const { data: aluno } = await supabase
-        .from("alunos")
-        .select("id")
-        .eq("email", session?.user.email ?? "")
+      const { data, error } = await supabase
+        .from(\"alunos\")
+        .select(\"id, nome, ctr\")
+        .eq(\"email\", session?.user.email ?? \"\")
         .single();
-      
-      if (!aluno) return [];
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user.email,
+  });
+
+  const { data: configs } = useQuery({
+    queryKey: [\"student-configs\"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(\"configuracoes\")
+        .select(\"chave, valor\");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const whatsappSuporte = configs?.find(c => c.chave === \"whatsapp_suporte\")?.valor || \"\";
+  const mensagemPadrao = configs?.find(c => c.chave === \"mensagem_whatsapp\")?.valor || \"\";
+
+  const { data: vitrine } = useQuery({
+    queryKey: [\"student-vitrine\", session?.user.email],
+    queryFn: async () => {
+      if (!studentData?.id) return [];
 
       const { data, error } = await supabase
-        .from("cursos_vitrine")
+        .from(\"cursos_vitrine\")
         .select(`
           *,
           cursos (
@@ -86,13 +108,13 @@ function StudentDashboard() {
             thumbnail_url
           )
         `)
-        .eq("aluno_id", aluno.id)
-        .eq("ativo", true);
+        .eq(\"aluno_id\", studentData.id)
+        .eq(\"ativo\", true);
 
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!session?.user.email,
+    enabled: !!studentData?.id,
   });
 
   if (isLoading) {
@@ -257,52 +279,55 @@ function StudentDashboard() {
                 <div 
                   key={item.id} 
                   onClick={() => setSelectedVitrine(item)}
-                  className="group cursor-pointer block w-full"
+                  className=\"group cursor-pointer block w-full\"
                 >
-                  <div className="relative w-full aspect-[220/320] bg-white rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm">
-                    <div className="absolute inset-0">
+                  <div className=\"relative w-full aspect-[220/320] bg-white rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm\">
+                    <div className=\"absolute inset-0\">
                       {curso.thumbnail_url ? (
                         <img 
                           src={curso.thumbnail_url} 
                           alt={curso.nome}
-                          className="w-full h-full object-cover grayscale transition-transform duration-500 group-hover:scale-105"
+                          className=\"w-full h-full object-cover filter grayscale transition-transform duration-500 group-hover:scale-105\"
                         />
                       ) : (
-                        <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center grayscale`}>
-                          <BookOpen className="h-12 w-12 text-white/40 mb-2" />
-                          <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
+                        <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center filter grayscale`}>
+                          <BookOpen className=\"h-12 w-12 text-white/40 mb-2\" />
+                          <span className=\"text-white font-bold text-sm line-clamp-2\">{curso.nome}</span>
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/60" />
+                      <div className=\"absolute inset-0 bg-black/40\" />
                     </div>
 
-                    <div className="absolute top-3 left-3">
-                      <div className="bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    <div className=\"absolute top-3 left-3\">
+                      <div className=\"bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider\">
+                        <div className=\"w-1.5 h-1.5 rounded-full bg-green-500\" />
                         Disponível
                       </div>
                     </div>
 
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
-                        <Lock className="h-10 w-10 text-white" />
+                    <div className=\"absolute inset-0 flex items-center justify-center\">
+                      <div className=\"p-3 bg-white/20 backdrop-blur-sm rounded-full\">
+                        <Lock className=\"h-10 w-10 text-white\" />
                       </div>
                     </div>
 
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <h3 className="text-white font-bold text-base leading-tight line-clamp-2">
+                    <div className=\"absolute bottom-0 left-0 right-0 p-4\">
+                      <h3 className=\"text-white font-bold text-base leading-tight line-clamp-2\">
                         {curso.nome}
                       </h3>
-                      <div className="mt-2">
-                        <p className="text-white font-bold text-sm">
-                          {formatCurrency(item.preco_pix)}
+                      <div className=\"mt-2 space-y-0.5\">
+                        <p className=\"text-white font-bold text-sm\">
+                          PIX: {formatCurrency(item.preco_pix)}
+                        </p>
+                        <p className=\"text-white/80 text-[10px] font-medium\">
+                          Cartão: até {item.max_parcelas}x de {formatCurrency(item.preco_cartao / item.max_parcelas)}
                         </p>
                       </div>
                     </div>
 
-                    <div className="absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-white font-bold text-xs uppercase tracking-widest bg-[#1E3A5F] px-3 py-2 rounded-lg">
-                        Desbloquear
+                    <div className=\"absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity\">
+                      <span className=\"text-white font-bold text-xs uppercase tracking-widest bg-[#1E3A5F] px-3 py-2 rounded-lg\">
+                        Ver Detalhes
                       </span>
                     </div>
                   </div>
@@ -324,43 +349,63 @@ function StudentDashboard() {
           
           {selectedVitrine && (
             <div className="space-y-6 py-4">
-              <div className="text-center space-y-2">
-                <h3 className="text-xl font-bold text-gray-900">{selectedVitrine.cursos?.nome}</h3>
-                <p className="text-sm text-gray-500 italic">Checkout em breve...</p>
+              <div className=\"text-center space-y-2\">
+                <h3 className=\"text-xl font-bold text-gray-900\">{selectedVitrine.cursos?.nome}</h3>
               </div>
 
-              <div className="bg-gray-50 p-6 rounded-xl space-y-4 border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                    <Smartphone className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">PIX</p>
-                    <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedVitrine.preco_pix)}</p>
+              <div className=\"bg-gray-50 p-6 rounded-xl space-y-4 border border-gray-100\">
+                <div className=\"flex items-center justify-between\">
+                  <div className=\"flex items-center gap-3\">
+                    <div className=\"p-2 bg-blue-100 rounded-lg text-blue-600\">
+                      <Smartphone className=\"h-5 w-5\" />
+                    </div>
+                    <div>
+                      <p className=\"text-xs text-gray-500 uppercase font-bold tracking-wider\">Preço PIX</p>
+                      <p className=\"text-lg font-bold text-gray-900\">{formatCurrency(selectedVitrine.preco_pix)}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
-                    <Smartphone className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Cartão</p>
-                    <p className="text-lg font-bold text-gray-900">
-                      até {selectedVitrine.max_parcelas}x de {formatCurrency(selectedVitrine.preco_cartao / selectedVitrine.max_parcelas)}
-                    </p>
+                <div className=\"flex items-center justify-between pt-2 border-t\">
+                  <div className=\"flex items-center gap-3\">
+                    <div className=\"p-2 bg-purple-100 rounded-lg text-purple-600\">
+                      <Smartphone className=\"h-5 w-5\" />
+                    </div>
+                    <div>
+                      <p className=\"text-xs text-gray-500 uppercase font-bold tracking-wider\">Preço Cartão</p>
+                      <p className=\"text-lg font-bold text-gray-900\">
+                        {formatCurrency(selectedVitrine.preco_cartao)}
+                      </p>
+                      <p className=\"text-sm text-purple-600 font-medium\">
+                        em até {selectedVitrine.max_parcelas}x de {formatCurrency(selectedVitrine.preco_cartao / selectedVitrine.max_parcelas)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 text-center">
-                <p className="text-sm text-gray-600">Para adquirir entre em contato:</p>
-                <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2" asChild>
-                  <a href={`https://wa.me/5511999999999`} target="_blank" rel="noopener noreferrer">
-                    <Smartphone className="h-4 w-4" />
-                    WhatsApp da escola
-                  </a>
-                </Button>
+              <div className=\"space-y-4 text-center\">
+                {!whatsappSuporte ? (
+                  <p className=\"text-sm text-red-500 font-medium\">Suporte temporariamente indisponível</p>
+                ) : (
+                  <>
+                    <p className=\"text-sm text-gray-600\">Para adquirir este curso entre em contato conosco!</p>
+                    <Button className=\"w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2\" asChild>
+                      <a 
+                        href={`https://wa.me/${whatsappSuporte}?text=${encodeURIComponent(
+                          mensagemPadrao
+                            .replace(\"[nome]\", studentData?.nome || \"\")
+                            .replace(\"[ctr]\", studentData?.ctr || \"\")
+                        )}`} 
+                        target=\"_blank\" 
+                        rel=\"noopener noreferrer\"
+                      >
+                        <Smartphone className=\"h-4 w-4\" />
+                        💬 Falar no WhatsApp
+                      </a>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}

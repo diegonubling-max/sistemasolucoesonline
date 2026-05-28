@@ -569,63 +569,66 @@ function AlunoDetalhes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="mt-12 space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <ShoppingBag className="h-6 w-6 text-primary" />
-            Cursos na Vitrine
+      <div className=\"mt-12 space-y-6\">
+        <div className=\"space-y-1\">
+          <h2 className=\"text-2xl font-bold flex items-center gap-2\">
+            <Lock className=\"h-6 w-6 text-primary\" />
+            🔒 Vitrine de Cursos
           </h2>
-          <Button onClick={() => setShowVitrineModal(true)} variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
+          <p className=\"text-sm text-muted-foreground\">
+            Cursos bloqueados visíveis para o aluno na área de membros
+          </p>
+        </div>
+
+        <div className=\"flex justify-end\">
+          <Button onClick={() => setShowVitrineModal(true)} className=\"gap-2\">
+            <Plus className=\"h-4 w-4\" />
             Adicionar curso à vitrine
           </Button>
         </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            {!vitrine || vitrine.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">Nenhum curso na vitrine deste aluno.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-muted-foreground">
-                      <th className="text-left py-2 font-medium">Curso</th>
-                      <th className="text-left py-2 font-medium">Preço PIX</th>
-                      <th className="text-left py-2 font-medium">Preço Cartão</th>
-                      <th className="text-left py-2 font-medium">Parcelas</th>
-                      <th className="text-right py-2 font-medium">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {vitrine.map((item) => (
-                      <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="py-4 font-medium">{(item.cursos as any)?.nome}</td>
-                        <td className="py-4">{formatCurrency(item.preco_pix)}</td>
-                        <td className="py-4">{formatCurrency(item.preco_cartao)}</td>
-                        <td className="py-4">{item.max_parcelas}x</td>
-                        <td className="py-4 text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => {
-                              if (confirm("Deseja remover este curso da vitrine?")) {
-                                removeFromVitrine.mutate(item.id);
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4\">
+          {!vitrine || vitrine.length === 0 ? (
+            <div className=\"col-span-full\">
+              <Card>
+                <CardContent className=\"pt-6\">
+                  <p className=\"text-center py-8 text-muted-foreground\">Nenhum curso na vitrine deste aluno.</p>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            vitrine.map((item) => (
+              <Card key={item.id} className=\"relative group\">
+                <CardContent className=\"pt-6\">
+                  <div className=\"flex items-start justify-between\">
+                    <div className=\"space-y-1\">
+                      <div className=\"flex items-center gap-2\">
+                        <span className=\"text-lg\">📚</span>
+                        <h3 className=\"font-bold text-gray-900\">{(item.cursos as any)?.nome}</h3>
+                      </div>
+                      <p className=\"text-sm text-muted-foreground\">
+                        PIX: <span className=\"font-semibold\">{formatCurrency(item.preco_pix)}</span> | 
+                        Cartão: <span className=\"font-semibold\">até {item.max_parcelas}x</span>
+                      </p>
+                    </div>
+                    <Button 
+                      variant=\"ghost\" 
+                      size=\"icon\" 
+                      className=\"text-red-500 hover:text-red-600 hover:bg-red-50\"
+                      onClick={() => {
+                        if (confirm(\"Deseja remover este curso da vitrine?\")) {
+                          removeFromVitrine.mutate(item.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className=\"h-4 w-4\" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
 
       <Dialog open={showVitrineModal} onOpenChange={setShowVitrineModal}>
@@ -673,15 +676,17 @@ function AlunoDetalhes() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className=\"space-y-2\">
               <Label>Máx. parcelas</Label>
-              <Input 
-                type="number" 
-                min="1" 
-                max="12" 
+              <select 
+                className=\"w-full h-10 px-3 rounded-md border border-input bg-background\"
                 value={vitrineMaxParcelas}
                 onChange={(e) => setVitrineMaxParcelas(e.target.value)}
-              />
+              >
+                {[...Array(12)].map((_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}x</option>
+                ))}
+              </select>
             </div>
           </div>
           <DialogFooter>
