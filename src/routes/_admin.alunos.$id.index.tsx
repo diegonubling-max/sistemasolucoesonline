@@ -54,6 +54,10 @@ function AlunoDetalhes() {
   const [vitrinePrecoPix, setVitrinePrecoPix] = useState("");
   const [vitrinePrecoCartao, setVitrinePrecoCartao] = useState("");
   const [vitrineMaxParcelas, setVitrineMaxParcelas] = useState("12");
+  const [editVitrinePrecoPix, setEditVitrinePrecoPix] = useState("");
+  const [editVitrinePrecoCartao, setEditVitrinePrecoCartao] = useState("");
+  const [editVitrineMaxParcelas, setEditVitrineMaxParcelas] = useState("12");
+  const [editVitrineAtivo, setEditVitrineAtivo] = useState(true);
 
   const darBaixa = useMutation({
     mutationFn: async (data: {
