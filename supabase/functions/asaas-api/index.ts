@@ -39,7 +39,7 @@ serve(async (req) => {
 
     const baseUrl = ambiente === 'sandbox' 
       ? 'https://sandbox.asaas.com/api/v3'
-      : 'https://api.asaas.com/api/v3'
+      : 'https://api.asaas.com/v3'
 
     // 2. Parse request body
     let requestData;
