@@ -204,8 +204,15 @@ serve(async (req) => {
       updateParcela.asaas_pix_chave = pixData.payload;
       updateParcela.asaas_pix_qrcode = pixData.encodedImage;
     } else if (tipo === 'BOLETO') {
-      // Priorizando fullCycleCode se existir, senão identificationField (linha digitável)
-      updateParcela.asaas_barcode = paymentData.fullCycleCode || paymentData.identificationField || paymentData.nossoNumero;
+      // Priorizando identificationField (linha digitável de 47 dígitos) conforme solicitado pelo usuário
+      console.log("Campos de boleto retornados:", { 
+        identificationField: paymentData.identificationField, 
+        fullCycleCode: paymentData.fullCycleCode, 
+        nossoNumero: paymentData.nossoNumero 
+      });
+      
+      updateParcela.asaas_barcode = paymentData.identificationField || paymentData.fullCycleCode || paymentData.nossoNumero;
+      console.log(`Código de barras selecionado para salvar: ${updateParcela.asaas_barcode}`);
     }
 
     const { error: updateParcelaError } = await supabaseClient
