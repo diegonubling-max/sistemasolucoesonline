@@ -31,16 +31,31 @@ function CursosList() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [selectedSegmento, setSelectedSegmento] = useState<string | null>(null);
   const [cursoToDelete, setCursoToDelete] = useState<{ id: string; nome: string } | null>(null);
 
+  const { data: segmentos } = useQuery({
+    queryKey: ["segmentos-ativos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("segmentos")
+        .select("id, nome")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const { data, isLoading } = useQuery({
-    queryKey: ["cursos", search],
+    queryKey: ["cursos", search, selectedSegmento],
     queryFn: async () => {
       let q = supabase
         .from("cursos")
-        .select("id, nome, descricao, ativo, created_at, aulas(count)")
+        .select("id, nome, descricao, ativo, created_at, segmento_id, segmentos(nome), aulas(count)")
         .order("created_at", { ascending: false });
       if (search) q = q.ilike("nome", `%${search}%`);
+      if (selectedSegmento) q = q.eq("segmento_id", selectedSegmento);
       const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
@@ -129,9 +144,9 @@ function CursosList() {
           <Table>
             <TableHeader>
               <TableRow>
-                 <TableHead>Nome</TableHead>
-                 <TableHead>Segmento</TableHead>
-                 <TableHead>Descrição</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Segmento</TableHead>
+                <TableHead>Descrição</TableHead>
                 <TableHead>Aulas</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Cadastro</TableHead>
@@ -141,20 +156,20 @@ function CursosList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
               )}
-              {data?.map((c) => {
+              {data?.map((c: any) => {
                 const count = Array.isArray(c.aulas) ? (c.aulas[0]?.count ?? 0) : 0;
+                const segmentoNome = Array.isArray(c.segmentos) ? (c.segmentos[0]?.nome || "—") : (c.segmentos?.nome || "—");
+                
                 return (
-                   <TableRow key={c.id}>
-                     <TableCell className="font-medium">{c.nome}</TableCell>
-                     <TableCell>
-                       {Array.isArray(c.segmentos) ? (c.segmentos[0]?.nome || "—") : (c.segmentos?.nome || "—")}
-                     </TableCell>
-                     <TableCell className="max-w-md truncate text-muted-foreground">
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.nome}</TableCell>
+                    <TableCell>{segmentoNome}</TableCell>
+                    <TableCell className="max-w-md truncate text-muted-foreground">
                       {c.descricao || "—"}
                     </TableCell>
                     <TableCell>{count}</TableCell>
@@ -168,6 +183,14 @@ function CursosList() {
                     <TableCell>{formatDate(c.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title={c.ativo ? "Desativar" : "Ativar"}
+                          onClick={() => toggle.mutate({ id: c.id, ativo: c.ativo })}
+                        >
+                          <Power className={`h-4 w-4 ${c.ativo ? "text-green-600" : "text-gray-400"}`} />
+                        </Button>
                         <Button asChild size="icon" variant="ghost" title="Gerenciar aulas">
                           <Link to="/cursos/$id/aulas" params={{ id: c.id }}>
                             <ListVideo className="h-4 w-4" />
@@ -194,7 +217,7 @@ function CursosList() {
               })}
               {!isLoading && data?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Nenhum curso cadastrado.
                   </TableCell>
                 </TableRow>
