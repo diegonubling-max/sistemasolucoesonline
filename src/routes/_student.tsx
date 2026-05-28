@@ -226,6 +226,7 @@ function StudentLayout() {
           </StudentThemeContext.Provider>
         </div>
       </main>
+      <WhatsAppButton />
     </div>
   );
 }
