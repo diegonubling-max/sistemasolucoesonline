@@ -42,7 +42,15 @@ serve(async (req) => {
       : 'https://api.asaas.com/api/v3'
 
     // 2. Parse request body
-    const { path, method, body } = await req.json()
+    let requestData;
+    try {
+      requestData = await req.json();
+    } catch (e) {
+      console.error('Error parsing request body:', e);
+      throw new Error('Invalid JSON in request body');
+    }
+
+    const { path, method, body } = requestData;
 
     console.log(`Forwarding ${method} request to Asaas: ${path}`)
 
