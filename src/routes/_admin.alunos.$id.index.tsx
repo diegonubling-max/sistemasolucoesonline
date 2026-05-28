@@ -20,7 +20,7 @@ import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
-import { createAsaasPayment } from "@/services/asaas";
+import { createAsaasPayment, createOrGetAsaasCustomer } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
@@ -212,11 +212,32 @@ function AlunoDetalhes() {
   });
 
   const handleGenerateAsaas = async (type: 'PIX' | 'BOLETO') => {
-    if (!selectedParcela || !aluno?.asaas_customer_id) return;
+    if (!selectedParcela || !id) return;
     setIsGeneratingAsaas(true);
     try {
+      let customerId = aluno?.asaas_customer_id;
+
+      if (!customerId) {
+        if (!aluno?.cpf || !aluno?.email || !aluno?.nome || !aluno?.telefone) {
+          throw new Error("Cadastro do aluno incompleto (Nome, CPF, Telefone e E-mail são obrigatórios para o Asaas).");
+        }
+        
+        toast.info("Configurando cliente no Asaas...");
+        customerId = await createOrGetAsaasCustomer({
+          id: aluno.id,
+          nome: aluno.nome,
+          cpf: aluno.cpf,
+          email: aluno.email,
+          telefone: aluno.telefone
+        });
+      }
+
+      if (!customerId) {
+        throw new Error("Não foi possível obter ou criar o cliente no Asaas.");
+      }
+
       const { payment, pixData } = await createAsaasPayment({
-        customer: aluno.asaas_customer_id,
+        customer: customerId,
         billingType: type,
         value: Number(selectedParcela.valor),
         dueDate: selectedParcela.data_vencimento,
@@ -242,6 +263,7 @@ function AlunoDetalhes() {
       setShowAsaasModal(false);
       setShowAsaasResultModal(true);
       qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
+      qc.invalidateQueries({ queryKey: ["aluno", id] });
       toast.success("Cobrança gerada no Asaas!");
     } catch (error: any) {
       toast.error(error.message);
