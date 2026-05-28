@@ -65,7 +65,13 @@ function StudentFinance() {
         throw new Error(response.error);
       }
 
-      return { ...response.updateParcela, type };
+      return { 
+        ...response.updateParcela, 
+        type, 
+        // Garantir campos para o modal/retorno
+        identificationField: response.updateParcela.asaas_barcode,
+        bankSlipUrl: response.updateParcela.asaas_url
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["student-finance"] });
@@ -348,7 +354,7 @@ function StudentFinance() {
                                       asChild
                                     >
                                       <a href={parcela.asaas_url || "#"} target="_blank" rel="noreferrer">
-                                        <ExternalLink className="h-3 w-3 mr-1" /> Ver Boleto
+                                        <ExternalLink className="h-3 w-3 mr-1" /> Ver PDF do Boleto
                                       </a>
                                     </Button>
                                     <Button 
