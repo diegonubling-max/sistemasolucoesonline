@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { createAsaasPayment } from "@/services/asaas";
+import { createAsaasPayment, createOrGetAsaasCustomer } from "@/services/asaas";
 import { useStudentTheme } from "./_student";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,12 +59,30 @@ function StudentFinance() {
 
   const generatePaymentMutation = useMutation({
     mutationFn: async ({ parcela, type }: { parcela: any, type: 'PIX' | 'BOLETO' }) => {
-      if (!financeData?.aluno?.asaas_customer_id) {
-        throw new Error("ID do cliente Asaas não encontrado. Verifique seu cadastro.");
+      let customerId = financeData?.aluno?.asaas_customer_id;
+
+      if (!customerId) {
+        // Buscar dados completos do aluno para criar no Asaas
+        const { data: alunoCompleto, error: alunoError } = await supabase
+          .from("alunos")
+          .select("id, nome, cpf, email, telefone")
+          .eq("id", financeData?.aluno?.id)
+          .single();
+
+        if (alunoError || !alunoCompleto) {
+          throw new Error("Erro ao carregar dados do aluno para integração.");
+        }
+
+        if (!alunoCompleto.cpf || !alunoCompleto.email) {
+          throw new Error("Seu cadastro está incompleto (CPF e E-mail são obrigatórios).");
+        }
+
+        toast.info("Configurando sua conta de pagamento...");
+        customerId = await createOrGetAsaasCustomer(alunoCompleto);
       }
 
       const response = await createAsaasPayment({
-        customer: financeData.aluno.asaas_customer_id,
+        customer: customerId,
         billingType: type,
         value: Number(parcela.valor),
         dueDate: parcela.data_vencimento,
