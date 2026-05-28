@@ -227,7 +227,7 @@ serve(async (req) => {
 
     await supabaseClient.from("parcelas").update(updateParcela).eq("id", parcela_id);
 
-    return new Response(JSON.stringify({ success: true, payment: paymentData, pixData, updateParcela }), {
+    return new Response(JSON.stringify({ success: true, payment: paymentDetail, pixData, updateParcela }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
