@@ -106,11 +106,31 @@ function StudentProfile() {
     }
   });
 
+  const { data: configs } = useQuery({
+    queryKey: ["global-configs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .select("chave, valor");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleWhatsAppSupport = () => {
+    const whatsappNumber = configs?.find(c => c.chave === "whatsapp_suporte")?.valor;
+    const rawMessage = configs?.find(c => c.chave === "mensagem_whatsapp")?.valor || "";
+    
+    if (!whatsappNumber) return;
+
     const nome = alunoData?.nome || "";
     const ctr = alunoData?.ctr || "";
-    const message = `Olá! Sou o(a) aluno(a) ${nome} (CTR #${ctr}) e preciso de ajuda.`;
-    const whatsappUrl = `https://wa.me/5551XXXXXXXXX?text=${encodeURIComponent(message)}`;
+    
+    const message = rawMessage
+      .replace("[nome]", nome)
+      .replace("[ctr]", ctr.toString());
+
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
