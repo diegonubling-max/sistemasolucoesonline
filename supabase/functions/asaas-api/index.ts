@@ -67,17 +67,10 @@ serve(async (req) => {
     const responseText = await response.text();
     let data;
     try {
-      data = JSON.parse(responseText);
+      data = responseText ? JSON.parse(responseText) : {};
     } catch (e) {
       console.error('Error parsing Asaas response as JSON:', responseText);
-      return new Response(JSON.stringify({ 
-        error: 'Asaas returned non-JSON response',
-        status: response.status,
-        text: responseText
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      throw new Error(`Asaas returned non-JSON response: ${responseText.substring(0, 100)}`);
     }
 
     if (!response.ok) {
