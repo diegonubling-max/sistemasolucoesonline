@@ -72,27 +72,27 @@ function AdminSettings() {
       toast.error("Erro ao salvar configuração: " + error.message);
     },
   });
-2: 
-3:   const updateMultipleConfigs = useMutation({
-4:     mutationFn: async (items: { chave: string, valor: string }[]) => {
-5:       const promises = items.map(item => 
-6:         supabase
-7:           .from("configuracoes")
-8:           .update({ valor: item.valor })
-9:           .eq("chave", item.chave)
-10:       );
-11:       const results = await Promise.all(promises);
-12:       const error = results.find(r => r.error)?.error;
-13:       if (error) throw error;
-14:     },
-15:     onSuccess: () => {
-16:       queryClient.invalidateQueries({ queryKey: ["admin-configs"] });
-17:       toast.success("Configurações salvas com sucesso!");
-18:     },
-19:     onError: (error: any) => {
-20:       toast.error("Erro ao salvar configurações: " + error.message);
-21:     },
-22:   });
+
+  const updateMultipleConfigs = useMutation({
+    mutationFn: async (items: { chave: string, valor: string }[]) => {
+      const promises = items.map(item => 
+        supabase
+          .from("configuracoes")
+          .update({ valor: item.valor })
+          .eq("chave", item.chave)
+      );
+      const results = await Promise.all(promises);
+      const error = results.find(r => r.error)?.error;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-configs"] });
+      toast.success("Configurações salvas com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao salvar configurações: " + error.message);
+    },
+  });
 
   if (isLoading) {
     return (
@@ -125,43 +125,26 @@ function AdminSettings() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">WhatsApp de Suporte</CardTitle>
-                <CardDescription>Configure o número que os alunos usarão para entrar em contato</CardDescription>
+                <CardDescription>Configure o número e a mensagem padrão para o atendimento</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="whatsapp-number">Número do WhatsApp</Label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="whatsapp-number"
-                        placeholder="Ex: 5551999999999"
-                        className="pl-9"
-                        value={whatsappSuporte}
-                        onChange={(e) => setWhatsappSuporte(e.target.value)}
-                      />
-                    </div>
-                    <Button 
-                      onClick={() => updateConfig.mutate({ chave: "whatsapp_suporte", valor: whatsappSuporte })}
-                      disabled={updateConfig.isPending}
-                    >
-                      {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                      Salvar
-                    </Button>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="whatsapp-number"
+                      placeholder="Ex: 5551999999999"
+                      className="pl-9"
+                      value={whatsappSuporte}
+                      onChange={(e) => setWhatsappSuporte(e.target.value)}
+                    />
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Digite o número com DDI e DDD sem espaços ou símbolos. Ex: 5551999999999
                   </p>
                 </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Mensagem padrão do WhatsApp</CardTitle>
-                <CardDescription>Defina o texto inicial que será enviado pelo aluno</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="whatsapp-message">Mensagem pré-definida</Label>
                   <Textarea
@@ -174,15 +157,20 @@ function AdminSettings() {
                   <p className="text-xs text-muted-foreground">
                     Use <code className="bg-muted px-1 rounded text-primary">[nome]</code> e <code className="bg-muted px-1 rounded text-primary">[ctr]</code> para incluir os dados do aluno automaticamente
                   </p>
-                  <div className="flex justify-end pt-2">
-                    <Button 
-                      onClick={() => updateConfig.mutate({ chave: "mensagem_whatsapp", valor: mensagemWhatsapp })}
-                      disabled={updateConfig.isPending}
-                    >
-                      {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                      Salvar Mensagem
-                    </Button>
-                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button 
+                    onClick={() => updateMultipleConfigs.mutate([
+                      { chave: "whatsapp_suporte", valor: whatsappSuporte },
+                      { chave: "mensagem_whatsapp", valor: mensagemWhatsapp }
+                    ])}
+                    disabled={updateMultipleConfigs.isPending}
+                    className="w-full sm:w-auto"
+                  >
+                    {updateMultipleConfigs.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Salvar Alterações do WhatsApp
+                  </Button>
                 </div>
               </CardContent>
             </Card>
