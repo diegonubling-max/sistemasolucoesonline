@@ -20,12 +20,12 @@ function StudentProfile() {
   const { session } = useAuth();
   const { isDark } = useStudentTheme();
   
-  const { data: alunoData } = useQuery({
+  const { data: alunoData, refetch: refetchAluno } = useQuery({
     queryKey: ["student-profile", session?.user.email],
     queryFn: async () => {
       const { data } = await supabase
         .from("alunos")
-        .select("nome, ctr, email")
+        .select("nome, ctr, email, telefone, foto_perfil")
         .eq("email", session?.user.email ?? "")
         .single();
       return data;
