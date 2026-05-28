@@ -185,7 +185,7 @@ function SegmentosList() {
               <div className="space-y-1.5 flex flex-col justify-end">
                 <div className="flex items-center gap-2 pb-2">
                   <Switch
-                    checked={editing?.ativo}
+                    checked={!!editing?.ativo}
                     onCheckedChange={(v) => setEditing({ ...editing, ativo: v })}
                   />
                   <span className="text-sm">{editing?.ativo ? "Ativo" : "Inativo"}</span>

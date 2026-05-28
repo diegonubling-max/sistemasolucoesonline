@@ -14,6 +14,7 @@ import { Route as StudentRouteImport } from './routes/_student'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
+import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
 import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
@@ -51,6 +52,11 @@ const AlunoLoginRoute = AlunoLoginRouteImport.update({
   id: '/aluno/login',
   path: '/aluno/login',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
+  id: '/segmentos',
+  path: '/segmentos',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminPacotesRoute = AdminPacotesRouteImport.update({
   id: '/pacotes',
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
+  '/segmentos': typeof AdminSegmentosRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
+  '/segmentos': typeof AdminSegmentosRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_admin/financeiro': typeof AdminFinanceiroRoute
   '/_admin/pacotes': typeof AdminPacotesRoute
+  '/_admin/segmentos': typeof AdminSegmentosRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/financeiro'
     | '/pacotes'
+    | '/segmentos'
     | '/aluno/login'
     | '/alunos/novo'
     | '/cursos/novo'
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/financeiro'
     | '/pacotes'
+    | '/segmentos'
     | '/aluno/login'
     | '/alunos/novo'
     | '/cursos/novo'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_admin/financeiro'
     | '/_admin/pacotes'
+    | '/_admin/segmentos'
     | '/aluno/login'
     | '/_admin/'
     | '/_admin/alunos/novo'
@@ -288,6 +300,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/aluno/login'
       preLoaderRoute: typeof AlunoLoginRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_admin/segmentos': {
+      id: '/_admin/segmentos'
+      path: '/segmentos'
+      fullPath: '/segmentos'
+      preLoaderRoute: typeof AdminSegmentosRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_admin/pacotes': {
       id: '/_admin/pacotes'
@@ -393,6 +412,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminPacotesRoute: typeof AdminPacotesRoute
+  AdminSegmentosRoute: typeof AdminSegmentosRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
   AdminCursosNovoRoute: typeof AdminCursosNovoRoute
@@ -407,6 +427,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminPacotesRoute: AdminPacotesRoute,
+  AdminSegmentosRoute: AdminSegmentosRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminAlunosNovoRoute: AdminAlunosNovoRoute,
   AdminCursosNovoRoute: AdminCursosNovoRoute,
