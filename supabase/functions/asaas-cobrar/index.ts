@@ -90,17 +90,26 @@ serve(async (req) => {
         throw new Error(`Erro ao buscar cobrança no Asaas: ${paymentData.errors?.[0]?.description || fetchResponse.statusText}`);
       }
 
-      if (paymentData.billingType === 'BOLETO') {
-        console.log("DETALHE BOLETO:", JSON.stringify(paymentData));
-      }
-
-      // Atualizar no banco com os dados mais recentes (especialmente identificationField)
+      // Atualizar no banco com os dados mais recentes
       const updateData: any = {
         asaas_url: paymentData.bankSlipUrl || paymentData.invoiceUrl,
       };
 
       if (paymentData.billingType === 'BOLETO') {
-        updateData.asaas_barcode = paymentData.identificationField || paymentData.fullCycleCode;
+        console.log("Buscando identificationField do boleto (FETCH)...");
+        const barcodeResponse = await fetch(`${asaasBaseUrl}/payments/${parcela.asaas_id}/identificationField`, {
+          headers: { "access_token": asaas_api_key }
+        });
+        const barcodeData = await barcodeResponse.json();
+        console.log("IDENTIFICATION FIELD (FETCH):", JSON.stringify(barcodeData));
+        
+        updateData.asaas_barcode = barcodeData.identificationField;
+        
+        // Garantir que a URL do PDF esteja correta
+        if (!updateData.asaas_url) {
+          updateData.asaas_url = `${asaas_ambiente === "producao" ? "https://www.asaas.com" : "https://sandbox.asaas.com"}/b/pdf/${parcela.asaas_id}`;
+        }
+        
         console.log(`Atualizando código de barras para: ${updateData.asaas_barcode}`);
       }
 
@@ -195,19 +204,25 @@ serve(async (req) => {
 
     if (!paymentResponse.ok) throw new Error(`Erro ao criar cobrança: ${paymentData.errors?.[0]?.description}`);
 
-    let paymentDetail = paymentData;
+    let paymentDetail = { ...paymentData };
     if (tipo === 'BOLETO') {
-      console.log("Buscando detalhes do boleto para obter código de barras...");
-      const detailResponse = await fetch(`${asaasBaseUrl}/payments/${paymentData.id}`, {
+      console.log("Buscando identificationField do boleto (CREATE)...");
+      const barcodeResponse = await fetch(`${asaasBaseUrl}/payments/${paymentData.id}/identificationField`, {
         headers: { "access_token": asaas_api_key }
       });
       
-      if (detailResponse.ok) {
-        paymentDetail = await detailResponse.json();
-        console.log("DETALHE BOLETO:", JSON.stringify(paymentDetail));
+      if (barcodeResponse.ok) {
+        const barcodeData = await barcodeResponse.json();
+        console.log("IDENTIFICATION FIELD (CREATE):", JSON.stringify(barcodeData));
+        paymentDetail.identificationField = barcodeData.identificationField;
       } else {
-        const errorText = await detailResponse.text();
-        console.error(`Erro ao buscar detalhes do boleto (${detailResponse.status}): ${errorText}`);
+        const errorText = await barcodeResponse.text();
+        console.error(`Erro ao buscar identificationField (${barcodeResponse.status}): ${errorText}`);
+      }
+
+      // Garantir que a URL do PDF esteja preenchida
+      if (!paymentDetail.bankSlipUrl) {
+        paymentDetail.bankSlipUrl = `${asaas_ambiente === "producao" ? "https://www.asaas.com" : "https://sandbox.asaas.com"}/b/pdf/${paymentData.id}`;
       }
     }
 
