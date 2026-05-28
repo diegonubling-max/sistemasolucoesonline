@@ -44,6 +44,7 @@ function AlunoDetalhes() {
   const [showAsaasResultModal, setShowAsaasResultModal] = useState(false);
   const [asaasResult, setAsaasResult] = useState<any>(null);
   const [isGeneratingAsaas, setIsGeneratingAsaas] = useState(false);
+  const [isFetchingAsaas, setIsFetchingAsaas] = useState<string | null>(null);
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
   const [resumoBaixa, setResumoBaixa] = useState<{
     formaPagamento: string;
