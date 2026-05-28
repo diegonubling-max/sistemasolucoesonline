@@ -181,6 +181,29 @@ function AlunoDetalhes() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const updateVitrine = useMutation({
+    mutationFn: async () => {
+      if (!editingVitrineItem) return;
+      const { error } = await supabase
+        .from("cursos_vitrine")
+        .update({
+          preco_pix: Number(editVitrinePrecoPix),
+          preco_cartao: Number(editVitrinePrecoCartao),
+          max_parcelas: Number(editVitrineMaxParcelas),
+          ativo: editVitrineAtivo,
+        })
+        .eq("id", editingVitrineItem.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Vitrine atualizada com sucesso!");
+      setShowEditVitrineModal(false);
+      setEditingVitrineItem(null);
+      qc.invalidateQueries({ queryKey: ["aluno-vitrine", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const { data: aluno, isLoading } = useQuery({
     queryKey: ["aluno", id],
     queryFn: async () => {
