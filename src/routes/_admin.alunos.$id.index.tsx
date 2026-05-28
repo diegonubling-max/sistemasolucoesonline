@@ -233,7 +233,10 @@ function AlunoDetalhes() {
       .replace(/[\u0300-\u036f]/g, '')
       .split(' ')[0];
       
-    const text = `Olá ${primeiroNome}! Seus dados de acesso:\nLogin: ${aluno.ctr}\nSenha: ${senhaGerada}\nAcesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+    const text = `Olá ${primeiroNome}! Seus dados de acesso:
+Login: ${aluno.ctr}
+Senha: ${senhaGerada}
+Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
     
     navigator.clipboard.writeText(text);
     toast.success("Dados copiados para a área de transferência!");
@@ -558,7 +561,10 @@ function AlunoDetalhes() {
             <Button 
               className="w-full" 
               onClick={() => {
-                const text = `Olá ${aluno.nome.split(" ")[0]}! Seus dados de acesso:\nLogin: ${aluno.ctr}\nSenha: ${passwordToDisplay}\nAcesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+                const text = `Olá ${aluno.nome.split(" ")[0]}! Seus dados de acesso:
+Login: ${aluno.ctr}
+Senha: ${passwordToDisplay}
+Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                 navigator.clipboard.writeText(text);
                 toast.success("Dados copiados!");
               }}
@@ -676,10 +682,10 @@ function AlunoDetalhes() {
                 />
               </div>
             </div>
-            <div className=\"space-y-2\">
+            <div className="space-y-2">
               <Label>Máx. parcelas</Label>
               <select 
-                className=\"w-full h-10 px-3 rounded-md border border-input bg-background\"
+                className="w-full h-10 px-3 rounded-md border border-input bg-background"
                 value={vitrineMaxParcelas}
                 onChange={(e) => setVitrineMaxParcelas(e.target.value)}
               >
