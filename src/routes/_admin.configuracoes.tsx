@@ -41,7 +41,9 @@ function AdminSettings() {
   const [nomeEscola, setNomeEscola] = useState("");
   const [asaasApiKey, setAsaasApiKey] = useState("");
   const [asaasAmbiente, setAsaasAmbiente] = useState("producao");
+  const [asaasWebhookToken, setAsaasWebhookToken] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showWebhookToken, setShowWebhookToken] = useState(false);
 
   useEffect(() => {
     if (configs) {
@@ -50,6 +52,7 @@ function AdminSettings() {
       setNomeEscola(configs.find(c => c.chave === "nome_escola")?.valor || "");
       setAsaasApiKey(configs.find(c => c.chave === "asaas_api_key")?.valor || "");
       setAsaasAmbiente(configs.find(c => c.chave === "asaas_ambiente")?.valor || "producao");
+      setAsaasWebhookToken(configs.find(c => c.chave === "asaas_webhook_token")?.valor || "");
     }
   }, [configs]);
 
@@ -275,6 +278,47 @@ function AdminSettings() {
                       Salvar
                     </Button>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Token do Webhook Asaas</CardTitle>
+                <CardDescription>Insira o token de segurança para validar notificações do Asaas</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="asaas-webhook">Token do Webhook</Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        id="asaas-webhook"
+                        type={showWebhookToken ? "text" : "password"}
+                        placeholder="whsec_..."
+                        value={asaasWebhookToken}
+                        onChange={(e) => setAsaasWebhookToken(e.target.value)}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowWebhookToken(!showWebhookToken)}
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showWebhookToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <Button 
+                      onClick={() => updateConfig.mutate({ chave: "asaas_webhook_token", valor: asaasWebhookToken })}
+                      disabled={updateConfig.isPending}
+                    >
+                      {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      Salvar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Dica: Encontre em Integrações → Webhooks no painel do Asaas
+                  </p>
                 </div>
               </CardContent>
             </Card>
