@@ -264,8 +264,10 @@ function StudentProfile() {
               </CardContent>
           </Card>
 
-          <Card className="bg-white border-gray-100 shadow-md border-none shadow-xl border overflow-hidden">
-            <CardHeader>
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-900 px-1">Suporte</h2>
+            <Card className="bg-white border-gray-100 shadow-md border-none shadow-xl border overflow-hidden">
+              <CardHeader>
               <CardTitle className="text-gray-900 flex items-center gap-2">
                 <div className="bg-[#25D366]/10 p-2 rounded-lg">
                   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#25D366]" xmlns="http://www.w3.org/2000/svg">
