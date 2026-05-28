@@ -87,6 +87,10 @@ serve(async (req) => {
         throw new Error(`Erro ao buscar cobrança no Asaas: ${paymentData.errors?.[0]?.description || fetchResponse.statusText}`);
       }
 
+      if (paymentData.billingType === 'BOLETO') {
+        console.log("DETALHE BOLETO:", JSON.stringify(paymentData));
+      }
+
       // Atualizar no banco com os dados mais recentes (especialmente identificationField)
       const updateData: any = {
         asaas_url: paymentData.bankSlipUrl || paymentData.invoiceUrl,
@@ -188,6 +192,22 @@ serve(async (req) => {
 
     if (!paymentResponse.ok) throw new Error(`Erro ao criar cobrança: ${paymentData.errors?.[0]?.description}`);
 
+    let paymentDetail = paymentData;
+    if (tipo === 'BOLETO') {
+      console.log("Buscando detalhes do boleto para obter código de barras...");
+      const detailResponse = await fetch(`${asaasBaseUrl}/payments/${paymentData.id}`, {
+        headers: { "access_token": asaas_api_key }
+      });
+      
+      if (detailResponse.ok) {
+        paymentDetail = await detailResponse.json();
+        console.log("DETALHE BOLETO:", JSON.stringify(paymentDetail));
+      } else {
+        const errorText = await detailResponse.text();
+        console.error(`Erro ao buscar detalhes do boleto (${detailResponse.status}): ${errorText}`);
+      }
+    }
+
     let pixData = null;
     if (tipo === 'PIX') {
       const pixResponse = await fetch(`${asaasBaseUrl}/payments/${paymentData.id}/pixQrCode`, {
@@ -198,7 +218,7 @@ serve(async (req) => {
 
     const updateParcela: any = {
       asaas_id: paymentData.id,
-      asaas_url: paymentData.bankSlipUrl || paymentData.invoiceUrl,
+      asaas_url: paymentDetail.bankSlipUrl || paymentDetail.invoiceUrl,
       forma_pagamento: tipo.toLowerCase()
     };
 
@@ -207,12 +227,13 @@ serve(async (req) => {
       updateParcela.asaas_pix_qrcode = pixData.encodedImage;
     } else if (tipo === 'BOLETO') {
       // Garantindo identificationField (47 dígitos)
-      updateParcela.asaas_barcode = paymentData.identificationField || paymentData.fullCycleCode;
+      updateParcela.asaas_barcode = paymentDetail.identificationField || paymentDetail.fullCycleCode;
+      console.log(`Salvando código de barras: ${updateParcela.asaas_barcode}`);
     }
 
     await supabaseClient.from("parcelas").update(updateParcela).eq("id", parcela_id);
 
-    return new Response(JSON.stringify({ success: true, payment: paymentData, pixData, updateParcela }), {
+    return new Response(JSON.stringify({ success: true, payment: paymentDetail, pixData, updateParcela }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
