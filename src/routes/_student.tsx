@@ -125,6 +125,9 @@ function StudentLayout() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link to="/aluno/dashboard" className="flex items-center gap-2">
+              <div className="bg-[#2D6ADF]/10 p-1.5 rounded-lg mr-1">
+                <School className="h-5 w-5 text-[#2D6ADF]" />
+              </div>
               <span className="text-xl font-bold">
                 <span className="text-white">{nomeEscola.split(' ')[0]}</span>{" "}
                 <span className="text-[#2D6ADF]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
