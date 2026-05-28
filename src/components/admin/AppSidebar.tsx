@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2 } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, ListVideo, Tags } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
   { title: "Alunos", url: "/alunos", icon: Users, enabled: true },
   { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true },
+  { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true },
   { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true },
 ];

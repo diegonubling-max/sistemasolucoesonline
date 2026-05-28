@@ -48,6 +48,12 @@ function StudentDashboard() {
             nome,
             descricao,
             thumbnail_url,
+            segmento_id,
+            segmentos (
+              id,
+              nome,
+              ordem
+            ),
             aulas (count)
           )
         `)
@@ -134,58 +140,91 @@ function StudentDashboard() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {cursos.map((c: any, i: number) => {
-              const curso = c.cursos;
-              if (!curso) return null;
-              const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
-              
-              return (
-                <Link key={i} to="/aluno/curso/$id" params={{ id: curso.id }} className="group">
-                  <div className="relative bg-white border-gray-200 rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border h-full flex flex-col shadow-sm">
-                    <div className="aspect-video bg-gray-100 flex items-center justify-center relative overflow-hidden">
-                      {curso.thumbnail_url ? (
-                        <img 
-                          src={curso.thumbnail_url} 
-                          alt={curso.nome}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                      ) : (
-                        <div className="p-4 bg-[#2D6ADF]/20 rounded-full">
-                          <BookOpen className="h-10 w-10 text-[#2D6ADF]" />
-                        </div>
-                      )}
-                      
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="flex items-center gap-2 bg-[#2D6ADF] px-4 py-2 rounded-full text-white font-bold text-sm">
-                            <PlayCircle className="h-4 w-4" />
-                            Assistir
-                        </div>
-                      </div>
+          <div className="space-y-12">
+            {(() => {
+              const groups: any = {};
+              cursos.forEach((c: any) => {
+                const curso = c.cursos;
+                if (!curso) return;
+                const seg = curso.segmentos;
+                const segName = Array.isArray(seg) ? (seg[0]?.nome || "Outros") : (seg?.nome || "Outros");
+                const segId = Array.isArray(seg) ? (seg[0]?.id || "others") : (seg?.id || "others");
+                const segOrdem = Array.isArray(seg) ? (seg[0]?.ordem || 99) : (seg?.ordem || 99);
+                
+                if (!groups[segId]) {
+                  groups[segId] = { id: segId, nome: segName, ordem: segOrdem, items: [] };
+                }
+                groups[segId].items.push(c);
+              });
+
+              const sortedGroups = Object.values(groups).sort((a: any, b: any) => a.ordem - b.ordem);
+              const showGroups = sortedGroups.length > 1;
+
+              return sortedGroups.map((group: any) => (
+                <div key={group.id} className="space-y-6">
+                  {showGroups && (
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-1 bg-[#1E3A5F] rounded-full" />
+                      <h3 className="text-xl font-bold text-gray-800 uppercase tracking-wide">
+                        {group.nome}
+                      </h3>
                     </div>
-                    
-                    <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{curso.nome}</h3>
-                        <p className="text-xs text-gray-500 mt-1 uppercase font-bold tracking-wider">
-                            {aulasCount} {aulasCount === 1 ? 'aula' : 'aulas'}
-                        </p>
-                      </div>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {group.items.map((c: any, i: number) => {
+                      const curso = c.cursos;
+                      const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
                       
-                      <div className="space-y-2">
-                        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#2D6ADF] transition-all" style={{ width: '0%' }} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Progresso</p>
-                            <p className="text-[10px] text-[#2D6ADF] font-bold">0%</p>
-                        </div>
-                      </div>
-                    </div>
+                      return (
+                        <Link key={i} to="/aluno/curso/$id" params={{ id: curso.id }} className="group">
+                          <div className="relative bg-white border-gray-200 rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border h-full flex flex-col shadow-sm">
+                            <div className="aspect-video bg-gray-100 flex items-center justify-center relative overflow-hidden">
+                              {curso.thumbnail_url ? (
+                                <img 
+                                  src={curso.thumbnail_url} 
+                                  alt={curso.nome}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                              ) : (
+                                <div className="p-4 bg-[#2D6ADF]/20 rounded-full">
+                                  <BookOpen className="h-10 w-10 text-[#2D6ADF]" />
+                                </div>
+                              )}
+                              
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex items-center gap-2 bg-[#2D6ADF] px-4 py-2 rounded-full text-white font-bold text-sm">
+                                    <PlayCircle className="h-4 w-4" />
+                                    Assistir
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                              <div>
+                                <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{curso.nome}</h3>
+                                <p className="text-xs text-gray-500 mt-1 uppercase font-bold tracking-wider">
+                                    {aulasCount} {aulasCount === 1 ? 'aula' : 'aulas'}
+                                </p>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                  <div className="h-full bg-[#2D6ADF] transition-all" style={{ width: '0%' }} />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Progresso</p>
+                                    <p className="text-[10px] text-[#2D6ADF] font-bold">0%</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
-                </Link>
-              );
-            })}
+                </div>
+              ));
+            })()}
           </div>
         )}
       </div>

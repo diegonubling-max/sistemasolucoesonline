@@ -137,6 +137,7 @@ export type Database = {
           descricao: string | null
           id: string
           nome: string
+          segmento_id: string | null
           thumbnail_url: string | null
         }
         Insert: {
@@ -145,6 +146,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome: string
+          segmento_id?: string | null
           thumbnail_url?: string | null
         }
         Update: {
@@ -153,9 +155,18 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome?: string
+          segmento_id?: string | null
           thumbnail_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cursos_segmento_id_fkey"
+            columns: ["segmento_id"]
+            isOneToOne: false
+            referencedRelation: "segmentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cursos_vitrine: {
         Row: {
@@ -453,6 +464,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      segmentos: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

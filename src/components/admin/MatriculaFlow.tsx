@@ -46,12 +46,25 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
 
+  const { data: segmentos } = useQuery({
+    queryKey: ["segmentos-ativos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("segmentos")
+        .select("id, nome")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const { data: cursos } = useQuery({
     queryKey: ["cursos-ativos"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cursos")
-        .select("id, nome, aulas(count)")
+        .select("id, nome, segmento_id, aulas(count)")
         .eq("ativo", true)
         .order("nome");
       if (error) throw error;
@@ -216,6 +229,18 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     );
   };
 
+  const toggleSegmento = (segmentoId: string | null, checked: boolean) => {
+    const coursesInSegment = filteredCursos
+      .filter(c => c.segmento_id === segmentoId)
+      .map(c => c.id);
+    
+    if (checked) {
+      setSelectedCursos(prev => [...new Set([...prev, ...coursesInSegment])]);
+    } else {
+      setSelectedCursos(prev => prev.filter(id => !coursesInSegment.includes(id)));
+    }
+  };
+
   const handleAllCursos = (checked: boolean) => {
     if (checked) {
       setSelectedCursos(filteredCursos.map(c => c.id));
@@ -223,6 +248,22 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       setSelectedCursos([]);
     }
   };
+
+  // Group courses by segment
+  const groupedCursos = (segmentos || []).map(seg => ({
+    ...seg,
+    cursos: filteredCursos.filter(c => c.segmento_id === seg.id)
+  })).filter(g => g.cursos.length > 0);
+
+  // Add courses without segment or with invalid segment
+  const otherCursos = filteredCursos.filter(c => !segmentos?.some(s => s.id === c.segmento_id));
+  if (otherCursos.length > 0) {
+    groupedCursos.push({
+      id: "others",
+      nome: "Outros",
+      cursos: otherCursos
+    } as any);
+  }
 
   return (
     <div className="space-y-8">
@@ -336,26 +377,54 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 <label htmlFor="all" className="text-sm font-bold cursor-pointer">Marcar todos os cursos</label>
               </div>
 
-              <div className="max-h-[400px] overflow-y-auto space-y-1">
-                {filteredCursos.map(curso => {
-                  const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
-                  const isSelected = selectedCursos.includes(curso.id);
-                  return (
-                    <div 
-                      key={curso.id}
-                      className={`flex items-center justify-between p-4 rounded-lg border transition-all cursor-pointer hover:bg-muted/50 ${isSelected ? "border-primary bg-primary/5 shadow-sm" : ""}`}
-                      onClick={() => toggleCurso(curso.id)}
-                    >
-                      <div className="flex items-center gap-4">
-                        <Checkbox checked={isSelected} onCheckedChange={() => {}} />
-                        <div>
-                          <p className="font-semibold text-sm">{curso.nome}</p>
-                          <p className="text-xs text-muted-foreground">{aulasCount} aulas</p>
-                        </div>
+              <div className="max-h-[500px] overflow-y-auto space-y-6 pt-2">
+                {groupedCursos.map(group => (
+                  <div key={group.id} className="space-y-3">
+                    <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md border border-muted">
+                      <div className="flex items-center gap-2">
+                        <Checkbox 
+                          id={`seg-${group.id}`}
+                          checked={group.cursos.every(c => selectedCursos.includes(c.id))}
+                          onCheckedChange={(c) => toggleSegmento(group.id === "others" ? null : group.id, !!c)}
+                        />
+                        <label htmlFor={`seg-${group.id}`} className="text-xs font-bold uppercase tracking-wider cursor-pointer">
+                          {group.nome}
+                        </label>
                       </div>
+                      <span className="text-[10px] text-muted-foreground font-bold">
+                        {group.cursos.filter(c => selectedCursos.includes(c.id)).length} / {group.cursos.length}
+                      </span>
                     </div>
-                  );
-                })}
+
+                    <div className="grid grid-cols-1 gap-1">
+                      {group.cursos.map(curso => {
+                        const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
+                        const isSelected = selectedCursos.includes(curso.id);
+                        return (
+                          <div 
+                            key={curso.id}
+                            className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer hover:bg-muted/30 ${isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-transparent"}`}
+                            onClick={() => toggleCurso(curso.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Checkbox checked={isSelected} onCheckedChange={() => {}} />
+                              <div>
+                                <p className="font-semibold text-sm">{curso.nome}</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">{aulasCount} aulas</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+                {filteredCursos.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum curso encontrado para "{searchCurso}"
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
