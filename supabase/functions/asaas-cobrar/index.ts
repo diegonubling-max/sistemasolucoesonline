@@ -198,8 +198,14 @@ serve(async (req) => {
       const detailResponse = await fetch(`${asaasBaseUrl}/payments/${paymentData.id}`, {
         headers: { "access_token": asaas_api_key }
       });
-      paymentDetail = await detailResponse.json();
-      console.log("DETALHE BOLETO:", JSON.stringify(paymentDetail));
+      
+      if (detailResponse.ok) {
+        paymentDetail = await detailResponse.json();
+        console.log("DETALHE BOLETO:", JSON.stringify(paymentDetail));
+      } else {
+        const errorText = await detailResponse.text();
+        console.error(`Erro ao buscar detalhes do boleto (${detailResponse.status}): ${errorText}`);
+      }
     }
 
     let pixData = null;
