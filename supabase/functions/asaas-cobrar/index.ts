@@ -87,6 +87,10 @@ serve(async (req) => {
         throw new Error(`Erro ao buscar cobrança no Asaas: ${paymentData.errors?.[0]?.description || fetchResponse.statusText}`);
       }
 
+      if (paymentData.billingType === 'BOLETO') {
+        console.log("DETALHE BOLETO:", JSON.stringify(paymentData));
+      }
+
       // Atualizar no banco com os dados mais recentes (especialmente identificationField)
       const updateData: any = {
         asaas_url: paymentData.bankSlipUrl || paymentData.invoiceUrl,
