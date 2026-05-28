@@ -1,0 +1,9 @@
+ALTER TABLE public.parcelas 
+ADD COLUMN IF NOT EXISTS asaas_id TEXT,
+ADD COLUMN IF NOT EXISTS asaas_url TEXT,
+ADD COLUMN IF NOT EXISTS asaas_pix_qrcode TEXT,
+ADD COLUMN IF NOT EXISTS asaas_pix_chave TEXT,
+ADD COLUMN IF NOT EXISTS asaas_barcode TEXT;
+
+ALTER TABLE public.alunos 
+ADD COLUMN IF NOT EXISTS asaas_customer_id TEXT;

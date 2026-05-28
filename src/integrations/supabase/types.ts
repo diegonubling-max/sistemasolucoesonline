@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       alunos: {
         Row: {
+          asaas_customer_id: string | null
           ativo: boolean
           cpf: string
           created_at: string
@@ -39,6 +40,7 @@ export type Database = {
           vendedora: string | null
         }
         Insert: {
+          asaas_customer_id?: string | null
           ativo?: boolean
           cpf: string
           created_at?: string
@@ -62,6 +64,7 @@ export type Database = {
           vendedora?: string | null
         }
         Update: {
+          asaas_customer_id?: string | null
           ativo?: boolean
           cpf?: string
           created_at?: string
@@ -388,6 +391,11 @@ export type Database = {
       }
       parcelas: {
         Row: {
+          asaas_barcode: string | null
+          asaas_id: string | null
+          asaas_pix_chave: string | null
+          asaas_pix_qrcode: string | null
+          asaas_url: string | null
           cartao_parcelas: number | null
           created_at: string
           data_pagamento: string | null
@@ -408,6 +416,11 @@ export type Database = {
           valor_taxa: number | null
         }
         Insert: {
+          asaas_barcode?: string | null
+          asaas_id?: string | null
+          asaas_pix_chave?: string | null
+          asaas_pix_qrcode?: string | null
+          asaas_url?: string | null
           cartao_parcelas?: number | null
           created_at?: string
           data_pagamento?: string | null
@@ -428,6 +441,11 @@ export type Database = {
           valor_taxa?: number | null
         }
         Update: {
+          asaas_barcode?: string | null
+          asaas_id?: string | null
+          asaas_pix_chave?: string | null
+          asaas_pix_qrcode?: string | null
+          asaas_url?: string | null
           cartao_parcelas?: number | null
           created_at?: string
           data_pagamento?: string | null

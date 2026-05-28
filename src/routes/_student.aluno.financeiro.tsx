@@ -8,8 +8,12 @@ import {
   AlertCircle, 
   Lock,
   Receipt,
-  CreditCard
+  CreditCard,
+  Copy,
+  ExternalLink
 } from "lucide-react";
+import { toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useStudentTheme } from "./_student";
@@ -269,18 +273,60 @@ function StudentFinance() {
                           <span className="text-xs text-gray-500 italic">Isentado</span>
                         ) : (
                           <div className="flex justify-end gap-2">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="outline" size="sm" disabled className="h-8 border-gray-100 text-gray-500 bg-transparent opacity-50">
-                                    <CreditCard className="h-3 w-3 mr-1" /> Pagar
+                            {parcela.asaas_id ? (
+                              <>
+                                {parcela.asaas_pix_chave ? (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 border-green-200 text-green-600 hover:bg-green-50"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(parcela.asaas_pix_chave || "");
+                                      toast.success("Chave PIX copiada!");
+                                    }}
+                                  >
+                                    <Copy className="h-3 w-3 mr-1" /> Copiar PIX
                                   </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Integração disponível em breve</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                                ) : (
+                                  <>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-8 border-blue-200 text-blue-600 hover:bg-blue-50"
+                                      asChild
+                                    >
+                                      <a href={parcela.asaas_url || "#"} target="_blank" rel="noreferrer">
+                                        <ExternalLink className="h-3 w-3 mr-1" /> Ver Boleto
+                                      </a>
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-8 border-gray-200 text-gray-600 hover:bg-gray-50"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(parcela.asaas_barcode || "");
+                                        toast.success("Código de barras copiado!");
+                                      }}
+                                    >
+                                      <Copy className="h-3 w-3 mr-1" /> Copiar Código
+                                    </Button>
+                                  </>
+                                )}
+                              </>
+                            ) : (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" disabled className="h-8 border-gray-100 text-gray-500 bg-transparent opacity-50">
+                                      <CreditCard className="h-3 w-3 mr-1" /> Pagar
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Integração disponível em breve</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                           </div>
                         )}
                       </TableCell>

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { AlunoForm, type AlunoFormValues } from "./AlunoForm";
 import { maskCPF, maskPhone, isValidCPF, calcAge, generateStudentPassword } from "@/lib/format";
 import { toast } from "sonner";
+import { createOrGetAsaasCustomer } from "@/services/asaas";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
@@ -171,6 +172,22 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
       const { error } = await supabase.from('parcelas').insert(allParcelas);
       if (error) throw error;
+
+      // Integrar com Asaas: Criar/Buscar cliente
+      try {
+        await createOrGetAsaasCustomer({
+          id: aluno.id,
+          nome: aluno.nome,
+          cpf: aluno.cpf,
+          email: aluno.email || "",
+          telefone: aluno.telefone || ""
+        });
+        console.log("Cliente sincronizado com Asaas");
+      } catch (asaasError) {
+        console.error("Erro ao sincronizar com Asaas:", asaasError);
+        // Não trava a conclusão da matrícula, mas avisa
+        toast.error("Matrícula concluída, mas erro ao sincronizar com Asaas.");
+      }
 
       return true;
     },
