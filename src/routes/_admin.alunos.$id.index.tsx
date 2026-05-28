@@ -20,6 +20,8 @@ import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
+import { createAsaasPayment } from "@/services/asaas";
+import { QRCodeSVG } from "qrcode.react";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
   head: () => ({ meta: [{ title: "Aluno — Soluções Online" }] }),
@@ -36,7 +38,12 @@ function AlunoDetalhes() {
   const [showEditVitrineModal, setShowEditVitrineModal] = useState(false);
   const [editingVitrineItem, setEditingVitrineItem] = useState<any>(null);
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
+  const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const [selectedParcelaValor, setSelectedParcelaValor] = useState<number>(0);
+  const [showAsaasModal, setShowAsaasModal] = useState(false);
+  const [showAsaasResultModal, setShowAsaasResultModal] = useState(false);
+  const [asaasResult, setAsaasResult] = useState<any>(null);
+  const [isGeneratingAsaas, setIsGeneratingAsaas] = useState(false);
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
   const [resumoBaixa, setResumoBaixa] = useState<{
     formaPagamento: string;
@@ -203,6 +210,45 @@ function AlunoDetalhes() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const handleGenerateAsaas = async (type: 'PIX' | 'BOLETO') => {
+    if (!selectedParcela || !aluno?.asaas_customer_id) return;
+    setIsGeneratingAsaas(true);
+    try {
+      const { payment, pixData } = await createAsaasPayment({
+        customer: aluno.asaas_customer_id,
+        billingType: type,
+        value: Number(selectedParcela.valor),
+        dueDate: selectedParcela.data_vencimento,
+        description: selectedParcela.descricao || `Parcela ${selectedParcela.numero}`,
+        externalReference: selectedParcela.id,
+      });
+
+      // Update parcela with asaas info
+      const { error: updateError } = await supabase
+        .from('parcelas')
+        .update({
+          asaas_id: payment.id,
+          asaas_url: payment.bankSlipUrl || payment.invoiceUrl,
+          asaas_pix_chave: pixData?.payload,
+          asaas_pix_qrcode: pixData?.encodedImage,
+          asaas_barcode: payment.identificationField
+        })
+        .eq('id', selectedParcela.id);
+
+      if (updateError) throw updateError;
+
+      setAsaasResult({ ...payment, pixData });
+      setShowAsaasModal(false);
+      setShowAsaasResultModal(true);
+      qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
+      toast.success("Cobrança gerada no Asaas!");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsGeneratingAsaas(false);
+    }
+  };
 
   const { data: aluno, isLoading } = useQuery({
     queryKey: ["aluno", id],
