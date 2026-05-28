@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 const StudentThemeContext = createContext<{ isDark: boolean }>({ isDark: true });
 export const useStudentTheme = () => useContext(StudentThemeContext);
@@ -225,6 +226,7 @@ function StudentLayout() {
           </StudentThemeContext.Provider>
         </div>
       </main>
+      <WhatsAppButton />
     </div>
   );
 }

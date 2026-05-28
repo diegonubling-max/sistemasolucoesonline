@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 export const Route = createFileRoute("/aluno/login")({
   component: AlunoLogin,
@@ -162,6 +163,7 @@ function AlunoLogin() {
           </CardContent>
         </Card>
       </div>
+      <WhatsAppButton />
     </div>
   );
 }
