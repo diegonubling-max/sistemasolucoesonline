@@ -1014,12 +1014,26 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                     </Button>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1" asChild>
-                    <a href={asaasResult?.bankSlipUrl} target="_blank" rel="noreferrer">
-                      Ver PDF do Boleto
-                    </a>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => {
+                      if (asaasResult?.bankSlipUrl) {
+                        window.open(asaasResult.bankSlipUrl, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                  >
+                    Ver PDF do Boleto
                   </Button>
+                  <a 
+                    href={asaasResult?.bankSlipUrl || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-center text-xs text-blue-500 hover:underline"
+                  >
+                    Clique aqui se o PDF não abrir
+                  </a>
                 </div>
               </div>
             )}
