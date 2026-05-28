@@ -101,15 +101,23 @@ function StudentDashboard() {
         <Skeleton className="h-64 md:h-80 w-full rounded-2xl bg-gray-200" />
         <div className="space-y-6">
             <Skeleton className="h-8 w-48 bg-gray-200" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[1, 2, 3, 4].map((i) => (
-                    <Skeleton key={i} className="aspect-[4/5] w-full rounded-xl bg-gray-200" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {[1, 2, 3, 4, 5].map((i) => (
+                    <Skeleton key={i} className="aspect-[220/320] w-full rounded-xl bg-gray-200" />
                 ))}
             </div>
         </div>
       </div>
     );
   }
+
+  const gradients = [
+    "from-blue-600 to-blue-400",
+    "from-purple-600 to-purple-400",
+    "from-green-600 to-green-400",
+    "from-orange-600 to-orange-400",
+    "from-red-600 to-red-400",
+  ];
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
@@ -170,51 +178,56 @@ function StudentDashboard() {
                       </h3>
                     </div>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     {group.items.map((c: any, i: number) => {
                       const curso = c.cursos;
                       const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
+                      const gradientIndex = (curso.nome?.length || 0) % gradients.length;
+                      const gradientClass = gradients[gradientIndex];
                       
                       return (
-                        <Link key={i} to="/aluno/curso/$id" params={{ id: curso.id }} className="group">
-                          <div className="relative bg-white border-gray-200 rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border h-full flex flex-col shadow-sm">
-                            <div className="aspect-video bg-gray-100 flex items-center justify-center relative overflow-hidden">
+                        <Link 
+                          key={i} 
+                          to="/aluno/curso/$id" 
+                          params={{ id: curso.id }} 
+                          className="group block w-full"
+                        >
+                          <div className="relative w-full aspect-[220/320] bg-white rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm cursor-pointer">
+                            <div className="absolute inset-0">
                               {curso.thumbnail_url ? (
                                 <img 
                                   src={curso.thumbnail_url} 
                                   alt={curso.nome}
-                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
                               ) : (
-                                <div className="p-4 bg-[#2D6ADF]/20 rounded-full">
-                                  <BookOpen className="h-10 w-10 text-[#2D6ADF]" />
+                                <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center`}>
+                                  <BookOpen className="h-12 w-12 text-white/40 mb-2" />
+                                  <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
                                 </div>
                               )}
-                              
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="flex items-center gap-2 bg-[#2D6ADF] px-4 py-2 rounded-full text-white font-bold text-sm">
-                                    <PlayCircle className="h-4 w-4" />
-                                    Assistir
-                                </div>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                            </div>
+
+                            <div className="absolute top-3 left-3">
+                              <div className="bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
+                                <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                {aulasCount} {aulasCount === 1 ? 'Aula' : 'Aulas'}
                               </div>
                             </div>
-                            
-                            <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                              <div>
-                                <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{curso.nome}</h3>
-                                <p className="text-xs text-gray-500 mt-1 uppercase font-bold tracking-wider">
-                                    {aulasCount} {aulasCount === 1 ? 'aula' : 'aulas'}
-                                </p>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                  <div className="h-full bg-[#2D6ADF] transition-all" style={{ width: '0%' }} />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Progresso</p>
-                                    <p className="text-[10px] text-[#2D6ADF] font-bold">0%</p>
-                                </div>
+
+                            <div className="absolute bottom-0 left-0 right-0 p-4">
+                              <h3 className="text-white font-bold text-base leading-tight line-clamp-2">
+                                {curso.nome}
+                              </h3>
+                              <p className="text-gray-400 text-[10px] font-medium mt-1 uppercase tracking-widest">
+                                Soluções Online
+                              </p>
+                            </div>
+
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                              <div className="bg-[#2D6ADF] p-3 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                <PlayCircle className="h-8 w-8 text-white" />
                               </div>
                             </div>
                           </div>
@@ -233,54 +246,64 @@ function StudentDashboard() {
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-900">Cursos Disponíveis para Você 🔒</h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {vitrine.map((item: any) => {
               const curso = item.cursos;
               if (!curso) return null;
+              const gradientIndex = (curso.nome?.length || 0) % gradients.length;
+              const gradientClass = gradients[gradientIndex];
               
               return (
                 <div 
                   key={item.id} 
                   onClick={() => setSelectedVitrine(item)}
-                  className="group cursor-pointer"
+                  className="group cursor-pointer block w-full"
                 >
-                  <div className="relative bg-white border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] hover:border-[#2D6ADF] border h-full flex flex-col shadow-sm">
-                    <div className="aspect-video bg-gray-100 flex items-center justify-center relative overflow-hidden">
+                  <div className="relative w-full aspect-[220/320] bg-white rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm">
+                    <div className="absolute inset-0">
                       {curso.thumbnail_url ? (
                         <img 
                           src={curso.thumbnail_url} 
                           alt={curso.nome}
-                          className="w-full h-full object-cover grayscale transition-transform duration-500 group-hover:scale-110"
+                          className="w-full h-full object-cover grayscale transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="p-4 bg-gray-200 rounded-full grayscale">
-                          <BookOpen className="h-10 w-10 text-gray-400" />
+                        <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center grayscale`}>
+                          <BookOpen className="h-12 w-12 text-white/40 mb-2" />
+                          <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
                         </div>
                       )}
-                      
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
-                          <Lock className="h-8 w-8 text-white" />
-                        </div>
-                      </div>
+                      <div className="absolute inset-0 bg-black/60" />
+                    </div>
 
-                      <div className="absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="text-white font-bold text-sm">Clique para desbloquear</span>
+                    <div className="absolute top-3 left-3">
+                      <div className="bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        Disponível
                       </div>
                     </div>
-                    
-                    <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-600 line-clamp-1">{curso.nome}</h3>
-                        <div className="mt-2 space-y-1">
-                          <p className="text-sm font-bold text-[#1E3A5F]">
-                            PIX: {formatCurrency(item.preco_pix)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            ou Cartão até {item.max_parcelas}x
-                          </p>
-                        </div>
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
+                        <Lock className="h-10 w-10 text-white" />
                       </div>
+                    </div>
+
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <h3 className="text-white font-bold text-base leading-tight line-clamp-2">
+                        {curso.nome}
+                      </h3>
+                      <div className="mt-2">
+                        <p className="text-white font-bold text-sm">
+                          {formatCurrency(item.preco_pix)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-white font-bold text-xs uppercase tracking-widest bg-[#1E3A5F] px-3 py-2 rounded-lg">
+                        Desbloquear
+                      </span>
                     </div>
                   </div>
                 </div>
