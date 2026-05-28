@@ -126,8 +126,8 @@ function StudentLayout() {
           <div className="flex items-center gap-8">
             <Link to="/aluno/dashboard" className="flex items-center gap-2">
               <span className="text-xl font-bold">
-                <span className="text-white">Soluções</span>{" "}
-                <span className="text-[#2D6ADF]">Online</span>
+                <span className="text-white">{nomeEscola.split(' ')[0]}</span>{" "}
+                <span className="text-[#2D6ADF]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
               </span>
             </Link>
 
