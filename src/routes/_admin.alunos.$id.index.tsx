@@ -654,10 +654,10 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                         className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
                         onClick={() => {
                           setEditingVitrineItem(item);
-                          setEditVitrinePrecoPix(item.preco_pix.toString());
-                          setEditVitrinePrecoCartao(item.preco_cartao.toString());
-                          setEditVitrineMaxParcelas(item.max_parcelas.toString());
-                          setEditVitrineAtivo(item.ativo);
+                          setEditVitrinePrecoPix(item.preco_pix?.toString() || "");
+                          setEditVitrinePrecoCartao(item.preco_cartao?.toString() || "");
+                          setEditVitrineMaxParcelas(item.max_parcelas?.toString() || "12");
+                          setEditVitrineAtivo(item.ativo ?? true);
                           setShowEditVitrineModal(true);
                         }}
                       >
