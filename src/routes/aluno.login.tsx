@@ -17,6 +17,20 @@ function AlunoLogin() {
   const navigate = useNavigate();
   const [ctr, setCtr] = useState("");
   const [password, setPassword] = useState("");
+  const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+
+  useQuery({
+    queryKey: ["global-configs-login"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'nome_escola')
+        .single();
+      if (data?.valor) setNomeEscola(data.valor);
+      return data;
+    },
+  });
 
   const login = useMutation({
     mutationFn: async () => {
