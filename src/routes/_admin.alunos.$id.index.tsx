@@ -20,7 +20,7 @@ import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
-import { createAsaasPayment } from "@/services/asaas";
+import { createAsaasPayment, createOrGetAsaasCustomer } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
