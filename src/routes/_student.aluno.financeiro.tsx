@@ -347,16 +347,28 @@ function StudentFinance() {
                                   </div>
                                 ) : (
                                   <>
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm" 
-                                      className="h-8 border-blue-200 text-blue-600 hover:bg-blue-50"
-                                      asChild
-                                    >
-                                      <a href={parcela.asaas_url || "#"} target="_blank" rel="noreferrer">
+                                    <div className="flex flex-col gap-1 items-end">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="h-8 border-blue-200 text-blue-600 hover:bg-blue-50"
+                                        onClick={() => {
+                                          if (parcela.asaas_url) {
+                                            window.open(parcela.asaas_url, '_blank', 'noopener,noreferrer');
+                                          }
+                                        }}
+                                      >
                                         <ExternalLink className="h-3 w-3 mr-1" /> Ver PDF do Boleto
+                                      </Button>
+                                      <a 
+                                        href={parcela.asaas_url || "#"} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="text-[10px] text-blue-500 hover:underline"
+                                      >
+                                        Clique aqui se o PDF não abrir
                                       </a>
-                                    </Button>
+                                    </div>
                                     <Button 
                                       variant="outline" 
                                       size="sm" 
