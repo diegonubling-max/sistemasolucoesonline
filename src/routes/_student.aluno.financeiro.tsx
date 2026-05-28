@@ -77,7 +77,7 @@ function StudentFinance() {
         .order('data_vencimento', { ascending: true });
 
       if (error) throw error;
-      return { parcelas: parcelas || [] };
+      return { parcelas: parcelas || [], aluno };
     },
     enabled: !!session?.user.email,
   });
