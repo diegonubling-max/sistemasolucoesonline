@@ -301,9 +301,18 @@ function StudentFinance() {
       </div>
 
       <div className="bg-white border-gray-200 shadow-md border rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-          <Receipt className="h-5 w-5 text-[#2D6ADF]" />
-          <h2 className="text-xl font-bold text-gray-900">Minhas Cobranças</h2>
+        <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Receipt className="h-5 w-5 text-[#2D6ADF]" />
+            <h2 className="text-xl font-bold text-gray-900">Minhas Cobranças</h2>
+          </div>
+          
+          {!financeData?.aluno?.asaas_customer_id && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-xs font-medium animate-in fade-in slide-in-from-right-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>Sua conta de pagamento será configurada no primeiro pagamento.</span>
+            </div>
+          )}
         </div>
         <div className="overflow-x-auto">
           <Table>
