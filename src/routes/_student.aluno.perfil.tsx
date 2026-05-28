@@ -72,6 +72,48 @@ function StudentProfile() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const uploadPhoto = useMutation({
+    mutationFn: async (file: File) => {
+      if (!session?.user.email) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('fotos-perfil')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('fotos-perfil')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('alunos')
+        .update({ foto_perfil: publicUrl })
+        .eq('email', session.user.email);
+
+      if (updateError) throw updateError;
+    },
+    onSuccess: () => {
+      toast.success("Foto atualizada com sucesso!");
+      refetchAluno();
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao atualizar foto: " + error.message);
+    }
+  });
+
+  const handleWhatsAppSupport = () => {
+    const nome = alunoData?.nome || "";
+    const ctr = alunoData?.ctr || "";
+    const message = `Olá! Sou o(a) aluno(a) ${nome} (CTR #${ctr}) e preciso de ajuda.`;
+    const whatsappUrl = `https://wa.me/5551XXXXXXXXX?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row items-center gap-8 bg-white border-gray-100 shadow-sm p-8 rounded-2xl border transition-colors shadow-xl">
