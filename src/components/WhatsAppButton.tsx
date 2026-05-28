@@ -1,8 +1,49 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 export const WhatsAppButton = () => {
-  // Use the placeholder number as requested in the prompt
-  const whatsappUrl = "https://wa.me/55XXXXXXXXXXX?text=Olá!%20Sou%20aluno%20da%20Soluções%20Online%20e%20preciso%20de%20ajuda.";
+  const { session } = useAuth();
+  
+  const { data: configs } = useQuery({
+    queryKey: ["global-configs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .select("chave, valor");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: alunoData } = useQuery({
+    queryKey: ["student-profile-mini", session?.user.email],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("alunos")
+        .select("nome, ctr")
+        .eq("email", session?.user.email ?? "")
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user.email,
+  });
+
+  const whatsappNumber = configs?.find(c => c.chave === "whatsapp_suporte")?.valor;
+  const rawMessage = configs?.find(c => c.chave === "mensagem_whatsapp")?.valor || "";
+
+  if (!whatsappNumber) return null;
+
+  const nome = alunoData?.nome || "";
+  const ctr = alunoData?.ctr || "";
+  
+  const message = rawMessage
+    .replace("[nome]", nome)
+    .replace("[ctr]", ctr.toString());
+
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
   return (
     <div className="fixed bottom-6 right-6 z-[999]">
