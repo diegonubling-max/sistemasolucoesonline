@@ -229,7 +229,7 @@ function AlunoDetalhes() {
         ...payment, 
         pixData,
         // Garantir que identificationField venha de onde quer que o Asaas tenha enviado
-        identificationField: payment.fullCycleCode || payment.identificationField || payment.nossoNumero,
+        identificationField: payment.identificationField || payment.fullCycleCode || payment.nossoNumero,
         bankSlipUrl: payment.bankSlipUrl || payment.invoiceUrl
       };
 
