@@ -222,15 +222,15 @@ function AlunoDetalhes() {
         throw new Error(response.error);
       }
 
-      const { payment, pixData } = response;
+      const { payment, pixData, updateParcela } = response;
       
       // Mapear campos para garantir que o modal exiba corretamente
       const result = { 
         ...payment, 
         pixData,
-        // Garantir que identificationField venha de onde quer que o Asaas tenha enviado
-        identificationField: payment.identificationField || payment.fullCycleCode || payment.nossoNumero,
-        bankSlipUrl: payment.bankSlipUrl || payment.invoiceUrl
+        // Priorizar o campo identificationField da consulta detalhada
+        identificationField: updateParcela?.asaas_barcode || payment.identificationField || payment.fullCycleCode,
+        bankSlipUrl: updateParcela?.asaas_url || payment.bankSlipUrl || payment.invoiceUrl
       };
 
       setAsaasResult(result);
