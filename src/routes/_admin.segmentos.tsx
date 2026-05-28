@@ -128,7 +128,7 @@ function SegmentosList() {
                         size="icon"
                         variant="ghost"
                         title={s.ativo ? "Desativar" : "Ativar"}
-                        onClick={() => toggleStatus.mutate({ id: s.id, ativo: s.ativo })}
+                        onClick={() => toggleStatus.mutate({ id: s.id, ativo: !!s.ativo })}
                       >
                         <Power className={`h-4 w-4 ${s.ativo ? "text-green-600" : "text-gray-400"}`} />
                       </Button>
