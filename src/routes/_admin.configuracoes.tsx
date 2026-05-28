@@ -72,6 +72,27 @@ function AdminSettings() {
       toast.error("Erro ao salvar configuração: " + error.message);
     },
   });
+2: 
+3:   const updateMultipleConfigs = useMutation({
+4:     mutationFn: async (items: { chave: string, valor: string }[]) => {
+5:       const promises = items.map(item => 
+6:         supabase
+7:           .from("configuracoes")
+8:           .update({ valor: item.valor })
+9:           .eq("chave", item.chave)
+10:       );
+11:       const results = await Promise.all(promises);
+12:       const error = results.find(r => r.error)?.error;
+13:       if (error) throw error;
+14:     },
+15:     onSuccess: () => {
+16:       queryClient.invalidateQueries({ queryKey: ["admin-configs"] });
+17:       toast.success("Configurações salvas com sucesso!");
+18:     },
+19:     onError: (error: any) => {
+20:       toast.error("Erro ao salvar configurações: " + error.message);
+21:     },
+22:   });
 
   if (isLoading) {
     return (
