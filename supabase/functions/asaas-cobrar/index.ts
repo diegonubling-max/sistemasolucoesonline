@@ -104,10 +104,12 @@ serve(async (req) => {
         console.log("IDENTIFICATION FIELD (FETCH):", JSON.stringify(barcodeData));
         
         updateData.asaas_barcode = barcodeData.identificationField;
+        paymentData.identificationField = barcodeData.identificationField;
         
         // Garantir que a URL do PDF esteja correta
         if (!updateData.asaas_url) {
           updateData.asaas_url = `${asaas_ambiente === "producao" ? "https://www.asaas.com" : "https://sandbox.asaas.com"}/b/pdf/${parcela.asaas_id}`;
+          paymentData.bankSlipUrl = updateData.asaas_url;
         }
         
         console.log(`Atualizando código de barras para: ${updateData.asaas_barcode}`);
