@@ -334,18 +334,28 @@ function StudentFinance() {
                           <div className="flex justify-end gap-2">
                             {parcela.asaas_id ? (
                               <>
-                                {parcela.asaas_pix_chave ? (
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="h-8 border-green-200 text-green-600 hover:bg-green-50"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(parcela.asaas_pix_chave || "");
-                                      toast.success("Chave PIX copiada!");
-                                    }}
-                                  >
-                                    <Copy className="h-3 w-3 mr-1" /> Copiar PIX
-                                  </Button>
+                                {parcela.asaas_pix_qrcode ? (
+                                  <div className="flex gap-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-8 border-green-200 text-green-600 hover:bg-green-50"
+                                      onClick={() => setShowPixDialog({ qrcode: parcela.asaas_pix_qrcode, key: parcela.asaas_pix_chave })}
+                                    >
+                                      <CreditCard className="h-3 w-3 mr-1" /> Ver QR Code
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-8 border-green-200 text-green-600 hover:bg-green-50"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(parcela.asaas_pix_chave || "");
+                                        toast.success("Chave PIX copiada!");
+                                      }}
+                                    >
+                                      <Copy className="h-3 w-3 mr-1" /> Copiar PIX
+                                    </Button>
+                                  </div>
                                 ) : (
                                   <>
                                     <Button 
@@ -373,18 +383,36 @@ function StudentFinance() {
                                 )}
                               </>
                             ) : (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="outline" size="sm" disabled className="h-8 border-gray-100 text-gray-500 bg-transparent opacity-50">
-                                      <CreditCard className="h-3 w-3 mr-1" /> Pagar
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Integração disponível em breve</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-8 border-[#2D6ADF] text-[#2D6ADF] hover:bg-[#2D6ADF]/5"
+                                  onClick={() => generatePaymentMutation.mutate({ parcela, type: 'PIX' })}
+                                  disabled={generatePaymentMutation.isPending}
+                                >
+                                  {generatePaymentMutation.isPending && generatePaymentMutation.variables?.type === 'PIX' && generatePaymentMutation.variables?.parcela.id === parcela.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                  ) : (
+                                    <CreditCard className="h-3 w-3 mr-1" />
+                                  )}
+                                  Gerar PIX
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-8 border-[#2D6ADF] text-[#2D6ADF] hover:bg-[#2D6ADF]/5"
+                                  onClick={() => generatePaymentMutation.mutate({ parcela, type: 'BOLETO' })}
+                                  disabled={generatePaymentMutation.isPending}
+                                >
+                                  {generatePaymentMutation.isPending && generatePaymentMutation.variables?.type === 'BOLETO' && generatePaymentMutation.variables?.parcela.id === parcela.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                  ) : (
+                                    <Receipt className="h-3 w-3 mr-1" />
+                                  )}
+                                  Gerar Boleto
+                                </Button>
+                              </div>
                             )}
                           </div>
                         )}
