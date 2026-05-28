@@ -39,11 +39,14 @@ serve(async (req) => {
     }
 
     const asaas_api_key = configs.find(c => c.chave === "asaas_api_key")?.valor;
-    const asaas_ambiente = configs.find(c => c.chave === "asaas_ambiente")?.valor || "sandbox";
+    const asaas_ambiente = configs.find(c => c.chave === "asaas_ambiente")?.valor;
 
-    if (!asaas_api_key) {
-      console.error("Chave de API do Asaas não encontrada na tabela configuracoes.");
-      throw new Error("Chave de API do Asaas não configurada.");
+    if (!asaas_api_key || !asaas_ambiente) {
+      const faltantes = [];
+      if (!asaas_api_key) faltantes.push("asaas_api_key");
+      if (!asaas_ambiente) faltantes.push("asaas_ambiente");
+      console.error(`Configurações obrigatórias não encontradas na tabela configuracoes: ${faltantes.join(", ")}`);
+      throw new Error(`Configurações do Asaas incompletas. Cadastre na tabela configuracoes: ${faltantes.join(", ")}.`);
     }
 
     const asaasBaseUrl = asaas_ambiente === "producao" 
