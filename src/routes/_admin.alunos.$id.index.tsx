@@ -647,18 +647,35 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                         Cartão: <span className="font-semibold">até {item.max_parcelas}x</span>
                       </p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => {
-                        if (confirm("Deseja remover este curso da vitrine?")) {
-                          removeFromVitrine.mutate(item.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                        onClick={() => {
+                          setEditingVitrineItem(item);
+                          setEditVitrinePrecoPix(item.preco_pix.toString());
+                          setEditVitrinePrecoCartao(item.preco_cartao.toString());
+                          setEditVitrineMaxParcelas(item.max_parcelas.toString());
+                          setEditVitrineAtivo(item.ativo);
+                          setShowEditVitrineModal(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          if (confirm("Deseja remover este curso da vitrine?")) {
+                            removeFromVitrine.mutate(item.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
