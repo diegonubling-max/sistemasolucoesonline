@@ -32,6 +32,18 @@ function StudentProfile() {
     },
     enabled: !!session?.user.email,
   });
+
+  const { data: configs } = useQuery({
+    queryKey: ["global-configs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .select("chave, valor");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -107,10 +119,19 @@ function StudentProfile() {
   });
 
   const handleWhatsAppSupport = () => {
+    const whatsappNumber = configs?.find(c => c.chave === "whatsapp_suporte")?.valor;
+    const rawMessage = configs?.find(c => c.chave === "mensagem_whatsapp")?.valor || "";
+    
+    if (!whatsappNumber) return;
+
     const nome = alunoData?.nome || "";
     const ctr = alunoData?.ctr || "";
-    const message = `Olá! Sou o(a) aluno(a) ${nome} (CTR #${ctr}) e preciso de ajuda.`;
-    const whatsappUrl = `https://wa.me/5551XXXXXXXXX?text=${encodeURIComponent(message)}`;
+    
+    const message = rawMessage
+      .replace("[nome]", nome)
+      .replace("[ctr]", ctr.toString());
+
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
@@ -277,16 +298,20 @@ function StudentProfile() {
                 Precisa de ajuda?
               </CardTitle>
               <CardDescription className="text-gray-500">
-                Entre em contato com nossa equipe pelo WhatsApp. Estamos prontos para te ajudar!
+                {configs?.find(c => c.chave === "whatsapp_suporte")?.valor 
+                  ? "Entre em contato com nossa equipe pelo WhatsApp. Estamos prontos para te ajudar!"
+                  : "Suporte temporariamente indisponível"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button 
-                onClick={handleWhatsAppSupport}
-                className="w-full bg-[#25D366] hover:bg-[#25D366]/90 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 py-6 text-lg transition-all"
-              >
-                💬 Chamar no WhatsApp
-              </Button>
+              {configs?.find(c => c.chave === "whatsapp_suporte")?.valor && (
+                <Button 
+                  onClick={handleWhatsAppSupport}
+                  className="w-full bg-[#25D366] hover:bg-[#25D366]/90 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 py-6 text-lg transition-all"
+                >
+                  💬 Chamar no WhatsApp
+                </Button>
+              )}
             </CardContent>
           </Card>
           </div>

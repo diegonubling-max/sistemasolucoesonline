@@ -1,0 +1,192 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Settings, Save, Loader2, MessageSquare, School, Phone } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
+
+export const Route = createFileRoute("/_admin/configuracoes")({
+  head: () => ({ meta: [{ title: "Configurações — Painel Admin" }] }),
+  component: AdminSettings,
+});
+
+function AdminSettings() {
+  const queryClient = useQueryClient();
+  
+  const { data: configs, isLoading } = useQuery({
+    queryKey: ["admin-configs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const [whatsappSuporte, setWhatsappSuporte] = useState("");
+  const [mensagemWhatsapp, setMensagemWhatsapp] = useState("");
+  const [nomeEscola, setNomeEscola] = useState("");
+
+  useEffect(() => {
+    if (configs) {
+      setWhatsappSuporte(configs.find(c => c.chave === "whatsapp_suporte")?.valor || "");
+      setMensagemWhatsapp(configs.find(c => c.chave === "mensagem_whatsapp")?.valor || "");
+      setNomeEscola(configs.find(c => c.chave === "nome_escola")?.valor || "");
+    }
+  }, [configs]);
+
+  const updateConfig = useMutation({
+    mutationFn: async ({ chave, valor }: { chave: string, valor: string }) => {
+      const { error } = await supabase
+        .from("configuracoes")
+        .update({ valor })
+        .eq("chave", chave);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-configs"] });
+      toast.success("Configuração salva com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao salvar configuração: " + error.message);
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex items-center gap-3 border-b pb-6">
+        <div className="p-2 bg-primary/10 rounded-lg">
+          <Settings className="h-6 w-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Configurações</h1>
+          <p className="text-gray-500">Gerencie as informações globais do sistema</p>
+        </div>
+      </div>
+
+      <div className="grid gap-8 max-w-4xl">
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-gray-800">Contato e Suporte</h2>
+          </div>
+          
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">WhatsApp de Suporte</CardTitle>
+                <CardDescription>Configure o número que os alunos usarão para entrar em contato</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp-number">Número do WhatsApp</Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="whatsapp-number"
+                        placeholder="Ex: 5551999999999"
+                        className="pl-9"
+                        value={whatsappSuporte}
+                        onChange={(e) => setWhatsappSuporte(e.target.value)}
+                      />
+                    </div>
+                    <Button 
+                      onClick={() => updateConfig.mutate({ chave: "whatsapp_suporte", valor: whatsappSuporte })}
+                      disabled={updateConfig.isPending}
+                    >
+                      {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      Salvar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Digite o número com DDI e DDD sem espaços ou símbolos. Ex: 5551999999999
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Mensagem padrão do WhatsApp</CardTitle>
+                <CardDescription>Defina o texto inicial que será enviado pelo aluno</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp-message">Mensagem pré-definida</Label>
+                  <Textarea
+                    id="whatsapp-message"
+                    rows={4}
+                    placeholder="Olá! Preciso de ajuda..."
+                    value={mensagemWhatsapp}
+                    onChange={(e) => setMensagemWhatsapp(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use <code className="bg-muted px-1 rounded text-primary">[nome]</code> e <code className="bg-muted px-1 rounded text-primary">[ctr]</code> para incluir os dados do aluno automaticamente
+                  </p>
+                  <div className="flex justify-end pt-2">
+                    <Button 
+                      onClick={() => updateConfig.mutate({ chave: "mensagem_whatsapp", valor: mensagemWhatsapp })}
+                      disabled={updateConfig.isPending}
+                    >
+                      {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      Salvar Mensagem
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <School className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-gray-800">Informações da Escola</h2>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Nome da escola</CardTitle>
+              <CardDescription>Este nome será exibido em várias partes do sistema</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="school-name">Nome da escola</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="school-name"
+                    value={nomeEscola}
+                    onChange={(e) => setNomeEscola(e.target.value)}
+                    placeholder="Nome da sua escola"
+                  />
+                  <Button 
+                    onClick={() => updateConfig.mutate({ chave: "nome_escola", valor: nomeEscola })}
+                    disabled={updateConfig.isPending}
+                  >
+                    {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Salvar
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    </div>
+  );
+}

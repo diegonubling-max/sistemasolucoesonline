@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,20 @@ function AlunoLogin() {
   const navigate = useNavigate();
   const [ctr, setCtr] = useState("");
   const [password, setPassword] = useState("");
+  const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+
+  useQuery({
+    queryKey: ["global-configs-login"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'nome_escola')
+        .single();
+      if (data?.valor) setNomeEscola(data.valor);
+      return data;
+    },
+  });
 
   const login = useMutation({
     mutationFn: async () => {
@@ -95,8 +109,8 @@ function AlunoLogin() {
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2">
-            <span className="text-white">Soluções</span>{" "}
-            <span className="text-[#2ECC71]">Online</span>
+            <span className="text-white">{nomeEscola.split(' ')[0]}</span>{" "}
+            <span className="text-[#2ECC71]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
           </h1>
           <p className="text-white/70 font-medium text-lg">
             Acesse sua área de estudos

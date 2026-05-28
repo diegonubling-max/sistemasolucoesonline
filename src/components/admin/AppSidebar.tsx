@@ -1,5 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, ListVideo, Tags } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, ListVideo, Tags, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,20 @@ export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
   const [recreating, setRecreating] = useState(false);
+  const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+
+  useQuery({
+    queryKey: ["admin-sidebar-config"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'nome_escola')
+        .single();
+      if (data?.valor) setNomeEscola(data.valor);
+      return data;
+    },
+  });
 
   const isActive = (url: string) => {
     if (url === "/") return path === "/";
@@ -53,7 +68,7 @@ export function AppSidebar() {
     <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen">
       <div className="px-6 py-6 border-b border-sidebar-border">
         <h1 className="text-2xl font-bold tracking-tight">
-          <span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span>
+          <span className="text-white">{nomeEscola.split(' ')[0]}</span> <span className="text-[#2ECC71]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
         </h1>
         <p className="text-xs text-sidebar-foreground/60 mt-1">Painel Administrativo</p>
       </div>
@@ -103,6 +118,17 @@ export function AppSidebar() {
           {recreating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShieldPlus className="h-4 w-4 mr-2" />}
           Recriar Admin
         </Button>
+        <Link
+          to="/configuracoes"
+          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+            isActive("/configuracoes")
+              ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          }`}
+        >
+          <Settings className="h-4 w-4" />
+          Configurações
+        </Link>
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

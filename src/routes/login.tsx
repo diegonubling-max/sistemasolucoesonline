@@ -19,6 +19,19 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+
+  useEffect(() => {
+    async function fetchConfig() {
+      const { data } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'nome_escola')
+        .single();
+      if (data?.valor) setNomeEscola(data.valor);
+    }
+    fetchConfig();
+  }, []);
 
   useEffect(() => {
     if (session) navigate({ to: "/" });
@@ -53,7 +66,7 @@ function LoginPage() {
             <GraduationCap className="h-7 w-7" />
           </div>
           <h1 className="text-3xl font-bold">
-            <span className="text-white">Soluções</span> <span className="text-[#2ECC71]">Online</span>
+            <span className="text-white">{nomeEscola.split(' ')[0]}</span> <span className="text-[#2ECC71]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
           </h1>
           <p className="text-sm text-white/70 mt-2">Acesse o painel administrativo</p>
         </div>

@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, createContext, useContext } from "react";
-import { Loader2, LogOut, User as UserIcon, BookOpen, Wallet, Menu, X, Sun, Moon, Settings } from "lucide-react";
+import { Loader2, LogOut, User as UserIcon, BookOpen, Wallet, Menu, X, Sun, Moon, Settings, MessageSquare, School } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ function StudentLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tema, setTema] = useState<"claro" | "escuro">("claro");
   const [alunoId, setAlunoId] = useState<string | null>(null);
+  const [nomeEscola, setNomeEscola] = useState("Soluções Online");
 
   const toggleTema = async () => {
     const novoTema = tema === "escuro" ? "claro" : "escuro";
@@ -86,6 +87,17 @@ function StudentLayout() {
           setTema(aluno.tema);
         }
       }
+      // Get School Name
+      const { data: configNome } = await supabase
+        .from('configuracoes')
+        .select('valor')
+        .eq('chave', 'nome_escola')
+        .single();
+      
+      if (configNome?.valor) {
+        setNomeEscola(configNome.valor);
+      }
+
       setIsVerifying(false);
     }
 
@@ -113,9 +125,12 @@ function StudentLayout() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link to="/aluno/dashboard" className="flex items-center gap-2">
+              <div className="bg-[#2D6ADF]/10 p-1.5 rounded-lg mr-1">
+                <School className="h-5 w-5 text-[#2D6ADF]" />
+              </div>
               <span className="text-xl font-bold">
-                <span className="text-white">Soluções</span>{" "}
-                <span className="text-[#2D6ADF]">Online</span>
+                <span className="text-white">{nomeEscola.split(' ')[0]}</span>{" "}
+                <span className="text-[#2D6ADF]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
               </span>
             </Link>
 
