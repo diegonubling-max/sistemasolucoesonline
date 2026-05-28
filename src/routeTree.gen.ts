@@ -17,6 +17,7 @@ import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
 import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
+import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
 import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
@@ -66,6 +67,11 @@ const AdminPacotesRoute = AdminPacotesRouteImport.update({
 const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCursosIndexRoute = AdminCursosIndexRouteImport.update({
@@ -132,6 +138,7 @@ const AdminAlunosIdEditarRoute = AdminAlunosIdEditarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
   '/segmentos': typeof AdminSegmentosRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
   '/segmentos': typeof AdminSegmentosRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/_admin': typeof AdminRouteWithChildren
   '/_student': typeof StudentRouteWithChildren
   '/login': typeof LoginRoute
+  '/_admin/configuracoes': typeof AdminConfiguracoesRoute
   '/_admin/financeiro': typeof AdminFinanceiroRoute
   '/_admin/pacotes': typeof AdminPacotesRoute
   '/_admin/segmentos': typeof AdminSegmentosRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/configuracoes'
     | '/financeiro'
     | '/pacotes'
     | '/segmentos'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/configuracoes'
     | '/financeiro'
     | '/pacotes'
     | '/segmentos'
@@ -238,6 +249,7 @@ export interface FileRouteTypes {
     | '/_admin'
     | '/_student'
     | '/login'
+    | '/_admin/configuracoes'
     | '/_admin/financeiro'
     | '/_admin/pacotes'
     | '/_admin/segmentos'
@@ -320,6 +332,13 @@ declare module '@tanstack/react-router' {
       path: '/financeiro'
       fullPath: '/financeiro'
       preLoaderRoute: typeof AdminFinanceiroRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/configuracoes': {
+      id: '/_admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AdminConfiguracoesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/cursos/': {
@@ -410,6 +429,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminPacotesRoute: typeof AdminPacotesRoute
   AdminSegmentosRoute: typeof AdminSegmentosRoute
@@ -425,6 +445,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminPacotesRoute: AdminPacotesRoute,
   AdminSegmentosRoute: AdminSegmentosRoute,
@@ -467,3 +488,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
