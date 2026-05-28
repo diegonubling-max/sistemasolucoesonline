@@ -30,6 +30,7 @@ function StudentLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tema, setTema] = useState<"claro" | "escuro">("claro");
   const [alunoId, setAlunoId] = useState<string | null>(null);
+  const [nomeEscola, setNomeEscola] = useState("Soluções Online");
 
   const toggleTema = async () => {
     const novoTema = tema === "escuro" ? "claro" : "escuro";
