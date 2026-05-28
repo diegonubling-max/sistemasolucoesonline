@@ -10,6 +10,7 @@ const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
   { title: "Alunos", url: "/alunos", icon: Users, enabled: true },
   { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true },
+  { title: "Segmentos", url: "/segmentos", icon: ListVideo, enabled: true },
   { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true },
 ];
