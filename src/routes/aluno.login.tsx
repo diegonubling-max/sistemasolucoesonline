@@ -163,6 +163,7 @@ function AlunoLogin() {
           </CardContent>
         </Card>
       </div>
+      <WhatsAppButton />
     </div>
   );
 }
