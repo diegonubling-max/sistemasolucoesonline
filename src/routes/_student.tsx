@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, createContext, useContext } from "react";
-import { Loader2, LogOut, User as UserIcon, BookOpen, Wallet, Menu, X, Sun, Moon, Settings, MessageSquare } from "lucide-react";
+import { Loader2, LogOut, User as UserIcon, BookOpen, Wallet, Menu, X, Sun, Moon, Settings, MessageSquare, School } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
