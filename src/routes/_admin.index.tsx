@@ -89,7 +89,6 @@ function Dashboard() {
 
   const cards = [
     { label: "Total de Alunos", value: stats?.alunos ?? 0, icon: Users, color: "text-primary" },
-    { label: "Total de Cursos", value: stats?.cursos ?? 0, icon: BookOpen, color: "text-primary" },
     { label: "Total de Matrículas", value: stats?.matriculas ?? 0, icon: GraduationCap, color: "text-primary" },
     { label: "Alunos Ativos", value: stats?.ativos ?? 0, icon: UserCheck, color: "text-accent" },
   ];
