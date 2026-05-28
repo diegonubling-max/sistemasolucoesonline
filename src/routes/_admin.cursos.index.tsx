@@ -94,21 +94,44 @@ function CursosList() {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="relative mb-4 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar curso..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="relative max-w-sm w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar curso..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={selectedSegmento === null ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedSegmento(null)}
+              >
+                Todos
+              </Button>
+              {segmentos?.map((s) => (
+                <Button
+                  key={s.id}
+                  variant={selectedSegmento === s.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedSegmento(s.id)}
+                >
+                  {s.nome}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Descrição</TableHead>
+                 <TableHead>Nome</TableHead>
+                 <TableHead>Segmento</TableHead>
+                 <TableHead>Descrição</TableHead>
                 <TableHead>Aulas</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Cadastro</TableHead>
@@ -126,9 +149,12 @@ function CursosList() {
               {data?.map((c) => {
                 const count = Array.isArray(c.aulas) ? (c.aulas[0]?.count ?? 0) : 0;
                 return (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.nome}</TableCell>
-                    <TableCell className="max-w-md truncate text-muted-foreground">
+                   <TableRow key={c.id}>
+                     <TableCell className="font-medium">{c.nome}</TableCell>
+                     <TableCell>
+                       {Array.isArray(c.segmentos) ? (c.segmentos[0]?.nome || "—") : (c.segmentos?.nome || "—")}
+                     </TableCell>
+                     <TableCell className="max-w-md truncate text-muted-foreground">
                       {c.descricao || "—"}
                     </TableCell>
                     <TableCell>{count}</TableCell>
