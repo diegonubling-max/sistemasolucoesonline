@@ -76,8 +76,8 @@ export function ThumbnailUpload({
       {value ? (
         <div 
           className={cn(
-            "relative group w-full rounded-lg overflow-hidden border bg-[#f5f5f5] flex items-center justify-center",
-            bucket === "thumbnails-cursos" ? "aspect-[2/3]" : "aspect-video"
+            "relative group rounded-lg overflow-hidden border bg-[#f5f5f5] flex items-center justify-center",
+            bucket === "thumbnails-cursos" ? "w-[150px] aspect-[2/3]" : "w-full aspect-video"
           )}
         >
           <img
@@ -99,8 +99,8 @@ export function ThumbnailUpload({
       ) : (
         <label 
           className={cn(
-            "flex flex-col items-center justify-center w-full rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer",
-            bucket === "thumbnails-cursos" ? "aspect-[2/3]" : "aspect-video"
+            "flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer",
+            bucket === "thumbnails-cursos" ? "w-[150px] aspect-[2/3]" : "w-full aspect-video"
           )}
         >
           <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
@@ -111,8 +111,8 @@ export function ThumbnailUpload({
                 <div className="p-3 rounded-full bg-primary/10 text-primary mb-3">
                   <Image className="h-6 w-6" />
                 </div>
-                <p className="text-sm font-medium">Clique para adicionar uma imagem</p>
-                <p className="text-xs text-muted-foreground mt-1">({recommendedSize})</p>
+                <p className="text-xs font-medium">Adicionar imagem</p>
+                <p className="text-[10px] text-muted-foreground mt-1">({recommendedSize})</p>
               </>
             )}
           </div>
