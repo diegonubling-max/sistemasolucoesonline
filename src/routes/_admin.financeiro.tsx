@@ -216,6 +216,54 @@ function Financeiro() {
     enabled: activeFilter === "atraso"
   });
 
+  const { data: matriculasVendedora, refetch: refetchVendedora } = useQuery({
+    queryKey: ["financeiro-vendedora", vendedoraPeriod, selectedVendedora],
+    queryFn: async () => {
+      let query = supabase
+        .from("matriculas")
+        .select(`
+          id,
+          created_at,
+          alunos!inner (
+            nome,
+            vendedora
+          ),
+          matricula_pacotes (
+            pacotes (
+              nome,
+              valor_total
+            )
+          )
+        `)
+        .gte("created_at", `${vendedoraPeriod.start}T00:00:00`)
+        .lte("created_at", `${vendedoraPeriod.end}T23:59:59`);
+
+      if (selectedVendedora !== "todas") {
+        query = query.eq("alunos.vendedora", selectedVendedora);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return (data ?? []).map(m => {
+        const aluno = m.alunos as any;
+        const pacotes = (m.matricula_pacotes as any[]).map(mp => mp.pacotes);
+        const valorTotal = pacotes.reduce((acc, p) => acc + Number(p.valor_total), 0);
+        const cursos = pacotes.map(p => p.nome).join(", ");
+        
+        return {
+          id: m.id,
+          alunoNome: aluno?.nome,
+          vendedora: aluno?.vendedora || "Não informada",
+          dataMatricula: m.created_at,
+          cursos,
+          valorTotal
+        };
+      });
+    },
+    enabled: activeFilter === "vendedora"
+  });
+
   const darBaixaMutation = useMutation({
     mutationFn: async ({ id, ...data }: { id: string; [key: string]: any }) => {
       const { error } = await supabase
