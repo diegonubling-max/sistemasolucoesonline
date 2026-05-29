@@ -54,6 +54,11 @@ function Financeiro() {
     start: format(startOfMonth(today), "yyyy-MM-dd"),
     end: format(today, "yyyy-MM-dd")
   });
+  const [vendedoraPeriod, setVendedoraPeriod] = useState({ 
+    start: format(startOfMonth(today), "yyyy-MM-dd"), 
+    end: format(endOfMonth(today), "yyyy-MM-dd") 
+  });
+  const [selectedVendedora, setSelectedVendedora] = useState<string>("todas");
 
   // Lowering status modal state
   const [baixaModal, setBaixaModal] = useState<{ 
