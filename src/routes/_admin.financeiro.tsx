@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_admin/financeiro")({
   component: Financeiro,
 });
 
-type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | null;
+type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | "vendedora" | null;
 
 function Financeiro() {
   const queryClient = useQueryClient();
@@ -54,6 +54,11 @@ function Financeiro() {
     start: format(startOfMonth(today), "yyyy-MM-dd"),
     end: format(today, "yyyy-MM-dd")
   });
+  const [vendedoraPeriod, setVendedoraPeriod] = useState({ 
+    start: format(startOfMonth(today), "yyyy-MM-dd"), 
+    end: format(endOfMonth(today), "yyyy-MM-dd") 
+  });
+  const [selectedVendedora, setSelectedVendedora] = useState<string>("todas");
 
   // Lowering status modal state
   const [baixaModal, setBaixaModal] = useState<{ 
@@ -211,6 +216,54 @@ function Financeiro() {
     enabled: activeFilter === "atraso"
   });
 
+  const { data: matriculasVendedora, refetch: refetchVendedora } = useQuery({
+    queryKey: ["financeiro-vendedora", vendedoraPeriod, selectedVendedora],
+    queryFn: async () => {
+      let query = supabase
+        .from("matriculas")
+        .select(`
+          id,
+          created_at,
+          alunos!inner (
+            nome,
+            vendedora
+          ),
+          matricula_pacotes (
+            pacotes (
+              nome,
+              valor_total
+            )
+          )
+        `)
+        .gte("created_at", `${vendedoraPeriod.start}T00:00:00`)
+        .lte("created_at", `${vendedoraPeriod.end}T23:59:59`);
+
+      if (selectedVendedora !== "todas") {
+        query = query.eq("alunos.vendedora", selectedVendedora);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return (data ?? []).map(m => {
+        const aluno = m.alunos as any;
+        const pacotes = (m.matricula_pacotes as any[]).map(mp => mp.pacotes);
+        const valorTotal = pacotes.reduce((acc, p) => acc + Number(p.valor_total), 0);
+        const cursos = pacotes.map(p => p.nome).join(", ");
+        
+        return {
+          id: m.id,
+          alunoNome: aluno?.nome,
+          vendedora: aluno?.vendedora || "Não informada",
+          dataMatricula: m.created_at,
+          cursos,
+          valorTotal
+        };
+      });
+    },
+    enabled: activeFilter === "vendedora"
+  });
+
   const darBaixaMutation = useMutation({
     mutationFn: async ({ id, ...data }: { id: string; [key: string]: any }) => {
       const { error } = await supabase
@@ -289,6 +342,32 @@ function Financeiro() {
     document.body.removeChild(link);
   };
 
+  const exportVendedoraCSV = () => {
+    if (!matriculasVendedora || matriculasVendedora.length === 0) return;
+    const headers = ["Aluno", "Data Matrícula", "Cursos", "Valor Total", "Vendedora"];
+    
+    const csvContent = [
+      headers.join(","),
+      ...matriculasVendedora.map(m => [
+        `"${m.alunoNome}"`,
+        formatDate(m.dataMatricula),
+        `"${m.cursos}"`,
+        m.valorTotal,
+        `"${m.vendedora}"`
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `matriculas-por-vendedora.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const summaryCards = [
     { label: "Total Recebido no Mês", value: formatCurrency(globalStats?.recebido), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "A Receber no Mês", value: formatCurrency(globalStats?.aReceberMes), icon: Landmark, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -308,6 +387,7 @@ function Financeiro() {
     { id: "primeiras", label: "Primeiras", sub: "Parcelas", icon: Hash },
     { id: "ultimas", label: "Últimas", sub: "Parcelas", icon: Calendar },
     { id: "atraso", label: "Alunos em", sub: "Atraso", icon: UserX },
+    { id: "vendedora", label: "Matrículas por", sub: "Vendedora", icon: Wallet },
   ];
 
   return (
@@ -615,6 +695,97 @@ function Financeiro() {
                 <p className="font-bold">Total em atraso: {formatCurrency((atraso ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => exportCSV(atraso || [], "alunos-em-atraso", ["Dias em Atraso"], (p) => [String(p.diasAtraso)])}>
+                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeFilter === "vendedora" && (
+        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-indigo-500" />
+                Matrículas por Vendedora
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={selectedVendedora} onValueChange={setSelectedVendedora}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Vendedora" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas as vendedoras</SelectItem>
+                    <SelectItem value="Vera">Vera</SelectItem>
+                    <SelectItem value="Gislaine">Gislaine</SelectItem>
+                    <SelectItem value="Mônica">Mônica</SelectItem>
+                    <SelectItem value="Sabrina">Sabrina</SelectItem>
+                    <SelectItem value="Bruna">Bruna</SelectItem>
+                    <SelectItem value="Juliana">Juliana</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input type="date" className="w-40" value={vendedoraPeriod.start} onChange={(e) => setVendedoraPeriod(p => ({ ...p, start: e.target.value }))} />
+                <span className="text-muted-foreground">até</span>
+                <Input type="date" className="w-40" value={vendedoraPeriod.end} onChange={(e) => setVendedoraPeriod(p => ({ ...p, end: e.target.value }))} />
+                <Button size="sm" onClick={() => refetchVendedora()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
+              </div>
+            </div>
+
+            {selectedVendedora === "todas" && matriculasVendedora && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                {["Vera", "Gislaine", "Mônica", "Sabrina", "Bruna", "Juliana"].map(v => {
+                  const filtered = matriculasVendedora.filter(m => m.vendedora === v);
+                  const totalVal = filtered.reduce((acc, curr) => acc + curr.valorTotal, 0);
+                  return (
+                    <Card key={v} className="bg-slate-50 border-none shadow-none">
+                      <CardContent className="pt-6">
+                        <p className="text-sm font-semibold text-slate-500">{v}</p>
+                        <div className="flex items-end justify-between mt-1">
+                          <div>
+                            <p className="text-2xl font-bold">{filtered.length}</p>
+                            <p className="text-xs text-slate-400">matrículas</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-indigo-600">{formatCurrency(totalVal)}</p>
+                            <p className="text-xs text-slate-400">gerado</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Aluno</TableHead>
+                <TableHead>Data Matrícula</TableHead>
+                <TableHead>Curso(s)</TableHead>
+                <TableHead>Vendedora</TableHead>
+                <TableHead className="text-right">Valor Total</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {(matriculasVendedora ?? []).map((m: any) => (
+                  <TableRow key={m.id}>
+                    <TableCell className="font-medium">{m.alunoNome}</TableCell>
+                    <TableCell>{formatDate(m.dataMatricula)}</TableCell>
+                    <TableCell>{m.cursos}</TableCell>
+                    <TableCell>{m.vendedora}</TableCell>
+                    <TableCell className="text-right font-bold">{formatCurrency(m.valorTotal)}</TableCell>
+                  </TableRow>
+                ))}
+                {matriculasVendedora?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma matrícula encontrada para o período/vendedora.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+
+            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">{matriculasVendedora?.length || 0} matrículas no período</p>
+                <p className="font-bold text-lg">Total gerado: {formatCurrency((matriculasVendedora ?? []).reduce((acc: number, m: any) => acc + Number(m.valorTotal), 0))}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={exportVendedoraCSV}>
                 <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
             </div>
