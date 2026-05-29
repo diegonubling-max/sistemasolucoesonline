@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_admin/financeiro")({
   component: Financeiro,
 });
 
-type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | null;
+type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | "vendedora" | null;
 
 function Financeiro() {
   const queryClient = useQueryClient();
