@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Image, X, Loader2, Upload } from "lucide-react";
+import { Image, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import imageCompression from 'browser-image-compression';
 
 interface ThumbnailUploadProps {
   value?: string | null;
@@ -33,20 +34,31 @@ export function ThumbnailUpload({
 
     setUploading(true);
     try {
+      // Opções de compressão para otimizar o carregamento
+      const options = {
+        maxSizeMB: 0.2, // Reduz para no máximo 200KB
+        maxWidthOrHeight: 800, // Reduz dimensões se forem muito grandes
+        useWebWorker: true,
+        initialQuality: 0.8,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+      
       const fileExt = file.name.split(".").pop();
       const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
       const filePath = fileName;
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file);
+        .upload(filePath, compressedFile);
 
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
       onChange(data.publicUrl);
-      toast.success("Imagem enviada com sucesso!");
+      toast.success("Imagem otimizada e enviada com sucesso!");
     } catch (error) {
+      console.error("Erro no upload:", error);
       toast.error("Erro ao enviar imagem", {
         description: (error as Error).message,
       });
