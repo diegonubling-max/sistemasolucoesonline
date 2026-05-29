@@ -74,11 +74,16 @@ export function ThumbnailUpload({
   return (
     <div className={cn("space-y-2", className)}>
       {value ? (
-        <div className="relative group w-full aspect-video rounded-lg overflow-hidden border bg-muted">
+        <div 
+          className={cn(
+            "relative group w-full rounded-lg overflow-hidden border bg-[#f5f5f5] flex items-center justify-center",
+            bucket === "thumbnails-cursos" ? "aspect-[2/3]" : "aspect-video"
+          )}
+        >
           <img
             src={value}
             alt="Thumbnail preview"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <Button
@@ -92,7 +97,12 @@ export function ThumbnailUpload({
           </div>
         </div>
       ) : (
-        <label className="flex flex-col items-center justify-center w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+        <label 
+          className={cn(
+            "flex flex-col items-center justify-center w-full rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer",
+            bucket === "thumbnails-cursos" ? "aspect-[2/3]" : "aspect-video"
+          )}
+        >
           <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
             {uploading ? (
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

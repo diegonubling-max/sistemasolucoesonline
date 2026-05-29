@@ -89,7 +89,7 @@ export function CursoForm({
               value={form.watch("thumbnail_url")}
               onChange={(url) => form.setValue("thumbnail_url", url)}
               bucket="thumbnails-cursos"
-              recommendedSize="400x225px"
+              recommendedSize="300x450px"
             />
           </div>
           <div className="space-y-1.5">

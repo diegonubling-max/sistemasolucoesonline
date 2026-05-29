@@ -214,13 +214,13 @@ function StudentDashboard() {
                           params={{ id: curso.id }} 
                           className="group block w-full"
                         >
-                          <div className="relative w-full aspect-[220/320] bg-white rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm cursor-pointer">
-                            <div className="absolute inset-0">
+                          <div className="relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm cursor-pointer flex items-center justify-center">
+                            <div className="absolute inset-0 flex items-center justify-center">
                               {curso.thumbnail_url ? (
                                 <img 
                                   src={curso.thumbnail_url} 
                                   alt={curso.nome}
-                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                                 />
                               ) : (
                                 <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center`}>
@@ -281,13 +281,13 @@ function StudentDashboard() {
                   onClick={() => setSelectedVitrine(item)}
                   className="group cursor-pointer block w-full"
                 >
-                  <div className="relative w-full aspect-[220/320] bg-white rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm">
-                    <div className="absolute inset-0">
+                  <div className="relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center">
                       {curso.thumbnail_url ? (
                         <img 
                           src={curso.thumbnail_url} 
                           alt={curso.nome}
-                          className="w-full h-full object-cover filter grayscale transition-transform duration-500 group-hover:scale-105"
+                          className="w-full h-full object-contain filter grayscale transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
                         <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center filter grayscale`}>
