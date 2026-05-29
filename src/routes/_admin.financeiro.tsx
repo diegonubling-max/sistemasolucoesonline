@@ -361,6 +361,7 @@ function Financeiro() {
     { id: "primeiras", label: "Primeiras", sub: "Parcelas", icon: Hash },
     { id: "ultimas", label: "Últimas", sub: "Parcelas", icon: Calendar },
     { id: "atraso", label: "Alunos em", sub: "Atraso", icon: UserX },
+    { id: "vendedora", label: "Matrículas por", sub: "Vendedora", icon: Wallet },
   ];
 
   return (
