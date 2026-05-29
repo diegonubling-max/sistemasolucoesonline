@@ -702,6 +702,96 @@ function Financeiro() {
         </Card>
       )}
 
+      {activeFilter === "vendedora" && (
+        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-indigo-500" />
+                Matrículas por Vendedora
+              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={selectedVendedora} onValueChange={setSelectedVendedora}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Vendedora" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas as vendedoras</SelectItem>
+                    <SelectItem value="Vera">Vera</SelectItem>
+                    <SelectItem value="Gislaine">Gislaine</SelectItem>
+                    <SelectItem value="Mônica">Mônica</SelectItem>
+                    <SelectItem value="Sabrina">Sabrina</SelectItem>
+                    <SelectItem value="Bruna">Bruna</SelectItem>
+                    <SelectItem value="Juliana">Juliana</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input type="date" className="w-40" value={vendedoraPeriod.start} onChange={(e) => setVendedoraPeriod(p => ({ ...p, start: e.target.value }))} />
+                <span className="text-muted-foreground">até</span>
+                <Input type="date" className="w-40" value={vendedoraPeriod.end} onChange={(e) => setVendedoraPeriod(p => ({ ...p, end: e.target.value }))} />
+                <Button size="sm" onClick={() => refetchVendedora()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
+              </div>
+            </div>
+
+            {selectedVendedora === "todas" && matriculasVendedora && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                {["Vera", "Gislaine", "Mônica", "Sabrina", "Bruna", "Juliana"].map(v => {
+                  const filtered = matriculasVendedora.filter(m => m.vendedora === v);
+                  const totalVal = filtered.reduce((acc, curr) => acc + curr.valorTotal, 0);
+                  return (
+                    <Card key={v} className="bg-slate-50 border-none shadow-none">
+                      <CardContent className="pt-6">
+                        <p className="text-sm font-semibold text-slate-500">{v}</p>
+                        <div className="flex items-end justify-between mt-1">
+                          <div>
+                            <p className="text-2xl font-bold">{filtered.length}</p>
+                            <p className="text-xs text-slate-400">matrículas</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-indigo-600">{formatCurrency(totalVal)}</p>
+                            <p className="text-xs text-slate-400">gerado</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Aluno</TableHead>
+                <TableHead>Data Matrícula</TableHead>
+                <TableHead>Curso(s)</TableHead>
+                <TableHead>Vendedora</TableHead>
+                <TableHead className="text-right">Valor Total</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {(matriculasVendedora ?? []).map((m: any) => (
+                  <TableRow key={m.id}>
+                    <TableCell className="font-medium">{m.alunoNome}</TableCell>
+                    <TableCell>{formatDate(m.dataMatricula)}</TableCell>
+                    <TableCell>{m.cursos}</TableCell>
+                    <TableCell>{m.vendedora}</TableCell>
+                    <TableCell className="text-right font-bold">{formatCurrency(m.valorTotal)}</TableCell>
+                  </TableRow>
+                ))}
+                {matriculasVendedora?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma matrícula encontrada para o período/vendedora.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+
+            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">{matriculasVendedora?.length || 0} matrículas no período</p>
+                <p className="font-bold text-lg">Total gerado: {formatCurrency((matriculasVendedora ?? []).reduce((acc: number, m: any) => acc + Number(m.valorTotal), 0))}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={exportVendedoraCSV}>
+                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
       <BaixaModal 
         open={baixaModal?.open || false}
         onOpenChange={(o) => !o && setBaixaModal(null)}
