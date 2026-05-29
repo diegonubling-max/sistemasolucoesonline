@@ -342,6 +342,32 @@ function Financeiro() {
     document.body.removeChild(link);
   };
 
+  const exportVendedoraCSV = () => {
+    if (!matriculasVendedora || matriculasVendedora.length === 0) return;
+    const headers = ["Aluno", "Data Matrícula", "Cursos", "Valor Total", "Vendedora"];
+    
+    const csvContent = [
+      headers.join(","),
+      ...matriculasVendedora.map(m => [
+        `"${m.alunoNome}"`,
+        formatDate(m.dataMatricula),
+        `"${m.cursos}"`,
+        m.valorTotal,
+        `"${m.vendedora}"`
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `matriculas-por-vendedora.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const summaryCards = [
     { label: "Total Recebido no Mês", value: formatCurrency(globalStats?.recebido), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "A Receber no Mês", value: formatCurrency(globalStats?.aReceberMes), icon: Landmark, color: "text-blue-500", bg: "bg-blue-500/10" },
