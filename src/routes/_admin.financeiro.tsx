@@ -791,6 +791,7 @@ function Financeiro() {
             </div>
           </CardContent>
         </Card>
+      )}
 
       <BaixaModal 
         open={baixaModal?.open || false}
