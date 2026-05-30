@@ -21,6 +21,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ContratoAlunoModal } from "@/components/admin/alunos/ContratoAlunoModal";
+
 
 export const Route = createFileRoute("/_admin/alunos/")({
   head: () => ({ meta: [{ title: "Alunos — Soluções Online" }] }),
@@ -35,13 +37,14 @@ function AlunosList() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [studentToDelete, setStudentToDelete] = useState<{ id: string; nome: string; email: string } | null>(null);
+  const [studentForContract, setStudentForContract] = useState<any | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["alunos", search, page],
     queryFn: async () => {
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, ativo, created_at, vendedora, ctr, matriculas(id)", { count: "exact" })
+        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, created_at, vendedora, ctr, matriculas(id), contratos(id, status)", { count: "exact" })
         .order("ctr", { ascending: true })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       if (search) {
@@ -163,6 +166,28 @@ function AlunosList() {
                   <TableCell>{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      {(() => {
+                        const contrato = a.contratos && a.contratos[0];
+                        if (!contrato) {
+                          return (
+                            <Button size="icon" variant="ghost" title="Gerar Contrato" onClick={() => setStudentForContract(a)}>
+                              <FileText className="h-4 w-4 text-gray-400" />
+                            </Button>
+                          );
+                        }
+                        if (contrato.status === 'assinado') {
+                          return (
+                            <Button size="icon" variant="ghost" title="Contrato Assinado" onClick={() => setStudentForContract(a)}>
+                              <FileCheck className="h-4 w-4 text-green-600" />
+                            </Button>
+                          );
+                        }
+                        return (
+                          <Button size="icon" variant="ghost" title="Contrato Pendente" onClick={() => setStudentForContract(a)}>
+                            <FileWarning className="h-4 w-4 text-amber-500" />
+                          </Button>
+                        );
+                      })()}
                       <Button asChild size="icon" variant="ghost" title={Array.isArray(a.matriculas) && a.matriculas.length > 0 ? "Ver matrícula" : "Ver detalhes"}>
                         <Link to="/alunos/$id" params={{ id: a.id }}>
                           <Eye className="h-4 w-4" />
@@ -261,6 +286,11 @@ function AlunosList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ContratoAlunoModal 
+        aluno={studentForContract}
+        isOpen={!!studentForContract}
+        onClose={() => setStudentForContract(null)}
+      />
     </div>
   );
 }
