@@ -194,7 +194,7 @@ function AdminSettings() {
               Não foi possível carregar as configurações do sistema. Isso pode ser um problema de permissão ou conexão.
             </p>
             <div className="bg-white/50 p-3 rounded border border-red-100 font-mono text-xs text-red-800 overflow-auto">
-              {(fetchError as any)?.message || \"Erro desconhecido\"}
+              {(fetchError as any)?.message || "Erro desconisido"}
             </div>
             <Button 
               variant="outline" 
@@ -230,54 +230,54 @@ function AdminSettings() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                \"w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left\",
+                "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left",
                 activeTab === tab.id
-                  ? \"bg-primary text-primary-foreground shadow-md\"
-                  : \"hover:bg-muted text-muted-foreground\"
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "hover:bg-muted text-muted-foreground"
               )}
             >
-              <tab.icon className=\"h-5 w-5\" />
-              <span className=\"font-medium\">{tab.label}</span>
+              <tab.icon className="h-5 w-5" />
+              <span className="font-medium">{tab.label}</span>
             </button>
           ))}
         </aside>
 
         {/* Content Area */}
-        <div className=\"flex-1 max-w-4xl\">
-          <div className=\"mb-6\">
-            <h2 className=\"text-2xl font-bold text-gray-900\">
+        <div className="flex-1 max-w-4xl">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
               {tabs.find(t => t.id === activeTab)?.label}
             </h2>
           </div>
 
-          <div className=\"space-y-8\">
+          <div className="space-y-8">
             {activeTab === 'geral' && (
-              <div className=\"space-y-8 animate-in slide-in-from-right-2 duration-300\">
-                <section className=\"space-y-4\">
-                  <div className=\"flex items-center gap-2 px-1\">
-                    <School className=\"h-5 w-5 text-primary\" />
-                    <h3 className=\"text-xl font-semibold text-gray-800\">Informações da Escola</h3>
+              <div className="space-y-8 animate-in slide-in-from-right-2 duration-300">
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <School className="h-5 w-5 text-primary" />
+                    <h3 className="text-xl font-semibold text-gray-800">Informações da Escola</h3>
                   </div>
                   <Card>
                     <CardHeader>
-                      <CardTitle className=\"text-lg\">Nome da escola</CardTitle>
+                      <CardTitle className="text-lg">Nome da escola</CardTitle>
                       <CardDescription>Este nome será exibido em várias partes do sistema</CardDescription>
                     </CardHeader>
-                    <CardContent className=\"space-y-4\">
-                      <div className=\"space-y-2\">
-                        <Label htmlFor=\"school-name\">Nome da escola</Label>
-                        <div className=\"flex gap-2\">
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="school-name">Nome da escola</Label>
+                        <div className="flex gap-2">
                           <Input
-                            id=\"school-name\"
+                            id="school-name"
                             value={nomeEscola}
                             onChange={(e) => setNomeEscola(e.target.value)}
-                            placeholder=\"Nome da sua escola\"
+                            placeholder="Nome da sua escola"
                           />
                           <Button 
-                            onClick={() => updateConfig.mutate({ chave: \"nome_escola\", valor: nomeEscola })}
+                            onClick={() => updateConfig.mutate({ chave: "nome_escola", valor: nomeEscola })}
                             disabled={updateConfig.isPending}
                           >
-                            {updateConfig.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Save className=\"h-4 w-4 mr-2\" />}
+                            {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                             Salvar
                           </Button>
                         </div>
@@ -286,58 +286,58 @@ function AdminSettings() {
                   </Card>
                 </section>
 
-                <section className=\"space-y-4\">
-                  <div className=\"flex items-center gap-2 px-1\">
-                    <MessageSquare className=\"h-5 w-5 text-primary\" />
-                    <h3 className=\"text-xl font-semibold text-gray-800\">Contato e Suporte</h3>
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    <h3 className="text-xl font-semibold text-gray-800">Contato e Suporte</h3>
                   </div>
                   <Card>
                     <CardHeader>
-                      <CardTitle className=\"text-lg\">WhatsApp de Suporte</CardTitle>
+                      <CardTitle className="text-lg">WhatsApp de Suporte</CardTitle>
                       <CardDescription>Configure o número e a mensagem padrão para o atendimento</CardDescription>
                     </CardHeader>
-                    <CardContent className=\"space-y-6\">
-                      <div className=\"space-y-2\">
-                        <Label htmlFor=\"whatsapp-number\">Número do WhatsApp</Label>
-                        <div className=\"relative\">
-                          <Phone className=\"absolute left-3 top-3 h-4 w-4 text-gray-400\" />
+                    <CardContent className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="whatsapp-number">Número do WhatsApp</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                           <Input
-                            id=\"whatsapp-number\"
-                            placeholder=\"Ex: 5551999999999\"
-                            className=\"pl-9\"
+                            id="whatsapp-number"
+                            placeholder="Ex: 5551999999999"
+                            className="pl-9"
                             value={whatsappSuporte}
                             onChange={(e) => setWhatsappSuporte(e.target.value)}
                           />
                         </div>
-                        <p className=\"text-xs text-muted-foreground\">
+                        <p className="text-xs text-muted-foreground">
                           Digite o número com DDI e DDD sem espaços ou símbolos. Ex: 5551999999999
                         </p>
                       </div>
 
-                      <div className=\"space-y-2\">
-                        <Label htmlFor=\"whatsapp-message\">Mensagem pré-definida</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="whatsapp-message">Mensagem pré-definida</Label>
                         <Textarea
-                          id=\"whatsapp-message\"
+                          id="whatsapp-message"
                           rows={4}
-                          placeholder=\"Olá! Preciso de ajuda...\"
+                          placeholder="Olá! Preciso de ajuda..."
                           value={mensagemWhatsapp}
                           onChange={(e) => setMensagemWhatsapp(e.target.value)}
                         />
-                        <p className=\"text-xs text-muted-foreground\">
-                          Use <code className=\"bg-muted px-1 rounded text-primary\">[nome]</code> e <code className=\"bg-muted px-1 rounded text-primary\">[ctr]</code> para incluir os dados do aluno automaticamente
+                        <p className="text-xs text-muted-foreground">
+                          Use <code className="bg-muted px-1 rounded text-primary">[nome]</code> e <code className="bg-muted px-1 rounded text-primary">[ctr]</code> para incluir os dados do aluno automaticamente
                         </p>
                       </div>
 
-                      <div className=\"flex justify-end pt-2\">
+                      <div className="flex justify-end pt-2">
                         <Button 
                           onClick={() => updateMultipleConfigs.mutate([
-                            { chave: \"whatsapp_suporte\", valor: whatsappSuporte },
-                            { chave: \"mensagem_whatsapp\", valor: mensagemWhatsapp }
+                            { chave: "whatsapp_suporte", valor: whatsappSuporte },
+                            { chave: "mensagem_whatsapp", valor: mensagemWhatsapp }
                           ])}
                           disabled={updateMultipleConfigs.isPending}
-                          className=\"w-full sm:w-auto\"
+                          className="w-full sm:w-auto"
                         >
-                          {updateMultipleConfigs.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Save className=\"h-4 w-4 mr-2\" />}
+                          {updateMultipleConfigs.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                           Salvar Alterações do WhatsApp
                         </Button>
                       </div>
@@ -348,38 +348,38 @@ function AdminSettings() {
             )}
 
             {activeTab === 'asaas' && (
-              <div className=\"space-y-6 animate-in slide-in-from-right-2 duration-300\">
+              <div className="space-y-6 animate-in slide-in-from-right-2 duration-300">
                 <Card>
                   <CardHeader>
-                    <CardTitle className=\"text-lg\">Chave API Asaas</CardTitle>
+                    <CardTitle className="text-lg">Chave API Asaas</CardTitle>
                     <CardDescription>Insira sua chave de API para integração de pagamentos</CardDescription>
                   </CardHeader>
-                  <CardContent className=\"space-y-4\">
-                    <div className=\"space-y-2\">
-                      <Label htmlFor=\"asaas-key\">Chave API</Label>
-                      <div className=\"flex gap-2\">
-                        <div className=\"relative flex-1\">
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="asaas-key">Chave API</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
                           <Input
-                            id=\"asaas-key\"
-                            type={showApiKey ? \"text\" : \"password\"}
-                            placeholder=\"$aact_prod_...\"
+                            id="asaas-key"
+                            type={showApiKey ? "text" : "password"}
+                            placeholder="$aact_prod_..."
                             value={asaasApiKey}
                             onChange={(e) => setAsaasApiKey(e.target.value)}
-                            className=\"pr-10\"
+                            className="pr-10"
                           />
                           <button
-                            type=\"button\"
+                            type="button"
                             onClick={() => setShowApiKey(!showApiKey)}
-                            className=\"absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors\"
+                            className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
                           >
-                            {showApiKey ? <EyeOff className=\"h-4 w-4\" /> : <Eye className=\"h-4 w-4\" />}
+                            {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
                         </div>
                         <Button 
-                          onClick={() => updateConfig.mutate({ chave: \"asaas_api_key\", valor: asaasApiKey })}
+                          onClick={() => updateConfig.mutate({ chave: "asaas_api_key", valor: asaasApiKey })}
                           disabled={updateConfig.isPending}
                         >
-                          {updateConfig.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Save className=\"h-4 w-4 mr-2\" />}
+                          {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                           Salvar
                         </Button>
                       </div>
@@ -389,32 +389,32 @@ function AdminSettings() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className=\"text-lg\">Ambiente</CardTitle>
+                    <CardTitle className="text-lg">Ambiente</CardTitle>
                     <CardDescription>Selecione entre o ambiente de testes ou produção</CardDescription>
                   </CardHeader>
-                  <CardContent className=\"space-y-4\">
-                    <div className=\"space-y-2\">
-                      <Label htmlFor=\"asaas-env\">Ambiente do Asaas</Label>
-                      <div className=\"flex gap-2\">
-                        <div className=\"flex-1\">
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="asaas-env">Ambiente do Asaas</Label>
+                      <div className="flex gap-2">
+                        <div className="flex-1">
                           <Select 
                             value={asaasAmbiente} 
                             onValueChange={(value) => setAsaasAmbiente(value)}
                           >
-                            <SelectTrigger id=\"asaas-env\">
-                              <SelectValue placeholder=\"Selecione o ambiente\" />
+                            <SelectTrigger id="asaas-env">
+                              <SelectValue placeholder="Selecione o ambiente" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value=\"producao\">Produção</SelectItem>
-                              <SelectItem value=\"sandbox\">Sandbox/Testes</SelectItem>
+                              <SelectItem value="producao">Produção</SelectItem>
+                              <SelectItem value="sandbox">Sandbox/Testes</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <Button 
-                          onClick={() => updateConfig.mutate({ chave: \"asaas_ambiente\", valor: asaasAmbiente })}
+                          onClick={() => updateConfig.mutate({ chave: "asaas_ambiente", valor: asaasAmbiente })}
                           disabled={updateConfig.isPending}
                         >
-                          {updateConfig.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Save className=\"h-4 w-4 mr-2\" />}
+                          {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                           Salvar
                         </Button>
                       </div>
@@ -425,42 +425,42 @@ function AdminSettings() {
             )}
 
             {activeTab === 'webhook' && (
-              <div className=\"animate-in slide-in-from-right-2 duration-300\">
+              <div className="animate-in slide-in-from-right-2 duration-300">
                 <Card>
                   <CardHeader>
-                    <CardTitle className=\"text-lg\">Token do Webhook Asaas</CardTitle>
+                    <CardTitle className="text-lg">Token do Webhook Asaas</CardTitle>
                     <CardDescription>Insira o token de segurança para validar notificações do Asaas</CardDescription>
                   </CardHeader>
-                  <CardContent className=\"space-y-4\">
-                    <div className=\"space-y-2\">
-                      <Label htmlFor=\"asaas-webhook\">Token do Webhook</Label>
-                      <div className=\"flex gap-2\">
-                        <div className=\"relative flex-1\">
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="asaas-webhook">Token do Webhook</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
                           <Input
-                            id=\"asaas-webhook\"
-                            type={showWebhookToken ? \"text\" : \"password\"}
-                            placeholder=\"whsec_...\"
+                            id="asaas-webhook"
+                            type={showWebhookToken ? "text" : "password"}
+                            placeholder="whsec_..."
                             value={asaasWebhookToken}
                             onChange={(e) => setAsaasWebhookToken(e.target.value)}
-                            className=\"pr-10\"
+                            className="pr-10"
                           />
                           <button
-                            type=\"button\"
+                            type="button"
                             onClick={() => setShowWebhookToken(!showWebhookToken)}
-                            className=\"absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors\"
+                            className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
                           >
-                            {showWebhookToken ? <EyeOff className=\"h-4 w-4\" /> : <Eye className=\"h-4 w-4\" />}
+                            {showWebhookToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
                         </div>
                         <Button 
-                          onClick={() => updateConfig.mutate({ chave: \"asaas_webhook_token\", valor: asaasWebhookToken })}
+                          onClick={() => updateConfig.mutate({ chave: "asaas_webhook_token", valor: asaasWebhookToken })}
                           disabled={updateConfig.isPending}
                         >
-                          {updateConfig.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Save className=\"h-4 w-4 mr-2\" />}
+                          {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                           Salvar
                         </Button>
                       </div>
-                      <p className=\"text-xs text-muted-foreground\">
+                      <p className="text-xs text-muted-foreground">
                         Dica: Encontre em Integrações → Webhooks no painel do Asaas
                       </p>
                     </div>
@@ -470,130 +470,130 @@ function AdminSettings() {
             )}
 
             {activeTab === 'contrato' && (
-              <div className=\"animate-in slide-in-from-right-2 duration-300\">
+              <div className="animate-in slide-in-from-right-2 duration-300">
                 <Card>
                   <CardHeader>
-                    <CardTitle className=\"text-lg\">Editor de Contrato</CardTitle>
+                    <CardTitle className="text-lg">Editor de Contrato</CardTitle>
                     <CardDescription>Configure o texto padrão do contrato que os alunos assinarão</CardDescription>
                   </CardHeader>
-                  <CardContent className=\"space-y-6\">
-                    <div className=\"grid grid-cols-1 xl:grid-cols-4 gap-6\">
-                      <div className=\"xl:col-span-3 space-y-4\">
-                        <div className=\"bg-white border rounded-md overflow-hidden flex flex-col min-h-[500px]\">
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                      <div className="xl:col-span-3 space-y-4">
+                        <div className="bg-white border rounded-md overflow-hidden flex flex-col min-h-[500px]">
                           {editor && (
-                            <div className=\"border-b bg-gray-50 p-2 flex flex-wrap gap-1 sticky top-0 z-10\">
+                            <div className="border-b bg-gray-50 p-2 flex flex-wrap gap-1 sticky top-0 z-10">
                               <Button
-                                variant=\"ghost\"
-                                size=\"sm\"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => editor.chain().focus().toggleBold().run()}
                                 className={editor.isActive('bold') ? 'bg-gray-200' : ''}
                               >
-                                <Bold className=\"h-4 w-4\" />
+                                <Bold className="h-4 w-4" />
                               </Button>
                               <Button
-                                variant=\"ghost\"
-                                size=\"sm\"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => editor.chain().focus().toggleItalic().run()}
                                 className={editor.isActive('italic') ? 'bg-gray-200' : ''}
                               >
-                                <Italic className=\"h-4 w-4\" />
+                                <Italic className="h-4 w-4" />
                               </Button>
                               <Button
-                                variant=\"ghost\"
-                                size=\"sm\"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => editor.chain().focus().toggleUnderline().run()}
                                 className={editor.isActive('underline') ? 'bg-gray-200' : ''}
                               >
-                                <UnderlineIcon className=\"h-4 w-4\" />
+                                <UnderlineIcon className="h-4 w-4" />
                               </Button>
-                              <div className=\"w-px h-6 bg-gray-300 mx-1 self-center\" />
+                              <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
                               <Button
-                                variant=\"ghost\"
-                                size=\"sm\"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => editor.chain().focus().setTextAlign('left').run()}
                                 className={editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}
                               >
-                                <AlignLeft className=\"h-4 w-4\" />
+                                <AlignLeft className="h-4 w-4" />
                               </Button>
                               <Button
-                                variant=\"ghost\"
-                                size=\"sm\"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => editor.chain().focus().setTextAlign('center').run()}
                                 className={editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}
                               >
-                                <AlignCenter className=\"h-4 w-4\" />
+                                <AlignCenter className="h-4 w-4" />
                               </Button>
                               <Button
-                                variant=\"ghost\"
-                                size=\"sm\"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => editor.chain().focus().setTextAlign('right').run()}
                                 className={editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}
                               >
-                                <AlignRight className=\"h-4 w-4\" />
+                                <AlignRight className="h-4 w-4" />
                               </Button>
                               <Button
-                                variant=\"ghost\"
-                                size=\"sm\"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => editor.chain().focus().setTextAlign('justify').run()}
                                 className={editor.isActive({ textAlign: 'justify' }) ? 'bg-gray-200' : ''}
                               >
-                                <AlignJustify className=\"h-4 w-4\" />
+                                <AlignJustify className="h-4 w-4" />
                               </Button>
-                              <div className=\"w-px h-6 bg-gray-300 mx-1 self-center\" />
+                              <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
                               <Button
-                                variant=\"ghost\"
-                                size=\"sm\"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                                 className={editor.isActive('bulletList') ? 'bg-gray-200' : ''}
                               >
-                                <List className=\"h-4 w-4\" />
+                                <List className="h-4 w-4" />
                               </Button>
                               <Button
-                                variant=\"ghost\"
-                                size=\"sm\"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
                                 className={editor.isActive('orderedList') ? 'bg-gray-200' : ''}
                               >
-                                <ListOrdered className=\"h-4 w-4\" />
+                                <ListOrdered className="h-4 w-4" />
                               </Button>
                             </div>
                           )}
-                          <div className=\"flex-1 p-4 prose prose-sm max-w-none focus:outline-none overflow-y-auto\">
+                          <div className="flex-1 p-4 prose prose-sm max-w-none focus:outline-none overflow-y-auto">
                             <EditorContent editor={editor} />
                           </div>
                         </div>
-                        <div className=\"flex justify-end\">
+                        <div className="flex justify-end">
                           <Button 
-                            onClick={() => updateConfig.mutate({ chave: \"modelo_contrato\", valor: modeloContrato })}
+                            onClick={() => updateConfig.mutate({ chave: "modelo_contrato", valor: modeloContrato })}
                             disabled={updateConfig.isPending}
                           >
-                            {updateConfig.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Save className=\"h-4 w-4 mr-2\" />}
+                            {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                             Salvar Modelo de Contrato
                           </Button>
                         </div>
                       </div>
                       
-                      <div className=\"space-y-4\">
-                        <h4 className=\"font-semibold text-sm\">Variáveis Disponíveis</h4>
-                        <p className=\"text-xs text-muted-foreground italic\">Clique para copiar e cole no editor</p>
-                        <div className=\"flex flex-wrap gap-2\">
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-sm">Variáveis Disponíveis</h4>
+                        <p className="text-xs text-muted-foreground italic">Clique para copiar e cole no editor</p>
+                        <div className="flex flex-wrap gap-2">
                           {[
-                            \"[NOME_ALUNO]\", \"[CPF_ALUNO]\", \"[EMAIL_ALUNO]\", \"[TELEFONE_ALUNO]\", 
-                            \"[DATA_NASCIMENTO]\", \"[PACOTE_NOME]\", \"[FORMA_PAGAMENTO]\", 
-                            \"[VALOR_ENTRADA]\", \"[VALOR_PARCELA]\", \"[NUMERO_PARCELAS]\", 
-                            \"[VALOR_TOTAL]\", \"[DATA_MATRICULA]\", \"[NOME_ESCOLA]\", \"[DATA_CONTRATO]\"
+                            "[NOME_ALUNO]", "[CPF_ALUNO]", "[EMAIL_ALUNO]", "[TELEFONE_ALUNO]", 
+                            "[DATA_NASCIMENTO]", "[PACOTE_NOME]", "[FORMA_PAGAMENTO]", 
+                            "[VALOR_ENTRADA]", "[VALOR_PARCELA]", "[NUMERO_PARCELAS]", 
+                            "[VALOR_TOTAL]", "[DATA_MATRICULA]", "[NOME_ESCOLA]", "[DATA_CONTRATO]"
                           ].map((variable) => (
                             <Button
                               key={variable}
-                              variant=\"outline\"
-                              size=\"sm\"
-                              className=\"text-[10px] h-7\"
+                              variant="outline"
+                              size="sm"
+                              className="text-[10px] h-7"
                               onClick={() => {
                                 navigator.clipboard.writeText(variable);
                                 toast.success(`Copiado: ${variable}`);
                               }}
                             >
-                              <Copy className=\"h-3 w-3 mr-1\" />
+                              <Copy className="h-3 w-3 mr-1" />
                               {variable}
                             </Button>
                           ))}
@@ -606,48 +606,48 @@ function AdminSettings() {
             )}
 
             {activeTab === 'admins' && (
-              <div className=\"animate-in slide-in-from-right-2 duration-300\">
+              <div className="animate-in slide-in-from-right-2 duration-300">
                 <Card>
                   <CardHeader>
-                    <CardTitle className=\"text-lg\">Criar conta Admin</CardTitle>
+                    <CardTitle className="text-lg">Criar conta Admin</CardTitle>
                     <CardDescription>Crie um novo usuário com permissões de administrador</CardDescription>
                   </CardHeader>
-                  <CardContent className=\"space-y-4\">
-                    <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">
-                      <div className=\"space-y-2\">
-                        <Label htmlFor=\"admin-email\">E-mail do Administrador</Label>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="admin-email">E-mail do Administrador</Label>
                         <Input
-                          id=\"admin-email\"
-                          type=\"email\"
-                          placeholder=\"exemplo@email.com\"
+                          id="admin-email"
+                          type="email"
+                          placeholder="exemplo@email.com"
                           value={newAdminEmail}
                           onChange={(e) => setNewAdminEmail(e.target.value)}
                         />
                       </div>
-                      <div className=\"space-y-2\">
-                        <Label htmlFor=\"admin-password\">Senha</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="admin-password">Senha</Label>
                         <Input
-                          id=\"admin-password\"
-                          type=\"password\"
-                          placeholder=\"Senha desejada\"
+                          id="admin-password"
+                          type="password"
+                          placeholder="Senha desejada"
                           value={newAdminPassword}
                           onChange={(e) => setNewAdminPassword(e.target.value)}
                         />
                       </div>
                     </div>
-                    <div className=\"flex justify-end pt-2\">
+                    <div className="flex justify-end pt-2">
                       <Button 
                         onClick={() => {
                           if (!newAdminEmail || !newAdminPassword) {
-                            toast.error(\"Preencha e-mail e senha\");
+                            toast.error("Preencha e-mail e senha");
                             return;
                           }
                           createAdminMutation.mutate();
                         }}
                         disabled={createAdminMutation.isPending}
-                        className=\"w-full sm:w-auto\"
+                        className="w-full sm:w-auto"
                       >
-                        {createAdminMutation.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <ShieldPlus className=\"h-4 w-4 mr-2\" />}
+                        {createAdminMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldPlus className="h-4 w-4 mr-2" />}
                         Criar Administrador
                       </Button>
                     </div>
