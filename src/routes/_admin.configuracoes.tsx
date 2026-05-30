@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, Link2, FileText, Copy } from "lucide-react";
+import { Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, Link2, FileText, Copy, ShieldPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,9 @@ function AdminSettings() {
   const [modeloContrato, setModeloContrato] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWebhookToken, setShowWebhookToken] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newAdminPassword, setNewAdminPassword] = useState("");
+
 
   useEffect(() => {
     if (configs) {
@@ -98,7 +101,31 @@ function AdminSettings() {
     },
   });
 
+  const createAdminMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("manage-student-access", {
+        body: { 
+          action: "create_admin",
+          email: newAdminEmail,
+          password: newAdminPassword
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Novo administrador criado com sucesso!");
+      setNewAdminEmail("");
+      setNewAdminPassword("");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao criar administrador: " + error.message);
+    },
+  });
+
   if (isLoading) {
+
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -340,9 +367,64 @@ function AdminSettings() {
 
         <section className="space-y-4 pb-12">
           <div className="flex items-center gap-2 px-1">
+            <ShieldPlus className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-gray-800">Novo Administrador</h2>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Criar conta Admin</CardTitle>
+              <CardDescription>Crie um novo usuário com permissões de administrador</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-email">E-mail do Administrador</Label>
+                  <Input
+                    id="admin-email"
+                    type="email"
+                    placeholder="exemplo@email.com"
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-password">Senha</Label>
+                  <Input
+                    id="admin-password"
+                    type="password"
+                    placeholder="Senha desejada"
+                    value={newAdminPassword}
+                    onChange={(e) => setNewAdminPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button 
+                  onClick={() => {
+                    if (!newAdminEmail || !newAdminPassword) {
+                      toast.error("Preencha e-mail e senha");
+                      return;
+                    }
+                    createAdminMutation.mutate();
+                  }}
+                  disabled={createAdminMutation.isPending}
+                  className="w-full sm:w-auto"
+                >
+                  {createAdminMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldPlus className="h-4 w-4 mr-2" />}
+                  Criar Administrador
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="space-y-4 pb-12">
+          <div className="flex items-center gap-2 px-1">
             <FileText className="h-5 w-5 text-primary" />
             <h2 className="text-xl font-semibold text-gray-800">Modelo de Contrato</h2>
           </div>
+
           
           <Card>
             <CardHeader>

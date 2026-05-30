@@ -138,22 +138,30 @@ function LoginPage() {
                       return;
                     }
                     setLoading(true);
-                    const { data, error } = await supabase.auth.signUp({ email, password });
-                    if (error) {
-                      toast.error("Erro ao criar conta", { description: error.message });
-                    } else if (data.user) {
-                      const { error: roleError } = await supabase
-                        .from("user_roles")
-                        .insert({ user_id: data.user.id, role: "admin" });
+                    try {
+                      const { data, error } = await supabase.functions.invoke("manage-student-access", {
+                        body: { 
+                          action: "create_admin",
+                          email,
+                          password
+                        },
+                      });
+
+                      if (error) throw error;
+                      if (data?.error) throw new Error(data.error);
+
+                      toast.success("Conta admin criada com sucesso! Agora você pode entrar.");
                       
-                      if (roleError) {
-                        toast.error("Erro ao atribuir perfil admin", { description: roleError.message });
-                      } else {
-                        toast.success("Conta admin criada e logada com sucesso!");
+                      // Opcionalmente, tentar logar automaticamente
+                      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+                      if (!loginError) {
                         navigate({ to: "/" });
                       }
+                    } catch (e: any) {
+                      toast.error("Erro ao criar conta", { description: e.message });
+                    } finally {
+                      setLoading(false);
                     }
-                    setLoading(false);
                   }}
                   className="text-primary hover:underline font-medium"
                 >
