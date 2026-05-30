@@ -98,6 +98,13 @@ function AdminSettings() {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Gapcursor,
     ],
     content: modeloContrato,
     onUpdate: ({ editor }) => {
