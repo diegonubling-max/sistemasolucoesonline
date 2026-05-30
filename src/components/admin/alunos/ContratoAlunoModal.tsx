@@ -169,7 +169,7 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
       "[NOME_ESCOLA]": "Soluções Online",
       "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy"),
       "[DATA_HOJE]": format(new Date(), "dd/MM/yyyy"),
-      "[DATA_PRIMEIRA_PARCELA]": primeiraParcela ? format(new Date(primeiraParcela.data_vencimento), "dd/MM/yyyy") : format(new Date(), "dd/MM/yyyy")
+      "[DATA_PRIMEIRA_PARCELA]": primeiraParcela && primeiraParcela.data_vencimento ? format(new Date(primeiraParcela.data_vencimento), "dd/MM/yyyy") : format(new Date(), "dd/MM/yyyy")
     };
 
     Object.entries(variables).forEach(([key, value]) => {
@@ -241,7 +241,7 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
             <div style="margin-top: 50px; padding: 20px; border: 2px solid #10b981; background: #f0fdf4; border-radius: 8px;">
               <h3 style="margin-top: 0; color: #065f46;">Assinado Digitalmente</h3>
               <p><strong>Nome:</strong> ${currentContrato.nome_confirmacao}</p>
-              <p><strong>Data/Hora:</strong> ${format(new Date(currentContrato.data_assinatura), "dd/MM/yyyy HH:mm")}</p>
+              <p><strong>Data/Hora:</strong> ${currentContrato.data_assinatura ? format(new Date(currentContrato.data_assinatura), "dd/MM/yyyy HH:mm") : 'N/A'}</p>
               <p><strong>IP:</strong> ${currentContrato.ip_assinatura}</p>
               <p><strong>ID de Autenticidade:</strong> ${currentContrato.id}</p>
             </div>
@@ -274,7 +274,7 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
             <div>
               <h4 className="font-bold text-green-800">Contrato Assinado</h4>
               <p className="text-sm text-green-700">
-                Assinado por <strong>{currentContrato.nome_confirmacao}</strong> em {format(new Date(currentContrato.data_assinatura), "dd/MM/yyyy 'às' HH:mm")}
+                Assinado por <strong>{currentContrato.nome_confirmacao}</strong> em {currentContrato.data_assinatura ? format(new Date(currentContrato.data_assinatura), "dd/MM/yyyy 'às' HH:mm") : 'N/A'}
               </p>
               <p className="text-xs text-green-600 mt-1 font-mono">IP: {currentContrato.ip_assinatura}</p>
             </div>
@@ -301,7 +301,7 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
             <div>
               <h4 className="font-bold text-amber-800">Contrato Pendente de Assinatura</h4>
               <p className="text-sm text-amber-700">
-                Gerado em {format(new Date(currentContrato.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                Gerado em {currentContrato.created_at ? format(new Date(currentContrato.created_at), "dd/MM/yyyy 'às' HH:mm") : 'N/A'}
               </p>
             </div>
           </div>
