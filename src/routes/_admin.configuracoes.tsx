@@ -585,6 +585,25 @@ function AdminSettings() {
                               >
                                 <ListOrdered className="h-4 w-4" />
                               </Button>
+                              <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                                title="Inserir Tabela"
+                              >
+                                <TableIcon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => editor.chain().focus().deleteTable().run()}
+                                disabled={!editor.isActive('table')}
+                                title="Excluir Tabela"
+                                className={!editor.isActive('table') ? 'opacity-50' : 'text-red-500'}
+                              >
+                                <TableIcon className="h-4 w-4" />
+                              </Button>
                             </div>
                           )}
                           <div className="flex-1 p-4 prose prose-sm max-w-none focus:outline-none overflow-y-auto">
