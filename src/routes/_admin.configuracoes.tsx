@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, Link2 } from "lucide-react";
+import { Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, Link2, FileText, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export const Route = createFileRoute("/_admin/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Painel Admin" }] }),
@@ -42,6 +44,7 @@ function AdminSettings() {
   const [asaasApiKey, setAsaasApiKey] = useState("");
   const [asaasAmbiente, setAsaasAmbiente] = useState("producao");
   const [asaasWebhookToken, setAsaasWebhookToken] = useState("");
+  const [modeloContrato, setModeloContrato] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWebhookToken, setShowWebhookToken] = useState(false);
 
@@ -53,6 +56,7 @@ function AdminSettings() {
       setAsaasApiKey(configs.find(c => c.chave === "asaas_api_key")?.valor || "");
       setAsaasAmbiente(configs.find(c => c.chave === "asaas_ambiente")?.valor || "producao");
       setAsaasWebhookToken(configs.find(c => c.chave === "asaas_webhook_token")?.valor || "");
+      setModeloContrato(configs.find(c => c.chave === "modelo_contrato")?.valor || "");
     }
   }, [configs]);
 
