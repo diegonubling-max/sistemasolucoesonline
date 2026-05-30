@@ -419,10 +419,12 @@ function AdminSettings() {
           </Card>
         </section>
 
+        <section className="space-y-4 pb-12">
           <div className="flex items-center gap-2 px-1">
             <FileText className="h-5 w-5 text-primary" />
             <h2 className="text-xl font-semibold text-gray-800">Modelo de Contrato</h2>
           </div>
+
           
           <Card>
             <CardHeader>
