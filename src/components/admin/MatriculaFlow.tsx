@@ -892,17 +892,25 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             </Card>
           )}
 
-          <div className="flex justify-between">
-            <Button variant="ghost" onClick={() => setStep(3)}>
+          <div className="flex justify-end gap-3 pt-8">
+            <Button variant="outline" onClick={() => setStep(3)}>
               <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
             </Button>
             <Button 
+              size="lg"
+              className="bg-primary hover:bg-primary/90 font-bold"
+              onClick={generateContract}
+            >
+              <FileText className="h-4 w-4 mr-2" /> Gerar Contrato
+            </Button>
+            <Button 
+              size="lg"
+              className="bg-green-600 hover:bg-green-700 font-bold"
               disabled={parcelasGeradas.length === 0 || concludeMatricula.isPending}
-              className="bg-green-600 hover:bg-green-700 h-12 px-8 text-lg"
               onClick={() => concludeMatricula.mutate()}
             >
-              {concludeMatricula.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Concluir Matrícula
+              {concludeMatricula.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+              Finalizar Matrícula
             </Button>
           </div>
         </div>
