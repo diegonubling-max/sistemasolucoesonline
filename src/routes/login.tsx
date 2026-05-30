@@ -50,6 +50,25 @@ function LoginPage() {
     navigate({ to: "/" });
   };
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      toast.error("Informe seu e-mail para recuperar a senha");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/perfil`,
+    });
+    setLoading(false);
+
+    if (error) {
+      toast.error("Erro ao enviar recuperação", { description: error.message });
+    } else {
+      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -100,7 +119,15 @@ function LoginPage() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Entrar
             </Button>
-            <div className="pt-2 text-center">
+            <div className="pt-2 text-center space-y-2">
+              <button
+                type="button"
+                onClick={handleResetPassword}
+                className="text-xs text-primary hover:underline font-medium block w-full"
+                disabled={loading}
+              >
+                Esqueci minha senha
+              </button>
               <p className="text-xs text-muted-foreground">
                 Não tem uma conta?{" "}
                 <button
