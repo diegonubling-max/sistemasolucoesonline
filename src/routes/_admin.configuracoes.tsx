@@ -194,7 +194,7 @@ function AdminSettings() {
               Não foi possível carregar as configurações do sistema. Isso pode ser um problema de permissão ou conexão.
             </p>
             <div className="bg-white/50 p-3 rounded border border-red-100 font-mono text-xs text-red-800 overflow-auto">
-              {(fetchError as any)?.message || "Erro desconisido"}
+              {(fetchError as any)?.message || "Erro desconhecido"}
             </div>
             <Button 
               variant="outline" 
