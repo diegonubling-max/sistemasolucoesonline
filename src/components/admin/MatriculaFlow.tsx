@@ -1041,17 +1041,6 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                     {saveStep3.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                     Confirmar e avançar <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
-                  {matriculaId && unlockedSteps.includes(4) && (
-                    <Button 
-                      variant="outline"
-                      size="lg"
-                      className="font-bold border-primary text-primary hover:bg-primary hover:text-white"
-                      onClick={() => setShowModelSelection(true)}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Gerar Contrato
-                    </Button>
-                  )}
                 </div>
               </div>
             </div>
