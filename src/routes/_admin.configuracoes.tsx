@@ -5,7 +5,7 @@ import {
   Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, 
   Link2, FileText, Copy, ShieldPlus, Bell, Bold, Italic, 
   Underline as UnderlineIcon, List, ListOrdered, AlignLeft, 
-  AlignCenter, AlignRight, AlignJustify 
+  AlignCenter, AlignRight, AlignJustify, Table as TableIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,11 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { Gapcursor } from '@tiptap/extension-gapcursor';
 
 
 export const Route = createFileRoute("/_admin/configuracoes")({
@@ -93,6 +98,13 @@ function AdminSettings() {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Gapcursor,
     ],
     content: modeloContrato,
     onUpdate: ({ editor }) => {
@@ -109,9 +121,26 @@ function AdminSettings() {
 
   const updateConfig = useMutation({
     mutationFn: async ({ chave, valor }: { chave: string, valor: string }) => {
+      // Clean up variables format before saving
+      let processedValue = valor;
+      if (chave === "modelo_contrato") {
+        processedValue = processedValue
+          .replace(/\$nome\$/g, "[NOME_ALUNO]")
+          .replace(/\$cpf\$/g, "[CPF_ALUNO]")
+          .replace(/\$fone\$/g, "[TELEFONE_ALUNO]")
+          .replace(/\$entrada\$/g, "[VALOR_ENTRADA]")
+          .replace(/\$quant_parcelas\$/g, "[NUMERO_PARCELAS]")
+          .replace(/\$valor_parcela_normal\$/g, "[VALOR_PARCELA]")
+          .replace(/\$dataprimeira_parcela\$/g, "[DATA_MATRICULA]")
+          // Remove non-existent fields
+          .replace(/\$bairro\$/g, "")
+          .replace(/\$cidade\$/g, "")
+          .replace(/\$estado\$/g, "");
+      }
+
       const { error } = await supabase
         .from("configuracoes")
-        .update({ valor })
+        .update({ valor: processedValue })
         .eq("chave", chave);
       if (error) throw error;
     },
@@ -555,6 +584,25 @@ function AdminSettings() {
                                 className={editor.isActive('orderedList') ? 'bg-gray-200' : ''}
                               >
                                 <ListOrdered className="h-4 w-4" />
+                              </Button>
+                              <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                                title="Inserir Tabela"
+                              >
+                                <TableIcon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => editor.chain().focus().deleteTable().run()}
+                                disabled={!editor.isActive('table')}
+                                title="Excluir Tabela"
+                                className={!editor.isActive('table') ? 'opacity-50' : 'text-red-500'}
+                              >
+                                <TableIcon className="h-4 w-4" />
                               </Button>
                             </div>
                           )}
