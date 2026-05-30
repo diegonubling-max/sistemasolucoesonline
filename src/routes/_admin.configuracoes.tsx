@@ -47,6 +47,9 @@ function AdminSettings() {
   const [modeloContrato, setModeloContrato] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWebhookToken, setShowWebhookToken] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newAdminPassword, setNewAdminPassword] = useState("");
+
 
   useEffect(() => {
     if (configs) {
