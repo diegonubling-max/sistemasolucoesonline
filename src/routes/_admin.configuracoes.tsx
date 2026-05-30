@@ -27,16 +27,21 @@ export const Route = createFileRoute("/_admin/configuracoes")({
 function AdminSettings() {
   const queryClient = useQueryClient();
   
-  const { data: configs, isLoading } = useQuery({
+  const { data: configs, isLoading, isError, error: fetchError } = useQuery({
     queryKey: ["admin-configs"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("configuracoes")
         .select("*");
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar configurações:", error);
+        throw error;
+      }
       return data;
     },
+    retry: 1,
   });
+
 
   const [whatsappSuporte, setWhatsappSuporte] = useState("");
   const [mensagemWhatsapp, setMensagemWhatsapp] = useState("");
