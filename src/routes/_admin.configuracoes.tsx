@@ -208,7 +208,8 @@ function AdminSettings() {
 
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="flex flex-col md:flex-row min-h-screen">
+
       <div className="flex items-center gap-3 border-b pb-6">
         <div className="p-2 bg-primary/10 rounded-lg">
           <Settings className="h-6 w-6 text-primary" />
