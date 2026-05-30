@@ -1216,68 +1216,102 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       </Dialog>
 
       <Dialog open={showConclusion} onOpenChange={(o) => !o && navigate({ to: "/alunos" })}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <Check className="h-6 w-6 text-green-600" />
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <Check className="h-8 w-8 text-green-600" />
             </div>
-            <DialogTitle className="text-center text-2xl">Matrícula Concluída!</DialogTitle>
-            <DialogDescription className="text-center">
-              O aluno foi matriculado com sucesso no sistema.
-            </DialogDescription>
+            <DialogTitle className="text-center text-3xl font-black">Matrícula Realizada com Sucesso!</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="bg-muted p-4 rounded-lg space-y-3">
-              <div className="flex justify-between items-center pb-2 border-b border-muted-foreground/10">
-                <span className="text-sm font-medium">Aluno:</span>
-                <span className="text-sm font-bold">{aluno?.nome}</span>
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs font-medium text-muted-foreground uppercase">Cursos:</span>
-                <ul className="text-xs space-y-1 list-disc pl-4">
-                  {cursos?.filter(c => selectedCursos.includes(c.id)).map(c => (
-                    <li key={c.id}>{c.nome}</li>
-                  ))}
-                </ul>
+          <div className="space-y-6 py-4">
+            {/* Acesso do Aluno */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <ShieldPlus className="h-4 w-4" /> Acesso do Aluno
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-muted/50 p-4 rounded-xl border relative group">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Login (CTR)</p>
+                  <p className="font-mono font-bold text-lg">{accessData?.ctr}</p>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute right-2 top-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      navigator.clipboard.writeText(accessData?.ctr?.toString() || "");
+                      toast.success("Login copiado!");
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="bg-muted/50 p-4 rounded-xl border relative group">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Senha Padrão</p>
+                  <p className="font-mono font-bold text-lg text-primary">{accessData?.pass}</p>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute right-2 top-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      navigator.clipboard.writeText(accessData?.pass || "");
+                      toast.success("Senha copiada!");
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <div className="border-2 border-dashed border-primary/30 p-5 rounded-xl bg-primary/5 text-center space-y-3">
-              <GraduationCap className="h-6 w-6 mx-auto text-primary" />
-              <div>
-                <p className="text-sm font-bold">Dados de Acesso</p>
-                <p className="text-xs text-muted-foreground">O aluno utilizará os dados abaixo para logar:</p>
+            {/* Link do Contrato */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <FileText className="h-4 w-4" /> Link do Contrato
+              </h3>
+              <div className="flex gap-2">
+                <Input value={contractLink || ""} readOnly className="font-mono text-sm h-12 bg-muted/30" />
+                <Button 
+                  variant="outline"
+                  className="h-12 px-4"
+                  onClick={() => {
+                    navigator.clipboard.writeText(contractLink || "");
+                    toast.success("Link do contrato copiado!");
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="bg-white p-3 rounded border space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span>Login:</span>
-                  <span className="font-mono font-bold">{accessData?.ctr}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span>Senha:</span>
-                  <span className="font-mono font-bold text-primary">{accessData?.pass}</span>
-                </div>
-              </div>
-              <p className="text-[10px] text-destructive font-bold uppercase">Anote a senha pois não será exibida novamente</p>
+            </div>
+
+            {/* Ações */}
+            <div className="grid grid-cols-1 gap-3 pt-2">
+              <Button 
+                size="lg"
+                className="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold h-14"
+                onClick={() => {
+                  const nome = aluno?.nome?.split(" ")[0] || "Aluno";
+                  const mensagem = `Olá ${nome}! Sua matrícula foi realizada com sucesso.\n\n` +
+                                   `Acesse o sistema com seus dados:\n` +
+                                   `Login: ${accessData?.ctr}\n` +
+                                   `Senha: ${accessData?.pass}\n\n` +
+                                   `Acesse o sistema: ${window.location.origin}/aluno/login\n\n` +
+                                   `Por favor, assine seu contrato através do link abaixo:\n` +
+                                   `${contractLink}`;
+                  
+                  const encodedMsg = encodeURIComponent(mensagem);
+                  const phone = aluno?.telefone?.replace(/\D/g, "");
+                  window.open(`https://wa.me/${phone}?text=${encodedMsg}`, "_blank");
+                }}
+              >
+                <MessageSquare className="h-5 w-5 mr-2" /> Enviar por WhatsApp
+              </Button>
             </div>
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => {
-                const loginUrl = "https://sistemasolucoesonline.lovable.app/aluno/login";
-                const text = `Olá ${aluno?.nome?.split(" ")[0]}! Seus dados de acesso:\nLogin: ${accessData?.ctr}\nSenha: ${accessData?.pass}\nAcesse: ${loginUrl}`;
-                navigator.clipboard.writeText(text);
-                toast.success("Dados copiados para a área de transferência!");
-              }}
-            >
-              <Copy className="h-4 w-4 mr-2" /> Copiar dados
-            </Button>
-            <Button className="flex-1" onClick={() => navigate({ to: "/alunos" })}>
-              Fechar e ir para lista de alunos
+          <DialogFooter>
+            <Button variant="ghost" className="w-full" onClick={() => navigate({ to: "/alunos" })}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
