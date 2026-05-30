@@ -5,7 +5,7 @@ import {
   Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, 
   Link2, FileText, Copy, ShieldPlus, Bell, Bold, Italic, 
   Underline as UnderlineIcon, List, ListOrdered, AlignLeft, 
-  AlignCenter, AlignRight, AlignJustify 
+  AlignCenter, AlignRight, AlignJustify, Table as TableIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
