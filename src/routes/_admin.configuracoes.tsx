@@ -41,7 +41,7 @@ export const Route = createFileRoute("/_admin/configuracoes")({
 function AdminSettings() {
   const queryClient = useQueryClient();
   
-  const { data: configs, isLoading, isError, error: fetchError } = useQuery({
+  const { data: configs, isLoading: isConfigsLoading, isError: isConfigsError, error: fetchError } = useQuery({
     queryKey: ["admin-configs"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -56,6 +56,21 @@ function AdminSettings() {
     retry: 1,
   });
 
+  const { data: modelos, isLoading: isModelosLoading } = useQuery({
+    queryKey: ["modelos-contrato"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("modelos_contrato")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isLoading = isConfigsLoading || isModelosLoading;
+  const isError = isConfigsError;
+
 
   const [whatsappSuporte, setWhatsappSuporte] = useState("");
   const [mensagemWhatsapp, setMensagemWhatsapp] = useState("");
@@ -64,6 +79,9 @@ function AdminSettings() {
   const [asaasAmbiente, setAsaasAmbiente] = useState("producao");
   const [asaasWebhookToken, setAsaasWebhookToken] = useState("");
   const [modeloContrato, setModeloContrato] = useState("");
+  const [nomeModelo, setNomeModelo] = useState("");
+  const [editingModeloId, setEditingModeloId] = useState<string | null>(null);
+  const [isEditingModelo, setIsEditingModelo] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWebhookToken, setShowWebhookToken] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
@@ -121,26 +139,9 @@ function AdminSettings() {
 
   const updateConfig = useMutation({
     mutationFn: async ({ chave, valor }: { chave: string, valor: string }) => {
-      // Clean up variables format before saving
-      let processedValue = valor;
-      if (chave === "modelo_contrato") {
-        processedValue = processedValue
-          .replace(/\$nome\$/g, "[NOME_ALUNO]")
-          .replace(/\$cpf\$/g, "[CPF_ALUNO]")
-          .replace(/\$fone\$/g, "[TELEFONE_ALUNO]")
-          .replace(/\$entrada\$/g, "[VALOR_ENTRADA]")
-          .replace(/\$quant_parcelas\$/g, "[NUMERO_PARCELAS]")
-          .replace(/\$valor_parcela_normal\$/g, "[VALOR_PARCELA]")
-          .replace(/\$dataprimeira_parcela\$/g, "[DATA_MATRICULA]")
-          // Remove non-existent fields
-          .replace(/\$bairro\$/g, "")
-          .replace(/\$cidade\$/g, "")
-          .replace(/\$estado\$/g, "");
-      }
-
       const { error } = await supabase
         .from("configuracoes")
-        .update({ valor: processedValue })
+        .update({ valor })
         .eq("chave", chave);
       if (error) throw error;
     },
@@ -150,6 +151,69 @@ function AdminSettings() {
     },
     onError: (error: any) => {
       toast.error("Erro ao salvar configuração: " + error.message);
+    },
+  });
+
+  const saveModeloMutation = useMutation({
+    mutationFn: async () => {
+      const processedContent = modeloContrato
+        .replace(/\$nome\$/g, "[NOME_ALUNO]")
+        .replace(/\$cpf\$/g, "[CPF_ALUNO]")
+        .replace(/\$fone\$/g, "[TELEFONE_ALUNO]")
+        .replace(/\$entrada\$/g, "[VALOR_ENTRADA]")
+        .replace(/\$quant_parcelas\$/g, "[NUMERO_PARCELAS]")
+        .replace(/\$valor_parcela_normal\$/g, "[VALOR_PARCELA]")
+        .replace(/\$dataprimeira_parcela\$/g, "[DATA_MATRICULA]")
+        .replace(/\$bairro\$/g, "")
+        .replace(/\$cidade\$/g, "")
+        .replace(/\$estado\$/g, "");
+
+      if (editingModeloId) {
+        const { error } = await supabase
+          .from("modelos_contrato")
+          .update({
+            nome: nomeModelo,
+            conteudo_html: processedContent
+          })
+          .eq("id", editingModeloId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("modelos_contrato")
+          .insert({
+            nome: nomeModelo,
+            conteudo_html: processedContent
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modelos-contrato"] });
+      toast.success("Modelo de contrato salvo com sucesso!");
+      setIsEditingModelo(false);
+      setEditingModeloId(null);
+      setNomeModelo("");
+      setModeloContrato("");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao salvar modelo: " + error.message);
+    },
+  });
+
+  const deleteModeloMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("modelos_contrato")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modelos-contrato"] });
+      toast.success("Modelo excluído com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao excluir modelo: " + error.message);
     },
   });
 
