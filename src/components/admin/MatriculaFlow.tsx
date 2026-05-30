@@ -918,7 +918,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             <Button 
               size="lg"
               className="bg-primary hover:bg-primary/90 font-bold"
-              onClick={generateContract}
+              onClick={() => setShowModelSelection(true)}
             >
               <FileText className="h-4 w-4 mr-2" /> Gerar Contrato
             </Button>
