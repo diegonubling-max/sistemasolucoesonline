@@ -98,7 +98,7 @@ function PublicContractPage() {
                 O contrato foi assinado digitalmente com sucesso por <strong>{contrato.nome_confirmacao}</strong>.
               </p>
               <div className="bg-white p-4 rounded-lg border border-green-100 text-left text-xs space-y-1">
-                <p><strong>Data/Hora:</strong> {new Date(contrato.data_assinatura).toLocaleString('pt-BR')}</p>
+                <p><strong>Data/Hora:</strong> {contrato.data_assinatura ? new Date(contrato.data_assinatura).toLocaleString('pt-BR') : 'N/A'}</p>
                 <p><strong>IP de Registro:</strong> {contrato.ip_assinatura}</p>
                 <p><strong>Autenticidade:</strong> {contrato.id}</p>
               </div>
