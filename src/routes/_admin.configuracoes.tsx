@@ -72,6 +72,27 @@ function AdminSettings() {
     }
   }, [configs]);
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+    ],
+    content: modeloContrato,
+    onUpdate: ({ editor }) => {
+      setModeloContrato(editor.getHTML());
+    },
+  });
+
+  useEffect(() => {
+    if (editor && modeloContrato && editor.getHTML() !== modeloContrato) {
+      editor.commands.setContent(modeloContrato);
+    }
+  }, [modeloContrato, editor]);
+
+
   const updateConfig = useMutation({
     mutationFn: async ({ chave, valor }: { chave: string, valor: string }) => {
       const { error } = await supabase
