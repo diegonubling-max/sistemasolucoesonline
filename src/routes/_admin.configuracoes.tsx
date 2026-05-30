@@ -16,8 +16,12 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import { Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
+
 
 export const Route = createFileRoute("/_admin/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Painel Admin" }] }),
