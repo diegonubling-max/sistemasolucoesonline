@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap, Copy, Calendar as CalendarIcon, Trash2, Plus, Wallet } from "lucide-react";
+import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap, Copy, Calendar as CalendarIcon, Trash2, Plus, Wallet, ChevronDown, ChevronRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -33,6 +33,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   // State for Step 2: Cursos
   const [selectedCursos, setSelectedCursos] = useState<string[]>([]);
   const [searchCurso, setSearchCurso] = useState("");
+  const [expandedSegment, setExpandedSegment] = useState<string | null>(null);
   
   // State for Step 3: Pacotes
   const [selectedPacote, setSelectedPacote] = useState<string | null>(null);
@@ -394,48 +395,100 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 <label htmlFor="all" className="text-sm font-bold cursor-pointer">Marcar todos os cursos</label>
               </div>
 
-              <div className="max-h-[500px] overflow-y-auto space-y-6 pt-2">
-                {groupedCursos.map(group => (
-                  <div key={group.id} className="space-y-3">
-                    <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md border border-muted">
-                      <div className="flex items-center gap-2">
-                        <Checkbox 
-                          id={`seg-${group.id}`}
-                          checked={group.cursos.every(c => selectedCursos.includes(c.id))}
-                          onCheckedChange={(c) => toggleSegmento(group.id === "others" ? null : group.id, !!c)}
-                        />
-                        <label htmlFor={`seg-${group.id}`} className="text-xs font-bold uppercase tracking-wider cursor-pointer">
-                          {group.nome}
-                        </label>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground font-bold">
-                        {group.cursos.filter(c => selectedCursos.includes(c.id)).length} / {group.cursos.length}
-                      </span>
-                    </div>
+              <div className="space-y-3 pt-2">
+                {groupedCursos.map(group => {
+                  const isExpanded = expandedSegment === group.id;
+                  const selectedInGroup = group.cursos.filter(c => selectedCursos.includes(c.id)).length;
+                  const allSelectedInGroup = selectedInGroup === group.cursos.length && group.cursos.length > 0;
 
-                    <div className="grid grid-cols-1 gap-1">
-                      {group.cursos.map(curso => {
-                        const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
-                        const isSelected = selectedCursos.includes(curso.id);
-                        return (
-                          <div 
-                            key={curso.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer hover:bg-muted/30 ${isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-transparent"}`}
-                            onClick={() => toggleCurso(curso.id)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Checkbox checked={isSelected} onCheckedChange={() => {}} />
-                              <div>
-                                <p className="font-semibold text-sm">{curso.nome}</p>
-                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">{aulasCount} aulas</p>
-                              </div>
-                            </div>
+                  return (
+                    <div key={group.id} className="border rounded-xl overflow-hidden bg-white shadow-sm transition-all">
+                      <div 
+                        className={cn(
+                          "flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors",
+                          isExpanded && "bg-muted/30 border-b"
+                        )}
+                        onClick={() => setExpandedSegment(isExpanded ? null : group.id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                            isExpanded ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                          )}>
+                            {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                           </div>
-                        );
-                      })}
+                          <div>
+                            <h3 className="font-bold text-sm uppercase tracking-tight">{group.nome}</h3>
+                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+                              {group.cursos.length} cursos disponíveis
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {selectedInGroup > 0 && (
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold">
+                              {selectedInGroup} selecionados
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="p-4 bg-muted/10 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="flex items-center space-x-2 pb-2 border-b border-muted">
+                            <Checkbox 
+                              id={`seg-${group.id}`}
+                              checked={allSelectedInGroup}
+                              onCheckedChange={(c) => toggleSegmento(group.id === "others" ? null : group.id, !!c)}
+                            />
+                            <label htmlFor={`seg-${group.id}`} className="text-xs font-bold uppercase tracking-wider cursor-pointer">
+                              Selecionar todos de {group.nome}
+                            </label>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {group.cursos.map(curso => {
+                              const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
+                              const isSelected = selectedCursos.includes(curso.id);
+                              return (
+                                <div 
+                                  key={curso.id}
+                                  className={cn(
+                                    "flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer group",
+                                    isSelected 
+                                      ? "border-primary bg-primary/5 shadow-sm" 
+                                      : "border-muted-foreground/10 bg-white hover:border-primary/50"
+                                  )}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleCurso(curso.id);
+                                  }}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Checkbox 
+                                      checked={isSelected} 
+                                      onCheckedChange={() => {}} 
+                                      className="pointer-events-none"
+                                    />
+                                    <div>
+                                      <p className="font-semibold text-sm leading-none mb-1">{curso.nome}</p>
+                                      <div className="flex items-center gap-1.5">
+                                        <GraduationCap className="h-3 w-3 text-muted-foreground" />
+                                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                                          {aulasCount} aulas
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {filteredCursos.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
