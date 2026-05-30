@@ -1041,6 +1041,17 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                     {saveStep3.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                     Confirmar e avançar <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
+                  {matriculaId && unlockedSteps.includes(4) && (
+                    <Button 
+                      variant="outline"
+                      size="lg"
+                      className="font-bold border-primary text-primary hover:bg-primary hover:text-white"
+                      onClick={() => setShowModelSelection(true)}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Gerar Contrato
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1189,6 +1200,43 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             </Button>
             <Button className="flex-1" onClick={() => navigate({ to: "/alunos" })}>
               Fechar e ir para lista de alunos
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showModelSelection} onOpenChange={setShowModelSelection}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Selecionar Modelo de Contrato</DialogTitle>
+            <DialogDescription>
+              Escolha qual modelo de contrato deseja utilizar para esta matrícula.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {modelos?.map((modelo: any) => (
+              <Button
+                key={modelo.id}
+                variant="outline"
+                className="w-full justify-between h-auto py-4 px-4 hover:border-primary hover:bg-primary/5 group"
+                onClick={() => generateContract(modelo.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">{modelo.nome}</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+              </Button>
+            ))}
+            {(!modelos || modelos.length === 0) && (
+              <div className="text-center py-6 text-muted-foreground italic">
+                Nenhum modelo de contrato cadastrado.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowModelSelection(false)}>
+              Cancelar
             </Button>
           </DialogFooter>
         </DialogContent>
