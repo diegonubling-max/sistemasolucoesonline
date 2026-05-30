@@ -121,9 +121,26 @@ function AdminSettings() {
 
   const updateConfig = useMutation({
     mutationFn: async ({ chave, valor }: { chave: string, valor: string }) => {
+      // Clean up variables format before saving
+      let processedValue = valor;
+      if (chave === "modelo_contrato") {
+        processedValue = processedValue
+          .replace(/\$nome\$/g, "[NOME_ALUNO]")
+          .replace(/\$cpf\$/g, "[CPF_ALUNO]")
+          .replace(/\$fone\$/g, "[TELEFONE_ALUNO]")
+          .replace(/\$entrada\$/g, "[VALOR_ENTRADA]")
+          .replace(/\$quant_parcelas\$/g, "[NUMERO_PARCELAS]")
+          .replace(/\$valor_parcela_normal\$/g, "[VALOR_PARCELA]")
+          .replace(/\$dataprimeira_parcela\$/g, "[DATA_MATRICULA]")
+          // Remove non-existent fields
+          .replace(/\$bairro\$/g, "")
+          .replace(/\$cidade\$/g, "")
+          .replace(/\$estado\$/g, "");
+      }
+
       const { error } = await supabase
         .from("configuracoes")
-        .update({ valor })
+        .update({ valor: processedValue })
         .eq("chave", chave);
       if (error) throw error;
     },
