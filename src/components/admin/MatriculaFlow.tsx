@@ -59,19 +59,6 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     queryKey: ["modelos-contrato"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("modelos_contrato")
-        .select("*")
-        .eq("ativo", true)
-        .order("nome");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: modelos } = useQuery({
-    queryKey: ["modelos-contrato"],
-    queryFn: async () => {
-      const { data, error } = await supabase
         .from("modelos_contrato" as any)
         .select("*")
         .eq("ativo", true)
@@ -82,6 +69,17 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   });
 
   const { data: segmentos } = useQuery({
+    queryKey: ["segmentos-ativos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("segmentos")
+        .select("id, nome")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   const { data: cursos } = useQuery({
     queryKey: ["cursos-ativos"],
