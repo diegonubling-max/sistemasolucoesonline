@@ -101,7 +101,31 @@ function AdminSettings() {
     },
   });
 
+  const createAdminMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("manage-student-access", {
+        body: { 
+          action: "create_admin",
+          email: newAdminEmail,
+          password: newAdminPassword
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Novo administrador criado com sucesso!");
+      setNewAdminEmail("");
+      setNewAdminPassword("");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao criar administrador: " + error.message);
+    },
+  });
+
   if (isLoading) {
+
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
