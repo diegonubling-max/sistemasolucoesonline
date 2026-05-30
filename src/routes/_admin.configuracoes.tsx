@@ -60,7 +60,7 @@ function AdminSettings() {
     queryKey: ["modelos-contrato"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("modelos_contrato")
+        .from("modelos_contrato" as any)
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -170,20 +170,20 @@ function AdminSettings() {
 
       if (editingModeloId) {
         const { error } = await supabase
-          .from("modelos_contrato")
+          .from("modelos_contrato" as any)
           .update({
             nome: nomeModelo,
             conteudo_html: processedContent
-          })
+          } as any)
           .eq("id", editingModeloId);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("modelos_contrato")
+          .from("modelos_contrato" as any)
           .insert({
             nome: nomeModelo,
             conteudo_html: processedContent
-          });
+          } as any);
         if (error) throw error;
       }
     },
@@ -203,7 +203,7 @@ function AdminSettings() {
   const deleteModeloMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from("modelos_contrato")
+        .from("modelos_contrato" as any)
         .delete()
         .eq("id", id);
       if (error) throw error;
