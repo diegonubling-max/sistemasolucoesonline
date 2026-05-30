@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, Link2, FileText, Copy, ShieldPlus } from "lucide-react";
+import { Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, Link2, FileText, Copy, ShieldPlus, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
