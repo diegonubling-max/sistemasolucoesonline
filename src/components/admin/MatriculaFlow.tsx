@@ -68,18 +68,20 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     },
   });
 
-  const { data: segmentos } = useQuery({
-    queryKey: ["segmentos-ativos"],
+  const { data: modelos } = useQuery({
+    queryKey: ["modelos-contrato"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("segmentos")
-        .select("id, nome")
+        .from("modelos_contrato" as any)
+        .select("*")
         .eq("ativo", true)
-        .order("ordem", { ascending: true });
+        .order("nome");
       if (error) throw error;
-      return data ?? [];
+      return data;
     },
   });
+
+  const { data: segmentos } = useQuery({
 
   const { data: cursos } = useQuery({
     queryKey: ["cursos-ativos"],
@@ -222,13 +224,13 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   const generateContract = async (modeloId: string) => {
     if (!aluno || !selectedPacote) return;
 
-    const modelo = modelos?.find(m => m.id === modeloId);
+    const modelo = modelos?.find((m: any) => m.id === modeloId);
     if (!modelo) {
       toast.error("Modelo de contrato não encontrado.");
       return;
     }
 
-    let template = modelo.conteudo_html;
+    let template = (modelo as any).conteudo_html;
     const currentPacote = pacotes?.find(p => p.id === selectedPacote);
     const sortedParcelas = getSortedParcelas();
     const parcelaNormal = sortedParcelas.find(p => p.tipo === 'parcela');
