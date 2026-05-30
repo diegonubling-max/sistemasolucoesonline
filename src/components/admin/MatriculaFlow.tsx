@@ -840,50 +840,126 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       )}
 
       {step === 3 && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pacotes?.map(p => {
-              const isSelected = selectedPacote === p.id;
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
+          <div className="space-y-8">
+            {['pix', 'boleto', 'cartao'].map(tipo => {
+              const pacotesDoTipo = pacotes?.filter(p => p.tipo === tipo) || [];
+              if (pacotesDoTipo.length === 0) return null;
+
               return (
-                <div 
-                  key={p.id}
-                  className={`relative p-5 rounded-xl border-2 transition-all cursor-pointer flex flex-col h-full hover:border-primary/50 ${isSelected ? "border-primary bg-primary/5 shadow-md" : "border-muted bg-white"}`}
-                  onClick={() => setSelectedPacote(p.id)}
-                >
-                  {isSelected && (
-                    <div className="absolute top-3 right-3 bg-primary text-primary-foreground rounded-full p-0.5">
-                      <Check className="h-3 w-3" />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <Badge variant="secondary" className="mb-2 capitalize">{p.tipo}</Badge>
-                    <h3 className="font-bold text-lg mb-1">{p.nome}</h3>
-                    <div className="space-y-1 text-sm text-muted-foreground mb-4">
-                      <p>Entrada: R$ {p.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                      <p>Parcelas: {p.numero_parcelas}x R$ {p.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                    </div>
+                <div key={tipo} className="space-y-3">
+                  <div className="flex items-center gap-2 pb-1 border-b">
+                    <div className={cn(
+                      "w-1 h-4 rounded-full",
+                      tipo === 'pix' ? "bg-green-500" : tipo === 'boleto' ? "bg-blue-500" : "bg-purple-500"
+                    )} />
+                    <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                      Grupo {tipo === 'pix' ? 'PIX' : tipo === 'boleto' ? 'Boleto' : 'Cartão'}
+                    </h3>
                   </div>
-                  <div className="pt-4 border-t">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Valor Total</p>
-                    <p className="text-2xl font-black text-primary">R$ {p.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                  
+                  <div className="grid gap-2">
+                    {pacotesDoTipo.map(p => {
+                      const isSelected = selectedPacote === p.id;
+                      return (
+                        <div 
+                          key={p.id}
+                          className={cn(
+                            "flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer bg-white hover:border-primary/30 group",
+                            isSelected ? "border-primary shadow-sm ring-1 ring-primary/10" : "border-muted"
+                          )}
+                          onClick={() => setSelectedPacote(p.id)}
+                        >
+                          <div className="flex items-center gap-4 flex-1">
+                            <Badge className={cn(
+                              "font-bold px-2 py-0.5 text-[10px] uppercase",
+                              tipo === 'pix' ? "bg-green-100 text-green-700 hover:bg-green-100" : 
+                              tipo === 'boleto' ? "bg-blue-100 text-blue-700 hover:bg-blue-100" : 
+                              "bg-purple-100 text-purple-700 hover:bg-purple-100"
+                            )}>
+                              {tipo}
+                            </Badge>
+                            
+                            <div className="flex-1">
+                              <p className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">{p.nome}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {p.numero_parcelas}x R$ {p.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-6">
+                            <div className="text-right">
+                              <p className="text-[10px] text-muted-foreground uppercase font-semibold">Total</p>
+                              <p className="font-black text-base text-primary">
+                                R$ {p.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </p>
+                            </div>
+                            <div className={cn(
+                              "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                              isSelected ? "border-primary bg-primary text-white" : "border-muted-foreground/30"
+                            )}>
+                              {isSelected && <Check className="h-3 w-3" strokeWidth={4} />}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="flex justify-between">
-            <Button variant="ghost" onClick={() => setStep(2)}>
-              <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
-            </Button>
-            <Button 
-              disabled={!selectedPacote || saveStep3.isPending}
-              onClick={() => saveStep3.mutate()}
-            >
-              {saveStep3.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Salvar e continuar <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
+          {/* Resumo Fixo no Rodapé */}
+          {selectedPacote && (
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-50 animate-in slide-in-from-bottom-full duration-500 shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
+              <div className="max-w-4xl mx-auto flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Pacote Selecionado</p>
+                    <p className="font-bold text-sm">{pacotes?.find(p => p.id === selectedPacote)?.nome}</p>
+                  </div>
+                  <div className="h-8 w-px bg-muted" />
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Entrada</p>
+                    <p className="font-bold text-sm">R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="h-8 w-px bg-muted" />
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Valor Total</p>
+                    <p className="font-black text-lg text-primary">R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" size="sm" onClick={() => setStep(2)}>
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+                  </Button>
+                  <Button 
+                    size="lg"
+                    className="px-8 font-bold"
+                    disabled={saveStep3.isPending}
+                    onClick={() => saveStep3.mutate()}
+                  >
+                    {saveStep3.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    Confirmar e avançar <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!selectedPacote && (
+            <div className="flex justify-between pt-6">
+              <Button variant="ghost" onClick={() => setStep(2)}>
+                <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+              </Button>
+              <Button disabled variant="outline">
+                Selecione um pacote para continuar
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
