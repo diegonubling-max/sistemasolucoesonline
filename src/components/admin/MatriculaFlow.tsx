@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap, Copy, Calendar as CalendarIcon, Trash2, Plus, Wallet, ChevronDown, ChevronRight, FileText, Link } from "lucide-react";
+import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap, Copy, Calendar as CalendarIcon, Trash2, Plus, Wallet, ChevronDown, ChevronRight, FileText, Link, ShieldPlus, MessageSquare } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3 | 4 | 5;
 
 export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   const navigate = useNavigate();
@@ -171,11 +171,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
   const concludeMatricula = useMutation({
     mutationFn: async () => {
-      if (!matriculaId || !aluno) throw new Error("Dados incompletos");
+      if (!matriculaId || !aluno || !contractContent) throw new Error("Dados incompletos");
 
       const currentPacote = pacotes?.find(p => p.id === selectedPacote);
       if (!currentPacote) throw new Error("Pacote não encontrado");
 
+      // 1. Salvar Parcelas
       const allParcelas: any[] = [];
       const sortedItems = getSortedParcelas();
 
@@ -191,8 +192,22 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         });
       });
 
-      const { error } = await supabase.from('parcelas').insert(allParcelas);
-      if (error) throw error;
+      const { error: errorParcelas } = await supabase.from('parcelas').insert(allParcelas);
+      if (errorParcelas) throw errorParcelas;
+
+      // 2. Salvar Contrato
+      const { data: contractData, error: errorContrato } = await supabase
+        .from('contratos')
+        .insert({
+          aluno_id: aluno.id,
+          matricula_id: matriculaId,
+          conteudo_html: contractContent,
+          status: 'pendente'
+        })
+        .select('token_unico')
+        .single();
+
+      if (errorContrato) throw errorContrato;
 
       // Integrar com Asaas: Criar/Buscar cliente
       try {
@@ -206,13 +221,16 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         console.log("Cliente sincronizado com Asaas");
       } catch (asaasError) {
         console.error("Erro ao sincronizar com Asaas:", asaasError);
-        // Não trava a conclusão da matrícula, mas avisa
         toast.error("Matrícula concluída, mas erro ao sincronizar com Asaas.");
       }
 
-      return true;
+      return {
+        token: contractData.token_unico,
+        link: `${window.location.origin}/contrato/${contractData.token_unico}`
+      };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setContractLink(data.link);
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
     },
@@ -918,18 +936,13 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             <Button 
               size="lg"
               className="bg-primary hover:bg-primary/90 font-bold"
-              onClick={() => setShowModelSelection(true)}
+              disabled={parcelasGeradas.length === 0}
+              onClick={() => {
+                setUnlockedSteps(prev => [...prev, 5]);
+                setStep(5);
+              }}
             >
-              <FileText className="h-4 w-4 mr-2" /> Gerar Contrato
-            </Button>
-            <Button 
-              size="lg"
-              className="bg-green-600 hover:bg-green-700 font-bold"
-              disabled={parcelasGeradas.length === 0 || concludeMatricula.isPending}
-              onClick={() => concludeMatricula.mutate()}
-            >
-              {concludeMatricula.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-              Finalizar Matrícula
+              Continuar para Contrato <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
         </div>
@@ -1055,6 +1068,82 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 Selecione um pacote para continuar
               </Button>
             </div>
+          )}
+        </div>
+      )}
+
+      {step === 5 && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {!selectedModeloId ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Selecionar Modelo de Contrato</CardTitle>
+                <CardDescription>Escolha um dos modelos abaixo para gerar o contrato desta matrícula.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {modelos?.map((modelo: any) => (
+                  <Button
+                    key={modelo.id}
+                    variant="outline"
+                    className="h-auto py-6 flex flex-col items-center gap-3 hover:border-primary hover:bg-primary/5 transition-all group"
+                    onClick={() => {
+                      setSelectedModeloId(modelo.id);
+                      generateContract(modelo.id);
+                    }}
+                  >
+                    <FileText className="h-8 w-8 text-muted-foreground group-hover:text-primary" />
+                    <span className="font-bold text-base">{modelo.nome}</span>
+                  </Button>
+                ))}
+                {(!modelos || modelos.length === 0) && (
+                  <div className="col-span-full text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg">
+                    <p>Nenhum modelo de contrato encontrado.</p>
+                    <Button variant="link" onClick={() => navigate({ to: "/configuracoes" })}>
+                      Cadastrar modelos em Configurações
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="bg-muted/30 border-t p-4">
+                <Button variant="ghost" onClick={() => setStep(4)}>
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para Pagamentos
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : (
+            <Card className="flex flex-col min-h-[600px]">
+              <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
+                <div>
+                  <CardTitle>Edição do Contrato</CardTitle>
+                  <CardDescription>Revise e ajuste o conteúdo se necessário antes de finalizar.</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setSelectedModeloId(null)}>
+                  Trocar Modelo
+                </Button>
+              </CardHeader>
+              <CardContent className="flex-1 p-0">
+                <ReactQuill 
+                  theme="snow" 
+                  value={contractContent} 
+                  onChange={setContractContent}
+                  className="h-[500px]"
+                />
+              </CardContent>
+              <CardFooter className="border-t p-6 flex justify-between bg-white sticky bottom-0 z-10">
+                <Button variant="outline" onClick={() => setStep(4)}>
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+                </Button>
+                <Button 
+                  size="lg"
+                  className="bg-green-600 hover:bg-green-700 font-bold px-10"
+                  disabled={concludeMatricula.isPending}
+                  onClick={() => concludeMatricula.mutate()}
+                >
+                  {concludeMatricula.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                  Finalizar Matrícula
+                </Button>
+              </CardFooter>
+            </Card>
           )}
         </div>
       )}
@@ -1194,94 +1283,6 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showModelSelection} onOpenChange={setShowModelSelection}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Selecionar Modelo de Contrato</DialogTitle>
-            <DialogDescription>
-              Escolha qual modelo de contrato deseja utilizar para esta matrícula.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-4">
-            {modelos?.map((modelo: any) => (
-              <Button
-                key={modelo.id}
-                variant="outline"
-                className="w-full justify-between h-auto py-4 px-4 hover:border-primary hover:bg-primary/5 group"
-                onClick={() => {
-                  generateContract(modelo.id);
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-primary" />
-                  <span className="font-semibold">{modelo.nome}</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-              </Button>
-            ))}
-            {(!modelos || modelos.length === 0) && (
-              <div className="text-center py-6 text-muted-foreground italic">
-                Nenhum modelo de contrato cadastrado.
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowModelSelection(false)}>
-              Cancelar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showContractModal} onOpenChange={setShowContractModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Contrato de Matrícula</DialogTitle>
-            <DialogDescription>
-              Revise o contrato e gere o link para assinatura do aluno.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-auto py-4">
-            <ReactQuill 
-              theme="snow" 
-              value={contractContent} 
-              onChange={setContractContent}
-              className="min-h-[300px]"
-            />
-          </div>
-
-          <DialogFooter className="flex-col sm:flex-row gap-2 border-t pt-4">
-            {contractLink ? (
-              <div className="flex-1 flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <Input value={contractLink} readOnly className="bg-muted" />
-                  <Button onClick={() => {
-                    navigator.clipboard.writeText(contractLink);
-                    toast.success("Link copiado!");
-                  }}>
-                    <Copy className="h-4 w-4 mr-2" /> Copiar
-                  </Button>
-                </div>
-                <p className="text-[10px] text-muted-foreground text-center">Envie este link para o aluno assinar digitalmente.</p>
-              </div>
-            ) : (
-              <>
-                <Button variant="outline" onClick={() => setShowContractModal(false)}>
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={() => createContract.mutate()}
-                  disabled={createContract.isPending}
-                >
-                  {createContract.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Link className="h-4 w-4 mr-2" />}
-                  Gerar link de assinatura
-                </Button>
-              </>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
