@@ -160,6 +160,56 @@ export type Database = {
         }
         Relationships: []
       }
+      contratos: {
+        Row: {
+          aluno_id: string
+          conteudo_html: string
+          created_at: string
+          data_assinatura: string | null
+          id: string
+          ip_assinatura: string | null
+          matricula_id: string | null
+          nome_confirmacao: string | null
+          status: string
+          token_unico: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          conteudo_html: string
+          created_at?: string
+          data_assinatura?: string | null
+          id?: string
+          ip_assinatura?: string | null
+          matricula_id?: string | null
+          nome_confirmacao?: string | null
+          status?: string
+          token_unico?: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          conteudo_html?: string
+          created_at?: string
+          data_assinatura?: string | null
+          id?: string
+          ip_assinatura?: string | null
+          matricula_id?: string | null
+          nome_confirmacao?: string | null
+          status?: string
+          token_unico?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cursos: {
         Row: {
           ativo: boolean

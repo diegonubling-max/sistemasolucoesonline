@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, Link2 } from "lucide-react";
+import { Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, Link2, FileText, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export const Route = createFileRoute("/_admin/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Painel Admin" }] }),
@@ -42,6 +44,7 @@ function AdminSettings() {
   const [asaasApiKey, setAsaasApiKey] = useState("");
   const [asaasAmbiente, setAsaasAmbiente] = useState("producao");
   const [asaasWebhookToken, setAsaasWebhookToken] = useState("");
+  const [modeloContrato, setModeloContrato] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWebhookToken, setShowWebhookToken] = useState(false);
 
@@ -53,6 +56,7 @@ function AdminSettings() {
       setAsaasApiKey(configs.find(c => c.chave === "asaas_api_key")?.valor || "");
       setAsaasAmbiente(configs.find(c => c.chave === "asaas_ambiente")?.valor || "producao");
       setAsaasWebhookToken(configs.find(c => c.chave === "asaas_webhook_token")?.valor || "");
+      setModeloContrato(configs.find(c => c.chave === "modelo_contrato")?.valor || "");
     }
   }, [configs]);
 
@@ -332,6 +336,79 @@ function AdminSettings() {
               </CardContent>
             </Card>
           </div>
+        </section>
+
+        <section className="space-y-4 pb-12">
+          <div className="flex items-center gap-2 px-1">
+            <FileText className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-gray-800">Modelo de Contrato</h2>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Editor de Contrato</CardTitle>
+              <CardDescription>Configure o texto padrão do contrato que os alunos assinarão</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="md:col-span-3 space-y-4">
+                  <div className="bg-white border rounded-md overflow-hidden">
+                    <ReactQuill 
+                      theme="snow" 
+                      value={modeloContrato} 
+                      onChange={setModeloContrato}
+                      modules={{
+                        toolbar: [
+                          [{ 'header': [1, 2, 3, false] }],
+                          ['bold', 'italic', 'underline', 'strike'],
+                          [{'list': 'ordered'}, {'list': 'bullet'}],
+                          [{ 'align': [] }],
+                          ['clean']
+                        ],
+                      }}
+                      className="min-h-[400px]"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={() => updateConfig.mutate({ chave: "modelo_contrato", valor: modeloContrato })}
+                      disabled={updateConfig.isPending}
+                    >
+                      {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      Salvar Modelo de Contrato
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm">Variáveis Disponíveis</h3>
+                  <p className="text-xs text-muted-foreground">Clique para copiar e cole no editor</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      "[NOME_ALUNO]", "[CPF_ALUNO]", "[EMAIL_ALUNO]", "[TELEFONE_ALUNO]", 
+                      "[DATA_NASCIMENTO]", "[PACOTE_NOME]", "[FORMA_PAGAMENTO]", 
+                      "[VALOR_ENTRADA]", "[VALOR_PARCELA]", "[NUMERO_PARCELAS]", 
+                      "[VALOR_TOTAL]", "[DATA_MATRICULA]", "[NOME_ESCOLA]", "[DATA_CONTRATO]"
+                    ].map((variable) => (
+                      <Button
+                        key={variable}
+                        variant="outline"
+                        size="sm"
+                        className="text-[10px] h-7"
+                        onClick={() => {
+                          navigator.clipboard.writeText(variable);
+                          toast.success(`Copiado: ${variable}`);
+                        }}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        {variable}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </section>
       </div>
     </div>
