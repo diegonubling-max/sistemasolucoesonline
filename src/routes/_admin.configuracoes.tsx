@@ -497,22 +497,88 @@ function AdminSettings() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-3 space-y-4">
-                  <div className="bg-white border rounded-md overflow-hidden">
-                    <ReactQuill 
-                      theme="snow" 
-                      value={modeloContrato} 
-                      onChange={setModeloContrato}
-                      modules={{
-                        toolbar: [
-                          [{ 'header': [1, 2, 3, false] }],
-                          ['bold', 'italic', 'underline', 'strike'],
-                          [{'list': 'ordered'}, {'list': 'bullet'}],
-                          [{ 'align': [] }],
-                          ['clean']
-                        ],
-                      }}
-                      className="min-h-[400px]"
-                    />
+                  <div className="bg-white border rounded-md overflow-hidden flex flex-col min-h-[450px]">
+                    {editor && (
+                      <div className="border-b bg-gray-50 p-2 flex flex-wrap gap-1 sticky top-0 z-10">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editor.chain().focus().toggleBold().run()}
+                          className={editor.isActive('bold') ? 'bg-gray-200' : ''}
+                        >
+                          <Bold className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editor.chain().focus().toggleItalic().run()}
+                          className={editor.isActive('italic') ? 'bg-gray-200' : ''}
+                        >
+                          <Italic className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editor.chain().focus().toggleUnderline().run()}
+                          className={editor.isActive('underline') ? 'bg-gray-200' : ''}
+                        >
+                          <UnderlineIcon className="h-4 w-4" />
+                        </Button>
+                        <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                          className={editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}
+                        >
+                          <AlignLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                          className={editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}
+                        >
+                          <AlignCenter className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                          className={editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}
+                        >
+                          <AlignRight className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+                          className={editor.isActive({ textAlign: 'justify' }) ? 'bg-gray-200' : ''}
+                        >
+                          <AlignJustify className="h-4 w-4" />
+                        </Button>
+                        <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editor.chain().focus().toggleBulletList().run()}
+                          className={editor.isActive('bulletList') ? 'bg-gray-200' : ''}
+                        >
+                          <List className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                          className={editor.isActive('orderedList') ? 'bg-gray-200' : ''}
+                        >
+                          <ListOrdered className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                    <div className="flex-1 p-4 prose prose-sm max-w-none focus:outline-none overflow-y-auto">
+                      <EditorContent editor={editor} />
+                    </div>
                   </div>
                   <div className="flex justify-end">
                     <Button 
