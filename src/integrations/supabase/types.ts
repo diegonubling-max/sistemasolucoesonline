@@ -400,6 +400,30 @@ export type Database = {
           },
         ]
       }
+      modelos_contrato: {
+        Row: {
+          ativo: boolean | null
+          conteudo_html: string | null
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          conteudo_html?: string | null
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean | null
+          conteudo_html?: string | null
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       pacotes: {
         Row: {
           ativo: boolean
