@@ -49,9 +49,24 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   const [showConclusion, setShowConclusion] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
+  const [showModelSelection, setShowModelSelection] = useState(false);
+  const [selectedModeloId, setSelectedModeloId] = useState<string | null>(null);
   const [contractContent, setContractContent] = useState("");
   const [contractLink, setContractLink] = useState<string | null>(null);
   const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
+
+  const { data: modelos } = useQuery({
+    queryKey: ["modelos-contrato"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("modelos_contrato")
+        .select("*")
+        .eq("ativo", true)
+        .order("nome");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: segmentos } = useQuery({
     queryKey: ["segmentos-ativos"],
@@ -204,19 +219,20 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     onError: (e: any) => toast.error(e.message)
   });
 
-  const generateContract = async () => {
+  const generateContract = async (modeloId: string) => {
     if (!aluno || !selectedPacote) return;
 
-    const { data: config } = await supabase
-      .from('configuracoes')
-      .select('valor')
-      .eq('chave', 'modelo_contrato')
-      .single();
+    const modelo = modelos?.find(m => m.id === modeloId);
+    if (!modelo) {
+      toast.error("Modelo de contrato não encontrado.");
+      return;
+    }
 
-    let template = config?.valor || "Contrato não configurado.";
+    let template = modelo.conteudo_html;
     const currentPacote = pacotes?.find(p => p.id === selectedPacote);
     const sortedParcelas = getSortedParcelas();
     const parcelaNormal = sortedParcelas.find(p => p.tipo === 'parcela');
+    const primeiraParcela = sortedParcelas.find(p => p.tipo === 'parcela' || p.tipo === 'taxa_matricula');
 
     const variables: Record<string, string> = {
       "[NOME_ALUNO]": aluno.nome,
@@ -231,8 +247,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       "[NUMERO_PARCELAS]": (currentPacote?.numero_parcelas || 0).toString(),
       "[VALOR_TOTAL]": currentPacote?.valor_total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
       "[DATA_MATRICULA]": format(new Date(), "dd/MM/yyyy"),
-      "[NOME_ESCOLA]": "Soluções Online", // Should ideally fetch from config
-      "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy")
+      "[NOME_ESCOLA]": "Soluções Online", 
+      "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy"),
+      "[DATA_HOJE]": format(new Date(), "dd/MM/yyyy"),
+      "[DATA_PRIMEIRA_PARCELA]": primeiraParcela ? format(primeiraParcela.vencimento, "dd/MM/yyyy") : format(new Date(), "dd/MM/yyyy")
     };
 
     Object.entries(variables).forEach(([key, value]) => {
@@ -240,6 +258,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     });
 
     setContractContent(template);
+    setShowModelSelection(false);
     setShowContractModal(true);
   };
 
