@@ -5,7 +5,8 @@ import {
   Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, 
   Link2, FileText, Copy, ShieldPlus, Bell, Bold, Italic, 
   Underline as UnderlineIcon, List, ListOrdered, AlignLeft, 
-  AlignCenter, AlignRight, AlignJustify, Table as TableIcon
+  AlignCenter, AlignRight, AlignJustify, Table as TableIcon,
+  Plus, Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/_admin/configuracoes")({
 function AdminSettings() {
   const queryClient = useQueryClient();
   
-  const { data: configs, isLoading, isError, error: fetchError } = useQuery({
+  const { data: configs, isLoading: isConfigsLoading, isError: isConfigsError, error: fetchError } = useQuery({
     queryKey: ["admin-configs"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -56,6 +57,21 @@ function AdminSettings() {
     retry: 1,
   });
 
+  const { data: modelos, isLoading: isModelosLoading } = useQuery({
+    queryKey: ["modelos-contrato"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("modelos_contrato" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isLoading = isConfigsLoading || isModelosLoading;
+  const isError = isConfigsError;
+
 
   const [whatsappSuporte, setWhatsappSuporte] = useState("");
   const [mensagemWhatsapp, setMensagemWhatsapp] = useState("");
@@ -64,6 +80,9 @@ function AdminSettings() {
   const [asaasAmbiente, setAsaasAmbiente] = useState("producao");
   const [asaasWebhookToken, setAsaasWebhookToken] = useState("");
   const [modeloContrato, setModeloContrato] = useState("");
+  const [nomeModelo, setNomeModelo] = useState("");
+  const [editingModeloId, setEditingModeloId] = useState<string | null>(null);
+  const [isEditingModelo, setIsEditingModelo] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWebhookToken, setShowWebhookToken] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
@@ -121,26 +140,9 @@ function AdminSettings() {
 
   const updateConfig = useMutation({
     mutationFn: async ({ chave, valor }: { chave: string, valor: string }) => {
-      // Clean up variables format before saving
-      let processedValue = valor;
-      if (chave === "modelo_contrato") {
-        processedValue = processedValue
-          .replace(/\$nome\$/g, "[NOME_ALUNO]")
-          .replace(/\$cpf\$/g, "[CPF_ALUNO]")
-          .replace(/\$fone\$/g, "[TELEFONE_ALUNO]")
-          .replace(/\$entrada\$/g, "[VALOR_ENTRADA]")
-          .replace(/\$quant_parcelas\$/g, "[NUMERO_PARCELAS]")
-          .replace(/\$valor_parcela_normal\$/g, "[VALOR_PARCELA]")
-          .replace(/\$dataprimeira_parcela\$/g, "[DATA_MATRICULA]")
-          // Remove non-existent fields
-          .replace(/\$bairro\$/g, "")
-          .replace(/\$cidade\$/g, "")
-          .replace(/\$estado\$/g, "");
-      }
-
       const { error } = await supabase
         .from("configuracoes")
-        .update({ valor: processedValue })
+        .update({ valor })
         .eq("chave", chave);
       if (error) throw error;
     },
@@ -150,6 +152,69 @@ function AdminSettings() {
     },
     onError: (error: any) => {
       toast.error("Erro ao salvar configuração: " + error.message);
+    },
+  });
+
+  const saveModeloMutation = useMutation({
+    mutationFn: async () => {
+      const processedContent = modeloContrato
+        .replace(/\$nome\$/g, "[NOME_ALUNO]")
+        .replace(/\$cpf\$/g, "[CPF_ALUNO]")
+        .replace(/\$fone\$/g, "[TELEFONE_ALUNO]")
+        .replace(/\$entrada\$/g, "[VALOR_ENTRADA]")
+        .replace(/\$quant_parcelas\$/g, "[NUMERO_PARCELAS]")
+        .replace(/\$valor_parcela_normal\$/g, "[VALOR_PARCELA]")
+        .replace(/\$dataprimeira_parcela\$/g, "[DATA_MATRICULA]")
+        .replace(/\$bairro\$/g, "")
+        .replace(/\$cidade\$/g, "")
+        .replace(/\$estado\$/g, "");
+
+      if (editingModeloId) {
+        const { error } = await supabase
+          .from("modelos_contrato" as any)
+          .update({
+            nome: nomeModelo,
+            conteudo_html: processedContent
+          } as any)
+          .eq("id", editingModeloId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("modelos_contrato" as any)
+          .insert({
+            nome: nomeModelo,
+            conteudo_html: processedContent
+          } as any);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modelos-contrato"] });
+      toast.success("Modelo de contrato salvo com sucesso!");
+      setIsEditingModelo(false);
+      setEditingModeloId(null);
+      setNomeModelo("");
+      setModeloContrato("");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao salvar modelo: " + error.message);
+    },
+  });
+
+  const deleteModeloMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("modelos_contrato" as any)
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modelos-contrato"] });
+      toast.success("Modelo excluído com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao excluir modelo: " + error.message);
     },
   });
 
@@ -499,157 +564,227 @@ function AdminSettings() {
             )}
 
             {activeTab === 'contrato' && (
-              <div className="animate-in slide-in-from-right-2 duration-300">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Editor de Contrato</CardTitle>
-                    <CardDescription>Configure o texto padrão do contrato que os alunos assinarão</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-                      <div className="xl:col-span-3 space-y-4">
-                        <div className="bg-white border rounded-md overflow-hidden flex flex-col min-h-[500px]">
-                          {editor && (
-                            <div className="border-b bg-gray-50 p-2 flex flex-wrap gap-1 sticky top-0 z-10">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().toggleBold().run()}
-                                className={editor.isActive('bold') ? 'bg-gray-200' : ''}
-                              >
-                                <Bold className="h-4 w-4" />
+              <div className="animate-in slide-in-from-right-2 duration-300 space-y-6">
+                {!isEditingModelo ? (
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">Modelos de Contrato</CardTitle>
+                        <CardDescription>Gerencie seus templates de contrato</CardDescription>
+                      </div>
+                      <Button onClick={() => {
+                        setIsEditingModelo(true);
+                        setEditingModeloId(null);
+                        setNomeModelo("");
+                        setModeloContrato("");
+                      }}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Novo Modelo
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {modelos?.map((m: any) => (
+                          <div key={m.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <FileText className="h-5 w-5 text-primary" />
+                              <span className="font-medium text-gray-900">{m.nome}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" onClick={() => {
+                                setEditingModeloId(m.id);
+                                setNomeModelo(m.nome);
+                                setModeloContrato(m.conteudo_html);
+                                setIsEditingModelo(true);
+                              }}>
+                                Editar
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().toggleItalic().run()}
-                                className={editor.isActive('italic') ? 'bg-gray-200' : ''}
-                              >
-                                <Italic className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().toggleUnderline().run()}
-                                className={editor.isActive('underline') ? 'bg-gray-200' : ''}
-                              >
-                                <UnderlineIcon className="h-4 w-4" />
-                              </Button>
-                              <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().setTextAlign('left').run()}
-                                className={editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}
-                              >
-                                <AlignLeft className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().setTextAlign('center').run()}
-                                className={editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}
-                              >
-                                <AlignCenter className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().setTextAlign('right').run()}
-                                className={editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}
-                              >
-                                <AlignRight className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-                                className={editor.isActive({ textAlign: 'justify' }) ? 'bg-gray-200' : ''}
-                              >
-                                <AlignJustify className="h-4 w-4" />
-                              </Button>
-                              <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().toggleBulletList().run()}
-                                className={editor.isActive('bulletList') ? 'bg-gray-200' : ''}
-                              >
-                                <List className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                                className={editor.isActive('orderedList') ? 'bg-gray-200' : ''}
-                              >
-                                <ListOrdered className="h-4 w-4" />
-                              </Button>
-                              <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-                                title="Inserir Tabela"
-                              >
-                                <TableIcon className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editor.chain().focus().deleteTable().run()}
-                                disabled={!editor.isActive('table')}
-                                title="Excluir Tabela"
-                                className={!editor.isActive('table') ? 'opacity-50' : 'text-red-500'}
-                              >
-                                <TableIcon className="h-4 w-4" />
+                              <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => {
+                                if (confirm("Tem certeza que deseja excluir este modelo?")) {
+                                  deleteModeloMutation.mutate(m.id);
+                                }
+                              }}>
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
-                          )}
-                          <div className="flex-1 p-4 prose prose-sm max-w-none focus:outline-none overflow-y-auto">
-                            <EditorContent editor={editor} />
+                          </div>
+                        ))}
+                        {(!modelos || modelos.length === 0) && (
+                          <div className="text-center py-8 text-gray-500 italic">
+                            Nenhum modelo cadastrado.
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">{editingModeloId ? 'Editar Modelo' : 'Novo Modelo'}</CardTitle>
+                        <CardDescription>Configure o nome e o conteúdo do template</CardDescription>
+                      </div>
+                      <Button variant="outline" onClick={() => setIsEditingModelo(false)}>
+                        Cancelar
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="modelo-nome">Nome do Modelo</Label>
+                        <Input
+                          id="modelo-nome"
+                          value={nomeModelo}
+                          onChange={(e) => setNomeModelo(e.target.value)}
+                          placeholder="Ex: Contrato de Matrícula Padrão"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                        <div className="xl:col-span-3 space-y-4">
+                          <Label>Conteúdo do Contrato</Label>
+                          <div className="bg-white border rounded-md overflow-hidden flex flex-col min-h-[500px]">
+                            {editor && (
+                              <div className="border-b bg-gray-50 p-2 flex flex-wrap gap-1 sticky top-0 z-10">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().toggleBold().run()}
+                                  className={editor.isActive('bold') ? 'bg-gray-200' : ''}
+                                >
+                                  <Bold className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                                  className={editor.isActive('italic') ? 'bg-gray-200' : ''}
+                                >
+                                  <Italic className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().toggleUnderline().run()}
+                                  className={editor.isActive('underline') ? 'bg-gray-200' : ''}
+                                >
+                                  <UnderlineIcon className="h-4 w-4" />
+                                </Button>
+                                <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                                  className={editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}
+                                >
+                                  <AlignLeft className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                                  className={editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}
+                                >
+                                  <AlignCenter className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                                  className={editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}
+                                >
+                                  <AlignRight className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+                                  className={editor.isActive({ textAlign: 'justify' }) ? 'bg-gray-200' : ''}
+                                >
+                                  <AlignJustify className="h-4 w-4" />
+                                </Button>
+                                <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().toggleBulletList().run()}
+                                  className={editor.isActive('bulletList') ? 'bg-gray-200' : ''}
+                                >
+                                  <List className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                                  className={editor.isActive('orderedList') ? 'bg-gray-200' : ''}
+                                >
+                                  <ListOrdered className="h-4 w-4" />
+                                </Button>
+                                <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                                  title="Inserir Tabela"
+                                >
+                                  <TableIcon className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editor.chain().focus().deleteTable().run()}
+                                  disabled={!editor.isActive('table')}
+                                  title="Excluir Tabela"
+                                  className={!editor.isActive('table') ? 'opacity-50' : 'text-red-500'}
+                                >
+                                  <TableIcon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                            <div className="flex-1 p-4 prose prose-sm max-w-none focus:outline-none overflow-y-auto">
+                              <EditorContent editor={editor} />
+                            </div>
+                          </div>
+                          <div className="flex justify-end">
+                            <Button 
+                              onClick={() => saveModeloMutation.mutate()}
+                              disabled={saveModeloMutation.isPending || !nomeModelo}
+                            >
+                              {saveModeloMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                              Salvar Modelo
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex justify-end">
-                          <Button 
-                            onClick={() => updateConfig.mutate({ chave: "modelo_contrato", valor: modeloContrato })}
-                            disabled={updateConfig.isPending}
-                          >
-                            {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                            Salvar Modelo de Contrato
-                          </Button>
+                        
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-sm">Variáveis Disponíveis</h4>
+                          <p className="text-xs text-muted-foreground italic">Clique para copiar e cole no editor</p>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              "[NOME_ALUNO]", "[CPF_ALUNO]", "[EMAIL_ALUNO]", "[TELEFONE_ALUNO]", 
+                              "[DATA_NASCIMENTO]", "[PACOTE_NOME]", "[FORMA_PAGAMENTO]", 
+                              "[VALOR_ENTRADA]", "[VALOR_PARCELA]", "[NUMERO_PARCELAS]", 
+                              "[VALOR_TOTAL]", "[DATA_MATRICULA]", "[NOME_ESCOLA]", "[DATA_HOJE]", "[DATA_PRIMEIRA_PARCELA]"
+                            ].map((variable) => (
+                              <Button
+                                key={variable}
+                                variant="outline"
+                                size="sm"
+                                className="text-[10px] h-7"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(variable);
+                                  toast.success(`Copiado: ${variable}`);
+                                }}
+                              >
+                                <Copy className="h-3 w-3 mr-1" />
+                                {variable}
+                              </Button>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="space-y-4">
-                        <h4 className="font-semibold text-sm">Variáveis Disponíveis</h4>
-                        <p className="text-xs text-muted-foreground italic">Clique para copiar e cole no editor</p>
-                        <div className="flex flex-wrap gap-2">
-                          {[
-                            "[NOME_ALUNO]", "[CPF_ALUNO]", "[EMAIL_ALUNO]", "[TELEFONE_ALUNO]", 
-                            "[DATA_NASCIMENTO]", "[PACOTE_NOME]", "[FORMA_PAGAMENTO]", 
-                            "[VALOR_ENTRADA]", "[VALOR_PARCELA]", "[NUMERO_PARCELAS]", 
-                            "[VALOR_TOTAL]", "[DATA_MATRICULA]", "[NOME_ESCOLA]", "[DATA_CONTRATO]"
-                          ].map((variable) => (
-                            <Button
-                              key={variable}
-                              variant="outline"
-                              size="sm"
-                              className="text-[10px] h-7"
-                              onClick={() => {
-                                navigator.clipboard.writeText(variable);
-                                toast.success(`Copiado: ${variable}`);
-                              }}
-                            >
-                              <Copy className="h-3 w-3 mr-1" />
-                              {variable}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
 

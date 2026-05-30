@@ -49,9 +49,24 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   const [showConclusion, setShowConclusion] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
+  const [showModelSelection, setShowModelSelection] = useState(false);
+  const [selectedModeloId, setSelectedModeloId] = useState<string | null>(null);
   const [contractContent, setContractContent] = useState("");
   const [contractLink, setContractLink] = useState<string | null>(null);
   const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
+
+  const { data: modelos } = useQuery({
+    queryKey: ["modelos-contrato"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("modelos_contrato" as any)
+        .select("*")
+        .eq("ativo", true)
+        .order("nome");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: segmentos } = useQuery({
     queryKey: ["segmentos-ativos"],
@@ -204,19 +219,20 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     onError: (e: any) => toast.error(e.message)
   });
 
-  const generateContract = async () => {
+  const generateContract = async (modeloId: string) => {
     if (!aluno || !selectedPacote) return;
 
-    const { data: config } = await supabase
-      .from('configuracoes')
-      .select('valor')
-      .eq('chave', 'modelo_contrato')
-      .single();
+    const modelo = modelos?.find((m: any) => m.id === modeloId);
+    if (!modelo) {
+      toast.error("Modelo de contrato não encontrado.");
+      return;
+    }
 
-    let template = config?.valor || "Contrato não configurado.";
+    let template = (modelo as any).conteudo_html;
     const currentPacote = pacotes?.find(p => p.id === selectedPacote);
     const sortedParcelas = getSortedParcelas();
     const parcelaNormal = sortedParcelas.find(p => p.tipo === 'parcela');
+    const primeiraParcela = sortedParcelas.find(p => p.tipo === 'parcela' || p.tipo === 'taxa_matricula');
 
     const variables: Record<string, string> = {
       "[NOME_ALUNO]": aluno.nome,
@@ -231,8 +247,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       "[NUMERO_PARCELAS]": (currentPacote?.numero_parcelas || 0).toString(),
       "[VALOR_TOTAL]": currentPacote?.valor_total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
       "[DATA_MATRICULA]": format(new Date(), "dd/MM/yyyy"),
-      "[NOME_ESCOLA]": "Soluções Online", // Should ideally fetch from config
-      "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy")
+      "[NOME_ESCOLA]": "Soluções Online", 
+      "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy"),
+      "[DATA_HOJE]": format(new Date(), "dd/MM/yyyy"),
+      "[DATA_PRIMEIRA_PARCELA]": primeiraParcela ? format(primeiraParcela.vencimento, "dd/MM/yyyy") : format(new Date(), "dd/MM/yyyy")
     };
 
     Object.entries(variables).forEach(([key, value]) => {
@@ -240,6 +258,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     });
 
     setContractContent(template);
+    setShowModelSelection(false);
     setShowContractModal(true);
   };
 
@@ -899,7 +918,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             <Button 
               size="lg"
               className="bg-primary hover:bg-primary/90 font-bold"
-              onClick={generateContract}
+              onClick={() => setShowModelSelection(true)}
             >
               <FileText className="h-4 w-4 mr-2" /> Gerar Contrato
             </Button>
@@ -1170,6 +1189,45 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             </Button>
             <Button className="flex-1" onClick={() => navigate({ to: "/alunos" })}>
               Fechar e ir para lista de alunos
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showModelSelection} onOpenChange={setShowModelSelection}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Selecionar Modelo de Contrato</DialogTitle>
+            <DialogDescription>
+              Escolha qual modelo de contrato deseja utilizar para esta matrícula.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {modelos?.map((modelo: any) => (
+              <Button
+                key={modelo.id}
+                variant="outline"
+                className="w-full justify-between h-auto py-4 px-4 hover:border-primary hover:bg-primary/5 group"
+                onClick={() => {
+                  generateContract(modelo.id);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">{modelo.nome}</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+              </Button>
+            ))}
+            {(!modelos || modelos.length === 0) && (
+              <div className="text-center py-6 text-muted-foreground italic">
+                Nenhum modelo de contrato cadastrado.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowModelSelection(false)}>
+              Cancelar
             </Button>
           </DialogFooter>
         </DialogContent>
