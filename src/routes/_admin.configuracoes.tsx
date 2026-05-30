@@ -59,6 +59,16 @@ function AdminSettings() {
   const [showWebhookToken, setShowWebhookToken] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminPassword, setNewAdminPassword] = useState("");
+  const [activeTab, setActiveTab] = useState("geral");
+
+  const tabs = [
+    { id: "geral", label: "Geral", icon: School },
+    { id: "asaas", label: "Integração Asaas", icon: Link2 },
+    { id: "contrato", label: "Modelo de Contrato", icon: FileText },
+    { id: "webhook", label: "Webhook", icon: Bell },
+    { id: "admins", label: "Administradores", icon: ShieldPlus },
+  ];
+
 
 
   useEffect(() => {
