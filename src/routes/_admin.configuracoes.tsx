@@ -337,6 +337,79 @@ function AdminSettings() {
             </Card>
           </div>
         </section>
+
+        <section className="space-y-4 pb-12">
+          <div className="flex items-center gap-2 px-1">
+            <FileText className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold text-gray-800">Modelo de Contrato</h2>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Editor de Contrato</CardTitle>
+              <CardDescription>Configure o texto padrão do contrato que os alunos assinarão</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="md:col-span-3 space-y-4">
+                  <div className="bg-white border rounded-md overflow-hidden">
+                    <ReactQuill 
+                      theme="snow" 
+                      value={modeloContrato} 
+                      onChange={setModeloContrato}
+                      modules={{
+                        toolbar: [
+                          [{ 'header': [1, 2, 3, false] }],
+                          ['bold', 'italic', 'underline', 'strike'],
+                          [{'list': 'ordered'}, {'list': 'bullet'}],
+                          [{ 'align': [] }],
+                          ['clean']
+                        ],
+                      }}
+                      className="min-h-[400px]"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={() => updateConfig.mutate({ chave: "modelo_contrato", valor: modeloContrato })}
+                      disabled={updateConfig.isPending}
+                    >
+                      {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      Salvar Modelo de Contrato
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm">Variáveis Disponíveis</h3>
+                  <p className="text-xs text-muted-foreground">Clique para copiar e cole no editor</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      "[NOME_ALUNO]", "[CPF_ALUNO]", "[EMAIL_ALUNO]", "[TELEFONE_ALUNO]", 
+                      "[DATA_NASCIMENTO]", "[PACOTE_NOME]", "[FORMA_PAGAMENTO]", 
+                      "[VALOR_ENTRADA]", "[VALOR_PARCELA]", "[NUMERO_PARCELAS]", 
+                      "[VALOR_TOTAL]", "[DATA_MATRICULA]", "[NOME_ESCOLA]", "[DATA_CONTRATO]"
+                    ].map((variable) => (
+                      <Button
+                        key={variable}
+                        variant="outline"
+                        size="sm"
+                        className="text-[10px] h-7"
+                        onClick={() => {
+                          navigator.clipboard.writeText(variable);
+                          toast.success(`Copiado: ${variable}`);
+                        }}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        {variable}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </div>
   );
