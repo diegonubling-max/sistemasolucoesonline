@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap, Copy, Calendar as CalendarIcon, Trash2, Plus, Wallet, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap, Copy, Calendar as CalendarIcon, Trash2, Plus, Wallet, ChevronDown, ChevronRight, FileText, Link } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,6 +19,8 @@ import { toast } from "sonner";
 import { createOrGetAsaasCustomer } from "@/services/asaas";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -46,6 +48,9 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
   const [showConclusion, setShowConclusion] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [contractContent, setContractContent] = useState("");
+  const [contractLink, setContractLink] = useState<string | null>(null);
   const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
 
   const { data: segmentos } = useQuery({
@@ -197,6 +202,70 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       qc.invalidateQueries({ queryKey: ["alunos"] });
     },
     onError: (e: any) => toast.error(e.message)
+  });
+
+  const generateContract = async () => {
+    if (!aluno || !selectedPacote) return;
+
+    const { data: config } = await supabase
+      .from('configuracoes')
+      .select('valor')
+      .eq('chave', 'modelo_contrato')
+      .single();
+
+    let template = config?.valor || "Contrato não configurado.";
+    const currentPacote = pacotes?.find(p => p.id === selectedPacote);
+    const sortedParcelas = getSortedParcelas();
+    const parcelaNormal = sortedParcelas.find(p => p.tipo === 'parcela');
+
+    const variables: Record<string, string> = {
+      "[NOME_ALUNO]": aluno.nome,
+      "[CPF_ALUNO]": aluno.cpf,
+      "[EMAIL_ALUNO]": aluno.email || "N/A",
+      "[TELEFONE_ALUNO]": aluno.telefone || "N/A",
+      "[DATA_NASCIMENTO]": format(new Date(aluno.data_nascimento), "dd/MM/yyyy"),
+      "[PACOTE_NOME]": currentPacote?.nome || "",
+      "[FORMA_PAGAMENTO]": currentPacote?.tipo || "",
+      "[VALOR_ENTRADA]": currentPacote?.valor_matricula.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
+      "[VALOR_PARCELA]": parcelaNormal?.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
+      "[NUMERO_PARCELAS]": (currentPacote?.numero_parcelas || 0).toString(),
+      "[VALOR_TOTAL]": currentPacote?.valor_total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
+      "[DATA_MATRICULA]": format(new Date(), "dd/MM/yyyy"),
+      "[NOME_ESCOLA]": "Soluções Online", // Should ideally fetch from config
+      "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy")
+    };
+
+    Object.entries(variables).forEach(([key, value]) => {
+      template = template.replaceAll(key, value);
+    });
+
+    setContractContent(template);
+    setShowContractModal(true);
+  };
+
+  const createContract = useMutation({
+    mutationFn: async () => {
+      if (!alunoId || !contractContent) throw new Error("Dados incompletos");
+
+      const { data, error } = await supabase
+        .from('contratos')
+        .insert({
+          aluno_id: alunoId,
+          matricula_id: matriculaId,
+          conteudo_html: contractContent,
+          status: 'pendente'
+        })
+        .select('token_unico')
+        .single();
+
+      if (error) throw error;
+      return `${window.location.origin}/contrato/${data.token_unico}`;
+    },
+    onSuccess: (link) => {
+      setContractLink(link);
+      toast.success("Contrato gerado com sucesso!");
+    },
+    onError: (e: any) => toast.error("Erro ao gerar contrato: " + e.message)
   });
 
   const getSortedParcelas = () => {
@@ -1094,6 +1163,56 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             <Button className="flex-1" onClick={() => navigate({ to: "/alunos" })}>
               Fechar e ir para lista de alunos
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showContractModal} onOpenChange={setShowContractModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Contrato de Matrícula</DialogTitle>
+            <DialogDescription>
+              Revise o contrato e gere o link para assinatura do aluno.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto py-4">
+            <ReactQuill 
+              theme="snow" 
+              value={contractContent} 
+              onChange={setContractContent}
+              className="min-h-[300px]"
+            />
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 border-t pt-4">
+            {contractLink ? (
+              <div className="flex-1 flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <Input value={contractLink} readOnly className="bg-muted" />
+                  <Button onClick={() => {
+                    navigator.clipboard.writeText(contractLink);
+                    toast.success("Link copiado!");
+                  }}>
+                    <Copy className="h-4 w-4 mr-2" /> Copiar
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground text-center">Envie este link para o aluno assinar digitalmente.</p>
+              </div>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setShowContractModal(false)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={() => createContract.mutate()}
+                  disabled={createContract.isPending}
+                >
+                  {createContract.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Link className="h-4 w-4 mr-2" />}
+                  Gerar link de assinatura
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
