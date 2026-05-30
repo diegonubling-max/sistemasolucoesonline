@@ -393,7 +393,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     <div className="space-y-8">
       {/* Progress Indicator */}
       <div className="flex items-center justify-center max-w-2xl mx-auto mb-10">
-        {[1, 2, 3, 4].map((s, i) => (
+        {[1, 2, 3, 4, 5].map((s, i) => (
           <div key={s} className="flex items-center flex-1 last:flex-none">
             <div 
               className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
@@ -402,16 +402,16 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 "border-gray-300 bg-gray-50 text-gray-400"
               }`}
             >
-              {unlockedSteps.includes((s + 1) as Step) && s < 4 ? (
+              {unlockedSteps.includes((s + 1) as Step) && s < 5 ? (
                 <Check className="h-5 w-5" />
               ) : (
                 <span className="text-sm font-bold">{s}</span>
               )}
               <span className="absolute -bottom-7 w-32 text-center text-xs font-medium text-muted-foreground">
-                {s === 1 ? "Dados do Aluno" : s === 2 ? "Cursos" : s === 3 ? "Pacote" : "Pagamentos"}
+                {s === 1 ? "Dados do Aluno" : s === 2 ? "Cursos" : s === 3 ? "Pacote" : s === 4 ? "Pagamentos" : "Contrato"}
               </span>
             </div>
-            {i < 3 && (
+            {i < 4 && (
               <div className={`flex-1 h-0.5 mx-2 ${unlockedSteps.includes((s + 1) as Step) ? "bg-green-500" : "bg-gray-200"}`} />
             )}
           </div>
