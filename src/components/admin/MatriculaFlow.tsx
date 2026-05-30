@@ -1219,7 +1219,9 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 key={modelo.id}
                 variant="outline"
                 className="w-full justify-between h-auto py-4 px-4 hover:border-primary hover:bg-primary/5 group"
-                onClick={() => generateContract(modelo.id)}
+                onClick={() => {
+                  generateContract(modelo.id);
+                }}
               >
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5 text-primary" />
