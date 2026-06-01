@@ -1122,12 +1122,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 </Button>
               </CardHeader>
               <CardContent className="flex-1 p-0">
-                <ReactQuill 
-                  theme="snow" 
-                  value={contractContent} 
+                <RichTextEditor 
+                  content={contractContent} 
                   onChange={setContractContent}
-                  className="h-[500px]"
+                  className="min-h-[500px]"
                 />
+
               </CardContent>
               <CardFooter className="border-t p-6 flex justify-between bg-white sticky bottom-0 z-10">
                 <Button variant="outline" onClick={() => setStep(4)}>
