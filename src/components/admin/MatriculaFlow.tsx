@@ -19,8 +19,8 @@ import { toast } from "sonner";
 import { createOrGetAsaasCustomer } from "@/services/asaas";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
