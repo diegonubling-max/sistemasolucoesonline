@@ -4,12 +4,16 @@ import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { FontSize } from '@tiptap/extension-font-size';
-
 import { Color } from '@tiptap/extension-color';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { Gapcursor } from '@tiptap/extension-gapcursor';
 import { 
   Bold, Italic, Underline as UnderlineIcon, 
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Type
+  List, ListOrdered, Type, Table as TableIcon, Trash2
 } from "lucide-react";
 import { Button } from "./button";
 import {
@@ -46,7 +50,13 @@ export function RichTextEditor({ content, onChange, className }: RichTextEditorP
       TextStyle,
       FontSize,
       Color,
-
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Gapcursor,
     ],
     content: content,
     onUpdate: ({ editor }) => {
@@ -166,6 +176,29 @@ export function RichTextEditor({ content, onChange, className }: RichTextEditorP
 
         <div className="w-px h-6 bg-gray-300 mx-1" />
 
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          title="Inserir Tabela"
+        >
+          <TableIcon className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().deleteTable().run()}
+          disabled={!editor.isActive('table')}
+          title="Excluir Tabela"
+          className={!editor.isActive('table') ? 'opacity-50' : 'text-red-500'}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+
         <Select
           value={editor.getAttributes('textStyle').fontSize || '16px'}
           onValueChange={(value) => editor.chain().focus().setFontSize(value).run()}
@@ -183,7 +216,7 @@ export function RichTextEditor({ content, onChange, className }: RichTextEditorP
           </SelectContent>
         </Select>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 min-h-[300px]">
+      <div className="flex-1 overflow-y-auto p-4 min-h-[400px]">
         <EditorContent editor={editor} className="prose prose-sm max-w-none focus:outline-none" />
       </div>
     </div>
