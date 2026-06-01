@@ -103,32 +103,6 @@ function AdminSettings() {
     }
   }, [configs]);
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      Gapcursor,
-    ],
-    content: modeloContrato,
-    onUpdate: ({ editor }) => {
-      setModeloContrato(editor.getHTML());
-    },
-  });
-
-  useEffect(() => {
-    if (editor && modeloContrato && editor.getHTML() !== modeloContrato) {
-      editor.commands.setContent(modeloContrato);
-    }
-  }, [modeloContrato, editor]);
 
 
   const updateConfig = useMutation({
