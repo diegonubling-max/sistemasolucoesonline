@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, FileText, Copy, MessageSquare, Printer, ShieldCheck, AlertCircle, Save } from "lucide-react";
+import { Loader2, FileText, Copy, MessageSquare, Printer, ShieldCheck, AlertCircle, Save, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -173,6 +173,30 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
     onError: (e: any) => toast.error("Erro ao gerar contrato: " + e.message)
   });
 
+  const regenerateTokenMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentContrato?.id) throw new Error("Contrato não encontrado");
+
+      const { data, error } = await supabase
+        .from('contratos')
+        .update({ 
+          token_unico: crypto.randomUUID()
+        })
+        .eq('id', currentContrato.id)
+        .select('token_unico')
+        .single();
+
+      if (error) throw error;
+      return data.token_unico;
+    },
+    onSuccess: () => {
+      toast.success("Novo link gerado com sucesso!");
+      refetchContrato();
+      qc.invalidateQueries({ queryKey: ["alunos"] });
+    },
+    onError: (e: any) => toast.error("Erro ao gerar novo link: " + e.message)
+  });
+
   const handleCopyLink = (token: string) => {
     const link = `${window.location.origin}/contrato/${token}`;
     navigator.clipboard.writeText(link);
@@ -254,6 +278,19 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="h-4 w-4 mr-2" /> Imprimir / PDF
             </Button>
+            <Button 
+              variant="outline" 
+              className="text-amber-600 border-amber-200 hover:bg-amber-50"
+              onClick={() => {
+                if (confirm("Gerar um novo link irá invalidar o contrato atual se ele for acessado novamente pelo link antigo. Deseja continuar?")) {
+                  regenerateTokenMutation.mutate();
+                }
+              }}
+              disabled={regenerateTokenMutation.isPending}
+            >
+              <RefreshCcw className={`h-4 w-4 mr-2 ${regenerateTokenMutation.isPending ? 'animate-spin' : ''}`} />
+              Gerar novo link
+            </Button>
             <Button onClick={onClose}>Fechar</Button>
           </DialogFooter>
         </div>
@@ -281,8 +318,22 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
                 <div className="flex-1 bg-white border rounded px-3 py-2 text-sm truncate font-mono">
                   {`${window.location.origin}/contrato/${currentContrato.token_unico}`}
                 </div>
-                <Button size="icon" variant="outline" onClick={() => handleCopyLink(currentContrato.token_unico)}>
+                <Button size="icon" variant="outline" onClick={() => handleCopyLink(currentContrato.token_unico)} title="Copiar link">
                   <Copy className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="outline" 
+                  className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                  onClick={() => {
+                    if (confirm("Deseja gerar um novo token para este contrato? O link anterior deixará de funcionar.")) {
+                      regenerateTokenMutation.mutate();
+                    }
+                  }}
+                  disabled={regenerateTokenMutation.isPending}
+                  title="Gerar novo link"
+                >
+                  <RefreshCcw className={`h-4 w-4 ${regenerateTokenMutation.isPending ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
             </div>
