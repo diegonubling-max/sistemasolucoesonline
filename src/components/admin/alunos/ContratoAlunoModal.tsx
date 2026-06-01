@@ -278,6 +278,19 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="h-4 w-4 mr-2" /> Imprimir / PDF
             </Button>
+            <Button 
+              variant="outline" 
+              className="text-amber-600 border-amber-200 hover:bg-amber-50"
+              onClick={() => {
+                if (confirm("Gerar um novo link irá invalidar o contrato atual se ele for acessado novamente pelo link antigo. Deseja continuar?")) {
+                  regenerateTokenMutation.mutate();
+                }
+              }}
+              disabled={regenerateTokenMutation.isPending}
+            >
+              <RefreshCcw className={`h-4 w-4 mr-2 ${regenerateTokenMutation.isPending ? 'animate-spin' : ''}`} />
+              Gerar novo link
+            </Button>
             <Button onClick={onClose}>Fechar</Button>
           </DialogFooter>
         </div>
