@@ -173,6 +173,30 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
     onError: (e: any) => toast.error("Erro ao gerar contrato: " + e.message)
   });
 
+  const regenerateTokenMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentContrato?.id) throw new Error("Contrato não encontrado");
+
+      const { data, error } = await supabase
+        .from('contratos')
+        .update({ 
+          token_unico: crypto.randomUUID()
+        })
+        .eq('id', currentContrato.id)
+        .select('token_unico')
+        .single();
+
+      if (error) throw error;
+      return data.token_unico;
+    },
+    onSuccess: () => {
+      toast.success("Novo link gerado com sucesso!");
+      refetchContrato();
+      qc.invalidateQueries({ queryKey: ["alunos"] });
+    },
+    onError: (e: any) => toast.error("Erro ao gerar novo link: " + e.message)
+  });
+
   const handleCopyLink = (token: string) => {
     const link = `${window.location.origin}/contrato/${token}`;
     navigator.clipboard.writeText(link);
