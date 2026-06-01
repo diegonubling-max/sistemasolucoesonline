@@ -37,32 +37,6 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Editor for preview/editing
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      Gapcursor,
-    ],
-    content: contractContent,
-    onUpdate: ({ editor }) => {
-      setContractContent(editor.getHTML());
-    },
-  });
-
-  useEffect(() => {
-    if (editor && contractContent && editor.getHTML() !== contractContent) {
-      editor.commands.setContent(contractContent);
-    }
-  }, [contractContent, editor]);
 
   // Fetch models
   const { data: modelos } = useQuery({
