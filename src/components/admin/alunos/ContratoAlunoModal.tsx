@@ -346,24 +346,14 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
               </Button>
             </div>
             
-            <div className="border rounded-lg overflow-hidden bg-white shadow-inner">
-              <div className="border-b bg-gray-50 px-3 py-2 flex items-center gap-2 overflow-x-auto no-print">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().toggleBold().run()}>
-                  <span className="font-bold">B</span>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().toggleItalic().run()}>
-                  <span className="italic">I</span>
-                </Button>
-                <div className="w-px h-4 bg-gray-300 mx-1" />
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().setTextAlign('left').run()}>
-                  <TextAlignLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().setTextAlign('center').run()}>
-                  <TextAlignCenter className="h-4 w-4" />
-                </Button>
-              </div>
-              <EditorContent editor={editor} className="p-6 prose prose-sm max-w-none max-h-[400px] overflow-y-auto" />
+            <div className="flex flex-col min-h-[400px]">
+              <RichTextEditor
+                content={contractContent}
+                onChange={setContractContent}
+                className="flex-1"
+              />
             </div>
+
 
             <DialogFooter className="gap-2">
               <Button variant="ghost" onClick={onClose}>Cancelar</Button>
