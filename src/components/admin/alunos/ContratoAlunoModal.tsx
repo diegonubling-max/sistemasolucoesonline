@@ -318,8 +318,22 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
                 <div className="flex-1 bg-white border rounded px-3 py-2 text-sm truncate font-mono">
                   {`${window.location.origin}/contrato/${currentContrato.token_unico}`}
                 </div>
-                <Button size="icon" variant="outline" onClick={() => handleCopyLink(currentContrato.token_unico)}>
+                <Button size="icon" variant="outline" onClick={() => handleCopyLink(currentContrato.token_unico)} title="Copiar link">
                   <Copy className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="outline" 
+                  className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                  onClick={() => {
+                    if (confirm("Deseja gerar um novo token para este contrato? O link anterior deixará de funcionar.")) {
+                      regenerateTokenMutation.mutate();
+                    }
+                  }}
+                  disabled={regenerateTokenMutation.isPending}
+                  title="Gerar novo link"
+                >
+                  <RefreshCcw className={`h-4 w-4 ${regenerateTokenMutation.isPending ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
             </div>
