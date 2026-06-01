@@ -2,12 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, 
-  Link2, FileText, Copy, ShieldPlus, Bell, Bold, Italic, 
-  Underline as UnderlineIcon, List, ListOrdered, AlignLeft, 
-  AlignCenter, AlignRight, AlignJustify, Table as TableIcon,
-  Plus, Trash2
+  Settings, Save, Loader2, MessageSquare, School, Phone, 
+  Link2, FileText, Copy, ShieldPlus, Bell, Plus, Trash2
 } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
