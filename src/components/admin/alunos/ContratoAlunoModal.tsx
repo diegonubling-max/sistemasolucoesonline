@@ -24,6 +24,7 @@ import {
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 
+
 interface ContratoAlunoModalProps {
   aluno: any;
   isOpen: boolean;
