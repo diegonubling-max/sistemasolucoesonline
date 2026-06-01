@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, FileText, Copy, MessageSquare, Printer, ShieldCheck, AlertCircle, Save } from "lucide-react";
+import { Loader2, FileText, Copy, MessageSquare, Printer, ShieldCheck, AlertCircle, Save, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
