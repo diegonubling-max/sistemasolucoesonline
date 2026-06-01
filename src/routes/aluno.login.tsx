@@ -35,24 +35,67 @@ function AlunoLogin() {
   const login = useMutation({
     mutationFn: async () => {
       // 1. Buscar o email do aluno pelo CTR
+      const ctrValue = ctr.trim();
       const { data: aluno, error: alunoError } = await supabase
         .from('alunos')
-        .select('email')
-        .eq('ctr', parseInt(ctr))
+        .select('email, nome')
+        .or(`ctr.eq.${ctrValue},ctr.eq.${parseInt(ctrValue) || 0}`)
         .maybeSingle();
 
-      if (alunoError || !aluno || !aluno.email) {
+      if (alunoError) throw alunoError;
+      
+      if (!aluno || !aluno.email) {
         throw new Error('CTR não encontrado');
       }
 
-      // 2. Autenticar com o email encontrado
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: aluno.email,
-        password,
-      });
+      // Tentar login. Se falhar por "Invalid login credentials", 
+      // verificamos se o usuário existe no auth.users.
+      // Se não existir, tentamos criar via RPC (autorreparo).
 
-      if (error) throw error;
-      return data;
+      // 2. Autenticar com o email encontrado
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: aluno.email,
+          password,
+        });
+
+        if (error) {
+          if (error.message === "Invalid login credentials") {
+            // Verificar se o usuário existe no public.user_roles ou auth.users
+            // Como não temos acesso direto a auth.users do cliente sem ser admin, 
+            // tentamos o RPC de criação que já lida com o "IF NOT EXISTS"
+            const primeiroNome = aluno.nome.split(' ')[0];
+            const senhaPadrao = '123' + primeiroNome
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .split(' ')[0];
+
+            if (password === senhaPadrao) {
+              console.log("Tentando recriar acesso para:", aluno.email);
+              const { error: rpcError } = await supabase.rpc('criar_acesso_aluno', {
+                p_email: aluno.email,
+                p_senha: password,
+                p_ctr: parseInt(ctrValue) || 0
+              });
+
+              if (!rpcError) {
+                // Tentar login novamente após criar
+                const retry = await supabase.auth.signInWithPassword({
+                  email: aluno.email,
+                  password,
+                });
+                if (retry.error) throw retry.error;
+                return retry.data;
+              }
+            }
+          }
+          throw error;
+        }
+        return data;
+      } catch (err: any) {
+        throw err;
+      }
     },
     onSuccess: async (data) => {
       // Check role
