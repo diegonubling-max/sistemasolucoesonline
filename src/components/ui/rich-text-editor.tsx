@@ -46,6 +46,7 @@ export function RichTextEditor({ content, onChange, className }: RichTextEditorP
       TextStyle,
       FontSize,
       Color,
+
     ],
     content: content,
     onUpdate: ({ editor }) => {
