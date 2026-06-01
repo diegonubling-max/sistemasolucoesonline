@@ -34,71 +34,61 @@ function AlunoLogin() {
 
   const login = useMutation({
     mutationFn: async () => {
-      // 1. Buscar o email do aluno pelo CTR
       const ctrValue = ctr.trim();
+      
+      // 1. Buscar o aluno pelo CTR
       const { data: aluno, error: alunoError } = await supabase
         .from('alunos')
-        .select('email, nome')
+        .select('email, nome, ctr')
         .or(`ctr.eq.${ctrValue},ctr.eq.${parseInt(ctrValue) || 0}`)
         .maybeSingle();
 
-      if (alunoError) throw alunoError;
+      if (alunoError) throw new Error('Erro ao buscar aluno: ' + alunoError.message);
       
       if (!aluno || !aluno.email) {
-        throw new Error('CTR não encontrado');
+        throw new Error('CTR inválido');
       }
 
-      // Tentar login. Se falhar por "Invalid login credentials", 
-      // verificamos se o usuário existe no auth.users.
-      // Se não existir, tentamos criar via RPC (autorreparo).
+      // 2. Definir a senha padrão (caso o usuário não tenha alterado)
+      const primeiroNome = aluno.nome.split(' ')[0];
+      const senhaPadrao = '123' + primeiroNome
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .split(' ')[0];
 
-      // 2. Autenticar com o email encontrado
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: aluno.email,
-          password,
-        });
+      // Usar a senha digitada ou a senha padrão
+      const finalPassword = password || senhaPadrao;
 
-        if (error) {
-          if (error.message === "Invalid login credentials") {
-            // Verificar se o usuário existe no public.user_roles ou auth.users
-            // Como não temos acesso direto a auth.users do cliente sem ser admin, 
-            // tentamos o RPC de criação que já lida com o "IF NOT EXISTS"
-            const primeiroNome = aluno.nome.split(' ')[0];
-            const senhaPadrao = '123' + primeiroNome
-              .toLowerCase()
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '')
-              .split(' ')[0];
+      // 3. Chamar a RPC para garantir que o usuário existe no Supabase Auth
+      // Passamos a senha digitada para que se for o primeiro acesso ele use ela
+      const { error: rpcError } = await supabase.rpc('criar_acesso_aluno', {
+        p_email: aluno.email,
+        p_senha: finalPassword,
+        p_ctr: aluno.ctr
+      });
 
-            if (password === senhaPadrao) {
-              console.log("Tentando recriar acesso para:", aluno.email);
-              const { error: rpcError } = await supabase.rpc('criar_acesso_aluno', {
-                p_email: aluno.email,
-                p_senha: password,
-                p_ctr: parseInt(ctrValue) || 0
-              });
+      if (rpcError) {
+        console.error('Erro ao preparar acesso:', rpcError);
+        throw new Error('Erro ao preparar acesso ao sistema');
+      }
 
-              if (!rpcError) {
-                // Tentar login novamente após criar
-                const retry = await supabase.auth.signInWithPassword({
-                  email: aluno.email,
-                  password,
-                });
-                if (retry.error) throw retry.error;
-                return retry.data;
-              }
-            }
-          }
-          throw error;
+      // 4. Autenticar com o email encontrado e a senha
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: aluno.email,
+        password: finalPassword,
+      });
+
+      if (authError) {
+        if (authError.message === "Invalid login credentials") {
+          throw new Error('Senha incorreta');
         }
-        return data;
-      } catch (err: any) {
-        throw err;
+        throw authError;
       }
+
+      return data;
     },
     onSuccess: async (data) => {
-      // Check role
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
@@ -113,7 +103,7 @@ function AlunoLogin() {
         await supabase.auth.signOut();
       }
     },
-    onError: (e: Error) => toast.error(e.message === "Invalid login credentials" ? "Senha incorreta" : e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const handleResetPassword = async () => {
@@ -125,7 +115,7 @@ function AlunoLogin() {
     const { data: aluno, error: alunoError } = await supabase
       .from('alunos')
       .select('email')
-      .eq('ctr', parseInt(ctr))
+      .or(`ctr.eq.${ctr.trim()},ctr.eq.${parseInt(ctr.trim()) || 0}`)
       .maybeSingle();
 
     if (alunoError || !aluno || !aluno.email) {
@@ -143,7 +133,6 @@ function AlunoLogin() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F5F5] px-4 py-8">
       <div className="w-full max-w-[440px] flex flex-col gap-6">
-        {/* Card Superior Azul */}
         <div className="bg-[#1E3A5F] rounded-[24px] pt-10 pb-8 px-6 text-center shadow-xl relative overflow-hidden">
           <div className="flex justify-center mb-6">
             <div className="bg-[#3D5270] p-4 rounded-2xl">
@@ -160,7 +149,6 @@ function AlunoLogin() {
           </p>
         </div>
 
-        {/* Card Inferior Branco */}
         <Card className="border-none shadow-xl bg-white rounded-[24px] overflow-hidden">
           <CardContent className="p-8">
             <form 
