@@ -198,13 +198,13 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
   });
 
   const handleCopyLink = (token: string) => {
-    const link = `${window.location.origin}/contrato/${token}`;
+    const link = `https://sistemasolucoesonline.lovable.app/contrato/${token}`;
     navigator.clipboard.writeText(link);
     toast.success("Link copiado!");
   };
 
   const handleWhatsApp = (token: string) => {
-    const link = `${window.location.origin}/contrato/${token}`;
+    const link = `https://sistemasolucoesonline.lovable.app/contrato/${token}`;
     const text = `Olá ${aluno.nome}! Segue o link para assinatura do seu contrato de matrícula: ${link}`;
     window.open(`https://wa.me/${aluno.telefone?.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -316,7 +316,7 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
               <label className="text-xs font-bold text-gray-500 uppercase">Link para Assinatura</label>
               <div className="flex gap-2">
                 <div className="flex-1 bg-white border rounded px-3 py-2 text-sm truncate font-mono">
-                  {`${window.location.origin}/contrato/${currentContrato.token_unico}`}
+                  {`https://sistemasolucoesonline.lovable.app/contrato/${currentContrato.token_unico}`}
                 </div>
                 <Button size="icon" variant="outline" onClick={() => handleCopyLink(currentContrato.token_unico)} title="Copiar link">
                   <Copy className="h-4 w-4" />

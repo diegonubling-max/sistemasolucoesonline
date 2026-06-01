@@ -58,7 +58,7 @@ function LoginPage() {
 
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/perfil`,
+      redirectTo: `https://sistemasolucoesonline.lovable.app/perfil`,
     });
     setLoading(false);
 

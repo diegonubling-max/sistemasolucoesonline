@@ -226,7 +226,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
       return {
         token: contractData.token_unico,
-        link: `${window.location.origin}/contrato/${contractData.token_unico}`
+        link: `https://sistemasolucoesonline.lovable.app/contrato/${contractData.token_unico}`
       };
     },
     onSuccess: (data) => {
@@ -296,7 +296,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         .single();
 
       if (error) throw error;
-      return `${window.location.origin}/contrato/${data.token_unico}`;
+      return `https://sistemasolucoesonline.lovable.app/contrato/${data.token_unico}`;
     },
     onSuccess: (link) => {
       setContractLink(link);
@@ -1193,7 +1193,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
               variant="outline" 
               className="flex-1"
               onClick={() => {
-                const loginUrl = `${window.location.origin}/aluno/login`;
+                const loginUrl = `https://sistemasolucoesonline.lovable.app/aluno/login`;
                 const text = `Olá ${accessData?.nome?.split(" ")[0]}! Seus dados de acesso:\nLogin: ${accessData?.ctr}\nSenha: ${accessData?.pass}\nAcesse: ${loginUrl}`;
                 navigator.clipboard.writeText(text);
                 toast.success("Dados copiados para a área de transferência!");
@@ -1295,7 +1295,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                                    `Acesse o sistema com seus dados:\n` +
                                    `Login: ${accessData?.ctr}\n` +
                                    `Senha: ${accessData?.pass}\n\n` +
-                                   `Acesse o sistema: ${window.location.origin}/aluno/login\n\n` +
+                                   `Acesse o sistema: https://sistemasolucoesonline.lovable.app/aluno/login\n\n` +
                                    `Por favor, assine seu contrato através do link abaixo:\n` +
                                    `${contractLink}`;
                   
