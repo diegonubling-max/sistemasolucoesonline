@@ -308,7 +308,7 @@ function AlunoDetalhes() {
     const text = `Olá ${primeiroNome}! Seus dados de acesso:
 Login: ${aluno.ctr}
 Senha: ${senhaGerada}
-Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+Acesse: ${window.location.origin}/aluno/login`;
     
     navigator.clipboard.writeText(text);
     toast.success("Dados copiados para a área de transferência!");
@@ -689,7 +689,7 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                 const text = `Olá ${aluno.nome.split(" ")[0]}! Seus dados de acesso:
 Login: ${aluno.ctr}
 Senha: ${passwordToDisplay}
-Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+Acesse: ${window.location.origin}/aluno/login`;
                 navigator.clipboard.writeText(text);
                 toast.success("Dados copiados!");
               }}
