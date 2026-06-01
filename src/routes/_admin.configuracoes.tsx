@@ -3,8 +3,10 @@ import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Settings, Save, Loader2, MessageSquare, School, Phone, 
-  Link2, FileText, Copy, ShieldPlus, Bell, Plus, Trash2
+  Link2, FileText, Copy, ShieldPlus, Bell, Plus, Trash2,
+  Eye, EyeOff
 } from "lucide-react";
+
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
