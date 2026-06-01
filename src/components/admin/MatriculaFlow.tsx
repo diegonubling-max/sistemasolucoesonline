@@ -19,8 +19,8 @@ import { toast } from "sonner";
 import { createOrGetAsaasCustomer } from "@/services/asaas";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -1122,12 +1122,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 </Button>
               </CardHeader>
               <CardContent className="flex-1 p-0">
-                <ReactQuill 
-                  theme="snow" 
-                  value={contractContent} 
+                <RichTextEditor 
+                  content={contractContent} 
                   onChange={setContractContent}
-                  className="h-[500px]"
+                  className="min-h-[500px]"
                 />
+
               </CardContent>
               <CardFooter className="border-t p-6 flex justify-between bg-white sticky bottom-0 z-10">
                 <Button variant="outline" onClick={() => setStep(4)}>

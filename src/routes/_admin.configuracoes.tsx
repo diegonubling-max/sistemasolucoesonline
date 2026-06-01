@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  Settings, Save, Loader2, MessageSquare, School, Phone, Eye, EyeOff, 
-  Link2, FileText, Copy, ShieldPlus, Bell, Bold, Italic, 
-  Underline as UnderlineIcon, List, ListOrdered, AlignLeft, 
-  AlignCenter, AlignRight, AlignJustify, Table as TableIcon,
-  Plus, Trash2
+  Settings, Save, Loader2, MessageSquare, School, Phone, 
+  Link2, FileText, Copy, ShieldPlus, Bell, Plus, Trash2,
+  Eye, EyeOff
 } from "lucide-react";
+
+
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,15 +23,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import { Table } from '@tiptap/extension-table';
-import { TableRow } from '@tiptap/extension-table-row';
-import { TableCell } from '@tiptap/extension-table-cell';
-import { TableHeader } from '@tiptap/extension-table-header';
-import { Gapcursor } from '@tiptap/extension-gapcursor';
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+
 
 
 export const Route = createFileRoute("/_admin/configuracoes")({
@@ -110,32 +103,6 @@ function AdminSettings() {
     }
   }, [configs]);
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      Gapcursor,
-    ],
-    content: modeloContrato,
-    onUpdate: ({ editor }) => {
-      setModeloContrato(editor.getHTML());
-    },
-  });
-
-  useEffect(() => {
-    if (editor && modeloContrato && editor.getHTML() !== modeloContrato) {
-      editor.commands.setContent(modeloContrato);
-    }
-  }, [modeloContrato, editor]);
 
 
   const updateConfig = useMutation({
@@ -642,108 +609,14 @@ function AdminSettings() {
                       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
                         <div className="xl:col-span-3 space-y-4">
                           <Label>Conteúdo do Contrato</Label>
-                          <div className="bg-white border rounded-md overflow-hidden flex flex-col min-h-[500px]">
-                            {editor && (
-                              <div className="border-b bg-gray-50 p-2 flex flex-wrap gap-1 sticky top-0 z-10">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().toggleBold().run()}
-                                  className={editor.isActive('bold') ? 'bg-gray-200' : ''}
-                                >
-                                  <Bold className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().toggleItalic().run()}
-                                  className={editor.isActive('italic') ? 'bg-gray-200' : ''}
-                                >
-                                  <Italic className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().toggleUnderline().run()}
-                                  className={editor.isActive('underline') ? 'bg-gray-200' : ''}
-                                >
-                                  <UnderlineIcon className="h-4 w-4" />
-                                </Button>
-                                <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().setTextAlign('left').run()}
-                                  className={editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}
-                                >
-                                  <AlignLeft className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().setTextAlign('center').run()}
-                                  className={editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}
-                                >
-                                  <AlignCenter className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().setTextAlign('right').run()}
-                                  className={editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}
-                                >
-                                  <AlignRight className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-                                  className={editor.isActive({ textAlign: 'justify' }) ? 'bg-gray-200' : ''}
-                                >
-                                  <AlignJustify className="h-4 w-4" />
-                                </Button>
-                                <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().toggleBulletList().run()}
-                                  className={editor.isActive('bulletList') ? 'bg-gray-200' : ''}
-                                >
-                                  <List className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                                  className={editor.isActive('orderedList') ? 'bg-gray-200' : ''}
-                                >
-                                  <ListOrdered className="h-4 w-4" />
-                                </Button>
-                                <div className="w-px h-6 bg-gray-300 mx-1 self-center" />
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-                                  title="Inserir Tabela"
-                                >
-                                  <TableIcon className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editor.chain().focus().deleteTable().run()}
-                                  disabled={!editor.isActive('table')}
-                                  title="Excluir Tabela"
-                                  className={!editor.isActive('table') ? 'opacity-50' : 'text-red-500'}
-                                >
-                                  <TableIcon className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-                            <div className="flex-1 p-4 prose prose-sm max-w-none focus:outline-none overflow-y-auto">
-                              <EditorContent editor={editor} />
-                            </div>
+                          <div className="flex flex-col min-h-[500px]">
+                            <RichTextEditor
+                              content={modeloContrato}
+                              onChange={setModeloContrato}
+                              className="flex-1"
+                            />
                           </div>
+
                           <div className="flex justify-end">
                             <Button 
                               onClick={() => saveModeloMutation.mutate()}

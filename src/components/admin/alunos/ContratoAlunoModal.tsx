@@ -21,15 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import { Table } from '@tiptap/extension-table';
-import { TableRow } from '@tiptap/extension-table-row';
-import { TableCell } from '@tiptap/extension-table-cell';
-import { TableHeader } from '@tiptap/extension-table-header';
-import { Gapcursor } from '@tiptap/extension-gapcursor';
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+
+
 
 interface ContratoAlunoModalProps {
   aluno: any;
@@ -44,32 +38,6 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Editor for preview/editing
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      Gapcursor,
-    ],
-    content: contractContent,
-    onUpdate: ({ editor }) => {
-      setContractContent(editor.getHTML());
-    },
-  });
-
-  useEffect(() => {
-    if (editor && contractContent && editor.getHTML() !== contractContent) {
-      editor.commands.setContent(contractContent);
-    }
-  }, [contractContent, editor]);
 
   // Fetch models
   const { data: modelos } = useQuery({
@@ -379,24 +347,14 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
               </Button>
             </div>
             
-            <div className="border rounded-lg overflow-hidden bg-white shadow-inner">
-              <div className="border-b bg-gray-50 px-3 py-2 flex items-center gap-2 overflow-x-auto no-print">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().toggleBold().run()}>
-                  <span className="font-bold">B</span>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().toggleItalic().run()}>
-                  <span className="italic">I</span>
-                </Button>
-                <div className="w-px h-4 bg-gray-300 mx-1" />
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().setTextAlign('left').run()}>
-                  <TextAlignLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().setTextAlign('center').run()}>
-                  <TextAlignCenter className="h-4 w-4" />
-                </Button>
-              </div>
-              <EditorContent editor={editor} className="p-6 prose prose-sm max-w-none max-h-[400px] overflow-y-auto" />
+            <div className="flex flex-col min-h-[400px]">
+              <RichTextEditor
+                content={contractContent}
+                onChange={setContractContent}
+                className="flex-1"
+              />
             </div>
+
 
             <DialogFooter className="gap-2">
               <Button variant="ghost" onClick={onClose}>Cancelar</Button>
@@ -430,24 +388,3 @@ export function ContratoAlunoModal({ aluno, isOpen, onClose }: ContratoAlunoModa
   );
 }
 
-function TextAlignLeft({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <line x1="17" y1="10" x2="3" y2="10"></line>
-      <line x1="21" y1="6" x2="3" y2="6"></line>
-      <line x1="21" y1="14" x2="3" y2="14"></line>
-      <line x1="17" y1="18" x2="3" y2="18"></line>
-    </svg>
-  );
-}
-
-function TextAlignCenter({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <line x1="18" y1="10" x2="6" y2="10"></line>
-      <line x1="21" y1="6" x2="3" y2="6"></line>
-      <line x1="21" y1="14" x2="3" y2="14"></line>
-      <line x1="18" y1="18" x2="6" y2="18"></line>
-    </svg>
-  );
-}
