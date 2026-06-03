@@ -174,17 +174,6 @@ function AlunoLogin() {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900 ml-1">Senha</label>
-                <Input 
-                  type="password" 
-                  placeholder="" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-[#1E3A5F] rounded-xl"
-                  required
-                />
-              </div>
 
               <div className="space-y-4">
                 <Button 
