@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CheckCircle2, FileText, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { Loader2, CheckCircle2, FileText, ShieldCheck, Lock } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/contrato/$token")({
@@ -15,14 +15,21 @@ export const Route = createFileRoute("/contrato/$token")({
 function PublicContractPage() {
   const { token } = Route.useParams();
   const [nomeConfirmacao, setNomeConfirmacao] = useState("");
-  const [isSigning, setIsSigning] = useState(false);
+  const [isValidated, setIsValidated] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
+
+  // Identity validation fields
+  const [valNome, setValNome] = useState("");
+  const [valTelefone, setValTelefone] = useState("");
+  const [valCpf, setValCpf] = useState("");
 
   const { data: contrato, isLoading, refetch } = useQuery({
     queryKey: ["public-contract", token],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("*, alunos(nome)")
+        .select("*, alunos(*)")
         .eq("token_unico", token)
         .single();
       if (error) throw error;
@@ -30,11 +37,49 @@ function PublicContractPage() {
     },
   });
 
+  const validateIdentity = () => {
+    if (!contrato || !contrato.alunos) return;
+    
+    if (attempts >= 3) {
+      setIsBlocked(true);
+      return;
+    }
+
+    const aluno = contrato.alunos;
+    
+    // Normalize values for comparison
+    const normInputNome = valNome.trim().toLowerCase();
+    const normDbNome = aluno.nome?.trim().toLowerCase();
+    
+    const normInputTel = valTelefone.replace(/\D/g, "");
+    const normDbTel = (aluno.telefone || "").replace(/\D/g, "");
+    
+    const normInputCpf = valCpf.replace(/\D/g, "");
+    const normDbCpf = (aluno.cpf || "").replace(/\D/g, "");
+
+    const nomeMatches = normInputNome === normDbNome;
+    const telMatches = normInputTel === normDbTel;
+    const cpfMatches = normInputCpf === normDbCpf;
+
+    if (nomeMatches && telMatches && cpfMatches) {
+      setIsValidated(true);
+      toast.success("Identidade validada com sucesso!");
+    } else {
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      if (newAttempts >= 3) {
+        setIsBlocked(true);
+        toast.error("Entre em contato com a escola");
+      } else {
+        toast.error("Dados não conferem. Verifique as informações e tente novamente.");
+      }
+    }
+  };
+
   const signContract = useMutation({
     mutationFn: async () => {
       if (!nomeConfirmacao) throw new Error("Digite seu nome completo para confirmar");
       
-      // Get client IP (approximate via public API or just record it's a web signature)
       let ip = "0.0.0.0";
       try {
         const res = await fetch('https://api.ipify.org?format=json');
@@ -108,6 +153,75 @@ function PublicContractPage() {
              <p className="text-sm text-muted-foreground">Você pode fechar esta aba agora.</p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="max-w-md w-full text-center p-8 border-destructive/50">
+          <Lock className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-destructive mb-2">Acesso Bloqueado</h1>
+          <p className="text-muted-foreground">Várias tentativas incorretas foram realizadas.</p>
+          <p className="font-bold mt-4">Entre em contato com a escola</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isValidated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full shadow-xl">
+          <CardHeader className="text-center space-y-2">
+            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+              <ShieldCheck className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-xl">Validação de Identidade</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Para acessar o contrato, confirme seus dados cadastrais.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nome Completo</label>
+              <Input 
+                placeholder="Ex: Maria Silva" 
+                value={valNome}
+                onChange={(e) => setValNome(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Telefone com DDD</label>
+              <Input 
+                placeholder="Somente números" 
+                value={valTelefone}
+                onChange={(e) => setValTelefone(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">CPF</label>
+              <Input 
+                placeholder="Somente números" 
+                value={valCpf}
+                onChange={(e) => setValCpf(e.target.value)}
+              />
+            </div>
+            <Button 
+              className="w-full h-12 font-bold mt-2" 
+              onClick={validateIdentity}
+              disabled={!valNome || !valTelefone || !valCpf}
+            >
+              Validar minha identidade
+            </Button>
+            {attempts > 0 && (
+              <p className="text-center text-xs text-destructive font-medium">
+                Tentativa {attempts} de 3
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -198,3 +312,4 @@ function Badge({ children, variant, className }: any) {
 function cn(...inputs: any[]) {
   return inputs.filter(Boolean).join(" ");
 }
+
