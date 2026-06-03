@@ -161,23 +161,37 @@ function AlunoLogin() {
               }}
               className="space-y-6"
             >
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900 ml-1">Login (seu CTR)</label>
-                <Input 
-                  type="text" 
-                  placeholder="Digite seu CTR" 
-                  value={ctr}
-                  onChange={(e) => setCtr(e.target.value)}
-                  className="h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-[#1E3A5F] rounded-xl"
-                  required
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-900 ml-1">Login (seu CTR)</label>
+                  <Input 
+                    type="text" 
+                    placeholder="Digite seu CTR" 
+                    value={ctr}
+                    onChange={(e) => setCtr(e.target.value)}
+                    className="h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-[#1E3A5F] rounded-xl"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-900 ml-1">Senha</label>
+                  <Input 
+                    type="password" 
+                    placeholder="Digite sua senha" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-[#1E3A5F] rounded-xl"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="space-y-4">
                 <Button 
                   type="submit" 
                   className="w-full h-12 text-lg font-bold bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white transition-all shadow-md rounded-xl"
-                  disabled={login.isPending}
+                  disabled={login.isPending || !ctr.trim() || !password.trim()}
                 >
                   {login.isPending ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
