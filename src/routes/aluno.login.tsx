@@ -35,10 +35,15 @@ function AlunoLogin() {
   const login = useMutation({
     mutationFn: async () => {
       const ctrValue = ctr.trim();
+      const passwordValue = password.trim();
       const ctrInt = parseInt(ctrValue);
       
       if (isNaN(ctrInt)) {
         throw new Error('CTR deve ser um número');
+      }
+
+      if (!passwordValue) {
+        throw new Error('A senha é obrigatória');
       }
 
       // 1. Buscar o aluno pelo CTR
@@ -58,37 +63,30 @@ function AlunoLogin() {
         throw new Error('Aluno sem e-mail cadastrado. Procure a secretaria.');
       }
 
-      // 2. Definir a senha padrão: "123" + primeiro nome em minúsculo sem espaços
-      const primeiroNome = aluno.nome.trim().split(' ')[0]
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-      
-      const senhaPadrao = `123${primeiroNome}`;
-
-      // 3. Chamar a RPC para garantir que o usuário existe no Supabase Auth
+      // 2. Chamar a RPC para garantir que o usuário existe no Supabase Auth
+      // Passamos a senha digitada - se for a primeira vez, ela será definida
       const { error: rpcError } = await supabase.rpc('criar_acesso_aluno', {
         p_email: aluno.email,
-        p_senha: senhaPadrao,
+        p_senha: passwordValue,
         p_ctr: aluno.ctr
       });
 
       if (rpcError) {
         console.error('Erro ao preparar acesso:', rpcError);
-        throw new Error('Erro ao preparar acesso ao sistema');
+        // Não lançamos erro aqui pois o usuário pode já existir
       }
 
-      // 4. Autenticar com o email encontrado e a senha padrão
+      // 3. Autenticar com o email encontrado e a senha digitada
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: aluno.email,
-        password: senhaPadrao,
+        password: passwordValue,
       });
 
       if (authError) {
         if (authError.message === "Invalid login credentials") {
-          throw new Error('Erro na autenticação. Verifique seu CTR ou procure a secretaria.');
+          throw new Error('Senha incorreta');
         }
-        throw authError;
+        throw new Error(authError.message);
       }
 
       return data;
