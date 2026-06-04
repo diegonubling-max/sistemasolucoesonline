@@ -294,7 +294,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   });
 
   const generateContract = async (modeloId: string) => {
-    if (!aluno || !selectedPacote) return;
+    if (!aluno || (!selectedPacote && !isNegociacaoPersonalizada)) return;
 
     const modelo = modelos?.find((m: any) => m.id === modeloId);
     if (!modelo) {
@@ -314,12 +314,18 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       "[EMAIL_ALUNO]": aluno.email || "N/A",
       "[TELEFONE_ALUNO]": aluno.telefone || "N/A",
       "[DATA_NASCIMENTO]": format(new Date(aluno.data_nascimento), "dd/MM/yyyy"),
-      "[PACOTE_NOME]": currentPacote?.nome || "",
-      "[FORMA_PAGAMENTO]": currentPacote?.tipo || "",
-      "[VALOR_ENTRADA]": currentPacote?.valor_matricula.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
+      "[PACOTE_NOME]": isNegociacaoPersonalizada ? "Negociação Personalizada" : (currentPacote?.nome || ""),
+      "[FORMA_PAGAMENTO]": isNegociacaoPersonalizada ? negociacao.formaPagamento : (currentPacote?.tipo || ""),
+      "[VALOR_ENTRADA]": isNegociacaoPersonalizada 
+        ? negociacao.valorEntrada.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+        : (currentPacote?.valor_matricula.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || ""),
       "[VALOR_PARCELA]": parcelaNormal?.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
-      "[NUMERO_PARCELAS]": (currentPacote?.numero_parcelas || 0).toString(),
-      "[VALOR_TOTAL]": currentPacote?.valor_total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
+      "[NUMERO_PARCELAS]": isNegociacaoPersonalizada 
+        ? negociacao.numeroParcelas.toString()
+        : (currentPacote?.numero_parcelas || 0).toString(),
+      "[VALOR_TOTAL]": isNegociacaoPersonalizada
+        ? (negociacao.valorEntrada + (negociacao.numeroParcelas * negociacao.valorParcela)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+        : (currentPacote?.valor_total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || ""),
       "[DATA_MATRICULA]": format(new Date(), "dd/MM/yyyy"),
       "[NOME_ESCOLA]": "Soluções Online", 
       "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy"),
