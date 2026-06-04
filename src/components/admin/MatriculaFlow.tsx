@@ -1325,6 +1325,33 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         </DialogContent>
       </Dialog>
 
+      {isProcessingAsaas && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center p-6 text-center">
+          <div className="bg-white p-8 rounded-2xl shadow-2xl border-2 border-primary/20 max-w-sm w-full space-y-6">
+            <div className="relative">
+              <Loader2 className="h-16 w-16 text-primary animate-spin mx-auto" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-bold text-primary">{asaasProgress.total > 0 ? Math.round((asaasProgress.current / asaasProgress.total) * 100) : 0}%</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-primary">Integrando com Asaas</h3>
+              <p className="text-muted-foreground text-sm">
+                Gerando cobrança {asaasProgress.current} de {asaasProgress.total}...
+              </p>
+              <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-primary h-full transition-all duration-300" 
+                  style={{ width: `${asaasProgress.total > 0 ? (asaasProgress.current / asaasProgress.total) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Isso pode levar alguns segundos. Por favor, não feche a janela.</p>
+          </div>
+        </div>
+      )}
+
+
       <Dialog open={showConclusion} onOpenChange={(o) => !o && navigate({ to: "/alunos" })}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
