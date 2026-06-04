@@ -989,7 +989,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             ) : p.numero}
                           </td>
                           <td className="py-3">
-                            {p.descricao || (p.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${p.numero}`)}
+                            <div className="flex flex-col">
+                              <span>{p.descricao || (p.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${p.numero}`)}</span>
+                              {p.descricao?.includes('(Negociado)') && (
+                                <Badge variant="outline" className="w-fit text-[10px] h-4 px-1 bg-blue-50 text-blue-600 border-blue-200">Negociado</Badge>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3">
                             <Popover>
