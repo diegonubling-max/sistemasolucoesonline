@@ -626,7 +626,80 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
       {step === 4 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Seção 0: Tipo de Cobrança */}
+            <Card className="md:col-span-3 border-primary/20 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Receipt className="h-5 w-5 text-primary" />
+                  Tipo de Cobrança
+                </CardTitle>
+                <CardDescription>Defina como o aluno irá realizar os pagamentos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup 
+                  value={tipoCobranca} 
+                  onValueChange={(v: any) => setTipoCobranca(v)}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <div>
+                    <RadioGroupItem value="carne" id="carne" className="peer sr-only" />
+                    <Label
+                      htmlFor="carne"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <FileText className="h-6 w-6 text-muted-foreground" />
+                        <span className="text-base font-bold">Carnê da Escola</span>
+                        <p className="text-xs text-center text-muted-foreground">
+                          Pagamento direto na escola. Baixa manual pelo painel financeiro. Sem taxas automáticas.
+                        </p>
+                      </div>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="asaas" id="asaas" className="peer sr-only" />
+                    <Label
+                      htmlFor="asaas"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Wallet className="h-6 w-6 text-primary" />
+                        <span className="text-base font-bold">Integração Asaas</span>
+                        <p className="text-xs text-center text-muted-foreground">
+                          Geração automática de boletos ou PIX. Baixa automática e links de pagamento.
+                        </p>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                {tipoCobranca === "asaas" && (
+                  <div className="mt-6 p-4 bg-white rounded-lg border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Label className="text-sm font-semibold mb-3 block">Selecione o tipo de cobrança Asaas:</Label>
+                    <RadioGroup 
+                      value={asaasTipo} 
+                      onValueChange={(v: any) => setAsaasTipo(v)}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="PIX" id="pix_asaas" />
+                        <Label htmlFor="pix_asaas" className="flex items-center gap-2 cursor-pointer">
+                          <span>💠</span> PIX
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="BOLETO" id="boleto_asaas" />
+                        <Label htmlFor="boleto_asaas" className="flex items-center gap-2 cursor-pointer">
+                          <span>🏦</span> Boleto
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Seção 1: Taxa de Matrícula */}
             <Card>
               <CardHeader className="pb-3">
