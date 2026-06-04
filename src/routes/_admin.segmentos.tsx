@@ -39,11 +39,13 @@ function SegmentosList() {
 
   const saveMutation = useMutation({
     mutationFn: async (values: any) => {
-      if (values.id) {
-        const { error } = await supabase.from("segmentos").update(values).eq("id", values.id);
+      const { cursos, ...cleanValues } = values;
+      
+      if (cleanValues.id) {
+        const { error } = await supabase.from("segmentos").update(cleanValues).eq("id", cleanValues.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("segmentos").insert(values);
+        const { error } = await supabase.from("segmentos").insert(cleanValues);
         if (error) throw error;
       }
     },
