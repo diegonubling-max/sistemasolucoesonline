@@ -1303,8 +1303,15 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
               variant="outline" 
               className="flex-1"
               onClick={() => {
-                const loginUrl = `https://sistemasolucoesonline.lovable.app/aluno/login`;
-                const text = `Olá ${accessData?.nome?.split(" ")[0]}! Seus dados de acesso:\nLogin: ${accessData?.ctr}\nSenha: ${accessData?.pass}\nAcesse: ${loginUrl}`;
+                const text = `*SEJA BEM VINDO*\n\n` +
+                             `Gostaríamos de dar as Boas Vindas e que você seja bem vindo(a) a nossa Escola.\n` +
+                             `Abaixo segue o seu Login e Senha para assistir as aulas do seu Preparatório e acesso as Apostilas.\n\n` +
+                             `*Login:* ${accessData?.ctr}\n` +
+                             `*Senha:* ${accessData?.pass}\n\n` +
+                             `Suas aulas já estão liberadas para assistir.\n` +
+                             `Agora basta acessar o Link abaixo e colocar seu Login e Senha.\n\n` +
+                             `Segue abaixo o link de acesso a Plataforma da Escola Soluções Online\n` +
+                             `https://sistemasolucoesonline.lovable.app/aluno/login`;
                 navigator.clipboard.writeText(text);
                 toast.success("Dados copiados para a área de transferência!");
               }}
@@ -1427,14 +1434,15 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 size="lg"
                 className="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold h-14"
                 onClick={() => {
-                  const nome = aluno?.nome?.split(" ")[0] || "Aluno";
-                  const mensagem = `Olá ${nome}! Sua matrícula foi realizada com sucesso.\n\n` +
-                                   `Acesse o sistema com seus dados:\n` +
-                                   `Login: ${accessData?.ctr}\n` +
-                                   `Senha: ${accessData?.pass}\n\n` +
-                                   `Acesse o sistema: https://sistemasolucoesonline.lovable.app/aluno/login\n\n` +
-                                   `Por favor, assine seu contrato através do link abaixo:\n` +
-                                   `${contractLink}`;
+                  const mensagem = `*SEJA BEM VINDO*\n\n` +
+                                   `Gostaríamos de dar as Boas Vindas e que você seja bem vindo(a) a nossa Escola.\n` +
+                                   `Abaixo segue o seu Login e Senha para assistir as aulas do seu Preparatório e acesso as Apostilas.\n\n` +
+                                   `*Login:* ${accessData?.ctr}\n` +
+                                   `*Senha:* ${accessData?.pass}\n\n` +
+                                   `Suas aulas já estão liberadas para assistir.\n` +
+                                   `Agora basta acessar o Link abaixo e colocar seu Login e Senha.\n\n` +
+                                   `Segue abaixo o link de acesso a Plataforma da Escola Soluções Online\n` +
+                                   `https://sistemasolucoesonline.lovable.app/aluno/login`;
                   
                   const encodedMsg = encodeURIComponent(mensagem);
                   const phone = aluno?.telefone?.replace(/\D/g, "");
