@@ -491,7 +491,14 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
                     
                     return (
                       <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="py-4 font-medium">{number}</td>
+                        <td className="py-4 font-medium flex items-center gap-2">
+                          {number}
+                          {p.asaas_id ? (
+                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-1 h-4">Asaas</Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1 h-4">Carnê</Badge>
+                          )}
+                        </td>
                         <td className="py-4">{description}</td>
                         <td className="py-4">
                           {p.status === 'pago' && p.forma_pagamento && (
