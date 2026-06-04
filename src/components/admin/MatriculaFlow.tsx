@@ -884,7 +884,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                     <Button 
                       onClick={() => {
                         const pacote = pacotes?.find(p => p.id === selectedPacote);
-                        if (!pacote) return;
+                        if (!pacote && !isNegociacaoPersonalizada) return;
                         const dia = parseInt(melhorDia);
                         if (isNaN(dia) || dia < 1 || dia > 31) {
                           toast.error("Informe um dia válido entre 1 e 31");
@@ -894,7 +894,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                         const novasParcelas = [];
                         const hoje = new Date();
                         
-                        if (pacote.tipo === 'cartao') {
+                        if (!isNegociacaoPersonalizada && pacote?.tipo === 'cartao') {
                           // Se for cartão, gera apenas uma linha de pagamento do cartão com o valor total (sem a taxa)
                           novasParcelas.push({
                             id: Math.random().toString(36).substr(2, 9),
@@ -904,8 +904,26 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             vencimento: hoje,
                             valor: pacote.valor_total - pacote.valor_matricula
                           });
+                        } else if (isNegociacaoPersonalizada) {
+                          for (let i = 1; i <= negociacao.numeroParcelas; i++) {
+                            let dataVenc = addMonths(hoje, i);
+                            const ultimoDia = lastDayOfMonth(dataVenc);
+                            if (dia > ultimoDia.getDate()) {
+                              dataVenc = ultimoDia;
+                            } else {
+                              dataVenc = setDate(dataVenc, dia);
+                            }
+
+                            novasParcelas.push({
+                              id: Math.random().toString(36).substr(2, 9),
+                              numero: i,
+                              vencimento: dataVenc,
+                              valor: negociacao.valorParcela,
+                              descricao: `Parcela ${i} (Negociado)`
+                            });
+                          }
                         } else {
-                          for (let i = 1; i <= pacote.numero_parcelas; i++) {
+                          for (let i = 1; i <= (pacote?.numero_parcelas || 0); i++) {
                             let dataVenc = addMonths(hoje, i);
                             
                             // Lógica para dia do mês
@@ -920,12 +938,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                               id: Math.random().toString(36).substr(2, 9),
                               numero: i,
                               vencimento: dataVenc,
-                              valor: pacote.valor_parcela
+                              valor: pacote?.valor_parcela || 0
                             });
                           }
                         }
                         setParcelasGeradas(novasParcelas);
-                        toast.success(pacote.tipo === 'cartao' ? "Cobrança única de cartão gerada!" : "Parcelas geradas com sucesso!");
+                        toast.success((!isNegociacaoPersonalizada && pacote?.tipo === 'cartao') ? "Cobrança única de cartão gerada!" : "Parcelas geradas com sucesso!");
                       }}
                     >
                       Gerar parcelas
