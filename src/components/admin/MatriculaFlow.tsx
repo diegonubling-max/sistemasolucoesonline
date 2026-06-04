@@ -1178,7 +1178,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             "flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer bg-white hover:border-primary/30 group",
                             isSelected ? "border-primary shadow-sm ring-1 ring-primary/10" : "border-muted"
                           )}
-                          onClick={() => setSelectedPacote(p.id)}
+                          onClick={() => {
+                            setSelectedPacote(p.id);
+                            setIsNegociacaoPersonalizada(false);
+                          }}
                         >
                           <div className="flex items-center gap-4 flex-1">
                             <Badge className={cn(
