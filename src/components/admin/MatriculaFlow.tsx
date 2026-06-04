@@ -1118,7 +1118,11 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase font-semibold">Total Geral</p>
                     <p className="text-2xl font-black text-primary">
-                      R$ {(parcelasGeradas.reduce((acc, p) => acc + p.valor, 0) + (taxaStatus === 'cobrar' ? (pacotes?.find(p => p.id === selectedPacote)?.valor_matricula || 0) : 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R$ {(parcelasGeradas.reduce((acc, p) => acc + p.valor, 0) + 
+                        (isNegociacaoPersonalizada 
+                          ? negociacao.valorEntrada 
+                          : (taxaStatus === 'cobrar' ? (pacotes?.find(p => p.id === selectedPacote)?.valor_matricula || 0) : 0)
+                        )).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
