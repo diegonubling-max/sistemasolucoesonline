@@ -1338,23 +1338,35 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
           </div>
 
           {/* Resumo Fixo no Rodapé */}
-          {selectedPacote && (
+          {(selectedPacote || isNegociacaoPersonalizada) && (
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-50 animate-in slide-in-from-bottom-full duration-500 shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
               <div className="max-w-4xl mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-6">
                   <div className="space-y-0.5">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Pacote Selecionado</p>
-                    <p className="font-bold text-sm">{pacotes?.find(p => p.id === selectedPacote)?.nome}</p>
+                    <p className="font-bold text-sm">
+                      {isNegociacaoPersonalizada ? "Negociação Personalizada" : pacotes?.find(p => p.id === selectedPacote)?.nome}
+                    </p>
                   </div>
                   <div className="h-8 w-px bg-muted" />
                   <div className="space-y-0.5">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Entrada</p>
-                    <p className="font-bold text-sm">R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    <p className="font-bold text-sm">
+                      R$ {isNegociacaoPersonalizada 
+                        ? negociacao.valorEntrada.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                        : pacotes?.find(p => p.id === selectedPacote)?.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                      }
+                    </p>
                   </div>
                   <div className="h-8 w-px bg-muted" />
                   <div className="space-y-0.5">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Valor Total</p>
-                    <p className="font-black text-lg text-primary">R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    <p className="font-black text-lg text-primary">
+                      R$ {isNegociacaoPersonalizada 
+                        ? (negociacao.valorEntrada + (negociacao.numeroParcelas * negociacao.valorParcela)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                        : pacotes?.find(p => p.id === selectedPacote)?.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                      }
+                    </p>
                   </div>
                 </div>
 
@@ -1376,7 +1388,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             </div>
           )}
 
-          {!selectedPacote && (
+          {!selectedPacote && !isNegociacaoPersonalizada && (
             <div className="flex justify-between pt-6">
               <Button variant="ghost" onClick={() => setStep(2)}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
