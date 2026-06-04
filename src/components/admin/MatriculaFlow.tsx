@@ -371,8 +371,20 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     const currentPacote = pacotes?.find(p => p.id === selectedPacote);
     const items: any[] = [];
 
-    // Taxa de Matrícula
-    if (currentPacote) {
+    // Taxa de Matrícula / Entrada
+    if (isNegociacaoPersonalizada) {
+      if (negociacao.valorEntrada > 0) {
+        items.push({
+          id: 'entrada-row',
+          tipo: 'taxa_matricula',
+          numero: 0,
+          vencimento: taxaVencimento,
+          valor: negociacao.valorEntrada,
+          status: 'aberto',
+          descricao: 'Entrada (Negociado)'
+        });
+      }
+    } else if (currentPacote) {
       items.push({
         id: 'taxa-row',
         tipo: 'taxa_matricula',
