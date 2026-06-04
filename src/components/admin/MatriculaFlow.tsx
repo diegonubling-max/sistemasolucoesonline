@@ -164,14 +164,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     mutationFn: async () => {
       if (!matriculaId || (!selectedPacote && !isNegociacaoPersonalizada)) throw new Error("Dados incompletos");
 
-      // 1. Save package (only if not personalized)
-      if (selectedPacote && !isNegociacaoPersonalizada) {
-        const { error: pe } = await supabase.from("matricula_pacotes").insert({
-          matricula_id: matriculaId,
-          pacote_id: selectedPacote
-        });
-        if (pe) throw pe;
-      }
+      // 1. Save package record (even if null for personalized)
+      const { error: pe } = await supabase.from("matricula_pacotes").insert({
+        matricula_id: matriculaId,
+        pacote_id: isNegociacaoPersonalizada ? null : selectedPacote
+      });
+      if (pe) throw pe;
 
       // 2. Save observation if personalized
       if (isNegociacaoPersonalizada && negociacao.observacao) {
@@ -196,8 +194,8 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     mutationFn: async () => {
       if (!matriculaId || !aluno || !contractContent) throw new Error("Dados incompletos");
 
-      const currentPacote = pacotes?.find(p => p.id === selectedPacote);
-      if (!currentPacote) throw new Error("Pacote não encontrado");
+      const currentPacote = !isNegociacaoPersonalizada ? pacotes?.find(p => p.id === selectedPacote) : null;
+      if (!isNegociacaoPersonalizada && !currentPacote) throw new Error("Pacote não encontrado");
 
       // 1. Salvar Parcelas
       const allParcelas: any[] = [];
@@ -1050,7 +1048,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             {p.status === 'isento' ? (
                               <Badge variant="secondary" className="bg-gray-100 text-gray-800 border-gray-200">Isento</Badge>
                             ) : (
-                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Aberto</Badge>
+                              <div className="flex gap-1">
+                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">Aberto</Badge>
+                                {p.descricao?.includes('(Negociado)') && (
+                                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">Negociado</Badge>
+                                )}
+                              </div>
                             )}
                           </td>
                           <td className="py-3 text-right">
