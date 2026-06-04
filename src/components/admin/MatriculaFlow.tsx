@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { AlunoForm, type AlunoFormValues } from "./AlunoForm";
 import { maskCPF, maskPhone, isValidCPF, calcAge, generateStudentPassword } from "@/lib/format";
 import { toast } from "sonner";
-import { createOrGetAsaasCustomer } from "@/services/asaas";
+import { createOrGetAsaasCustomer, generateAsaasCobrar } from "@/services/asaas";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
