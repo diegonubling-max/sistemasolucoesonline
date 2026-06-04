@@ -39,10 +39,11 @@ function SegmentosList() {
 
   const saveMutation = useMutation({
     mutationFn: async (values: any) => {
-      const { cursos, ...cleanValues } = values;
+      const { id, nome, descricao, ordem, ativo } = values;
+      const cleanValues = { nome, descricao, ordem, ativo };
       
-      if (cleanValues.id) {
-        const { error } = await supabase.from("segmentos").update(cleanValues).eq("id", cleanValues.id);
+      if (id) {
+        const { error } = await supabase.from("segmentos").update(cleanValues).eq("id", id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("segmentos").insert(cleanValues);
