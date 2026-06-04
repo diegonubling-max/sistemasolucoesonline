@@ -162,14 +162,25 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
   const saveStep3 = useMutation({
     mutationFn: async () => {
-      if (!matriculaId || !selectedPacote) throw new Error("Dados incompletos");
+      if (!matriculaId || (!selectedPacote && !isNegociacaoPersonalizada)) throw new Error("Dados incompletos");
 
-      // 1. Save package
-      const { error: pe } = await supabase.from("matricula_pacotes").insert({
-        matricula_id: matriculaId,
-        pacote_id: selectedPacote
-      });
-      if (pe) throw pe;
+      // 1. Save package (only if not personalized)
+      if (selectedPacote && !isNegociacaoPersonalizada) {
+        const { error: pe } = await supabase.from("matricula_pacotes").insert({
+          matricula_id: matriculaId,
+          pacote_id: selectedPacote
+        });
+        if (pe) throw pe;
+      }
+
+      // 2. Save observation if personalized
+      if (isNegociacaoPersonalizada && negociacao.observacao) {
+        const { error: me } = await supabase
+          .from("matriculas")
+          .update({ observacao: negociacao.observacao })
+          .eq("id", matriculaId);
+        if (me) throw me;
+      }
 
       return true;
     },
