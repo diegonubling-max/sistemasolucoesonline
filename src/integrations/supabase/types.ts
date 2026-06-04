@@ -340,19 +340,19 @@ export type Database = {
           created_at: string
           id: string
           matricula_id: string
-          pacote_id: string
+          pacote_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           matricula_id: string
-          pacote_id: string
+          pacote_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           matricula_id?: string
-          pacote_id?: string
+          pacote_id?: string | null
         }
         Relationships: [
           {

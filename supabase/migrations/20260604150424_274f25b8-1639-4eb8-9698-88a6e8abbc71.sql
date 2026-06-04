@@ -1,0 +1,1 @@
+ALTER TABLE public.matricula_pacotes ALTER COLUMN pacote_id DROP NOT NULL;
