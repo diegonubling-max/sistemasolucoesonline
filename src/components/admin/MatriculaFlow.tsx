@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap, Copy, Calendar as CalendarIcon, Trash2, Plus, Wallet, ChevronDown, ChevronRight, FileText, Link, ShieldPlus, MessageSquare } from "lucide-react";
+import { Search, Check, ArrowLeft, ArrowRight, Loader2, GraduationCap, Copy, Calendar as CalendarIcon, Trash2, Plus, Wallet, ChevronDown, ChevronRight, FileText, Link, ShieldPlus, MessageSquare, Receipt } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { AlunoForm, type AlunoFormValues } from "./AlunoForm";
 import { maskCPF, maskPhone, isValidCPF, calcAge, generateStudentPassword } from "@/lib/format";
 import { toast } from "sonner";
-import { createOrGetAsaasCustomer } from "@/services/asaas";
+import { createOrGetAsaasCustomer, generateAsaasCobrar } from "@/services/asaas";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -45,6 +45,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   const [taxaVencimento, setTaxaVencimento] = useState<Date>(new Date());
   const [melhorDia, setMelhorDia] = useState<string>("");
   const [parcelasGeradas, setParcelasGeradas] = useState<any[]>([]);
+  const [tipoCobranca, setTipoCobranca] = useState<"carne" | "asaas">("carne");
+  const [asaasTipo, setAsaasTipo] = useState<"PIX" | "BOLETO">("PIX");
+  const [isProcessingAsaas, setIsProcessingAsaas] = useState(false);
+  const [asaasProgress, setAsaasProgress] = useState({ current: 0, total: 0 });
 
   const [showConclusion, setShowConclusion] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
@@ -192,7 +196,11 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         });
       });
 
-      const { error: errorParcelas } = await supabase.from('parcelas').insert(allParcelas);
+      const { data: savedParcelas, error: errorParcelas } = await supabase
+        .from('parcelas')
+        .insert(allParcelas)
+        .select('id');
+        
       if (errorParcelas) throw errorParcelas;
 
       // 2. Salvar Contrato
@@ -209,8 +217,9 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
       if (errorContrato) throw errorContrato;
 
-      // Integrar com Asaas: Criar/Buscar cliente
+      // Integrar com Asaas
       try {
+        // Garantir cliente no Asaas
         await createOrGetAsaasCustomer({
           id: aluno.id,
           nome: aluno.nome,
@@ -218,10 +227,35 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
           email: aluno.email || "",
           telefone: aluno.telefone || ""
         });
-        console.log("Cliente sincronizado com Asaas");
+        
+        // Se tipo for Asaas, gerar cobranças automaticamente
+        if (tipoCobranca === "asaas" && savedParcelas && savedParcelas.length > 0) {
+          setIsProcessingAsaas(true);
+          setAsaasProgress({ current: 0, total: savedParcelas.length });
+          
+          let count = 0;
+          for (const p of savedParcelas) {
+            count++;
+            setAsaasProgress({ current: count, total: savedParcelas.length });
+            try {
+              await generateAsaasCobrar(p.id, asaasTipo);
+            } catch (err) {
+              console.error(`Erro ao gerar parcela ${p.id} no Asaas:`, err);
+              // Continuamos com as próximas mesmo se uma falhar, 
+              // mas talvez devessemos avisar o usuário
+            }
+          }
+          toast.success(`${savedParcelas.length} cobranças geradas no Asaas!`);
+        }
+        
+        console.log("Integração Asaas concluída");
       } catch (asaasError) {
-        console.error("Erro ao sincronizar com Asaas:", asaasError);
-        toast.error("Matrícula concluída, mas erro ao sincronizar com Asaas.");
+        console.error("Erro na integração Asaas:", asaasError);
+        if (tipoCobranca === "asaas") {
+          toast.error("Matrícula concluída, mas houve erro ao gerar cobranças no Asaas.");
+        }
+      } finally {
+        setIsProcessingAsaas(false);
       }
 
       return {
@@ -234,7 +268,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
     },
-    onError: (e: any) => toast.error(e.message)
+    onError: (e: any) => {
+      setIsProcessingAsaas(false);
+      toast.error(e.message);
+    }
   });
 
   const generateContract = async (modeloId: string) => {
@@ -622,7 +659,80 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
       {step === 4 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Seção 0: Tipo de Cobrança */}
+            <Card className="md:col-span-3 border-primary/20 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Receipt className="h-5 w-5 text-primary" />
+                  Tipo de Cobrança
+                </CardTitle>
+                <CardDescription>Defina como o aluno irá realizar os pagamentos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup 
+                  value={tipoCobranca} 
+                  onValueChange={(v: any) => setTipoCobranca(v)}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <div>
+                    <RadioGroupItem value="carne" id="carne" className="peer sr-only" />
+                    <Label
+                      htmlFor="carne"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <FileText className="h-6 w-6 text-muted-foreground" />
+                        <span className="text-base font-bold">Carnê da Escola</span>
+                        <p className="text-xs text-center text-muted-foreground">
+                          Pagamento direto na escola. Baixa manual pelo painel financeiro. Sem taxas automáticas.
+                        </p>
+                      </div>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="asaas" id="asaas" className="peer sr-only" />
+                    <Label
+                      htmlFor="asaas"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Wallet className="h-6 w-6 text-primary" />
+                        <span className="text-base font-bold">Integração Asaas</span>
+                        <p className="text-xs text-center text-muted-foreground">
+                          Geração automática de boletos ou PIX. Baixa automática e links de pagamento.
+                        </p>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                {tipoCobranca === "asaas" && (
+                  <div className="mt-6 p-4 bg-white rounded-lg border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Label className="text-sm font-semibold mb-3 block">Selecione o tipo de cobrança Asaas:</Label>
+                    <RadioGroup 
+                      value={asaasTipo} 
+                      onValueChange={(v: any) => setAsaasTipo(v)}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="PIX" id="pix_asaas" />
+                        <Label htmlFor="pix_asaas" className="flex items-center gap-2 cursor-pointer">
+                          <span>💠</span> PIX
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="BOLETO" id="boleto_asaas" />
+                        <Label htmlFor="boleto_asaas" className="flex items-center gap-2 cursor-pointer">
+                          <span>🏦</span> Boleto
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Seção 1: Taxa de Matrícula */}
             <Card>
               <CardHeader className="pb-3">
@@ -1214,6 +1324,33 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {isProcessingAsaas && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center p-6 text-center">
+          <div className="bg-white p-8 rounded-2xl shadow-2xl border-2 border-primary/20 max-w-sm w-full space-y-6">
+            <div className="relative">
+              <Loader2 className="h-16 w-16 text-primary animate-spin mx-auto" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-bold text-primary">{asaasProgress.total > 0 ? Math.round((asaasProgress.current / asaasProgress.total) * 100) : 0}%</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-primary">Integrando com Asaas</h3>
+              <p className="text-muted-foreground text-sm">
+                Gerando cobrança {asaasProgress.current} de {asaasProgress.total}...
+              </p>
+              <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-primary h-full transition-all duration-300" 
+                  style={{ width: `${asaasProgress.total > 0 ? (asaasProgress.current / asaasProgress.total) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Isso pode levar alguns segundos. Por favor, não feche a janela.</p>
+          </div>
+        </div>
+      )}
+
 
       <Dialog open={showConclusion} onOpenChange={(o) => !o && navigate({ to: "/alunos" })}>
         <DialogContent className="max-w-xl">

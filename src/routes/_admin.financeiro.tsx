@@ -461,7 +461,14 @@ function Financeiro() {
                 {(recebimentos ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      {p.matriculas?.alunos?.ctr}
+                      {p.asaas_id ? (
+                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-1 h-4">Asaas</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1 h-4">Carnê</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                     <TableCell>
                       {p.forma_pagamento && (
@@ -528,7 +535,14 @@ function Financeiro() {
                 {(aReceber ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      {p.matriculas?.alunos?.ctr}
+                      {p.asaas_id ? (
+                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-1 h-4">Asaas</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1 h-4">Carnê</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                     <TableCell>—</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
@@ -576,7 +590,14 @@ function Financeiro() {
                 {(primeiras ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      {p.matriculas?.alunos?.ctr}
+                      {p.asaas_id ? (
+                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-1 h-4">Asaas</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1 h-4">Carnê</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
@@ -624,7 +645,14 @@ function Financeiro() {
                 {(ultimas ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      {p.matriculas?.alunos?.ctr}
+                      {p.asaas_id ? (
+                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-1 h-4">Asaas</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1 h-4">Carnê</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
