@@ -39,6 +39,14 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   
   // State for Step 3: Pacotes
   const [selectedPacote, setSelectedPacote] = useState<string | null>(null);
+  const [isNegociacaoPersonalizada, setIsNegociacaoPersonalizada] = useState(false);
+  const [negociacao, setNegociacao] = useState({
+    formaPagamento: "carnê",
+    valorEntrada: 0,
+    numeroParcelas: 1,
+    valorParcela: 0,
+    observacao: ""
+  });
 
   // State for Step 4: Pagamentos
   const [taxaStatus, setTaxaStatus] = useState<"cobrar" | "isentar">("cobrar");
@@ -154,14 +162,25 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
   const saveStep3 = useMutation({
     mutationFn: async () => {
-      if (!matriculaId || !selectedPacote) throw new Error("Dados incompletos");
+      if (!matriculaId || (!selectedPacote && !isNegociacaoPersonalizada)) throw new Error("Dados incompletos");
 
-      // 1. Save package
-      const { error: pe } = await supabase.from("matricula_pacotes").insert({
-        matricula_id: matriculaId,
-        pacote_id: selectedPacote
-      });
-      if (pe) throw pe;
+      // 1. Save package (only if not personalized)
+      if (selectedPacote && !isNegociacaoPersonalizada) {
+        const { error: pe } = await supabase.from("matricula_pacotes").insert({
+          matricula_id: matriculaId,
+          pacote_id: selectedPacote
+        });
+        if (pe) throw pe;
+      }
+
+      // 2. Save observation if personalized
+      if (isNegociacaoPersonalizada && negociacao.observacao) {
+        const { error: me } = await supabase
+          .from("matriculas")
+          .update({ observacao: negociacao.observacao })
+          .eq("id", matriculaId);
+        if (me) throw me;
+      }
 
       return true;
     },
@@ -275,7 +294,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   });
 
   const generateContract = async (modeloId: string) => {
-    if (!aluno || !selectedPacote) return;
+    if (!aluno || (!selectedPacote && !isNegociacaoPersonalizada)) return;
 
     const modelo = modelos?.find((m: any) => m.id === modeloId);
     if (!modelo) {
@@ -295,12 +314,18 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       "[EMAIL_ALUNO]": aluno.email || "N/A",
       "[TELEFONE_ALUNO]": aluno.telefone || "N/A",
       "[DATA_NASCIMENTO]": format(new Date(aluno.data_nascimento), "dd/MM/yyyy"),
-      "[PACOTE_NOME]": currentPacote?.nome || "",
-      "[FORMA_PAGAMENTO]": currentPacote?.tipo || "",
-      "[VALOR_ENTRADA]": currentPacote?.valor_matricula.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
+      "[PACOTE_NOME]": isNegociacaoPersonalizada ? "Negociação Personalizada" : (currentPacote?.nome || ""),
+      "[FORMA_PAGAMENTO]": isNegociacaoPersonalizada ? negociacao.formaPagamento : (currentPacote?.tipo || ""),
+      "[VALOR_ENTRADA]": isNegociacaoPersonalizada 
+        ? negociacao.valorEntrada.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+        : (currentPacote?.valor_matricula.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || ""),
       "[VALOR_PARCELA]": parcelaNormal?.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
-      "[NUMERO_PARCELAS]": (currentPacote?.numero_parcelas || 0).toString(),
-      "[VALOR_TOTAL]": currentPacote?.valor_total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || "",
+      "[NUMERO_PARCELAS]": isNegociacaoPersonalizada 
+        ? negociacao.numeroParcelas.toString()
+        : (currentPacote?.numero_parcelas || 0).toString(),
+      "[VALOR_TOTAL]": isNegociacaoPersonalizada
+        ? (negociacao.valorEntrada + (negociacao.numeroParcelas * negociacao.valorParcela)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+        : (currentPacote?.valor_total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) || ""),
       "[DATA_MATRICULA]": format(new Date(), "dd/MM/yyyy"),
       "[NOME_ESCOLA]": "Soluções Online", 
       "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy"),
@@ -346,8 +371,20 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     const currentPacote = pacotes?.find(p => p.id === selectedPacote);
     const items: any[] = [];
 
-    // Taxa de Matrícula
-    if (currentPacote) {
+    // Taxa de Matrícula / Entrada
+    if (isNegociacaoPersonalizada) {
+      if (negociacao.valorEntrada > 0) {
+        items.push({
+          id: 'entrada-row',
+          tipo: 'taxa_matricula',
+          numero: 0,
+          vencimento: taxaVencimento,
+          valor: negociacao.valorEntrada,
+          status: 'aberto',
+          descricao: 'Entrada (Negociado)'
+        });
+      }
+    } else if (currentPacote) {
       items.push({
         id: 'taxa-row',
         tipo: 'taxa_matricula',
@@ -847,7 +884,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                     <Button 
                       onClick={() => {
                         const pacote = pacotes?.find(p => p.id === selectedPacote);
-                        if (!pacote) return;
+                        if (!pacote && !isNegociacaoPersonalizada) return;
                         const dia = parseInt(melhorDia);
                         if (isNaN(dia) || dia < 1 || dia > 31) {
                           toast.error("Informe um dia válido entre 1 e 31");
@@ -857,7 +894,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                         const novasParcelas = [];
                         const hoje = new Date();
                         
-                        if (pacote.tipo === 'cartao') {
+                        if (!isNegociacaoPersonalizada && pacote?.tipo === 'cartao') {
                           // Se for cartão, gera apenas uma linha de pagamento do cartão com o valor total (sem a taxa)
                           novasParcelas.push({
                             id: Math.random().toString(36).substr(2, 9),
@@ -867,8 +904,26 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             vencimento: hoje,
                             valor: pacote.valor_total - pacote.valor_matricula
                           });
+                        } else if (isNegociacaoPersonalizada) {
+                          for (let i = 1; i <= negociacao.numeroParcelas; i++) {
+                            let dataVenc = addMonths(hoje, i);
+                            const ultimoDia = lastDayOfMonth(dataVenc);
+                            if (dia > ultimoDia.getDate()) {
+                              dataVenc = ultimoDia;
+                            } else {
+                              dataVenc = setDate(dataVenc, dia);
+                            }
+
+                            novasParcelas.push({
+                              id: Math.random().toString(36).substr(2, 9),
+                              numero: i,
+                              vencimento: dataVenc,
+                              valor: negociacao.valorParcela,
+                              descricao: `Parcela ${i} (Negociado)`
+                            });
+                          }
                         } else {
-                          for (let i = 1; i <= pacote.numero_parcelas; i++) {
+                          for (let i = 1; i <= (pacote?.numero_parcelas || 0); i++) {
                             let dataVenc = addMonths(hoje, i);
                             
                             // Lógica para dia do mês
@@ -883,12 +938,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                               id: Math.random().toString(36).substr(2, 9),
                               numero: i,
                               vencimento: dataVenc,
-                              valor: pacote.valor_parcela
+                              valor: pacote?.valor_parcela || 0
                             });
                           }
                         }
                         setParcelasGeradas(novasParcelas);
-                        toast.success(pacote.tipo === 'cartao' ? "Cobrança única de cartão gerada!" : "Parcelas geradas com sucesso!");
+                        toast.success((!isNegociacaoPersonalizada && pacote?.tipo === 'cartao') ? "Cobrança única de cartão gerada!" : "Parcelas geradas com sucesso!");
                       }}
                     >
                       Gerar parcelas
@@ -899,7 +954,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 <div className="p-4 bg-muted/30 rounded-lg flex justify-between items-center">
                   <span className="text-sm font-medium">Configuração do Pacote</span>
                   <span className="text-sm font-bold">
-                    {pacotes?.find(p => p.id === selectedPacote)?.numero_parcelas}x de R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    {isNegociacaoPersonalizada 
+                      ? `${negociacao.numeroParcelas}x de R$ ${negociacao.valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                      : `${pacotes?.find(p => p.id === selectedPacote)?.numero_parcelas}x de R$ ${pacotes?.find(p => p.id === selectedPacote)?.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                    }
                   </span>
                 </div>
               </CardContent>
@@ -931,7 +989,12 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             ) : p.numero}
                           </td>
                           <td className="py-3">
-                            {p.descricao || (p.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${p.numero}`)}
+                            <div className="flex flex-col">
+                              <span>{p.descricao || (p.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : `Parcela ${p.numero}`)}</span>
+                              {p.descricao?.includes('(Negociado)') && (
+                                <Badge variant="outline" className="w-fit text-[10px] h-4 px-1 bg-blue-50 text-blue-600 border-blue-200">Negociado</Badge>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3">
                             <Popover>
@@ -1045,12 +1108,21 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase font-semibold">Taxa de matrícula</p>
-                    <p className="text-xl font-bold">{taxaStatus === 'isentar' ? "Isenta" : `R$ ${pacotes?.find(p => p.id === selectedPacote)?.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}</p>
+                    <p className="text-xl font-bold">
+                      {isNegociacaoPersonalizada 
+                        ? `R$ ${negociacao.valorEntrada.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                        : (taxaStatus === 'isentar' ? "Isenta" : `R$ ${pacotes?.find(p => p.id === selectedPacote)?.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
+                      }
+                    </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase font-semibold">Total Geral</p>
                     <p className="text-2xl font-black text-primary">
-                      R$ {(parcelasGeradas.reduce((acc, p) => acc + p.valor, 0) + (taxaStatus === 'cobrar' ? (pacotes?.find(p => p.id === selectedPacote)?.valor_matricula || 0) : 0)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R$ {(parcelasGeradas.reduce((acc, p) => acc + p.valor, 0) + 
+                        (isNegociacaoPersonalizada 
+                          ? negociacao.valorEntrada 
+                          : (taxaStatus === 'cobrar' ? (pacotes?.find(p => p.id === selectedPacote)?.valor_matricula || 0) : 0)
+                        )).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
@@ -1106,7 +1178,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                             "flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer bg-white hover:border-primary/30 group",
                             isSelected ? "border-primary shadow-sm ring-1 ring-primary/10" : "border-muted"
                           )}
-                          onClick={() => setSelectedPacote(p.id)}
+                          onClick={() => {
+                            setSelectedPacote(p.id);
+                            setIsNegociacaoPersonalizada(false);
+                          }}
                         >
                           <div className="flex items-center gap-4 flex-1">
                             <Badge className={cn(
@@ -1147,26 +1222,151 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 </div>
               );
             })}
+
+            {/* Negociação Personalizada Option */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-1 border-b">
+                <div className="w-1 h-4 rounded-full bg-orange-500" />
+                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  Outras Opções
+                </h3>
+              </div>
+              
+              <div 
+                className={cn(
+                  "flex flex-col p-4 rounded-xl border-2 transition-all cursor-pointer bg-white hover:border-primary/30 group",
+                  isNegociacaoPersonalizada ? "border-primary shadow-sm ring-1 ring-primary/10" : "border-muted"
+                )}
+                onClick={() => {
+                  setIsNegociacaoPersonalizada(true);
+                  setSelectedPacote(null);
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Badge className="font-bold px-2 py-0.5 text-[10px] uppercase bg-orange-100 text-orange-700 hover:bg-orange-100">
+                      Personalizado
+                    </Badge>
+                    <div>
+                      <p className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">Negociação Personalizada</p>
+                      <p className="text-xs text-muted-foreground">Defina manualmente os valores e parcelas</p>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                    isNegociacaoPersonalizada ? "border-primary bg-primary text-white" : "border-muted-foreground/30"
+                  )}>
+                    {isNegociacaoPersonalizada && <Check className="h-3 w-3" strokeWidth={4} />}
+                  </div>
+                </div>
+
+                {isNegociacaoPersonalizada && (
+                  <div className="mt-6 space-y-4 p-4 bg-muted/20 rounded-lg animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Forma de Pagamento</Label>
+                        <RadioGroup 
+                          value={negociacao.formaPagamento} 
+                          onValueChange={(v) => setNegociacao(prev => ({ ...prev, formaPagamento: v }))}
+                          className="flex flex-wrap gap-4 mt-2"
+                        >
+                          {["PIX", "Boleto", "Cartão", "Carnê"].map(opt => (
+                            <div key={opt} className="flex items-center space-x-2">
+                              <RadioGroupItem value={opt.toLowerCase()} id={`neg-${opt}`} />
+                              <Label htmlFor={`neg-${opt}`} className="text-xs font-medium cursor-pointer">{opt}</Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="valorEntrada">Valor da Entrada (R$)</Label>
+                        <Input 
+                          id="valorEntrada"
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={negociacao.valorEntrada || ""}
+                          onChange={(e) => setNegociacao(prev => ({ ...prev, valorEntrada: parseFloat(e.target.value) || 0 }))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="numParcelas">Número de Parcelas</Label>
+                        <Input 
+                          id="numParcelas"
+                          type="number"
+                          placeholder="Ex: 12"
+                          value={negociacao.numeroParcelas || ""}
+                          onChange={(e) => setNegociacao(prev => ({ ...prev, numeroParcelas: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="valorParcela">Valor de cada Parcela (R$)</Label>
+                        <Input 
+                          id="valorParcela"
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={negociacao.valorParcela || ""}
+                          onChange={(e) => setNegociacao(prev => ({ ...prev, valorParcela: parseFloat(e.target.value) || 0 }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="obsNegociacao">Observação / Justificativa</Label>
+                      <Input 
+                        id="obsNegociacao"
+                        placeholder="Ex: Negociado em 2x de R$ 634"
+                        value={negociacao.observacao}
+                        onChange={(e) => setNegociacao(prev => ({ ...prev, observacao: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg flex justify-between items-center">
+                      <span className="text-xs font-semibold text-primary uppercase">Valor Total Negociado</span>
+                      <span className="text-lg font-black text-primary">
+                        R$ {(negociacao.valorEntrada + (negociacao.numeroParcelas * negociacao.valorParcela)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Resumo Fixo no Rodapé */}
-          {selectedPacote && (
+          {(selectedPacote || isNegociacaoPersonalizada) && (
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-50 animate-in slide-in-from-bottom-full duration-500 shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
               <div className="max-w-4xl mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-6">
                   <div className="space-y-0.5">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Pacote Selecionado</p>
-                    <p className="font-bold text-sm">{pacotes?.find(p => p.id === selectedPacote)?.nome}</p>
+                    <p className="font-bold text-sm">
+                      {isNegociacaoPersonalizada ? "Negociação Personalizada" : pacotes?.find(p => p.id === selectedPacote)?.nome}
+                    </p>
                   </div>
                   <div className="h-8 w-px bg-muted" />
                   <div className="space-y-0.5">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Entrada</p>
-                    <p className="font-bold text-sm">R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    <p className="font-bold text-sm">
+                      R$ {isNegociacaoPersonalizada 
+                        ? negociacao.valorEntrada.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                        : pacotes?.find(p => p.id === selectedPacote)?.valor_matricula.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                      }
+                    </p>
                   </div>
                   <div className="h-8 w-px bg-muted" />
                   <div className="space-y-0.5">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Valor Total</p>
-                    <p className="font-black text-lg text-primary">R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    <p className="font-black text-lg text-primary">
+                      R$ {isNegociacaoPersonalizada 
+                        ? (negociacao.valorEntrada + (negociacao.numeroParcelas * negociacao.valorParcela)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                        : pacotes?.find(p => p.id === selectedPacote)?.valor_total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
+                      }
+                    </p>
                   </div>
                 </div>
 
@@ -1188,7 +1388,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             </div>
           )}
 
-          {!selectedPacote && (
+          {!selectedPacote && !isNegociacaoPersonalizada && (
             <div className="flex justify-between pt-6">
               <Button variant="ghost" onClick={() => setStep(2)}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
