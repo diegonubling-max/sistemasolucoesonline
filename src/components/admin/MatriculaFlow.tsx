@@ -1219,6 +1219,119 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 </div>
               );
             })}
+
+            {/* Negociação Personalizada Option */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-1 border-b">
+                <div className="w-1 h-4 rounded-full bg-orange-500" />
+                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  Outras Opções
+                </h3>
+              </div>
+              
+              <div 
+                className={cn(
+                  "flex flex-col p-4 rounded-xl border-2 transition-all cursor-pointer bg-white hover:border-primary/30 group",
+                  isNegociacaoPersonalizada ? "border-primary shadow-sm ring-1 ring-primary/10" : "border-muted"
+                )}
+                onClick={() => {
+                  setIsNegociacaoPersonalizada(true);
+                  setSelectedPacote(null);
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Badge className="font-bold px-2 py-0.5 text-[10px] uppercase bg-orange-100 text-orange-700 hover:bg-orange-100">
+                      Personalizado
+                    </Badge>
+                    <div>
+                      <p className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">Negociação Personalizada</p>
+                      <p className="text-xs text-muted-foreground">Defina manualmente os valores e parcelas</p>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                    isNegociacaoPersonalizada ? "border-primary bg-primary text-white" : "border-muted-foreground/30"
+                  )}>
+                    {isNegociacaoPersonalizada && <Check className="h-3 w-3" strokeWidth={4} />}
+                  </div>
+                </div>
+
+                {isNegociacaoPersonalizada && (
+                  <div className="mt-6 space-y-4 p-4 bg-muted/20 rounded-lg animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Forma de Pagamento</Label>
+                        <RadioGroup 
+                          value={negociacao.formaPagamento} 
+                          onValueChange={(v) => setNegociacao(prev => ({ ...prev, formaPagamento: v }))}
+                          className="flex flex-wrap gap-4 mt-2"
+                        >
+                          {["PIX", "Boleto", "Cartão", "Carnê"].map(opt => (
+                            <div key={opt} className="flex items-center space-x-2">
+                              <RadioGroupItem value={opt.toLowerCase()} id={`neg-${opt}`} />
+                              <Label htmlFor={`neg-${opt}`} className="text-xs font-medium cursor-pointer">{opt}</Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="valorEntrada">Valor da Entrada (R$)</Label>
+                        <Input 
+                          id="valorEntrada"
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={negociacao.valorEntrada || ""}
+                          onChange={(e) => setNegociacao(prev => ({ ...prev, valorEntrada: parseFloat(e.target.value) || 0 }))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="numParcelas">Número de Parcelas</Label>
+                        <Input 
+                          id="numParcelas"
+                          type="number"
+                          placeholder="Ex: 12"
+                          value={negociacao.numeroParcelas || ""}
+                          onChange={(e) => setNegociacao(prev => ({ ...prev, numeroParcelas: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="valorParcela">Valor de cada Parcela (R$)</Label>
+                        <Input 
+                          id="valorParcela"
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={negociacao.valorParcela || ""}
+                          onChange={(e) => setNegociacao(prev => ({ ...prev, valorParcela: parseFloat(e.target.value) || 0 }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="obsNegociacao">Observação / Justificativa</Label>
+                      <Input 
+                        id="obsNegociacao"
+                        placeholder="Ex: Negociado em 2x de R$ 634"
+                        value={negociacao.observacao}
+                        onChange={(e) => setNegociacao(prev => ({ ...prev, observacao: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg flex justify-between items-center">
+                      <span className="text-xs font-semibold text-primary uppercase">Valor Total Negociado</span>
+                      <span className="text-lg font-black text-primary">
+                        R$ {(negociacao.valorEntrada + (negociacao.numeroParcelas * negociacao.valorParcela)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Resumo Fixo no Rodapé */}
