@@ -954,7 +954,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 <div className="p-4 bg-muted/30 rounded-lg flex justify-between items-center">
                   <span className="text-sm font-medium">Configuração do Pacote</span>
                   <span className="text-sm font-bold">
-                    {pacotes?.find(p => p.id === selectedPacote)?.numero_parcelas}x de R$ {pacotes?.find(p => p.id === selectedPacote)?.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    {isNegociacaoPersonalizada 
+                      ? `${negociacao.numeroParcelas}x de R$ ${negociacao.valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                      : `${pacotes?.find(p => p.id === selectedPacote)?.numero_parcelas}x de R$ ${pacotes?.find(p => p.id === selectedPacote)?.valor_parcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                    }
                   </span>
                 </div>
               </CardContent>
