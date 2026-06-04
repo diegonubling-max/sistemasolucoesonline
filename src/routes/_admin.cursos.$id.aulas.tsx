@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -34,6 +34,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/admin/PageHeader";
 import {
   Select,
@@ -88,6 +98,7 @@ function AulasManager() {
 
   const [aulaEditando, setAulaEditando] = useState<Aula | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [aulaToDelete, setAulaToDelete] = useState<Aula | null>(null);
 
   const reorder = useMutation({
     mutationFn: async (items: Aula[]) => {
@@ -106,7 +117,24 @@ function AulasManager() {
       const { error } = await supabase.from("aulas").update({ ativo: !a.ativo }).eq("id", a.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["aulas", cursoId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["aulas", cursoId] });
+      qc.invalidateQueries({ queryKey: ["cursos"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("aulas").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Aula excluída com sucesso");
+      qc.invalidateQueries({ queryKey: ["aulas", cursoId] });
+      qc.invalidateQueries({ queryKey: ["cursos"] });
+      setAulaToDelete(null);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
