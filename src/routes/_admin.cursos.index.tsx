@@ -31,7 +31,7 @@ function CursosList() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
-  const [cursoToDelete, setCursoToDelete] = useState<{ id: string; nome: string } | null>(null);
+  const [cursoToDelete, setCursoToDelete] = useState<{ id: string; nome: string; hasAulas: boolean; hasMatriculas: boolean } | null>(null);
 
   const { data: segmentos } = useQuery({
     queryKey: ["segmentos-ativos"],
@@ -51,7 +51,7 @@ function CursosList() {
     queryFn: async () => {
       let q = supabase
         .from("cursos")
-        .select("id, nome, descricao, ativo, created_at, segmento_id, segmentos(nome), aulas(count)")
+        .select("id, nome, descricao, ativo, created_at, segmento_id, segmentos(nome), aulas(count), matricula_cursos(count)")
         .order("nome", { ascending: true });
       
       if (search) q = q.ilike("nome", `%${search}%`);
@@ -177,12 +177,13 @@ function CursosList() {
                   </TableHeader>
                   <TableBody>
                     {group.cursos.map((c: any) => {
-                      const count = Array.isArray(c.aulas) ? (c.aulas[0]?.count ?? 0) : 0;
+                      const countAulas = Array.isArray(c.aulas) ? (c.aulas[0]?.count ?? 0) : 0;
+                      const countMatriculas = Array.isArray(c.matricula_cursos) ? (c.matricula_cursos[0]?.count ?? 0) : 0;
                       
                       return (
                         <TableRow key={c.id} className="bg-white">
                           <TableCell className="font-medium">{c.nome}</TableCell>
-                          <TableCell>{count}</TableCell>
+                          <TableCell>{countAulas}</TableCell>
                           <TableCell>
                             {c.ativo ? (
                               <Badge className="bg-accent text-accent-foreground hover:bg-accent">Ativo</Badge>
@@ -215,7 +216,12 @@ function CursosList() {
                                 variant="ghost"
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                 title="Excluir"
-                                onClick={() => setCursoToDelete({ id: c.id, nome: c.nome })}
+                                onClick={() => setCursoToDelete({ 
+                                  id: c.id, 
+                                  nome: c.nome, 
+                                  hasAulas: countAulas > 0,
+                                  hasMatriculas: countMatriculas > 0
+                                })}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -241,7 +247,19 @@ function CursosList() {
             <AlertDialogTitle className="text-xl font-bold">Excluir curso?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
               Você está prestes a excluir o curso <span className="font-bold text-foreground">[{cursoToDelete?.nome}]</span>. 
-              Esta ação não pode ser desfeita e todos os dados relacionados serão removidos permanentemente.
+              {cursoToDelete?.hasAulas && (
+                <div className="bg-amber-50 text-amber-800 p-2 rounded mt-2 text-xs flex gap-2 items-center">
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                  <span>Este curso possui aulas vinculadas que também serão removidas.</span>
+                </div>
+              )}
+              {cursoToDelete?.hasMatriculas && (
+                <div className="bg-red-50 text-red-800 p-2 rounded mt-2 text-xs flex gap-2 items-center">
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                  <span>Este curso possui alunos matriculados. A exclusão pode causar erros no histórico dos alunos.</span>
+                </div>
+              )}
+              <div className="mt-4">Esta ação não pode ser desfeita e todos os dados relacionados serão removidos permanentemente.</div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center gap-2 mt-4">
