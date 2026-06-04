@@ -278,6 +278,7 @@ function SortableAula({
   index,
   onEdit,
   onToggle,
+  onDelete,
 }: {
   aula: Aula;
   index: number;
