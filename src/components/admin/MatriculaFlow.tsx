@@ -196,8 +196,8 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
     mutationFn: async () => {
       if (!matriculaId || !aluno || !contractContent) throw new Error("Dados incompletos");
 
-      const currentPacote = pacotes?.find(p => p.id === selectedPacote);
-      if (!currentPacote) throw new Error("Pacote não encontrado");
+      const currentPacote = !isNegociacaoPersonalizada ? pacotes?.find(p => p.id === selectedPacote) : null;
+      if (!isNegociacaoPersonalizada && !currentPacote) throw new Error("Pacote não encontrado");
 
       // 1. Salvar Parcelas
       const allParcelas: any[] = [];
