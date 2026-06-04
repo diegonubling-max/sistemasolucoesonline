@@ -45,6 +45,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   const [taxaVencimento, setTaxaVencimento] = useState<Date>(new Date());
   const [melhorDia, setMelhorDia] = useState<string>("");
   const [parcelasGeradas, setParcelasGeradas] = useState<any[]>([]);
+  const [tipoCobranca, setTipoCobranca] = useState<"carne" | "asaas">("carne");
+  const [asaasTipo, setAsaasTipo] = useState<"PIX" | "BOLETO">("PIX");
+  const [isProcessingAsaas, setIsProcessingAsaas] = useState(false);
+  const [asaasProgress, setAsaasProgress] = useState({ current: 0, total: 0 });
 
   const [showConclusion, setShowConclusion] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
