@@ -225,6 +225,7 @@ function AulasManager() {
                       index={i}
                       onEdit={() => handleEdit(a)}
                       onToggle={() => toggle.mutate(a)}
+                      onDelete={() => setAulaToDelete(a)}
                     />
                   ))}
                 </ul>
@@ -233,6 +234,41 @@ function AulasManager() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!aulaToDelete} onOpenChange={(open) => !open && setAulaToDelete(null)}>
+        <AlertDialogContent className="max-w-[400px]">
+          <AlertDialogHeader className="items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-2">
+              <Trash2 className="h-6 w-6 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold">Excluir aula?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              Você está prestes a excluir a aula <span className="font-bold text-foreground">[{aulaToDelete?.titulo}]</span>. 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center gap-2 mt-4">
+            <AlertDialogCancel disabled={deleteMutation.isPending} className="mt-0 sm:flex-1">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (aulaToDelete) deleteMutation.mutate(aulaToDelete.id);
+              }}
+              className="bg-[#DC2626] hover:bg-red-700 text-white sm:flex-1"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Excluindo...
+                </>
+              ) : (
+                "Sim, excluir"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -247,6 +283,7 @@ function SortableAula({
   index: number;
   onEdit: () => void;
   onToggle: () => void;
+  onDelete: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: aula.id,
@@ -291,7 +328,10 @@ function SortableAula({
         <Pencil className="h-4 w-4" />
       </Button>
       <Button size="icon" variant="ghost" onClick={onToggle} title={aula.ativo ? "Desativar" : "Ativar"}>
-        <Power className="h-4 w-4" />
+        <Power className={`h-4 w-4 ${aula.ativo ? "text-green-600" : "text-gray-400"}`} />
+      </Button>
+      <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onDelete} title="Excluir">
+        <Trash2 className="h-4 w-4" />
       </Button>
     </li>
   );
