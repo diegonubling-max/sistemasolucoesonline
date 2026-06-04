@@ -467,12 +467,16 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 .replace(/[\u0300-\u036f]/g, '')
                 .split(' ')[0];
               
-              // 1. Create student record
-              const { data: studentData, error: studentError } = await supabase.from("alunos").insert({
-                ...v,
+              const { email, ...rest } = v;
+              const studentToInsert = {
+                ...rest,
                 responsavel_email: v.responsavel_email || null,
-                menor_de_idade: calcAge(v.data_nascimento) < 18
-              }).select("id, nome, email, ctr").single();
+                menor_de_idade: calcAge(v.data_nascimento) < 18,
+                email: email || null
+              };
+
+              // 1. Create student record
+              const { data: studentData, error: studentError } = await supabase.from("alunos").insert(studentToInsert).select("id, nome, email, ctr").single();
               
               if (studentError) {
                 console.error("Erro ao salvar aluno:", studentError);
@@ -480,11 +484,26 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 return;
               }
 
-              // 2. Create Auth user via RPC if email exists
-              if (studentData.email) {
-                console.log('Criando acesso:', studentData.email, senhaGerada, studentData.ctr);
+              let finalEmail = studentData.email;
+
+              // Se o email não foi informado, gera o fictício
+              if (!finalEmail) {
+                finalEmail = `ctr${studentData.ctr}@solucoesonline.com.br`;
+                const { error: updateError } = await supabase
+                  .from("alunos")
+                  .update({ email: finalEmail })
+                  .eq("id", studentData.id);
+                
+                if (updateError) {
+                  console.error("Erro ao atualizar email fictício:", updateError);
+                }
+              }
+
+              // 2. Create Auth user via RPC
+              if (finalEmail) {
+                console.log('Criando acesso:', finalEmail, senhaGerada, studentData.ctr);
                 const { error: erroAcesso } = await supabase.rpc('criar_acesso_aluno', {
-                  p_email: studentData.email,
+                  p_email: finalEmail,
                   p_senha: senhaGerada,
                   p_ctr: studentData.ctr
                 });
@@ -499,7 +518,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
               
               setAlunoId(studentData.id);
               setAccessData({
-                email: studentData.email ?? "",
+                email: finalEmail ?? "",
                 pass: senhaGerada,
                 ctr: studentData.ctr,
                 nome: studentData.nome

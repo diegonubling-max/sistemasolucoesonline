@@ -13,7 +13,7 @@ import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
-const VENDEDORAS = ["Vera", "Gislaine", "Mônica", "Sabrina", "Bruna", "Juliana", "Outros"] as const;
+const VENDEDORAS = ["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"] as const;
 const SEXOS = ["Masculino", "Feminino"] as const;
 
 const schema = z
@@ -21,7 +21,7 @@ const schema = z
     nome: z.string().min(2, "O nome é obrigatório"),
     sexo: z.string().min(1, "O sexo é obrigatório"),
     telefone: z.string().min(14, "Telefone obrigatório"),
-    email: z.string().email("E-mail inválido").min(1, "O e-mail é obrigatório"),
+    email: z.string().email("E-mail inválido").optional().or(z.literal("")),
     data_nascimento: z.string().min(1, "Data de nascimento obrigatória"),
     cpf: z.string().refine((v) => isValidCPF(v), "CPF inválido ou obrigatório"),
     ativo: z.string().optional(),
@@ -150,7 +150,7 @@ export function AlunoForm({
           </Field>
 
           {/* 3. Email */}
-          <Field label="E-mail *" error={errors.email?.message as string}>
+          <Field label="E-mail (opcional)" error={errors.email?.message as string}>
             <Input type="email" {...form.register("email")} />
           </Field>
 

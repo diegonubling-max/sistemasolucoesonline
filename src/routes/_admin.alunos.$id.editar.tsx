@@ -89,9 +89,21 @@ function EditarAluno() {
 
   const updateAluno = useMutation({
     mutationFn: async (v: any) => {
+      const { email, ...rest } = v;
+      let finalEmail = email || null;
+
+      // Se o email foi removido e não tem um, gera o fictício baseado no CTR existente
+      if (!finalEmail && aluno?.ctr) {
+        finalEmail = `ctr${aluno.ctr}@solucoesonline.com.br`;
+      }
+
       const { error } = await supabase
         .from("alunos")
-        .update({ ...v, responsavel_email: v.responsavel_email || null })
+        .update({ 
+          ...rest, 
+          email: finalEmail,
+          responsavel_email: v.responsavel_email || null 
+        })
         .eq("id", id);
       if (error) throw error;
     },

@@ -745,12 +745,10 @@ function Financeiro() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todas">Todas as vendedoras</SelectItem>
-                    <SelectItem value="Vera">Vera</SelectItem>
                     <SelectItem value="Gislaine">Gislaine</SelectItem>
-                    <SelectItem value="Mônica">Mônica</SelectItem>
-                    <SelectItem value="Sabrina">Sabrina</SelectItem>
-                    <SelectItem value="Bruna">Bruna</SelectItem>
-                    <SelectItem value="Juliana">Juliana</SelectItem>
+                    <SelectItem value="Vera">Vera</SelectItem>
+                    <SelectItem value="Gabrielly">Gabrielly</SelectItem>
+                    <SelectItem value="Maria Eduarda">Maria Eduarda</SelectItem>
                   </SelectContent>
                 </Select>
                 <Input type="date" className="w-40" value={vendedoraPeriod.start} onChange={(e) => setVendedoraPeriod(p => ({ ...p, start: e.target.value }))} />
@@ -762,7 +760,7 @@ function Financeiro() {
 
             {selectedVendedora === "todas" && matriculasVendedora && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                {["Vera", "Gislaine", "Mônica", "Sabrina", "Bruna", "Juliana"].map(v => {
+                {["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"].map(v => {
                   const filtered = matriculasVendedora.filter(m => m.vendedora === v);
                   const totalVal = filtered.reduce((acc, curr) => acc + curr.valorTotal, 0);
                   return (
