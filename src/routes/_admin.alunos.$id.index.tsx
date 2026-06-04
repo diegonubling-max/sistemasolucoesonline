@@ -727,15 +727,38 @@ function AlunoDetalhes() {
             <Button 
               className="w-full" 
               onClick={() => {
-                const text = `Olá ${aluno.nome.split(" ")[0]}! Seus dados de acesso:
-Login: ${aluno.ctr}
-Senha: ${passwordToDisplay}
-Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+                const text = `*SEJA BEM VINDO*\n\n` +
+                             `Gostaríamos de dar as Boas Vindas e que você seja bem vindo(a) a nossa Escola.\n` +
+                             `Abaixo segue o seu Login e Senha para assistir as aulas do seu Preparatório e acesso as Apostilas.\n\n` +
+                             `*Login:* ${aluno.ctr}\n` +
+                             `*Senha:* ${passwordToDisplay}\n\n` +
+                             `Suas aulas já estão liberadas para assistir.\n` +
+                             `Agora basta acessar o Link abaixo e colocar seu Login e Senha.\n\n` +
+                             `Segue abaixo o link de acesso a Plataforma da Escola Soluções Online\n` +
+                             `https://sistemasolucoesonline.lovable.app/aluno/login`;
                 navigator.clipboard.writeText(text);
                 toast.success("Dados copiados!");
               }}
             >
-              Copiar dados
+              <Copy className="h-4 w-4 mr-2" /> Copiar dados
+            </Button>
+            <Button 
+              className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white" 
+              onClick={() => {
+                const text = `*SEJA BEM VINDO*\n\n` +
+                             `Gostaríamos de dar as Boas Vindas e que você seja bem vindo(a) a nossa Escola.\n` +
+                             `Abaixo segue o seu Login e Senha para assistir as aulas do seu Preparatório e acesso as Apostilas.\n\n` +
+                             `*Login:* ${aluno.ctr}\n` +
+                             `*Senha:* ${passwordToDisplay}\n\n` +
+                             `Suas aulas já estão liberadas para assistir.\n` +
+                             `Agora basta acessar o Link abaixo e colocar seu Login e Senha.\n\n` +
+                             `Segue abaixo o link de acesso a Plataforma da Escola Soluções Online\n` +
+                             `https://sistemasolucoesonline.lovable.app/aluno/login`;
+                const phone = aluno.telefone?.replace(/\D/g, "");
+                window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(text)}`, "_blank");
+              }}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" /> WhatsApp
             </Button>
             <Button variant="outline" className="w-full" onClick={() => setShowPasswordResult(false)}>Fechar</Button>
           </DialogFooter>
