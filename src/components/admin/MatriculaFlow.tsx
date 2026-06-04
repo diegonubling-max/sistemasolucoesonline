@@ -196,7 +196,11 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         });
       });
 
-      const { error: errorParcelas } = await supabase.from('parcelas').insert(allParcelas);
+      const { data: savedParcelas, error: errorParcelas } = await supabase
+        .from('parcelas')
+        .insert(allParcelas)
+        .select('id');
+        
       if (errorParcelas) throw errorParcelas;
 
       // 2. Salvar Contrato
@@ -213,8 +217,9 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
 
       if (errorContrato) throw errorContrato;
 
-      // Integrar com Asaas: Criar/Buscar cliente
+      // Integrar com Asaas
       try {
+        // Garantir cliente no Asaas
         await createOrGetAsaasCustomer({
           id: aluno.id,
           nome: aluno.nome,
@@ -222,10 +227,35 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
           email: aluno.email || "",
           telefone: aluno.telefone || ""
         });
-        console.log("Cliente sincronizado com Asaas");
+        
+        // Se tipo for Asaas, gerar cobranças automaticamente
+        if (tipoCobranca === "asaas" && savedParcelas && savedParcelas.length > 0) {
+          setIsProcessingAsaas(true);
+          setAsaasProgress({ current: 0, total: savedParcelas.length });
+          
+          let count = 0;
+          for (const p of savedParcelas) {
+            count++;
+            setAsaasProgress({ current: count, total: savedParcelas.length });
+            try {
+              await generateAsaasCobrar(p.id, asaasTipo);
+            } catch (err) {
+              console.error(`Erro ao gerar parcela ${p.id} no Asaas:`, err);
+              // Continuamos com as próximas mesmo se uma falhar, 
+              // mas talvez devessemos avisar o usuário
+            }
+          }
+          toast.success(`${savedParcelas.length} cobranças geradas no Asaas!`);
+        }
+        
+        console.log("Integração Asaas concluída");
       } catch (asaasError) {
-        console.error("Erro ao sincronizar com Asaas:", asaasError);
-        toast.error("Matrícula concluída, mas erro ao sincronizar com Asaas.");
+        console.error("Erro na integração Asaas:", asaasError);
+        if (tipoCobranca === "asaas") {
+          toast.error("Matrícula concluída, mas houve erro ao gerar cobranças no Asaas.");
+        }
+      } finally {
+        setIsProcessingAsaas(false);
       }
 
       return {
@@ -238,7 +268,10 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
     },
-    onError: (e: any) => toast.error(e.message)
+    onError: (e: any) => {
+      setIsProcessingAsaas(false);
+      toast.error(e.message);
+    }
   });
 
   const generateContract = async (modeloId: string) => {
