@@ -36,7 +36,7 @@ function AlunosList() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
-  const [studentToDelete, setStudentToDelete] = useState<{ id: string; nome: string; email: string } | null>(null);
+  const [studentToDelete, setStudentToDelete] = useState<{ id: string; nome: string; email: string; hasMatriculas: boolean } | null>(null);
   const [studentForContract, setStudentForContract] = useState<any | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -211,7 +211,12 @@ function AlunosList() {
                         variant="ghost"
                         title="Excluir"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setStudentToDelete({ id: a.id, nome: a.nome, email: a.email ?? "" })}
+                        onClick={() => setStudentToDelete({ 
+                          id: a.id, 
+                          nome: a.nome, 
+                          email: a.email ?? "",
+                          hasMatriculas: Array.isArray(a.matriculas) && a.matriculas.length > 0
+                        })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -261,7 +266,13 @@ function AlunosList() {
             <AlertDialogTitle className="text-xl font-bold">Excluir aluno?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
               Você está prestes a excluir o aluno <span className="font-bold text-foreground">[{studentToDelete?.nome}]</span>. 
-              Esta ação não pode ser desfeita e todos os dados relacionados serão removidos permanentemente.
+              {studentToDelete?.hasMatriculas && (
+                <div className="bg-red-50 text-red-800 p-2 rounded mt-2 text-xs flex gap-2 items-center text-left">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>Este aluno possui matrículas ativas. A exclusão removerá todo o histórico financeiro e de cursos.</span>
+                </div>
+              )}
+              <div className="mt-2">Esta ação não pode ser desfeita e todos os dados relacionados serão removidos permanentemente.</div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center gap-2 mt-4">
