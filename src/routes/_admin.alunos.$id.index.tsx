@@ -305,10 +305,15 @@ function AlunoDetalhes() {
       .replace(/[\u0300-\u036f]/g, '')
       .split(' ')[0];
       
-    const text = `Olá ${primeiroNome}! Seus dados de acesso:
-Login: ${aluno.ctr}
-Senha: ${senhaGerada}
-Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+    const text = `*SEJA BEM VINDO*\n\n` +
+                 `Gostaríamos de dar as Boas Vindas e que você seja bem vindo(a) a nossa Escola.\n` +
+                 `Abaixo segue o seu Login e Senha para assistir as aulas do seu Preparatório e acesso as Apostilas.\n\n` +
+                 `*Login:* ${aluno.ctr}\n` +
+                 `*Senha:* ${senhaGerada}\n\n` +
+                 `Suas aulas já estão liberadas para assistir.\n` +
+                 `Agora basta acessar o Link abaixo e colocar seu Login e Senha.\n\n` +
+                 `Segue abaixo o link de acesso a Plataforma da Escola Soluções Online\n` +
+                 `https://sistemasolucoesonline.lovable.app/aluno/login`;
     
     navigator.clipboard.writeText(text);
     toast.success("Dados copiados para a área de transferência!");
@@ -339,6 +344,35 @@ Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
             >
               {copied ? <CheckCircle2 className="h-4 w-4 mr-2" /> : <Key className="h-4 w-4 mr-2" />}
               {copied ? "Copiado!" : "Copiar dados de acesso"}
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-green-500 text-green-600 hover:bg-green-50"
+              onClick={() => {
+                if (!aluno) return;
+                const primeiroNome = aluno.nome.split(" ")[0];
+                const senhaGerada = '123' + primeiroNome
+                  .toLowerCase()
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .split(' ')[0];
+                  
+                const text = `*SEJA BEM VINDO*\n\n` +
+                             `Gostaríamos de dar as Boas Vindas e que você seja bem vindo(a) a nossa Escola.\n` +
+                             `Abaixo segue o seu Login e Senha para assistir as aulas do seu Preparatório e acesso as Apostilas.\n\n` +
+                             `*Login:* ${aluno.ctr}\n` +
+                             `*Senha:* ${senhaGerada}\n\n` +
+                             `Suas aulas já estão liberadas para assistir.\n` +
+                             `Agora basta acessar o Link abaixo e colocar seu Login e Senha.\n\n` +
+                             `Segue abaixo o link de acesso a Plataforma da Escola Soluções Online\n` +
+                             `https://sistemasolucoesonline.lovable.app/aluno/login`;
+                
+                const phone = aluno.telefone?.replace(/\D/g, "");
+                window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(text)}`, "_blank");
+              }}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Enviar por WhatsApp
             </Button>
             <Button variant="outline" onClick={() => setShowResetDefaultModal(true)}>
               <Key className="h-4 w-4 mr-2" />
