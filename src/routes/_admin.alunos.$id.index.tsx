@@ -562,18 +562,32 @@ function AlunoDetalhes() {
                           )}
                         </td>
                         <td className="py-4">
-                          <Badge 
-                            variant="secondary"
-                            className={cn(
-                              p.status === 'pago' ? "bg-green-100 text-green-800 border-green-200" :
-                              p.status === 'isento' ? "bg-gray-100 text-gray-700 border-gray-200" :
-                              isVencido ? "bg-red-100 text-red-800 border-red-200" :
-                              "bg-yellow-100 text-yellow-800 border-yellow-200"
+                          <div className="flex flex-wrap gap-1">
+                            <Badge 
+                              variant="secondary"
+                              className={cn(
+                                p.status === 'pago' ? "bg-green-100 text-green-800 border-green-200" :
+                                p.status === 'isento' ? "bg-gray-100 text-gray-700 border-gray-200" :
+                                isVencido ? "bg-red-100 text-red-800 border-red-200" :
+                                "bg-yellow-100 text-yellow-800 border-yellow-200"
+                              )}
+                            >
+                              {p.status === 'pago' ? 'Pago' : p.status === 'isento' ? 'Isento' : isVencido ? 'Vencido' : 'Aberto'}
+                              {isVencido && <AlertCircle className="h-3 w-3 ml-1 inline" />}
+                            </Badge>
+                            
+                            <Badge variant="outline" className={cn(
+                              p.asaas_id ? "border-purple-200 text-purple-700 bg-purple-50" : "border-blue-200 text-blue-700 bg-blue-50"
+                            )}>
+                              {p.asaas_id ? 'Asaas' : 'Carnê'}
+                            </Badge>
+
+                            {p.descricao?.includes('(Negociado)') && (
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                                Negociado
+                              </Badge>
                             )}
-                          >
-                            {p.status === 'pago' ? 'Pago' : p.status === 'isento' ? 'Isento' : isVencido ? 'Vencido' : 'Aberto'}
-                            {isVencido && <AlertCircle className="h-3 w-3 ml-1 inline" />}
-                          </Badge>
+                          </div>
                         </td>
                         <td className="py-4 text-right">
                           <div className="flex justify-end gap-2">
