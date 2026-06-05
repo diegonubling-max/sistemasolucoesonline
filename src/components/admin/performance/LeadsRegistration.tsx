@@ -200,6 +200,24 @@ export function LeadsRegistration() {
                         variant="ghost" 
                         size="icon"
                         onClick={() => {
+                          setEditingId(lead.id);
+                          setData(lead.data);
+                          setVendedora(lead.vendedora);
+                          setQuantidades({
+                            Google: 0,
+                            Meta: 0,
+                            Indicação: 0,
+                            Outros: 0,
+                            [lead.origem]: lead.quantidade
+                          });
+                        }}
+                      >
+                        <Edit2 className="h-4 w-4 text-blue-500" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => {
                           if (confirm("Deseja excluir este registro?")) {
                             deleteMutation.mutate(lead.id);
                           }
