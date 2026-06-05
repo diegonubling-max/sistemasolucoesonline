@@ -842,12 +842,14 @@ function AlunoDetalhes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="mt-12 space-y-6">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Lock className="h-6 w-6 text-primary" />
-            🔒 Vitrine de Cursos
-          </h2>
+        </TabsContent>
+
+        <TabsContent value="vitrine" className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Lock className="h-6 w-6 text-primary" />
+              🔒 Vitrine de Cursos
+            </h2>
           <p className="text-sm text-muted-foreground">
             Cursos bloqueados visíveis para o aluno na área de membros
           </p>
