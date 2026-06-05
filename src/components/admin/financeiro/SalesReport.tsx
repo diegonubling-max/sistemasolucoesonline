@@ -59,7 +59,8 @@ export function SalesReport() {
             )
           ),
           parcelas (
-            valor
+            valor,
+            status
           )
         `)
         .gte("created_at", `${filters.startDate}T00:00:00`)
@@ -73,27 +74,29 @@ export function SalesReport() {
         query = query.eq("alunos.origem", filters.origem as any);
       }
 
-
       const { data, error } = await query;
       if (error) throw error;
 
-      // Filter by package in JS because it's a bit complex with the relation
       let filtered = (data || []).map(m => {
         const aluno = m.alunos as any;
         const matriculaPacotes = (m.matricula_pacotes as any[]) || [];
         const isPersonalizado = matriculaPacotes.length > 0 && matriculaPacotes.some(mp => mp.pacote_id === null);
+        const parcelas = (m.parcelas as any[] || []);
         
         let pacoteNome = "";
         let valorTotal = 0;
 
         if (isPersonalizado) {
           pacoteNome = "Negociação Personalizada";
-          valorTotal = (m.parcelas as any[] || []).reduce((acc, p) => acc + Number(p.valor), 0);
+          valorTotal = parcelas.reduce((acc, p) => acc + Number(p.valor), 0);
         } else if (matriculaPacotes.length > 0) {
           const pacs = matriculaPacotes.map(mp => mp.pacotes).filter(Boolean);
           pacoteNome = pacs.map(p => p.nome).join(", ");
           valorTotal = pacs.reduce((acc, p) => acc + Number(p.valor_total), 0);
         }
+
+        const valorRecebido = parcelas.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0);
+        const valorEmAberto = parcelas.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0);
 
         return {
           id: m.id,
@@ -104,7 +107,9 @@ export function SalesReport() {
           dataMatricula: m.created_at,
           pacoteNome,
           pacoteIds: matriculaPacotes.map(mp => mp.pacote_id),
-          valorTotal
+          valorTotal,
+          valorRecebido,
+          valorEmAberto
         };
       });
 
