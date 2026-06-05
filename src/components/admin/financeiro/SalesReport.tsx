@@ -59,7 +59,8 @@ export function SalesReport() {
             )
           ),
           parcelas (
-            valor
+            valor,
+            status
           )
         `)
         .gte("created_at", `${filters.startDate}T00:00:00`)
@@ -73,27 +74,29 @@ export function SalesReport() {
         query = query.eq("alunos.origem", filters.origem as any);
       }
 
-
       const { data, error } = await query;
       if (error) throw error;
 
-      // Filter by package in JS because it's a bit complex with the relation
       let filtered = (data || []).map(m => {
         const aluno = m.alunos as any;
         const matriculaPacotes = (m.matricula_pacotes as any[]) || [];
         const isPersonalizado = matriculaPacotes.length > 0 && matriculaPacotes.some(mp => mp.pacote_id === null);
+        const parcelas = (m.parcelas as any[] || []);
         
         let pacoteNome = "";
         let valorTotal = 0;
 
         if (isPersonalizado) {
           pacoteNome = "Negociação Personalizada";
-          valorTotal = (m.parcelas as any[] || []).reduce((acc, p) => acc + Number(p.valor), 0);
+          valorTotal = parcelas.reduce((acc, p) => acc + Number(p.valor), 0);
         } else if (matriculaPacotes.length > 0) {
           const pacs = matriculaPacotes.map(mp => mp.pacotes).filter(Boolean);
           pacoteNome = pacs.map(p => p.nome).join(", ");
           valorTotal = pacs.reduce((acc, p) => acc + Number(p.valor_total), 0);
         }
+
+        const valorRecebido = parcelas.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0);
+        const valorEmAberto = parcelas.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0);
 
         return {
           id: m.id,
@@ -104,7 +107,9 @@ export function SalesReport() {
           dataMatricula: m.created_at,
           pacoteNome,
           pacoteIds: matriculaPacotes.map(mp => mp.pacote_id),
-          valorTotal
+          valorTotal,
+          valorRecebido,
+          valorEmAberto
         };
       });
 
@@ -117,26 +122,30 @@ export function SalesReport() {
   });
 
   const stats = useMemo(() => {
-    if (!reportData) return { totalMatriculas: 0, valorTotal: 0, ticketMedio: 0 };
+    if (!reportData) return { totalMatriculas: 0, valorTotal: 0, valorRecebido: 0, valorEmAberto: 0, ticketMedio: 0 };
     const totalMatriculas = reportData.length;
     const valorTotal = reportData.reduce((acc, curr) => acc + curr.valorTotal, 0);
+    const valorRecebido = reportData.reduce((acc, curr) => acc + curr.valorRecebido, 0);
+    const valorEmAberto = reportData.reduce((acc, curr) => acc + curr.valorEmAberto, 0);
     const ticketMedio = totalMatriculas > 0 ? valorTotal / totalMatriculas : 0;
-    return { totalMatriculas, valorTotal, ticketMedio };
+    return { totalMatriculas, valorTotal, valorRecebido, valorEmAberto, ticketMedio };
   }, [reportData]);
 
   const vendedorasStats = useMemo(() => {
     if (!reportData) return [];
-    const map: Record<string, { total: number, valor: number }> = {};
+    const map: Record<string, { total: number, valor: number, valorRecebido: number, valorEmAberto: number }> = {};
     
     // Default sellers to show even if they have 0 sales
     const defaultSellers = ["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"];
-    defaultSellers.forEach(s => map[s] = { total: 0, valor: 0 });
+    defaultSellers.forEach(s => map[s] = { total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 });
 
     reportData.forEach(r => {
       const v = r.vendedora;
-      if (!map[v]) map[v] = { total: 0, valor: 0 };
+      if (!map[v]) map[v] = { total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
       map[v].total += 1;
       map[v].valor += r.valorTotal;
+      map[v].valorRecebido += r.valorRecebido;
+      map[v].valorEmAberto += r.valorEmAberto;
     });
 
     const maxValor = Math.max(...Object.values(map).map(m => m.valor), 1);
@@ -287,45 +296,63 @@ export function SalesReport() {
       </Card>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card className="bg-gradient-to-br from-[#1E3A5F] to-[#2a528a] text-white">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/70 text-sm font-medium">Total de Matrículas</p>
-                <h3 className="text-4xl font-black mt-1">{stats.totalMatriculas}</h3>
+                <p className="text-white/70 text-xs font-medium uppercase">Matrículas</p>
+                <h3 className="text-2xl font-black mt-1">{stats.totalMatriculas}</h3>
               </div>
-              <div className="p-3 bg-white/10 rounded-2xl">
-                <Users className="h-8 w-8 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-2 border-[#10b981]/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm font-medium">Valor Total Gerado</p>
-                <h3 className="text-4xl font-black mt-1 text-[#10b981]">{formatCurrency(stats.valorTotal)}</h3>
-              </div>
-              <div className="p-3 bg-[#10b981]/10 rounded-2xl">
-                <TrendingUp className="h-8 w-8 text-[#10b981]" />
-              </div>
+              <Users className="h-6 w-6 text-white/40" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-white border-2 border-primary/20">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm font-medium">Ticket Médio</p>
-                <h3 className="text-4xl font-black mt-1 text-primary">{formatCurrency(stats.ticketMedio)}</h3>
+                <p className="text-muted-foreground text-xs font-medium uppercase">📋 Contrato</p>
+                <h3 className="text-2xl font-black mt-1 text-primary">{formatCurrency(stats.valorTotal)}</h3>
               </div>
-              <div className="p-3 bg-primary/10 rounded-2xl">
-                <BarChart3 className="h-8 w-8 text-primary" />
+              <Package className="h-6 w-6 text-primary/40" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-2 border-[#10b981]/20 shadow-sm">
+          <CardContent className="pt-6 px-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-xs font-medium uppercase">💰 Recebido</p>
+                <h3 className="text-2xl font-black mt-1 text-[#10b981]">{formatCurrency(stats.valorRecebido)}</h3>
               </div>
+              <TrendingUp className="h-6 w-6 text-[#10b981]/40" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-2 border-orange-500/20">
+          <CardContent className="pt-6 px-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-xs font-medium uppercase">⏳ Em Aberto</p>
+                <h3 className="text-2xl font-black mt-1 text-orange-500">{formatCurrency(stats.valorEmAberto)}</h3>
+              </div>
+              <BarChart3 className="h-6 w-6 text-orange-500/40" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-2 border-slate-200">
+          <CardContent className="pt-6 px-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-xs font-medium uppercase">Ticket Médio</p>
+                <h3 className="text-2xl font-black mt-1 text-slate-700">{formatCurrency(stats.ticketMedio)}</h3>
+              </div>
+              <BarChart3 className="h-6 w-6 text-slate-300" />
             </div>
           </CardContent>
         </Card>
@@ -342,15 +369,29 @@ export function SalesReport() {
           </CardHeader>
           <CardContent className="space-y-6">
             {vendedorasStats.map((v) => (
-              <div key={v.nome} className="space-y-2">
-                <div className="flex justify-between items-end">
+              <div key={v.nome} className="p-4 rounded-xl border border-muted-foreground/10 space-y-3">
+                <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-bold text-sm">{v.nome}</p>
+                    <p className="font-black text-base">{v.nome}</p>
                     <p className="text-xs text-muted-foreground">{v.total} matrículas</p>
                   </div>
-                  <p className="font-black text-primary">{formatCurrency(v.valor)}</p>
+                  <Progress value={v.percent} className="h-2 w-24" />
                 </div>
-                <Progress value={v.percent} className="h-2" />
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="bg-[#10b981]/10 p-2 rounded-lg border border-[#10b981]/20">
+                    <p className="text-[10px] text-[#10b981] font-bold uppercase mb-1">💰 Recebido</p>
+                    <p className="font-black text-sm text-[#10b981]">{formatCurrency(v.valorRecebido)}</p>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded-lg border border-slate-200">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">📋 Contrato</p>
+                    <p className="font-black text-sm text-slate-700">{formatCurrency(v.valor)}</p>
+                  </div>
+                  <div className="bg-orange-50 p-2 rounded-lg border border-orange-200">
+                    <p className="text-[10px] text-orange-600 font-bold uppercase mb-1">⏳ Em Aberto</p>
+                    <p className="font-black text-sm text-orange-600">{formatCurrency(v.valorEmAberto)}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </CardContent>
