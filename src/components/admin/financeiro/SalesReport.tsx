@@ -274,11 +274,12 @@ export function SalesReport() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todas">Todas</SelectItem>
-                  <SelectItem value="google">Google</SelectItem>
-                  <SelectItem value="meta">Meta</SelectItem>
-                  <SelectItem value="indicação">Indicação</SelectItem>
-                  <SelectItem value="outros">Outros</SelectItem>
+                  <SelectItem value="Google">Google</SelectItem>
+                  <SelectItem value="Meta">Meta</SelectItem>
+                  <SelectItem value="Indicação">Indicação</SelectItem>
+                  <SelectItem value="Outros">Outros</SelectItem>
                 </SelectContent>
+
               </Select>
             </div>
           </div>
