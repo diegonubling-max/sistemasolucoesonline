@@ -664,6 +664,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assinar_contrato_publico: {
+        Args: { p_ip: string; p_nome: string; p_token: string }
+        Returns: undefined
+      }
       criar_acesso_aluno: {
         Args: { p_ctr: number; p_email: string; p_senha: string }
         Returns: undefined
@@ -674,6 +678,7 @@ export type Database = {
       }
       delete_pacote: { Args: { p_pacote_id: string }; Returns: undefined }
       delete_user_auth: { Args: { user_email: string }; Returns: undefined }
+      get_contrato_publico: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
