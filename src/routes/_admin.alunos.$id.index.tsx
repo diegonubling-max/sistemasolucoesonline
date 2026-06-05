@@ -922,7 +922,119 @@ function AlunoDetalhes() {
             ))
           )}
         </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="historico" className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <LogIn className="h-4 w-4" />
+                  <span className="text-sm font-medium">Total de Acessos</span>
+                </div>
+                <p className="text-2xl font-bold">{stats.totalAcessos}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-sm font-medium">Tempo Médio/Sessão</span>
+                </div>
+                <p className="text-2xl font-bold">{stats.tempoMedio} min</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <BookOpen className="h-4 w-4" />
+                  <span className="text-sm font-medium">Aulas Assistidas</span>
+                </div>
+                <p className="text-2xl font-bold">{stats.totalAulas}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  <span className="text-sm font-medium">Último Acesso</span>
+                </div>
+                <p className="text-2xl font-bold">{stats.ultimoAcesso ? formatDate(stats.ultimoAcesso) : "—"}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Linha do Tempo de Atividade</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
+                {/* Contrato Assinado */}
+                {contratoAssinado && (
+                  <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-green-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                      <FileCheck className="h-5 w-5" />
+                    </div>
+                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-slate-200 bg-white shadow">
+                      <div className="flex items-center justify-between space-x-2 mb-1">
+                        <div className="font-bold text-slate-900">Contrato Assinado</div>
+                        <time className="font-medium text-blue-500 text-xs">{format(new Date(contratoAssinado.data_assinatura!), "dd/MM/yyyy HH:mm")}</time>
+                      </div>
+                      <div className="text-slate-500 text-sm">O aluno assinou o contrato digital.</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sessoes e Aulas */}
+                {sessoes?.map((sessao) => {
+                  const aulasDaSessao = aulasAssistidas?.filter(a => {
+                    const dataAula = new Date(a.assistida_em);
+                    const dataLogin = new Date(sessao.login_em);
+                    const dataLogout = sessao.logout_em ? new Date(sessao.logout_em) : new Date();
+                    return dataAula >= dataLogin && dataAula <= dataLogout;
+                  });
+
+                  return (
+                    <div key={sessao.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-blue-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                        <LogIn className="h-5 w-5" />
+                      </div>
+                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-slate-200 bg-white shadow">
+                        <div className="flex items-center justify-between space-x-2 mb-1">
+                          <div className="font-bold text-slate-900">Sessão Iniciada</div>
+                          <time className="font-medium text-blue-500 text-xs">{format(new Date(sessao.login_em), "dd/MM/yyyy HH:mm")}</time>
+                        </div>
+                        <div className="text-slate-500 text-sm space-y-2">
+                          <p>Duração: {sessao.duracao_minutos || "Em curso..."} {sessao.duracao_minutos ? "minutos" : ""}</p>
+                          {sessao.logout_em && (
+                            <p className="text-xs">Logout: {format(new Date(sessao.logout_em), "dd/MM/yyyy HH:mm")}</p>
+                          )}
+                          
+                          {aulasDaSessao && aulasDaSessao.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-slate-100">
+                              <p className="text-xs font-semibold uppercase text-slate-400 mb-2">Aulas assistidas nesta sessão:</p>
+                              <ul className="space-y-1">
+                                {aulasDaSessao.map((aula) => (
+                                  <li key={aula.id} className="flex items-center gap-2 text-xs">
+                                    <PlayCircle className="h-3 w-3 text-blue-500" />
+                                    <span className="font-medium">{(aula.aulas as any)?.titulo}</span>
+                                    <span className="text-slate-400">({(aula.cursos as any)?.nome})</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={showVitrineModal} onOpenChange={setShowVitrineModal}>
         <DialogContent>
