@@ -823,6 +823,9 @@ function Financeiro() {
         </Card>
       )}
 
+      {activeFilter === "vendas" && <SalesReport />}
+
+
       <BaixaModal 
         open={baixaModal?.open || false}
         onOpenChange={(o) => !o && setBaixaModal(null)}
