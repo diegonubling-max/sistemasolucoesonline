@@ -56,18 +56,36 @@ export function LeadsRegistration() {
       if (entries.length === 0) throw new Error("Informe a quantidade de pelo menos uma origem");
 
       if (editingId) {
-        // This is a bit complex since one "save" might have multiple origins
-        // For simplicity in the UI, if editing, we only edit one record at a time
-        // But the registration form handles multiple. 
-        // Let's adjust: the form handles NEW entries. Edit is handled differently.
-      }
+        const { error } = await supabase
+          .from("leads_diarios")
+          .update({
+            data,
+            vendedora,
+            origem: Object.keys(quantidades).find(k => quantidades[k] > 0),
+            quantidade: Object.values(quantidades).find(v => v > 0),
+          })
+          .eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const entries = Object.entries(quantidades)
+          .filter(([_, qty]) => qty > 0)
+          .map(([origem, quantidade]) => ({
+            data,
+            vendedora,
+            origem,
+            quantidade,
+          }));
 
-      const { error } = await supabase.from("leads_diarios").insert(entries);
-      if (error) throw error;
+        if (entries.length === 0) throw new Error("Informe a quantidade de pelo menos uma origem");
+
+        const { error } = await supabase.from("leads_diarios").insert(entries);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
-      toast.success("Leads registrados com sucesso!");
+      toast.success(editingId ? "Registro atualizado!" : "Leads registrados com sucesso!");
       setQuantidades({ Google: 0, Meta: 0, Indicação: 0, Outros: 0 });
+      setEditingId(null);
       queryClient.invalidateQueries({ queryKey: ["leads-historico"] });
     },
     onError: (error: any) => {
