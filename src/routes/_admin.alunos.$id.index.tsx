@@ -742,7 +742,7 @@ function AlunoDetalhes() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </TabsContent>
 
       <BaixaModal 
         open={showBaixaModal}
