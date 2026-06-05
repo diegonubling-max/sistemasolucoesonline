@@ -175,6 +175,9 @@ function StudentLayout() {
   }, [loading, session, navigate]);
 
   const handleLogout = async () => {
+    if (sessaoId) {
+      await encerrarSessao(sessaoId);
+    }
     await supabase.auth.signOut();
     navigate({ to: "/aluno/login" });
   };
