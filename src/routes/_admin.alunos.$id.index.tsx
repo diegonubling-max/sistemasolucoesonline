@@ -320,7 +320,7 @@ function AlunoDetalhes() {
         .from("contratos")
         .select("data_assinatura, assinado")
         .eq("aluno_id", id)
-        .eq("assinado", true)
+        .not("data_assinatura", "is", null)
         .maybeSingle();
       if (error) throw error;
       return data;
