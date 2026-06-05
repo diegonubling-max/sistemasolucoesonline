@@ -287,6 +287,55 @@ function AlunoDetalhes() {
     },
   });
 
+  const { data: sessoes } = useQuery({
+    queryKey: ["aluno-sessoes", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("aluno_sessoes")
+        .select("*")
+        .eq("aluno_id", id)
+        .order("login_em", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: aulasAssistidas } = useQuery({
+    queryKey: ["aluno-aulas-assistidas", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("aluno_aulas_assistidas")
+        .select("*, cursos(nome), aulas(titulo)")
+        .eq("aluno_id", id)
+        .order("assistida_em", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: contratoAssinado } = useQuery({
+    queryKey: ["aluno-contrato", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contratos")
+        .select("data_assinatura, assinado")
+        .eq("aluno_id", id)
+        .eq("assinado", true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const stats = {
+    totalAcessos: sessoes?.length || 0,
+    tempoMedio: sessoes?.length 
+      ? Math.round(sessoes.reduce((acc, s) => acc + (s.duracao_minutos || 0), 0) / sessoes.length)
+      : 0,
+    totalAulas: aulasAssistidas?.length || 0,
+    ultimoAcesso: sessoes?.[0]?.login_em || null
+  };
+
   const totalPago = parcelas?.filter(p => p.status === 'pago').reduce((acc, p) => {
     const isCartao = p.forma_pagamento === 'cartao';
     const val = isCartao && p.valor_liquido ? Number(p.valor_liquido) : Number(p.valor);
