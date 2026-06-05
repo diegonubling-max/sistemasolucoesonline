@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2, Trash2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2, Trash2, AlertTriangle, Image, CheckCircle2 } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -99,6 +99,7 @@ function AulasManager() {
   const [aulaEditando, setAulaEditando] = useState<Aula | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [aulaToDelete, setAulaToDelete] = useState<Aula | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const reorder = useMutation({
     mutationFn: async (items: Aula[]) => {
@@ -136,6 +137,43 @@ function AulasManager() {
       setAulaToDelete(null);
     },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const applyToAll = useMutation({
+    mutationFn: async () => {
+      if (!curso?.thumbnail_url) throw new Error("O curso não possui thumbnail");
+      
+      const { error } = await supabase
+        .from("aulas")
+        .update({ thumbnail_url: curso.thumbnail_url })
+        .eq("curso_id", cursoId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(`Thumbnail aplicada em ${aulas?.length ?? 0} aulas com sucesso!`, {
+        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />
+      });
+      qc.invalidateQueries({ queryKey: ["aulas", cursoId] });
+      setIsConfirmOpen(false);
+    },
+    onError: (e: Error) => toast.error("Erro ao aplicar thumbnail", { description: e.message }),
+  });
+
+  const updateCourseThumbnail = useMutation({
+    mutationFn: async (url: string | null) => {
+      const { error } = await supabase
+        .from("cursos")
+        .update({ thumbnail_url: url })
+        .eq("id", cursoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Thumbnail do curso atualizada!");
+      qc.invalidateQueries({ queryKey: ["curso", cursoId] });
+      qc.invalidateQueries({ queryKey: ["cursos"] });
+    },
+    onError: (e: Error) => toast.error("Erro ao atualizar curso", { description: e.message }),
   });
 
   const sensors = useSensors(
@@ -203,37 +241,96 @@ function AulasManager() {
         }
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{aulas?.length ?? 0} aula(s)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-muted-foreground text-center py-6">Carregando...</p>
-          ) : !aulas || aulas.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">
-              Nenhuma aula cadastrada. Clique em "Nova aula" para começar.
-            </p>
-          ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={aulas.map((a) => a.id)} strategy={verticalListSortingStrategy}>
-                <ul className="space-y-2">
-                  {aulas.map((a, i) => (
-                    <SortableAula
-                      key={a.id}
-                      aula={a}
-                      index={i}
-                      onEdit={() => handleEdit(a)}
-                      onToggle={() => toggle.mutate(a)}
-                      onDelete={() => setAulaToDelete(a)}
-                    />
-                  ))}
-                </ul>
-              </SortableContext>
-            </DndContext>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <Card className="md:col-span-1">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Image className="h-4 w-4 text-primary" /> Thumbnail do Curso
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ThumbnailUpload
+              value={curso?.thumbnail_url}
+              onChange={(url) => updateCourseThumbnail.mutate(url)}
+              bucket="thumbnails-cursos"
+              recommendedSize="300x450px"
+            />
+            {curso?.thumbnail_url && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="w-full text-xs"
+                onClick={() => setIsConfirmOpen(true)}
+                disabled={applyToAll.isPending}
+              >
+                {applyToAll.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle2 className="h-3 w-3 mr-2" />
+                )}
+                Aplicar em todas as aulas
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-3">
+          <CardHeader>
+            <CardTitle className="text-base">{aulas?.length ?? 0} aula(s)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <p className="text-muted-foreground text-center py-6">Carregando...</p>
+            ) : !aulas || aulas.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                Nenhuma aula cadastrada. Clique em "Nova aula" para começar.
+              </p>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={aulas.map((a) => a.id)} strategy={verticalListSortingStrategy}>
+                  <ul className="space-y-2">
+                    {aulas.map((a, i) => (
+                      <SortableAula
+                        key={a.id}
+                        aula={a}
+                        index={i}
+                        onEdit={() => handleEdit(a)}
+                        onToggle={() => toggle.mutate(a)}
+                        onDelete={() => setAulaToDelete(a)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Aplicar em todas as aulas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja aplicar esta thumbnail em todas as {aulas?.length ?? 0} aulas deste curso?
+              Esta ação substituirá as thumbnails atuais de cada aula.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                applyToAll.mutate();
+              }}
+              disabled={applyToAll.isPending}
+            >
+              {applyToAll.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!aulaToDelete} onOpenChange={(open) => !open && setAulaToDelete(null)}>
         <AlertDialogContent className="max-w-[400px]">
