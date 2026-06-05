@@ -27,13 +27,10 @@ function PublicContractPage() {
   const { data: contrato, isLoading, refetch } = useQuery({
     queryKey: ["public-contract", token],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contratos")
-        .select("*, alunos(*)")
-        .eq("token_unico", token)
-        .single();
+      const { data, error } = await supabase.rpc("get_contrato_publico" as any, { p_token: token });
       if (error) throw error;
-      return data;
+      if (!data) throw new Error("Contrato não encontrado");
+      return data as any;
     },
   });
 
@@ -89,15 +86,11 @@ function PublicContractPage() {
         console.error("IP fetch failed", e);
       }
 
-      const { error } = await supabase
-        .from("contratos")
-        .update({
-          status: 'assinado',
-          data_assinatura: new Date().toISOString(),
-          ip_assinatura: ip,
-          nome_confirmacao: nomeConfirmacao
-        })
-        .eq("token_unico", token);
+      const { error } = await supabase.rpc("assinar_contrato_publico" as any, {
+        p_token: token,
+        p_nome: nomeConfirmacao,
+        p_ip: ip,
+      });
 
       if (error) throw error;
     },
