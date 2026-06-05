@@ -12,12 +12,14 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThumbnailUpload } from "./ThumbnailUpload";
+import { PdfUpload } from "./PdfUpload";
 
 const schema = z.object({
   nome: z.string().min(2, "Informe o nome"),
   segmento_id: z.string().min(1, "Selecione um segmento"),
   descricao: z.string().optional().nullable(),
   thumbnail_url: z.string().optional().nullable(),
+  material_pdf_url: z.string().optional().nullable(),
   ativo: z.boolean(),
 });
 export type CursoFormValues = z.infer<typeof schema>;
