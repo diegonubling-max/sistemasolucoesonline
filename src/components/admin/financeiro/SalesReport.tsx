@@ -296,45 +296,63 @@ export function SalesReport() {
       </Card>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card className="bg-gradient-to-br from-[#1E3A5F] to-[#2a528a] text-white">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/70 text-sm font-medium">Total de Matrículas</p>
-                <h3 className="text-4xl font-black mt-1">{stats.totalMatriculas}</h3>
+                <p className="text-white/70 text-xs font-medium uppercase">Matrículas</p>
+                <h3 className="text-2xl font-black mt-1">{stats.totalMatriculas}</h3>
               </div>
-              <div className="p-3 bg-white/10 rounded-2xl">
-                <Users className="h-8 w-8 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-2 border-[#10b981]/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm font-medium">Valor Total Gerado</p>
-                <h3 className="text-4xl font-black mt-1 text-[#10b981]">{formatCurrency(stats.valorTotal)}</h3>
-              </div>
-              <div className="p-3 bg-[#10b981]/10 rounded-2xl">
-                <TrendingUp className="h-8 w-8 text-[#10b981]" />
-              </div>
+              <Users className="h-6 w-6 text-white/40" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-white border-2 border-primary/20">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm font-medium">Ticket Médio</p>
-                <h3 className="text-4xl font-black mt-1 text-primary">{formatCurrency(stats.ticketMedio)}</h3>
+                <p className="text-muted-foreground text-xs font-medium uppercase">📋 Contrato</p>
+                <h3 className="text-2xl font-black mt-1 text-primary">{formatCurrency(stats.valorTotal)}</h3>
               </div>
-              <div className="p-3 bg-primary/10 rounded-2xl">
-                <BarChart3 className="h-8 w-8 text-primary" />
+              <Package className="h-6 w-6 text-primary/40" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-2 border-[#10b981]/20 shadow-sm">
+          <CardContent className="pt-6 px-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-xs font-medium uppercase">💰 Recebido</p>
+                <h3 className="text-2xl font-black mt-1 text-[#10b981]">{formatCurrency(stats.valorRecebido)}</h3>
               </div>
+              <TrendingUp className="h-6 w-6 text-[#10b981]/40" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-2 border-orange-500/20">
+          <CardContent className="pt-6 px-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-xs font-medium uppercase">⏳ Em Aberto</p>
+                <h3 className="text-2xl font-black mt-1 text-orange-500">{formatCurrency(stats.valorEmAberto)}</h3>
+              </div>
+              <BarChart3 className="h-6 w-6 text-orange-500/40" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-2 border-slate-200">
+          <CardContent className="pt-6 px-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-xs font-medium uppercase">Ticket Médio</p>
+                <h3 className="text-2xl font-black mt-1 text-slate-700">{formatCurrency(stats.ticketMedio)}</h3>
+              </div>
+              <BarChart3 className="h-6 w-6 text-slate-300" />
             </div>
           </CardContent>
         </Card>
