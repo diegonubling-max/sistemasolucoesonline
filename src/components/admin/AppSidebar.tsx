@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, ListVideo, Tags, Settings, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, ListVideo, Tags, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ const items = [
   { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true },
   { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true },
-  { title: "Performance", url: "/performance", icon: BarChart3, enabled: true },
 ];
 
 export function AppSidebar() {

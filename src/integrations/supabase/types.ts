@@ -299,33 +299,6 @@ export type Database = {
           },
         ]
       }
-      leads_diarios: {
-        Row: {
-          created_at: string | null
-          data: string
-          id: string
-          origem: string
-          quantidade: number
-          vendedora: string
-        }
-        Insert: {
-          created_at?: string | null
-          data?: string
-          id?: string
-          origem: string
-          quantidade?: number
-          vendedora: string
-        }
-        Update: {
-          created_at?: string | null
-          data?: string
-          id?: string
-          origem?: string
-          quantidade?: number
-          vendedora?: string
-        }
-        Relationships: []
-      }
       matricula_cursos: {
         Row: {
           curso_id: string

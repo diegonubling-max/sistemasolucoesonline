@@ -16,7 +16,6 @@ import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
-import { Route as AdminPerformanceRouteImport } from './routes/_admin.performance'
 import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
 import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
@@ -64,11 +63,6 @@ const AlunoLoginRoute = AlunoLoginRouteImport.update({
 const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
   id: '/segmentos',
   path: '/segmentos',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
-  id: '/performance',
-  path: '/performance',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPacotesRoute = AdminPacotesRouteImport.update({
@@ -153,7 +147,6 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
-  '/performance': typeof AdminPerformanceRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
@@ -176,7 +169,6 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
-  '/performance': typeof AdminPerformanceRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
@@ -201,7 +193,6 @@ export interface FileRoutesById {
   '/_admin/configuracoes': typeof AdminConfiguracoesRoute
   '/_admin/financeiro': typeof AdminFinanceiroRoute
   '/_admin/pacotes': typeof AdminPacotesRoute
-  '/_admin/performance': typeof AdminPerformanceRoute
   '/_admin/segmentos': typeof AdminSegmentosRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
@@ -227,7 +218,6 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/financeiro'
     | '/pacotes'
-    | '/performance'
     | '/segmentos'
     | '/aluno/login'
     | '/contrato/$token'
@@ -250,7 +240,6 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/financeiro'
     | '/pacotes'
-    | '/performance'
     | '/segmentos'
     | '/aluno/login'
     | '/contrato/$token'
@@ -274,7 +263,6 @@ export interface FileRouteTypes {
     | '/_admin/configuracoes'
     | '/_admin/financeiro'
     | '/_admin/pacotes'
-    | '/_admin/performance'
     | '/_admin/segmentos'
     | '/aluno/login'
     | '/contrato/$token'
@@ -350,13 +338,6 @@ declare module '@tanstack/react-router' {
       path: '/segmentos'
       fullPath: '/segmentos'
       preLoaderRoute: typeof AdminSegmentosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/performance': {
-      id: '/_admin/performance'
-      path: '/performance'
-      fullPath: '/performance'
-      preLoaderRoute: typeof AdminPerformanceRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/pacotes': {
@@ -471,7 +452,6 @@ interface AdminRouteChildren {
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminPacotesRoute: typeof AdminPacotesRoute
-  AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminSegmentosRoute: typeof AdminSegmentosRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
@@ -488,7 +468,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminPacotesRoute: AdminPacotesRoute,
-  AdminPerformanceRoute: AdminPerformanceRoute,
   AdminSegmentosRoute: AdminSegmentosRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminAlunosNovoRoute: AdminAlunosNovoRoute,
@@ -530,3 +509,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
