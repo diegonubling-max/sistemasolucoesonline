@@ -536,7 +536,7 @@ function AulaDialog({
             value={aulaEditando.thumbnail_url}
             onChange={(url) => setAulaLocal({ ...aulaEditando, thumbnail_url: url })}
             bucket="thumbnails-aulas"
-            recommendedSize="320x180px"
+            recommendedSize="1280x720px"
           />
         </div>
         <div className="space-y-1.5">

@@ -243,7 +243,7 @@ function StudentCourse() {
                       }`}
                     >
                       {aula.thumbnail_url ? (
-                        <div className="h-12 w-20 rounded-md overflow-hidden shrink-0 border border-gray-100">
+                        <div className="h-16 w-28 rounded-md overflow-hidden shrink-0 border border-gray-100 relative group-hover:shadow-sm transition-all">
                           <img 
                             src={aula.thumbnail_url} 
                             alt={aula.titulo}
