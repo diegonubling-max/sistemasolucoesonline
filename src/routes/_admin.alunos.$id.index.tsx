@@ -533,11 +533,13 @@ function AlunoDetalhes() {
         </div>
       </div>
       
-      <div className="mt-8 space-y-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Wallet className="h-6 w-6 text-primary" />
-          Financeiro
-        </h2>
+        </TabsContent>
+
+        <TabsContent value="financeiro" className="space-y-6">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Wallet className="h-6 w-6 text-primary" />
+            Financeiro
+          </h2>
 
         {/* Resumo Financeiro */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
