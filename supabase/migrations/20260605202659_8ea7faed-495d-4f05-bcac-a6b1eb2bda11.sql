@@ -1,0 +1,1 @@
+ALTER TABLE public.cursos ADD COLUMN material_pdf_url TEXT;

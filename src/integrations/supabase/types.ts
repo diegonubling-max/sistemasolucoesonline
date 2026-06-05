@@ -307,6 +307,7 @@ export type Database = {
           descricao: string | null
           id: string
           is_prova_final: boolean | null
+          material_pdf_url: string | null
           nome: string
           segmento_id: string | null
           thumbnail_url: string | null
@@ -317,6 +318,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           is_prova_final?: boolean | null
+          material_pdf_url?: string | null
           nome: string
           segmento_id?: string | null
           thumbnail_url?: string | null
@@ -327,6 +329,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           is_prova_final?: boolean | null
+          material_pdf_url?: string | null
           nome?: string
           segmento_id?: string | null
           thumbnail_url?: string | null
