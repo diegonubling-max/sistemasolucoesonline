@@ -199,10 +199,24 @@ function StudentCourse() {
             <ChevronLeft className="h-4 w-4" /> Voltar para o início
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{curso?.nome}</h1>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
              <span>{curso?.aulas?.length} aulas</span>
              <span className="h-1 w-1 rounded-full bg-gray-300" />
              <span className="text-[#2D6ADF] font-bold">0% concluído</span>
+             {curso?.material_pdf_url && (
+               <>
+                 <span className="h-1 w-1 rounded-full bg-gray-300" />
+                 <a 
+                   href={curso.material_pdf_url} 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1 rounded-full font-bold hover:bg-red-100 transition-colors border border-red-100"
+                 >
+                   <FileText className="h-4 w-4" />
+                   Baixar Material (PDF)
+                 </a>
+               </>
+             )}
           </div>
         </div>
       </div>
