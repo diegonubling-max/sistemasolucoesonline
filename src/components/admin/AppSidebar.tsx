@@ -14,6 +14,7 @@ const items = [
   { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true },
   { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true },
+  { title: "Performance", url: "/performance", icon: BarChart3, enabled: true },
 ];
 
 export function AppSidebar() {
