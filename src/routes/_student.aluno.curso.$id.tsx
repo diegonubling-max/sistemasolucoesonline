@@ -86,6 +86,7 @@ function StudentCourse() {
           id,
           nome,
           descricao,
+          material_pdf_url,
           aulas (
             id,
             titulo,
