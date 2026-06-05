@@ -22,6 +22,7 @@ function StudentDashboard() {
   const { isDark } = useStudentTheme();
   const [selectedVitrine, setSelectedVitrine] = useState<any>(null);
   const [showProvaFinalDialog, setShowProvaFinalDialog] = useState(false);
+  const [showLockedProvaDialog, setShowLockedProvaDialog] = useState(false);
 
 
   const { data: cursos, isLoading } = useQuery({
@@ -315,11 +316,11 @@ function StudentDashboard() {
                         </div>
                       );
 
-                      if (isProvaFinal && isReleased) {
+                      if (isProvaFinal) {
                         return (
                           <div 
                             key={i} 
-                            onClick={() => setShowProvaFinalDialog(true)}
+                            onClick={() => isReleased ? setShowProvaFinalDialog(true) : setShowLockedProvaDialog(true)}
                             className="group block w-full"
                           >
                             {cardContent}
@@ -464,6 +465,42 @@ function StudentDashboard() {
                 <Smartphone className="h-5 w-5" />
                 Agendar via WhatsApp
               </a>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showLockedProvaDialog} onOpenChange={setShowLockedProvaDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Sua Prova Final está chegando! 🎓
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-6 space-y-4 text-center">
+            {(() => {
+              const releaseDate = new Date(studentData?.data_liberacao_prova || "");
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const diffTime = releaseDate.getTime() - today.getTime();
+              const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              
+              return (
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">
+                    Faltam apenas <span className="font-bold text-[#1E3A5F]">{days} dias</span> para você realizar sua Prova Final. 
+                    Continue estudando com dedicação! Você está cada vez mais perto de realizar o sonho de concluir seus estudos e conquistar seu certificado. 
+                    Acredite em você! Em {days} dias esse momento chegará. 💪
+                  </p>
+                </div>
+              );
+            })()}
+          </div>
+
+          <DialogFooter>
+            <Button className="w-full bg-[#1E3A5F]" onClick={() => setShowLockedProvaDialog(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

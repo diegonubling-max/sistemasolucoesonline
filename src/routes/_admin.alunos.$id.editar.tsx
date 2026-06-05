@@ -133,10 +133,11 @@ function EditarAluno() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="cursos">Cursos</TabsTrigger>
-          <TabsTrigger value="parcelas">Parcelas</TabsTrigger>
+          <TabsTrigger value="parcelas">Financeiro</TabsTrigger>
+          <TabsTrigger value="prova-final">Prova Final</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dados" className="animate-in fade-in-50 duration-300">
