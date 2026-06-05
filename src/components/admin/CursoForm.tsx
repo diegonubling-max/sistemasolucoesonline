@@ -50,7 +50,7 @@ export function CursoForm({
 
   const form = useForm<CursoFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { nome: "", segmento_id: "", descricao: "", thumbnail_url: null, ativo: true, ...initialValues },
+    defaultValues: { nome: "", segmento_id: "", descricao: "", thumbnail_url: null, material_pdf_url: null, ativo: true, ...initialValues },
   });
   const errors = form.formState.errors;
 
