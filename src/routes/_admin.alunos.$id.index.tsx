@@ -742,7 +742,17 @@ function AlunoDetalhes() {
             </div>
           </CardContent>
         </Card>
-      </TabsContent>
+        </TabsContent>
+        <TabsContent value="vitrine" className="space-y-6">
+          {/* Vitrine content here */}
+        </TabsContent>
+        <TabsContent value="historico" className="space-y-6">
+          {/* Histórico content here */}
+        </TabsContent>
+      </Tabs>
+      
+      {/* All Dialogs here */}
+
 
       <BaixaModal 
         open={showBaixaModal}
