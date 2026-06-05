@@ -438,7 +438,19 @@ function AlunoDetalhes() {
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <Tabs defaultValue="geral" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="geral">Dados Gerais</TabsTrigger>
+          <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+          <TabsTrigger value="vitrine">Vitrine de Cursos</TabsTrigger>
+          <TabsTrigger value="historico" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Histórico de Atividade
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="geral">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
