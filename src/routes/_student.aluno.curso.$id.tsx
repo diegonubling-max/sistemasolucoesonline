@@ -21,6 +21,35 @@ function StudentCourse() {
   const navigate = useNavigate();
   const { isDark } = useStudentTheme();
   const [activeAulaId, setActiveAulaId] = useState<string | null>(null);
+  const [lastTrackedAulaId, setLastTrackedAulaId] = useState<string | null>(null);
+
+  // Track lesson view
+  useEffect(() => {
+    const trackView = async () => {
+      if (!activeAulaId || !session?.user.email || activeAulaId === lastTrackedAulaId) return;
+
+      const { data: aluno } = await supabase
+        .from("alunos")
+        .select("id")
+        .eq("email", session.user.email)
+        .single();
+      
+      if (!aluno) return;
+
+      await supabase
+        .from("aluno_aulas_assistidas")
+        .insert({
+          aluno_id: aluno.id,
+          aula_id: activeAulaId,
+          curso_id: id,
+          assistida_em: new Date().toISOString()
+        });
+      
+      setLastTrackedAulaId(activeAulaId);
+    };
+
+    trackView();
+  }, [activeAulaId, session, id, lastTrackedAulaId]);
 
   const { data: curso, isLoading: loadingCurso, error: cursoError } = useQuery({
     queryKey: ["student-course", id, session?.user.email],
