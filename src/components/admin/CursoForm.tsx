@@ -95,6 +95,12 @@ export function CursoForm({
             />
           </div>
           <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Material do Aluno (PDF)</Label>
+            <PdfUpload
+              value={form.watch("material_pdf_url")}
+              onChange={(url) => form.setValue("material_pdf_url", url)}
+            />
+          <div className="space-y-1.5">
             <Label className="text-xs font-medium">Descrição</Label>
             <Textarea rows={4} {...form.register("descricao")} />
           </div>
