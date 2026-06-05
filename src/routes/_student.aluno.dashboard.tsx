@@ -415,11 +415,10 @@ function StudentDashboard() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              Agendar Prova Final
+              Sua Prova Final está disponível! 🎓
             </DialogTitle>
-            <DialogDescription>
-              Parabéns! Sua prova final já está liberada. Para realizar o agendamento, entre em contato com nosso setor de provas.
+            <DialogDescription className="text-gray-700 pt-2">
+              Parabéns! Sua prova final já está liberada para agendamento. Clique no botão abaixo para falar com nosso setor de provas e marcar seu exame.
             </DialogDescription>
           </DialogHeader>
           
