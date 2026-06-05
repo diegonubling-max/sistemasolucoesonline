@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { ChevronLeft, PlayCircle, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, PlayCircle, Loader2, AlertCircle, CheckCircle2, FileText, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -86,6 +86,7 @@ function StudentCourse() {
           id,
           nome,
           descricao,
+          material_pdf_url,
           aulas (
             id,
             titulo,
@@ -198,10 +199,24 @@ function StudentCourse() {
             <ChevronLeft className="h-4 w-4" /> Voltar para o início
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{curso?.nome}</h1>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
              <span>{curso?.aulas?.length} aulas</span>
              <span className="h-1 w-1 rounded-full bg-gray-300" />
              <span className="text-[#2D6ADF] font-bold">0% concluído</span>
+             {curso?.material_pdf_url && (
+               <>
+                 <span className="h-1 w-1 rounded-full bg-gray-300" />
+                 <a 
+                   href={curso.material_pdf_url} 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1 rounded-full font-bold hover:bg-red-100 transition-colors border border-red-100"
+                 >
+                   <FileText className="h-4 w-4" />
+                   Baixar Material (PDF)
+                 </a>
+               </>
+             )}
           </div>
         </div>
       </div>
@@ -240,6 +255,26 @@ function StudentCourse() {
                     </Button>
                 </div>
             </div>
+            
+            {curso?.material_pdf_url && (
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-blue-900">Material de Apoio</h4>
+                    <p className="text-sm text-blue-700">Acesse o PDF completo deste curso para auxiliar seus estudos.</p>
+                  </div>
+                </div>
+                <Button asChild className="bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white shrink-0">
+                  <a href={curso.material_pdf_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    Baixar PDF
+                  </a>
+                </Button>
+              </div>
+            )}
             
             <div className="space-y-3">
                 <h3 className="text-lg font-semibold text-gray-900">Sobre esta aula</h3>

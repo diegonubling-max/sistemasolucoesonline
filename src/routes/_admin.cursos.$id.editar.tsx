@@ -61,6 +61,7 @@ function EditarCurso() {
             segmento_id: curso.segmento_id || "", 
             descricao: curso.descricao ?? "", 
             thumbnail_url: curso.thumbnail_url,
+            material_pdf_url: curso.material_pdf_url,
             ativo: curso.ativo 
           }}
           submitting={mut.isPending}

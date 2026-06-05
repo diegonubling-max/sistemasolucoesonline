@@ -12,12 +12,14 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThumbnailUpload } from "./ThumbnailUpload";
+import { PdfUpload } from "./PdfUpload";
 
 const schema = z.object({
   nome: z.string().min(2, "Informe o nome"),
   segmento_id: z.string().min(1, "Selecione um segmento"),
   descricao: z.string().optional().nullable(),
   thumbnail_url: z.string().optional().nullable(),
+  material_pdf_url: z.string().optional().nullable(),
   ativo: z.boolean(),
 });
 export type CursoFormValues = z.infer<typeof schema>;
@@ -48,7 +50,7 @@ export function CursoForm({
 
   const form = useForm<CursoFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { nome: "", segmento_id: "", descricao: "", thumbnail_url: null, ativo: true, ...initialValues },
+    defaultValues: { nome: "", segmento_id: "", descricao: "", thumbnail_url: null, material_pdf_url: null, ativo: true, ...initialValues },
   });
   const errors = form.formState.errors;
 
@@ -90,6 +92,13 @@ export function CursoForm({
               onChange={(url) => form.setValue("thumbnail_url", url)}
               bucket="thumbnails-cursos"
               recommendedSize="300x450px"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Material do Aluno (PDF)</Label>
+            <PdfUpload
+              value={form.watch("material_pdf_url")}
+              onChange={(url) => form.setValue("material_pdf_url", url)}
             />
           </div>
           <div className="space-y-1.5">
