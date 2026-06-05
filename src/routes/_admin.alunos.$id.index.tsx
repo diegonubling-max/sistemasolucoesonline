@@ -842,7 +842,6 @@ function AlunoDetalhes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-        </TabsContent>
 
         <TabsContent value="vitrine" className="space-y-6">
           <div className="space-y-1">
