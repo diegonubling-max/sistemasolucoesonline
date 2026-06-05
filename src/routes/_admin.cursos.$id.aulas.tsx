@@ -139,6 +139,43 @@ function AulasManager() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const applyToAll = useMutation({
+    mutationFn: async () => {
+      if (!curso?.thumbnail_url) throw new Error("O curso não possui thumbnail");
+      
+      const { error } = await supabase
+        .from("aulas")
+        .update({ thumbnail_url: curso.thumbnail_url })
+        .eq("curso_id", cursoId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(`Thumbnail aplicada em ${aulas?.length ?? 0} aulas com sucesso!`, {
+        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />
+      });
+      qc.invalidateQueries({ queryKey: ["aulas", cursoId] });
+      setIsConfirmOpen(false);
+    },
+    onError: (e: Error) => toast.error("Erro ao aplicar thumbnail", { description: e.message }),
+  });
+
+  const updateCourseThumbnail = useMutation({
+    mutationFn: async (url: string | null) => {
+      const { error } = await supabase
+        .from("cursos")
+        .update({ thumbnail_url: url })
+        .eq("id", cursoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Thumbnail do curso atualizada!");
+      qc.invalidateQueries({ queryKey: ["curso", cursoId] });
+      qc.invalidateQueries({ queryKey: ["cursos"] });
+    },
+    onError: (e: Error) => toast.error("Erro ao atualizar curso", { description: e.message }),
+  });
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -238,36 +275,37 @@ function AulasManager() {
         </Card>
 
         <Card className="md:col-span-3">
-        <CardHeader>
-          <CardTitle className="text-base">{aulas?.length ?? 0} aula(s)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-muted-foreground text-center py-6">Carregando...</p>
-          ) : !aulas || aulas.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">
-              Nenhuma aula cadastrada. Clique em "Nova aula" para começar.
-            </p>
-          ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={aulas.map((a) => a.id)} strategy={verticalListSortingStrategy}>
-                <ul className="space-y-2">
-                  {aulas.map((a, i) => (
-                    <SortableAula
-                      key={a.id}
-                      aula={a}
-                      index={i}
-                      onEdit={() => handleEdit(a)}
-                      onToggle={() => toggle.mutate(a)}
-                      onDelete={() => setAulaToDelete(a)}
-                    />
-                  ))}
-                </ul>
-              </SortableContext>
-            </DndContext>
-          )}
-        </CardContent>
-      </Card>
+          <CardHeader>
+            <CardTitle className="text-base">{aulas?.length ?? 0} aula(s)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <p className="text-muted-foreground text-center py-6">Carregando...</p>
+            ) : !aulas || aulas.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                Nenhuma aula cadastrada. Clique em "Nova aula" para começar.
+              </p>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={aulas.map((a) => a.id)} strategy={verticalListSortingStrategy}>
+                  <ul className="space-y-2">
+                    {aulas.map((a, i) => (
+                      <SortableAula
+                        key={a.id}
+                        aula={a}
+                        index={i}
+                        onEdit={() => handleEdit(a)}
+                        onToggle={() => toggle.mutate(a)}
+                        onDelete={() => setAulaToDelete(a)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <AlertDialogContent>
