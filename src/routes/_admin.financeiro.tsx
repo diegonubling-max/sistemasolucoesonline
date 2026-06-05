@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { startOfMonth, endOfMonth, format, isBefore, parseISO, startOfDay, differenceInDays } from "date-fns";
-import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, Calendar, Hash, UserX } from "lucide-react";
+import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, Calendar, Hash, UserX, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -25,13 +25,15 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { SalesReport } from "@/components/admin/financeiro/SalesReport";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
   component: Financeiro,
 });
 
-type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | "vendedora" | null;
+type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | "vendedora" | "vendas" | null;
+
 
 function Financeiro() {
   const queryClient = useQueryClient();
@@ -388,7 +390,9 @@ function Financeiro() {
     { id: "ultimas", label: "Últimas", sub: "Parcelas", icon: Calendar },
     { id: "atraso", label: "Alunos em", sub: "Atraso", icon: UserX },
     { id: "vendedora", label: "Matrículas por", sub: "Vendedora", icon: Wallet },
+    { id: "vendas", label: "Relatório de", sub: "Vendas", icon: BarChart3 },
   ];
+
 
   return (
     <div className="space-y-8">
@@ -818,6 +822,9 @@ function Financeiro() {
           </CardContent>
         </Card>
       )}
+
+      {activeFilter === "vendas" && <SalesReport />}
+
 
       <BaixaModal 
         open={baixaModal?.open || false}
