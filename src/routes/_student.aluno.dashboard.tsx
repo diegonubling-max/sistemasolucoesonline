@@ -20,6 +20,8 @@ function StudentDashboard() {
   const { session } = useAuth();
   const { isDark } = useStudentTheme();
   const [selectedVitrine, setSelectedVitrine] = useState<any>(null);
+  const [showProvaFinalDialog, setShowProvaFinalDialog] = useState(false);
+
 
   const { data: cursos, isLoading } = useQuery({
     queryKey: ["student-courses", session?.user.email],
@@ -49,6 +51,7 @@ function StudentDashboard() {
             descricao,
             thumbnail_url,
             segmento_id,
+            is_prova_final,
             segmentos (
               id,
               nome,
@@ -70,7 +73,7 @@ function StudentDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("alunos")
-        .select("id, nome, ctr")
+        .select("id, nome, ctr, data_liberacao_prova, created_at")
         .eq("email", session?.user.email ?? "")
         .single();
       if (error) throw error;
@@ -185,6 +188,15 @@ function StudentDashboard() {
                   groups[segId] = { id: segId, nome: segName, ordem: segOrdem, items: [] };
                 }
                 groups[segId].items.push(c);
+              });
+
+              // Order items within each group: is_prova_final at the top
+              Object.values(groups).forEach((group: any) => {
+                group.items.sort((a: any, b: any) => {
+                  if (a.cursos?.is_prova_final && !b.cursos?.is_prova_final) return -1;
+                  if (!a.cursos?.is_prova_final && b.cursos?.is_prova_final) return 1;
+                  return 0;
+                });
               });
 
               const sortedGroups = Object.values(groups).sort((a: any, b: any) => a.ordem - b.ordem);
@@ -337,6 +349,47 @@ function StudentDashboard() {
           </div>
         </div>
       )}
+
+      {/* Prova Final Scheduling Dialog */}
+      <Dialog open={showProvaFinalDialog} onOpenChange={setShowProvaFinalDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              Agendar Prova Final
+            </DialogTitle>
+            <DialogDescription>
+              Parabéns! Sua prova final já está liberada. Para realizar o agendamento, entre em contato com nosso setor de provas.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100 flex items-start gap-3 my-4">
+            <div className="p-2 bg-yellow-400 rounded-full text-white">
+              <Smartphone className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs text-yellow-800 font-bold uppercase tracking-wider">Atenção</p>
+              <p className="text-sm text-yellow-700">O agendamento é feito exclusivamente via WhatsApp com o setor de provas.</p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2 py-6 text-lg" 
+              asChild
+            >
+              <a 
+                href={`https://wa.me/${whatsappSuporte}?text=${encodeURIComponent("Olá! Sou o(a) aluno(a) " + studentData?.nome + " (CTR: " + studentData?.ctr + ") e gostaria de agendar minha Prova Final.")}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Smartphone className="h-5 w-5" />
+                Agendar via WhatsApp
+              </a>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!selectedVitrine} onOpenChange={(open) => !open && setSelectedVitrine(null)}>
         <DialogContent className="max-w-md">

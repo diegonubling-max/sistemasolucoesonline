@@ -33,6 +33,7 @@ const schema = z
     responsavel_telefone: z.string().optional().nullable(),
     responsavel_cpf: z.string().optional().nullable(),
     responsavel_email: z.string().optional().nullable().or(z.literal("")),
+    dias_prova_final: z.coerce.number().min(0).optional(),
   })
   .superRefine((data, ctx) => {
     const menor = calcAge(data.data_nascimento) < 18;
@@ -68,6 +69,7 @@ export const defaultValues: any = {
   responsavel_telefone: "",
   responsavel_cpf: "",
   responsavel_email: "",
+  dias_prova_final: 60,
 };
 
 export function AlunoForm({
@@ -114,6 +116,13 @@ export function AlunoForm({
   const dob = form.watch("data_nascimento");
   const menor = dob ? calcAge(dob) < 18 : false;
   const errors = form.formState.errors;
+  const diasProvaFinal = form.watch("dias_prova_final") || 0;
+  
+  // Calculate preview of release date
+  const enrollmentDate = initialValues?.created_at ? new Date(initialValues.created_at) : new Date();
+  const calculatedReleaseDate = new Date(enrollmentDate);
+  calculatedReleaseDate.setDate(calculatedReleaseDate.getDate() + diasProvaFinal);
+
 
   // Scroll to first error
   useEffect(() => {
@@ -310,6 +319,35 @@ export function AlunoForm({
               className="min-h-[120px] resize-y"
             />
           </Field>
+        </CardContent>
+      </Card>
+
+      <Card className="border-blue-200 bg-blue-50/30">
+        <CardHeader>
+          <CardTitle className="text-blue-800">Prazo para Prova Final</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Field label="Dias configurados" error={errors.dias_prova_final?.message as string}>
+            <Input 
+              type="number" 
+              {...form.register("dias_prova_final")} 
+              placeholder="Ex: 60"
+            />
+          </Field>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">Data da Matrícula</Label>
+            <div className="p-2 bg-white rounded-md border text-sm">
+              {initialValues?.created_at ? format(new Date(initialValues.created_at), "dd/MM/yyyy") : "—"}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">Liberação Estimada</Label>
+            <div className="p-2 bg-white rounded-md border text-sm font-bold text-blue-700">
+              {format(calculatedReleaseDate, "dd/MM/yyyy")}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
