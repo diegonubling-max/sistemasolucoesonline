@@ -220,16 +220,6 @@ function StudentDashboard() {
                       const gradientIndex = (curso.nome?.length || 0) % gradients.length;
                       const gradientClass = gradients[gradientIndex];
                       
-                      return (
-                        <Link 
-                          key={i} 
-                          to="/aluno/curso/$id" 
-                          params={{ id: curso.id }} 
-                          className="group block w-full"
-                        >
-                      const gradientIndex = (curso.nome?.length || 0) % gradients.length;
-                      const gradientClass = gradients[gradientIndex];
-                      
                       const isProvaFinal = curso.is_prova_final;
                       let isReleased = true;
                       let daysRemaining = 0;
@@ -353,8 +343,6 @@ function StudentDashboard() {
                           className="group block w-full"
                         >
                           {cardContent}
-                        </Link>
-                      );
                         </Link>
                       );
                     })}
