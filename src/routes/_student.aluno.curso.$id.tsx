@@ -256,6 +256,26 @@ function StudentCourse() {
                 </div>
             </div>
             
+            {curso?.material_pdf_url && (
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-blue-900">Material de Apoio</h4>
+                    <p className="text-sm text-blue-700">Acesse o PDF completo deste curso para auxiliar seus estudos.</p>
+                  </div>
+                </div>
+                <Button asChild className="bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white shrink-0">
+                  <a href={curso.material_pdf_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    Baixar PDF
+                  </a>
+                </Button>
+              </div>
+            )}
+            
             <div className="space-y-3">
                 <h3 className="text-lg font-semibold text-gray-900">Sobre esta aula</h3>
                 <div className="text-gray-600 leading-relaxed">
