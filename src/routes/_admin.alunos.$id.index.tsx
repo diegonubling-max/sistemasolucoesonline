@@ -318,7 +318,7 @@ function AlunoDetalhes() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("data_assinatura, assinado")
+        .select("data_assinatura")
         .eq("aluno_id", id)
         .not("data_assinatura", "is", null)
         .maybeSingle();
