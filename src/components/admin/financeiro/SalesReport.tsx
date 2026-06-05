@@ -122,26 +122,30 @@ export function SalesReport() {
   });
 
   const stats = useMemo(() => {
-    if (!reportData) return { totalMatriculas: 0, valorTotal: 0, ticketMedio: 0 };
+    if (!reportData) return { totalMatriculas: 0, valorTotal: 0, valorRecebido: 0, valorEmAberto: 0, ticketMedio: 0 };
     const totalMatriculas = reportData.length;
     const valorTotal = reportData.reduce((acc, curr) => acc + curr.valorTotal, 0);
+    const valorRecebido = reportData.reduce((acc, curr) => acc + curr.valorRecebido, 0);
+    const valorEmAberto = reportData.reduce((acc, curr) => acc + curr.valorEmAberto, 0);
     const ticketMedio = totalMatriculas > 0 ? valorTotal / totalMatriculas : 0;
-    return { totalMatriculas, valorTotal, ticketMedio };
+    return { totalMatriculas, valorTotal, valorRecebido, valorEmAberto, ticketMedio };
   }, [reportData]);
 
   const vendedorasStats = useMemo(() => {
     if (!reportData) return [];
-    const map: Record<string, { total: number, valor: number }> = {};
+    const map: Record<string, { total: number, valor: number, valorRecebido: number, valorEmAberto: number }> = {};
     
     // Default sellers to show even if they have 0 sales
     const defaultSellers = ["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"];
-    defaultSellers.forEach(s => map[s] = { total: 0, valor: 0 });
+    defaultSellers.forEach(s => map[s] = { total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 });
 
     reportData.forEach(r => {
       const v = r.vendedora;
-      if (!map[v]) map[v] = { total: 0, valor: 0 };
+      if (!map[v]) map[v] = { total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
       map[v].total += 1;
       map[v].valor += r.valorTotal;
+      map[v].valorRecebido += r.valorRecebido;
+      map[v].valorEmAberto += r.valorEmAberto;
     });
 
     const maxValor = Math.max(...Object.values(map).map(m => m.valor), 1);
