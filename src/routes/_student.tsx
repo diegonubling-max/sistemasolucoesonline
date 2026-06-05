@@ -31,6 +31,7 @@ function StudentLayout() {
   const [tema, setTema] = useState<"claro" | "escuro">("claro");
   const [alunoId, setAlunoId] = useState<string | null>(null);
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+  const [sessaoId, setSessaoId] = useState<string | null>(null);
 
   const toggleTema = async () => {
     const novoTema = tema === "escuro" ? "claro" : "escuro";
@@ -43,6 +44,75 @@ function StudentLayout() {
         .eq('id', alunoId);
     }
   };
+
+  const encerrarSessao = async (id: string) => {
+    const logoutEm = new Date();
+    const { data: sessao } = await supabase
+      .from('aluno_sessoes')
+      .select('login_em')
+      .eq('id', id)
+      .single();
+
+    if (sessao) {
+      const loginEm = new Date(sessao.login_em);
+      const duracaoMinutos = Math.round((logoutEm.getTime() - loginEm.getTime()) / 60000);
+      
+      await supabase
+        .from('aluno_sessoes')
+        .update({ 
+          logout_em: logoutEm.toISOString(),
+          duracao_minutos: Math.max(1, duracaoMinutos)
+        })
+        .eq('id', id);
+    }
+  };
+
+  useEffect(() => {
+    if (!alunoId) return;
+
+    const iniciarSessao = async () => {
+      const { data, error } = await supabase
+        .from('aluno_sessoes')
+        .insert({ aluno_id: alunoId })
+        .select('id')
+        .single();
+      
+      if (data) {
+        setSessaoId(data.id);
+      }
+    };
+
+    iniciarSessao();
+
+    const handleBeforeUnload = () => {
+      if (sessaoId) {
+        // Use sendBeacon or similar for reliable cleanup on close
+        // But for simplicity and since we can't easily wait for async in beforeunload
+        // we'll try to update it. Navigator.sendBeacon is better for this.
+        const logoutEm = new Date().toISOString();
+        // Since we can't easily calculate duration in a synchronous beacon,
+        // we might just set logout_em and have a trigger or cron fix duration,
+        // or just accept that sometimes it won't save if it's too fast.
+        // Actually, we can use a fetch with keepalive: true
+        fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/aluno_sessoes?id=eq.${sessaoId}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ logout_em: logoutEm }),
+          keepalive: true
+        });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [alunoId, sessaoId, session]);
 
   useEffect(() => {
     async function checkRole() {
