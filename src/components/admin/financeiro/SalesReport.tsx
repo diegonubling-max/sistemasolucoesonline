@@ -70,8 +70,9 @@ export function SalesReport() {
       }
       
       if (filters.origem !== "todas") {
-        query = query.eq("alunos.origem", filters.origem);
+        query = query.eq("alunos.origem", filters.origem as any);
       }
+
 
       const { data, error } = await query;
       if (error) throw error;
