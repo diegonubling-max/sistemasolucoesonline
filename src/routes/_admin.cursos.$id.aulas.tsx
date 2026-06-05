@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2, Trash2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2, Trash2, AlertTriangle, Image, CheckCircle2 } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -99,6 +99,7 @@ function AulasManager() {
   const [aulaEditando, setAulaEditando] = useState<Aula | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [aulaToDelete, setAulaToDelete] = useState<Aula | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const reorder = useMutation({
     mutationFn: async (items: Aula[]) => {
@@ -203,7 +204,40 @@ function AulasManager() {
         }
       />
 
-      <Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <Card className="md:col-span-1">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Image className="h-4 w-4 text-primary" /> Thumbnail do Curso
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ThumbnailUpload
+              value={curso?.thumbnail_url}
+              onChange={(url) => updateCourseThumbnail.mutate(url)}
+              bucket="thumbnails-cursos"
+              recommendedSize="300x450px"
+            />
+            {curso?.thumbnail_url && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="w-full text-xs"
+                onClick={() => setIsConfirmOpen(true)}
+                disabled={applyToAll.isPending}
+              >
+                {applyToAll.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle2 className="h-3 w-3 mr-2" />
+                )}
+                Aplicar em todas as aulas
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-3">
         <CardHeader>
           <CardTitle className="text-base">{aulas?.length ?? 0} aula(s)</CardTitle>
         </CardHeader>
@@ -234,6 +268,31 @@ function AulasManager() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Aplicar em todas as aulas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja aplicar esta thumbnail em todas as {aulas?.length ?? 0} aulas deste curso?
+              Esta ação substituirá as thumbnails atuais de cada aula.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                applyToAll.mutate();
+              }}
+              disabled={applyToAll.isPending}
+            >
+              {applyToAll.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!aulaToDelete} onOpenChange={(open) => !open && setAulaToDelete(null)}>
         <AlertDialogContent className="max-w-[400px]">
