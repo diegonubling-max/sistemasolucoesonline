@@ -21,7 +21,9 @@ export type Database = {
           cpf: string
           created_at: string
           ctr: number
+          data_liberacao_prova: string | null
           data_nascimento: string
+          dias_prova_final: number | null
           email: string | null
           foto_perfil: string | null
           id: string
@@ -45,7 +47,9 @@ export type Database = {
           cpf: string
           created_at?: string
           ctr?: number
+          data_liberacao_prova?: string | null
           data_nascimento: string
+          dias_prova_final?: number | null
           email?: string | null
           foto_perfil?: string | null
           id?: string
@@ -69,7 +73,9 @@ export type Database = {
           cpf?: string
           created_at?: string
           ctr?: number
+          data_liberacao_prova?: string | null
           data_nascimento?: string
+          dias_prova_final?: number | null
           email?: string | null
           foto_perfil?: string | null
           id?: string
@@ -216,6 +222,7 @@ export type Database = {
           created_at: string
           descricao: string | null
           id: string
+          is_prova_final: boolean | null
           nome: string
           segmento_id: string | null
           thumbnail_url: string | null
@@ -225,6 +232,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           id?: string
+          is_prova_final?: boolean | null
           nome: string
           segmento_id?: string | null
           thumbnail_url?: string | null
@@ -234,6 +242,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           id?: string
+          is_prova_final?: boolean | null
           nome?: string
           segmento_id?: string | null
           thumbnail_url?: string | null
