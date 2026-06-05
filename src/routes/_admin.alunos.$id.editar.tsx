@@ -171,8 +171,130 @@ function EditarAluno() {
             }}
           />
         </TabsContent>
+
+        <TabsContent value="prova-final" className="animate-in fade-in-50 duration-300">
+          <ConfigurarProvaFinal 
+            aluno={aluno}
+            matriculaId={matricula?.id}
+            onSuccess={() => {
+              qc.invalidateQueries({ queryKey: ["aluno", id] });
+              qc.invalidateQueries({ queryKey: ["aluno-matricula-edit", id] });
+            }}
+          />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function ConfigurarProvaFinal({ aluno, matriculaId, onSuccess }: any) {
+  const [dias, setDias] = useState(aluno.dias_prova_final || 60);
+  const [saving, setSaving] = useState(false);
+
+  const dataMatricula = new Date(aluno.created_at);
+  const dataLiberacao = new Date(dataMatricula);
+  dataLiberacao.setDate(dataMatricula.getDate() + Number(dias));
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffTime = dataLiberacao.getTime() - today.getTime();
+  const diasRestantes = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const dataLiberacaoStr = format(dataLiberacao, 'yyyy-MM-dd');
+      
+      // 1. Update aluno
+      const { error: errA } = await supabase
+        .from("alunos")
+        .update({
+          dias_prova_final: Number(dias),
+          data_liberacao_prova: dataLiberacaoStr
+        })
+        .eq("id", aluno.id);
+      
+      if (errA) throw errA;
+
+      // 2. Update data_liberacao in matricula_cursos for Prova Final course
+      if (matriculaId) {
+        // Find course ID for Prova Final
+        const { data: cursoPF } = await supabase
+          .from("cursos")
+          .select("id")
+          .eq("is_prova_final", true)
+          .maybeSingle();
+
+        if (cursoPF) {
+          const { error: errMC } = await supabase
+            .from("matricula_cursos")
+            .update({ data_liberacao: dataLiberacaoStr })
+            .eq("matricula_id", matriculaId)
+            .eq("curso_id", cursoPF.id);
+          
+          if (errMC) {
+            console.error("Erro ao atualizar data_liberacao em matricula_cursos:", errMC);
+            // Non-critical if it fails (maybe the course isn't assigned yet)
+          }
+        }
+      }
+
+      toast.success("Configurações da Prova Final salvas!");
+      onSuccess();
+    } catch (e: any) {
+      toast.error("Erro ao salvar", { description: e.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Configurações da Prova Final</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2">
+            <Label>Prazo em dias</Label>
+            <Input 
+              type="number" 
+              value={dias} 
+              onChange={(e) => setDias(e.target.value)}
+              min={0}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Data da Matrícula</Label>
+            <div className="p-2 border rounded-md bg-muted/50 text-sm">
+              {format(dataMatricula, 'dd/MM/yyyy')}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Liberação Calculada</Label>
+            <div className="p-2 border rounded-md bg-muted/50 text-sm font-bold text-blue-600">
+              {format(dataLiberacao, 'dd/MM/yyyy')}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Dias Restantes</Label>
+            <div className="p-2 border rounded-md bg-muted/50 text-sm font-bold">
+              {diasRestantes} dias
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-4">
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Salvar Configurações
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
