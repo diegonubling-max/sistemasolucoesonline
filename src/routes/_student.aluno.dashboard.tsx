@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, PlayCircle, Loader2, Lock, Smartphone } from "lucide-react";
+import { BookOpen, PlayCircle, Loader2, Lock, Smartphone, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useStudentTheme } from "./_student";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_student/aluno/dashboard")({
   head: () => ({ meta: [{ title: "Meus Cursos — Soluções Online" }] }),
@@ -226,45 +227,134 @@ function StudentDashboard() {
                           params={{ id: curso.id }} 
                           className="group block w-full"
                         >
-                          <div className="relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm cursor-pointer flex items-center justify-center">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              {curso.thumbnail_url ? (
-                                <img 
-                                  src={curso.thumbnail_url} 
-                                  alt={curso.nome}
-                                  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                                />
-                              ) : (
-                                <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center`}>
-                                  <BookOpen className="h-12 w-12 text-white/40 mb-2" />
-                                  <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
-                                </div>
-                              )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                            </div>
+                      const gradientIndex = (curso.nome?.length || 0) % gradients.length;
+                      const gradientClass = gradients[gradientIndex];
+                      
+                      const isProvaFinal = curso.is_prova_final;
+                      let isReleased = true;
+                      let daysRemaining = 0;
 
-                            <div className="absolute top-3 left-3">
-                              <div className="bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
-                                <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                                {aulasCount} {aulasCount === 1 ? 'Aula' : 'Aulas'}
+                      if (isProvaFinal && studentData?.data_liberacao_prova) {
+                        const releaseDate = new Date(studentData.data_liberacao_prova);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        const diffTime = releaseDate.getTime() - today.getTime();
+                        daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        isReleased = daysRemaining <= 0;
+                      }
+                      
+                      const cardContent = (
+                        <div className={cn(
+                          "relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 border border-gray-100 shadow-sm cursor-pointer flex items-center justify-center",
+                          !isReleased ? "grayscale" : "hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)]",
+                          isReleased && isProvaFinal && "border-yellow-400 border-2 shadow-[0_0_15px_rgba(250,204,21,0.4)]"
+                        )}>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            {curso.thumbnail_url ? (
+                              <img 
+                                src={curso.thumbnail_url} 
+                                alt={curso.nome}
+                                className={cn(
+                                  "w-full h-full object-contain transition-transform duration-500",
+                                  isReleased && "group-hover:scale-105"
+                                )}
+                              />
+                            ) : (
+                              <div className={cn(
+                                "w-full h-full bg-gradient-to-br flex flex-col items-center justify-center p-4 text-center",
+                                gradientClass
+                              )}>
+                                <BookOpen className="h-12 w-12 text-white/40 mb-2" />
+                                <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
+                              </div>
+                            )}
+                            <div className={cn(
+                              "absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent",
+                              !isReleased && "bg-black/40"
+                            )} />
+                          </div>
+
+                          {!isReleased && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center z-20 px-4 text-center">
+                              <Lock className="h-10 w-10 text-white mb-3 drop-shadow-lg" />
+                              <p className="text-white font-bold text-sm drop-shadow-md">
+                                Faltam {daysRemaining} dias para sua Prova Final
+                              </p>
+                            </div>
+                          )}
+
+                          {isReleased && isProvaFinal && (
+                            <div className="absolute top-3 right-3 z-20">
+                              <div className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider animate-pulse">
+                                Liberado!
                               </div>
                             </div>
+                          )}
 
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                              <h3 className="text-white font-bold text-base leading-tight line-clamp-2">
-                                {curso.nome}
-                              </h3>
+                          <div className="absolute top-3 left-3 z-10">
+                            <div className="bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
+                              <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                              {aulasCount} {aulasCount === 1 ? 'Aula' : 'Aulas'}
+                            </div>
+                          </div>
+
+                          <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+                            <h3 className="text-white font-bold text-base leading-tight line-clamp-2">
+                              {curso.nome}
+                            </h3>
+                            {isProvaFinal && isReleased && (
+                              <p className="text-yellow-400 text-[10px] font-bold mt-1 uppercase tracking-wider">
+                                Sua Prova Final está disponível para agendamento!
+                              </p>
+                            )}
+                            {!isProvaFinal && (
                               <p className="text-gray-400 text-[10px] font-medium mt-1 uppercase tracking-widest">
                                 Soluções Online
                               </p>
-                            </div>
+                            )}
+                          </div>
 
+                          {isReleased && !isProvaFinal && (
                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
                               <div className="bg-[#2D6ADF] p-3 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
                                 <PlayCircle className="h-8 w-8 text-white" />
                               </div>
                             </div>
+                          )}
+                        </div>
+                      );
+
+                      if (isProvaFinal && isReleased) {
+                        return (
+                          <div 
+                            key={i} 
+                            onClick={() => setShowProvaFinalDialog(true)}
+                            className="group block w-full"
+                          >
+                            {cardContent}
                           </div>
+                        );
+                      }
+
+                      if (!isReleased) {
+                        return (
+                          <div key={i} className="group block w-full cursor-not-allowed">
+                            {cardContent}
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <Link 
+                          key={i} 
+                          to="/aluno/curso/$id" 
+                          params={{ id: curso.id }} 
+                          className="group block w-full"
+                        >
+                          {cardContent}
+                        </Link>
+                      );
                         </Link>
                       );
                     })}
