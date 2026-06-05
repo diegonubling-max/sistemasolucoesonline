@@ -369,15 +369,29 @@ export function SalesReport() {
           </CardHeader>
           <CardContent className="space-y-6">
             {vendedorasStats.map((v) => (
-              <div key={v.nome} className="space-y-2">
-                <div className="flex justify-between items-end">
+              <div key={v.nome} className="p-4 rounded-xl border border-muted-foreground/10 space-y-3">
+                <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-bold text-sm">{v.nome}</p>
+                    <p className="font-black text-base">{v.nome}</p>
                     <p className="text-xs text-muted-foreground">{v.total} matrículas</p>
                   </div>
-                  <p className="font-black text-primary">{formatCurrency(v.valor)}</p>
+                  <Progress value={v.percent} className="h-2 w-24" />
                 </div>
-                <Progress value={v.percent} className="h-2" />
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="bg-[#10b981]/10 p-2 rounded-lg border border-[#10b981]/20">
+                    <p className="text-[10px] text-[#10b981] font-bold uppercase mb-1">💰 Recebido</p>
+                    <p className="font-black text-sm text-[#10b981]">{formatCurrency(v.valorRecebido)}</p>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded-lg border border-slate-200">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">📋 Contrato</p>
+                    <p className="font-black text-sm text-slate-700">{formatCurrency(v.valor)}</p>
+                  </div>
+                  <div className="bg-orange-50 p-2 rounded-lg border border-orange-200">
+                    <p className="text-[10px] text-orange-600 font-bold uppercase mb-1">⏳ Em Aberto</p>
+                    <p className="font-black text-sm text-orange-600">{formatCurrency(v.valorEmAberto)}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </CardContent>
