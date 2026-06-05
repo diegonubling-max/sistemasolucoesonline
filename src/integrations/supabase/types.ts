@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      aluno_aulas_assistidas: {
+        Row: {
+          aluno_id: string
+          assistida_em: string
+          aula_id: string
+          created_at: string
+          curso_id: string
+          id: string
+        }
+        Insert: {
+          aluno_id: string
+          assistida_em?: string
+          aula_id: string
+          created_at?: string
+          curso_id: string
+          id?: string
+        }
+        Update: {
+          aluno_id?: string
+          assistida_em?: string
+          aula_id?: string
+          created_at?: string
+          curso_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aluno_aulas_assistidas_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aluno_aulas_assistidas_aula_id_fkey"
+            columns: ["aula_id"]
+            isOneToOne: false
+            referencedRelation: "aulas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aluno_aulas_assistidas_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aluno_sessoes: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          duracao_minutos: number | null
+          id: string
+          login_em: string
+          logout_em: string | null
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          duracao_minutos?: number | null
+          id?: string
+          login_em?: string
+          logout_em?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          duracao_minutos?: number | null
+          id?: string
+          login_em?: string
+          logout_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aluno_sessoes_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alunos: {
         Row: {
           asaas_customer_id: string | null
