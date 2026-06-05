@@ -237,8 +237,7 @@ function StudentDashboard() {
                       
                       const cardContent = (
                         <div className={cn(
-                          "relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 border border-gray-100 shadow-sm cursor-pointer flex items-center justify-center",
-                          !isReleased ? "grayscale" : "hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)]",
+                          "relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 border border-gray-100 shadow-sm cursor-pointer flex items-center justify-center hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)]",
                           isReleased && isProvaFinal && "border-yellow-400 border-2 shadow-[0_0_15px_rgba(250,204,21,0.4)]"
                         )}>
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -246,10 +245,7 @@ function StudentDashboard() {
                               <img 
                                 src={curso.thumbnail_url} 
                                 alt={curso.nome}
-                                className={cn(
-                                  "w-full h-full object-contain transition-transform duration-500",
-                                  isReleased && "group-hover:scale-105"
-                                )}
+                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                               />
                             ) : (
                               <div className={cn(
@@ -260,28 +256,8 @@ function StudentDashboard() {
                                 <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
                               </div>
                             )}
-                            <div className={cn(
-                              "absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent",
-                              !isReleased && "bg-black/40"
-                            )} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                           </div>
-
-                          {!isReleased && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center z-20 px-4 text-center">
-                              <Lock className="h-10 w-10 text-white mb-3 drop-shadow-lg" />
-                              <p className="text-white font-bold text-sm drop-shadow-md">
-                                Faltam {daysRemaining} dias para sua Prova Final
-                              </p>
-                            </div>
-                          )}
-
-                          {isReleased && isProvaFinal && (
-                            <div className="absolute top-3 right-3 z-20">
-                              <div className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider animate-pulse">
-                                Liberado!
-                              </div>
-                            </div>
-                          )}
 
                           <div className="absolute top-3 left-3 z-10">
                             <div className="bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
@@ -297,6 +273,11 @@ function StudentDashboard() {
                             {isProvaFinal && isReleased && (
                               <p className="text-yellow-400 text-[10px] font-bold mt-1 uppercase tracking-wider">
                                 Sua Prova Final está disponível para agendamento!
+                              </p>
+                            )}
+                            {isProvaFinal && !isReleased && (
+                              <p className="text-white/80 text-[10px] font-medium mt-1 uppercase tracking-wider">
+                                Faltam {daysRemaining} dias
                               </p>
                             )}
                             {!isProvaFinal && (
