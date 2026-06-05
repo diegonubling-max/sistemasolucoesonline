@@ -77,7 +77,7 @@ export function ThumbnailUpload({
         <div 
           className={cn(
             "relative group rounded-lg overflow-hidden border bg-[#f5f5f5] flex items-center justify-center",
-            bucket === "thumbnails-cursos" ? "w-[150px] aspect-[2/3]" : "w-full aspect-video"
+            bucket === "thumbnails-cursos" ? "w-[150px] aspect-[2/3]" : "w-full aspect-video max-w-[320px]"
           )}
         >
           <img
@@ -100,7 +100,7 @@ export function ThumbnailUpload({
         <label 
           className={cn(
             "flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer",
-            bucket === "thumbnails-cursos" ? "w-[150px] aspect-[2/3]" : "w-full aspect-video"
+            bucket === "thumbnails-cursos" ? "w-[150px] aspect-[2/3]" : "w-full aspect-video max-w-[320px]"
           )}
         >
           <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
