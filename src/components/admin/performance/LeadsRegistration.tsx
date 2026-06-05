@@ -153,14 +153,24 @@ export function LeadsRegistration() {
             ))}
           </div>
 
-          <Button 
-            className="w-full md:w-auto" 
-            onClick={() => saveMutation.mutate()}
-            disabled={saveMutation.isPending}
-          >
-            {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-            Salvar Lançamentos
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              className="w-full md:w-auto" 
+              onClick={() => saveMutation.mutate()}
+              disabled={saveMutation.isPending}
+            >
+              {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+              {editingId ? "Atualizar Lançamento" : "Salvar Lançamentos"}
+            </Button>
+            {editingId && (
+              <Button variant="outline" onClick={() => {
+                setEditingId(null);
+                setQuantidades({ Google: 0, Meta: 0, Indicação: 0, Outros: 0 });
+              }}>
+                Cancelar
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
