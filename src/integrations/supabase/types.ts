@@ -786,6 +786,10 @@ export type Database = {
         Args: { p_email: string; p_nova_senha: string }
         Returns: undefined
       }
+      registrar_aula_assistida: {
+        Args: { p_aluno_id: string; p_aula_id: string; p_curso_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "aluno"
