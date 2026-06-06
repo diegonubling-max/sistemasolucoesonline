@@ -36,14 +36,12 @@ function StudentCourse() {
       
       if (!aluno) return;
 
-      await supabase
-        .from("aluno_aulas_assistidas")
-        .insert({
-          aluno_id: aluno.id,
-          aula_id: activeAulaId,
-          curso_id: id,
-          assistida_em: new Date().toISOString()
-        });
+      // Usar a RPC de rastreamento para garantir consistência
+      await supabase.rpc('registrar_aula_assistida', {
+        p_aluno_id: aluno.id,
+        p_aula_id: activeAulaId,
+        p_curso_id: id
+      });
       
       setLastTrackedAulaId(activeAulaId);
     };
