@@ -68,51 +68,36 @@ function StudentLayout() {
   };
 
   useEffect(() => {
-    if (!alunoId) return;
+    const sessaoIdLocal = localStorage.getItem('aluno_sessao_id');
+    if (sessaoIdLocal) {
+      setSessaoId(sessaoIdLocal);
+    }
+  }, []);
 
-    const iniciarSessao = async () => {
-      const { data, error } = await supabase
-        .from('aluno_sessoes')
-        .insert({ aluno_id: alunoId })
-        .select('id')
-        .single();
-      
-      if (data) {
-        setSessaoId(data.id);
-      }
-    };
-
-    iniciarSessao();
+  useEffect(() => {
+    if (!sessaoId) return;
 
     const handleBeforeUnload = () => {
-      if (sessaoId) {
-        // Use sendBeacon or similar for reliable cleanup on close
-        // But for simplicity and since we can't easily wait for async in beforeunload
-        // we'll try to update it. Navigator.sendBeacon is better for this.
-        const logoutEm = new Date().toISOString();
-        // Since we can't easily calculate duration in a synchronous beacon,
-        // we might just set logout_em and have a trigger or cron fix duration,
-        // or just accept that sometimes it won't save if it's too fast.
-        // Actually, we can use a fetch with keepalive: true
-        fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/aluno_sessoes?id=eq.${sessaoId}`, {
-          method: 'PATCH',
-          headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({ logout_em: logoutEm }),
-          keepalive: true
-        });
-      }
+      const logoutEm = new Date().toISOString();
+      // Usar fetch com keepalive para garantir o registro ao fechar a aba
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/aluno_sessoes?id=eq.${sessaoId}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session?.access_token}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ logout_em: logoutEm }),
+        keepalive: true
+      });
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [alunoId, sessaoId, session]);
+  }, [sessaoId, session]);
 
   useEffect(() => {
     async function checkRole() {
@@ -175,8 +160,10 @@ function StudentLayout() {
   }, [loading, session, navigate]);
 
   const handleLogout = async () => {
-    if (sessaoId) {
-      await encerrarSessao(sessaoId);
+    const currentSessaoId = sessaoId || localStorage.getItem('aluno_sessao_id');
+    if (currentSessaoId) {
+      await encerrarSessao(currentSessaoId);
+      localStorage.removeItem('aluno_sessao_id');
     }
     await supabase.auth.signOut();
     navigate({ to: "/aluno/login" });

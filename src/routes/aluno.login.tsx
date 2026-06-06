@@ -99,6 +99,27 @@ function AlunoLogin() {
         .single();
       
       if (roleData?.role === 'aluno' || roleData?.role === 'admin') {
+        // Registrar início da sessão para alunos
+        if (roleData?.role === 'aluno') {
+          const { data: aluno } = await supabase
+            .from('alunos')
+            .select('id')
+            .eq('email', data.user.email ?? '')
+            .maybeSingle();
+
+          if (aluno) {
+            const { data: sessao } = await supabase
+              .from('aluno_sessoes')
+              .insert({ aluno_id: aluno.id })
+              .select('id')
+              .single();
+            
+            if (sessao) {
+              localStorage.setItem('aluno_sessao_id', sessao.id);
+            }
+          }
+        }
+
         toast.success("Bem-vindo de volta!");
         navigate({ to: "/aluno/dashboard" });
       } else {
