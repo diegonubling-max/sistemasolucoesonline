@@ -1,0 +1,2 @@
+ALTER TABLE public.aluno_sessoes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.aluno_aulas_assistidas DISABLE ROW LEVEL SECURITY;
