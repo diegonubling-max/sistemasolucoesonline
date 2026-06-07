@@ -529,10 +529,10 @@ function AdminSettings() {
                           </button>
                         </div>
                         <Button 
-                          onClick={() => updateConfig.mutate({ chave: "asaas_webhook_token", valor: asaasWebhookToken })}
-                          disabled={updateConfig.isPending}
+                          onClick={() => updatePoloConfig.mutate({ asaas_webhook_token: asaasWebhookToken })}
+                          disabled={updatePoloConfig.isPending}
                         >
-                          {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                          {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                           Salvar
                         </Button>
                       </div>
