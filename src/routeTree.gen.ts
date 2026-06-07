@@ -28,6 +28,7 @@ import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.alu
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
+import { Route as StudentAlunoProvaFinalRealizarRouteImport } from './routes/_student.aluno.prova-final.realizar'
 import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_student.aluno.prova-final.execucao'
 import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
 import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
@@ -127,6 +128,12 @@ const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
   path: '/alunos/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
+const StudentAlunoProvaFinalRealizarRoute =
+  StudentAlunoProvaFinalRealizarRouteImport.update({
+    id: '/realizar',
+    path: '/realizar',
+    getParentRoute: () => StudentAlunoProvaFinalRoute,
+  } as any)
 const StudentAlunoProvaFinalExecucaoRoute =
   StudentAlunoProvaFinalExecucaoRouteImport.update({
     id: '/execucao',
@@ -176,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
+  '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -200,6 +208,7 @@ export interface FileRoutesByTo {
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
+  '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesById {
@@ -227,6 +236,7 @@ export interface FileRoutesById {
   '/_admin/cursos/$id/editar': typeof AdminCursosIdEditarRoute
   '/_student/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/_student/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
+  '/_student/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/cursos/$id/editar'
     | '/aluno/curso/$id'
     | '/aluno/prova-final/execucao'
+    | '/aluno/prova-final/realizar'
     | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/cursos/$id/editar'
     | '/aluno/curso/$id'
     | '/aluno/prova-final/execucao'
+    | '/aluno/prova-final/realizar'
     | '/alunos/$id'
   id:
     | '__root__'
@@ -303,6 +315,7 @@ export interface FileRouteTypes {
     | '/_admin/cursos/$id/editar'
     | '/_student/aluno/curso/$id'
     | '/_student/aluno/prova-final/execucao'
+    | '/_student/aluno/prova-final/realizar'
     | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -449,6 +462,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_student/aluno/prova-final/realizar': {
+      id: '/_student/aluno/prova-final/realizar'
+      path: '/realizar'
+      fullPath: '/aluno/prova-final/realizar'
+      preLoaderRoute: typeof StudentAlunoProvaFinalRealizarRouteImport
+      parentRoute: typeof StudentAlunoProvaFinalRoute
+    }
     '/_student/aluno/prova-final/execucao': {
       id: '/_student/aluno/prova-final/execucao'
       path: '/execucao'
@@ -523,11 +543,13 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface StudentAlunoProvaFinalRouteChildren {
   StudentAlunoProvaFinalExecucaoRoute: typeof StudentAlunoProvaFinalExecucaoRoute
+  StudentAlunoProvaFinalRealizarRoute: typeof StudentAlunoProvaFinalRealizarRoute
 }
 
 const StudentAlunoProvaFinalRouteChildren: StudentAlunoProvaFinalRouteChildren =
   {
     StudentAlunoProvaFinalExecucaoRoute: StudentAlunoProvaFinalExecucaoRoute,
+    StudentAlunoProvaFinalRealizarRoute: StudentAlunoProvaFinalRealizarRoute,
   }
 
 const StudentAlunoProvaFinalRouteWithChildren =

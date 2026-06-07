@@ -78,7 +78,7 @@ function ProvaFinalPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      navigate({ to: "/aluno/prova-final/execucao" });
+      navigate({ to: "/aluno/prova-final/realizar" });
     },
   });
 
