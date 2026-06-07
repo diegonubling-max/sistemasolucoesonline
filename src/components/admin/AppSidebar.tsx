@@ -25,7 +25,22 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
   const [recreating, setRecreating] = useState(false);
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
 
-  useQuery({
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.role;
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  const { data: config } = useQuery({
     queryKey: ["admin-sidebar-config"],
     queryFn: async () => {
       const { data } = await supabase
@@ -77,7 +92,9 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
         {items.map((item) => {
-          const isAdmin = session?.user?.email === 'admin@admin.com';
+          const isAdmin = session?.user?.email === 'admin@admin.com' || userRole === 'admin';
+          console.log(`Item: ${item.title}, isAdmin: ${isAdmin}, email: ${session?.user?.email}, role: ${userRole}`);
+          
           if (item.adminOnly && !isAdmin) return null;
           
           if (colaborador && item.perm) {
