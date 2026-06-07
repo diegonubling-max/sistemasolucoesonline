@@ -87,6 +87,7 @@ function Financeiro() {
   useEffect(() => {
     const handlePoloChange = () => {
       setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+      console.log("DEBUG [Financeiro]: Polo alterado para:", sessionStorage.getItem("selected_polo_id"));
     };
     window.addEventListener("polo-changed", handlePoloChange);
     return () => window.removeEventListener("polo-changed", handlePoloChange);
@@ -102,9 +103,20 @@ function Financeiro() {
     enabled: !!session?.user?.id
   });
 
+  const { data: colabData } = useQuery({
+    queryKey: ["colaborador-polo", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
 
-  const filterByPolo = (q: any, colabPoloId: string | null) => {
+  const filterByPolo = (q: any) => {
+    const colabPoloId = colabData?.polo_id;
     if (isSuperAdmin) {
       if (selectedPoloId && selectedPoloId !== 'all') {
         return q.eq('polo_id', selectedPoloId);
