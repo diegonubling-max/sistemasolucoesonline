@@ -65,19 +65,36 @@ function AlunosList() {
     }
   };
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["alunos", search, page],
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
+
+  useEffect(() => {
+    const handlePoloChange = () => {
+      setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+      setPage(0);
+    };
+    window.addEventListener("polo-changed", handlePoloChange);
+    return () => window.removeEventListener("polo-changed", handlePoloChange);
+  }, []);
+
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", sessionData.session?.user.id],
     queryFn: async () => {
-      // Se for colaborador, filtrar pelo polo dele. 
-      // Por simplicidade aqui e seguindo a Parte 4, vou adicionar o filtro se o colaborador estiver presente.
-      // Como não estamos passando via contexto, vamos buscar o colab no queryFn ou assumir RLS.
-      // O requisito diz "Filtrar alunos pelo polo_id do colaborador".
-      
-      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.user.id) return null;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', sessionData.session.user.id).maybeSingle();
+      return data?.role;
+    },
+    enabled: !!sessionData.session?.user.id
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["alunos", search, page, selectedPoloId],
+    queryFn: async () => {
       const userId = sessionData.session?.user.id;
       
       let colabPoloId = null;
-      if (userId) {
+      let isAdmin = sessionData.session?.user.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
+      if (userId && !isAdmin) {
         const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', userId).maybeSingle();
         colabPoloId = colab?.polo_id;
       }
@@ -88,7 +105,11 @@ function AlunosList() {
         .order("ctr", { ascending: true })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       
-      if (colabPoloId) {
+      if (isAdmin) {
+        if (selectedPoloId && selectedPoloId !== 'all') {
+          q = q.eq('polo_id', selectedPoloId);
+        }
+      } else if (colabPoloId) {
         q = q.eq('polo_id', colabPoloId);
       }
 
