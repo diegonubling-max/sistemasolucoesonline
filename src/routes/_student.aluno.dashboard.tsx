@@ -297,13 +297,33 @@ function StudentDashboard() {
                                     const dataHoraStr = `${agendamento.data_prova}T${agendamento.hora_prova}`;
                                     const dataHoraProva = new Date(dataHoraStr);
                                     const agora = new Date();
-                                    const podeComecar = agora >= dataHoraProva;
+                                    const hoje = new Date();
+                                    hoje.setHours(0, 0, 0, 0);
+                                    
+                                    const dataProva = new Date(agendamento.data_prova + 'T00:00:00');
+                                    
+                                    if (agora >= dataHoraProva) {
+                                      return (
+                                        <p className="text-green-400 text-[10px] font-bold uppercase tracking-wider animate-pulse">
+                                          🎯 Prova Liberada! Começar Agora
+                                        </p>
+                                      );
+                                    }
+                                    
+                                    if (hoje.getTime() === dataProva.getTime()) {
+                                      return (
+                                        <p className="text-yellow-400 text-[10px] font-bold uppercase tracking-wider">
+                                          Sua prova é HOJE às {agendamento.hora_prova.substring(0, 5)}! 💪
+                                        </p>
+                                      );
+                                    }
+                                    
+                                    const diffTime = dataProva.getTime() - hoje.getTime();
+                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                                     
                                     return (
-                                      <p className={cn("text-[10px] font-bold uppercase tracking-wider", podeComecar ? "text-green-400" : "text-yellow-400")}>
-                                        {podeComecar 
-                                          ? "Tudo pronto para começar!" 
-                                          : `Agendada para ${new Date(agendamento.data_prova + 'T00:00:00').toLocaleDateString('pt-BR')} às ${agendamento.hora_prova.substring(0, 5)}. Prepare-se!`}
+                                      <p className="text-white/80 text-[10px] font-medium uppercase tracking-wider">
+                                        Agendada: {dataProva.toLocaleDateString('pt-BR')} às {agendamento.hora_prova.substring(0, 5)} (Faltam {diffDays} {diffDays === 1 ? 'dia' : 'dias'}) 📚
                                       </p>
                                     );
                                   })()
