@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Settings, Save, Loader2, MessageSquare, School, Phone, 
   Link2, FileText, Copy, ShieldPlus, Bell, Plus, Trash2,
-  Eye, EyeOff
+  Eye, EyeOff, Upload
 } from "lucide-react";
 
 
@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { useAuth } from "@/hooks/use-auth";
 
 
 
