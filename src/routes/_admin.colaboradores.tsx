@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Shield, Trash2, Loader2, Users } from "lucide-react";
+import { Plus, Search, Pencil, Shield, Trash2, Loader2, Users, MoreHorizontal, UserCheck, UserMinus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,8 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { 
   Form, 
@@ -24,7 +25,8 @@ import {
   FormField, 
   FormItem, 
   FormLabel, 
-  FormMessage 
+  FormMessage,
+  FormDescription
 } from "@/components/ui/form";
 import { 
   Select, 
@@ -34,9 +36,18 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_admin/colaboradores")({
   component: ColaboradoresList,
@@ -45,17 +56,50 @@ export const Route = createFileRoute("/_admin/colaboradores")({
 const formSchema = z.object({
   nome: z.string().min(3, "Mínimo 3 caracteres"),
   email: z.string().email("E-mail inválido"),
-  senha: z.string().min(6, "Mínimo 6 caracteres"),
+  senha: z.string().min(6, "Mínimo 6 caracteres").optional().or(z.literal("")),
   polo_id: z.string().uuid("Selecione um polo"),
   setor: z.string().min(1, "Selecione um setor"),
 });
 
 const SETORES = ["Vendedor", "Setor de Provas", "Cobrança", "Administrativo", "Outros"];
 
+const PERMISSIONS_LIST = [
+  { id: 'ver_alunos', label: 'Ver Alunos' },
+  { id: 'cadastrar_alunos', label: 'Cadastrar Alunos' },
+  { id: 'fazer_matriculas', label: 'Fazer Matrículas' },
+  { id: 'ver_financeiro', label: 'Ver Financeiro' },
+  { id: 'dar_baixa_pagamentos', label: 'Baixa em Pagamentos' },
+  { id: 'agendar_provas', label: 'Agendar Provas' },
+  { id: 'ver_relatorios', label: 'Ver Relatórios' },
+  { id: 'ver_configuracoes', label: 'Ver Configurações' },
+];
+
 function ColaboradoresList() {
+  const { session } = useAuth();
+  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedColabPerms, setSelectedColabPerms] = useState<any>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingColab, setEditingColab] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // State for permissions during creation/editing
+  const [formPerms, setFormPerms] = useState<Record<string, boolean>>({
+    ver_alunos: false,
+    cadastrar_alunos: false,
+    fazer_matriculas: false,
+    ver_financeiro: false,
+    dar_baixa_pagamentos: false,
+    agendar_provas: false,
+    ver_relatorios: false,
+    ver_configuracoes: false,
+  });
+
+  // Access check
+  useEffect(() => {
+    if (session?.user?.email !== 'admin@admin.com') {
+      navigate({ to: "/" });
+    }
+  }, [session, navigate]);
 
   const { data: colaboradores, isLoading } = useQuery({
     queryKey: ["colaboradores"],
@@ -89,44 +133,110 @@ function ColaboradoresList() {
     },
   });
 
-  const createMutation = useMutation({
+  useEffect(() => {
+    if (editingColab) {
+      form.reset({
+        nome: editingColab.nome,
+        email: editingColab.email,
+        senha: "",
+        polo_id: editingColab.polo_id,
+        setor: editingColab.setor,
+      });
+      
+      const perms = editingColab.colaborador_permissoes?.[0] || {};
+      const newPerms: Record<string, boolean> = {};
+      PERMISSIONS_LIST.forEach(p => {
+        newPerms[p.id] = perms[p.id] || false;
+      });
+      setFormPerms(newPerms);
+    } else {
+      form.reset({
+        nome: "",
+        email: "",
+        senha: "",
+        polo_id: "",
+        setor: "",
+      });
+      setFormPerms({
+        ver_alunos: false,
+        cadastrar_alunos: false,
+        fazer_matriculas: false,
+        ver_financeiro: false,
+        dar_baixa_pagamentos: false,
+        agendar_provas: false,
+        ver_relatorios: false,
+        ver_configuracoes: false,
+      });
+    }
+  }, [editingColab, form]);
+
+  const manageMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const action = editingColab ? "update_colaborador" : "create_colaborador";
+      const payload: any = { 
+        action, 
+        ...values, 
+        permissoes: formPerms 
+      };
+      
+      if (editingColab) {
+        payload.id = editingColab.id;
+        if (!values.senha) delete payload.senha;
+      }
+
       const { data, error } = await supabase.functions.invoke("manage-colaboradores", {
-        body: { action: "create_colaborador", ...values },
+        body: payload,
       });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      toast.success("Colaborador cadastrado com sucesso");
+      toast.success(editingColab ? "Colaborador atualizado" : "Colaborador cadastrado");
       qc.invalidateQueries({ queryKey: ["colaboradores"] });
-      setIsCreateOpen(false);
-      form.reset();
+      setIsFormOpen(false);
+      setEditingColab(null);
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-  const updatePermsMutation = useMutation({
-    mutationFn: async ({ id, perms }: { id: string; perms: any }) => {
-      const { error } = await supabase
-        .from("colaborador_permissoes")
-        .update(perms)
-        .eq("colaborador_id", id);
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+      const { data, error } = await supabase.functions.invoke("manage-colaboradores", {
+        body: { action: "update_colaborador", id, ativo },
+      });
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
-      toast.success("Permissões atualizadas");
+      toast.success("Status atualizado");
       qc.invalidateQueries({ queryKey: ["colaboradores"] });
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-  const handlePermToggle = (colabId: string, field: string, value: boolean) => {
-    updatePermsMutation.mutate({
-      id: colabId,
-      perms: { [field]: value }
-    });
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.functions.invoke("manage-colaboradores", {
+        body: { action: "delete_colaborador", id },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Colaborador excluído");
+      qc.invalidateQueries({ queryKey: ["colaboradores"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handlePermToggle = (field: string, value: boolean) => {
+    setFormPerms(prev => ({ ...prev, [field]: value }));
   };
+
+  const filteredColaboradores = colaboradores?.filter(c => 
+    c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -134,62 +244,69 @@ function ColaboradoresList() {
         title="Colaboradores"
         description="Gerencie os membros da sua equipe e suas permissões"
         actions={
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <Dialog open={isFormOpen} onOpenChange={(open) => {
+            setIsFormOpen(open);
+            if (!open) setEditingColab(null);
+          }}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => setEditingColab(null)}>
                 <Plus className="h-4 w-4 mr-2" /> Novo Colaborador
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Cadastrar Colaborador</DialogTitle>
+                <DialogTitle>{editingColab ? "Editar Colaborador" : "Cadastrar Colaborador"}</DialogTitle>
+                <DialogDescription>
+                  Preencha as informações do colaborador e defina suas permissões.
+                </DialogDescription>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit((v) => createMutation.mutate(v))} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="nome"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>E-mail</FormLabel>
-                        <FormControl><Input {...field} type="email" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="senha"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Senha</FormLabel>
-                        <FormControl><Input {...field} type="password" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <form onSubmit={form.handleSubmit((v) => manageMutation.mutate(v))} className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="nome"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome Completo</FormLabel>
+                          <FormControl><Input {...field} placeholder="Ex: João Silva" /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-mail</FormLabel>
+                          <FormControl><Input {...field} type="email" placeholder="joao@email.com" /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="senha"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{editingColab ? "Nova Senha (opcional)" : "Senha"}</FormLabel>
+                          <FormControl><Input {...field} type="password" placeholder="******" /></FormControl>
+                          <FormDescription>Mínimo 6 caracteres</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="polo_id"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Polo</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Selecione" />
+                                <SelectValue placeholder="Selecione um polo" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -208,10 +325,10 @@ function ColaboradoresList() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Setor</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Selecione" />
+                                <SelectValue placeholder="Selecione o setor" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -225,9 +342,31 @@ function ColaboradoresList() {
                       )}
                     />
                   </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <Shield className="h-4 w-4" /> Permissões
+                    </h3>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4 p-4 border rounded-lg bg-muted/30">
+                      {PERMISSIONS_LIST.map(perm => (
+                        <div key={perm.id} className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{perm.label}</span>
+                          <Switch 
+                            checked={formPerms[perm.id] || false} 
+                            onCheckedChange={(val) => handlePermToggle(perm.id, val)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   <DialogFooter>
-                    <Button type="submit" disabled={createMutation.isPending}>
-                      {createMutation.isPending ? "Salvando..." : "Salvar Colaborador"}
+                    <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" disabled={manageMutation.isPending}>
+                      {manageMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      {editingColab ? "Salvar Alterações" : "Cadastrar Colaborador"}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -236,6 +375,18 @@ function ColaboradoresList() {
           </Dialog>
         }
       />
+
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Buscar por nome ou e-mail..." 
+            className="pl-9"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
 
       <Card>
         <CardContent className="pt-6">
@@ -246,56 +397,69 @@ function ColaboradoresList() {
                 <TableHead>Polo</TableHead>
                 <TableHead>Setor</TableHead>
                 <TableHead>E-mail</TableHead>
-                <TableHead className="text-right">Permissões</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center">Carregando...</TableCell></TableRow>
-              ) : colaboradores?.map((c) => (
+                <TableRow><TableCell colSpan={6} className="text-center py-8"><Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
+              ) : filteredColaboradores?.length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-8">Nenhum colaborador encontrado.</TableCell></TableRow>
+              ) : filteredColaboradores?.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.nome}</TableCell>
                   <TableCell>{c.polos?.nome}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{c.setor}</Badge>
                   </TableCell>
-                  <TableCell>{c.email}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{c.email}</TableCell>
+                  <TableCell>
+                    {c.ativo ? (
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
+                        Ativo
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-50 border-red-100">
+                        Inativo
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Dialog>
-                      <DialogTrigger asChild>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
-                          <Shield className="h-4 w-4" />
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Permissões: {c.nome}</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          {[
-                            { id: 'ver_alunos', label: 'Ver Alunos' },
-                            { id: 'cadastrar_alunos', label: 'Cadastrar Alunos' },
-                            { id: 'fazer_matriculas', label: 'Fazer Matrículas' },
-                            { id: 'ver_financeiro', label: 'Ver Financeiro' },
-                            { id: 'dar_baixa_pagamentos', label: 'Baixa em Pagamentos' },
-                            { id: 'agendar_provas', label: 'Agendar Provas' },
-                            { id: 'ver_relatorios', label: 'Ver Relatórios' },
-                            { id: 'ver_configuracoes', label: 'Ver Configurações' },
-                          ].map(perm => {
-                            const permsObj = c.colaborador_permissoes?.[0] as any;
-                            return (
-                              <div key={perm.id} className="flex items-center justify-between">
-                                <span className="text-sm font-medium">{perm.label}</span>
-                                <Switch 
-                                  checked={permsObj?.[perm.id] ?? false} 
-                                  onCheckedChange={(val) => handlePermToggle(c.id, perm.id, val)}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => {
+                          setEditingColab(c);
+                          setIsFormOpen(true);
+                        }}>
+                          <Pencil className="h-4 w-4 mr-2" /> Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => statusMutation.mutate({ id: c.id, ativo: !c.ativo })}>
+                          {c.ativo ? (
+                            <><UserMinus className="h-4 w-4 mr-2 text-red-500" /> Inativar</>
+                          ) : (
+                            <><UserCheck className="h-4 w-4 mr-2 text-green-500" /> Ativar</>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => {
+                            if (confirm(`Deseja realmente excluir o colaborador ${c.nome}? Esta ação também removerá o acesso dele ao sistema.`)) {
+                              deleteMutation.mutate(c.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
