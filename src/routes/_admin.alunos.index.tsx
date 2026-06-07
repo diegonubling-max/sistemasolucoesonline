@@ -88,15 +88,23 @@ function AlunosList() {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["alunos", search, page, selectedPoloId],
+    queryKey: ["alunos", search, page, selectedPoloId, userRole],
     queryFn: async () => {
       const userId = session?.user?.id;
       let colabPoloId = null;
       let isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
 
+      console.log("DEBUG [Alunos]:", { 
+        email: session?.user?.email, 
+        userRole, 
+        isSuperAdmin, 
+        selectedPoloId 
+      });
+
       if (userId && !isSuperAdmin) {
         const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', userId).maybeSingle();
         colabPoloId = colab?.polo_id;
+        console.log("DEBUG [Alunos]: Colaborador Polo ID:", colabPoloId);
       }
 
       let q = supabase
@@ -107,9 +115,13 @@ function AlunosList() {
       
       if (isSuperAdmin) {
         if (selectedPoloId && selectedPoloId !== 'all') {
+          console.log("DEBUG [Alunos]: Aplicando filtro SuperAdmin para polo:", selectedPoloId);
           q = q.eq('polo_id', selectedPoloId);
+        } else {
+          console.log("DEBUG [Alunos]: SuperAdmin - Mostrando todos os polos");
         }
       } else if (colabPoloId) {
+        console.log("DEBUG [Alunos]: Aplicando filtro Colaborador para polo:", colabPoloId);
         q = q.eq('polo_id', colabPoloId);
       }
 
