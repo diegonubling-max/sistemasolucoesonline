@@ -21,6 +21,7 @@ import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
 import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
+import { Route as StudentAlunoProvaFinalRouteImport } from './routes/_student.aluno.prova-final'
 import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
 import { Route as StudentAlunoFinanceiroRouteImport } from './routes/_student.aluno.financeiro'
 import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.aluno.dashboard'
@@ -90,6 +91,11 @@ const AdminAlunosIndexRoute = AdminAlunosIndexRouteImport.update({
   path: '/alunos/',
   getParentRoute: () => AdminRoute,
 } as any)
+const StudentAlunoProvaFinalRoute = StudentAlunoProvaFinalRouteImport.update({
+  id: '/aluno/prova-final',
+  path: '/aluno/prova-final',
+  getParentRoute: () => StudentRoute,
+} as any)
 const StudentAlunoPerfilRoute = StudentAlunoPerfilRouteImport.update({
   id: '/aluno/perfil',
   path: '/aluno/perfil',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
+  '/aluno/prova-final': typeof StudentAlunoProvaFinalRoute
   '/alunos/': typeof AdminAlunosIndexRoute
   '/cursos/': typeof AdminCursosIndexRoute
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
+  '/aluno/prova-final': typeof StudentAlunoProvaFinalRoute
   '/alunos': typeof AdminAlunosIndexRoute
   '/cursos': typeof AdminCursosIndexRoute
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/_student/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/_student/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/_student/aluno/perfil': typeof StudentAlunoPerfilRoute
+  '/_student/aluno/prova-final': typeof StudentAlunoProvaFinalRoute
   '/_admin/alunos/': typeof AdminAlunosIndexRoute
   '/_admin/cursos/': typeof AdminCursosIndexRoute
   '/_admin/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
     | '/aluno/dashboard'
     | '/aluno/financeiro'
     | '/aluno/perfil'
+    | '/aluno/prova-final'
     | '/alunos/'
     | '/cursos/'
     | '/alunos/$id/editar'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/aluno/dashboard'
     | '/aluno/financeiro'
     | '/aluno/perfil'
+    | '/aluno/prova-final'
     | '/alunos'
     | '/cursos'
     | '/alunos/$id/editar'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/_student/aluno/dashboard'
     | '/_student/aluno/financeiro'
     | '/_student/aluno/perfil'
+    | '/_student/aluno/prova-final'
     | '/_admin/alunos/'
     | '/_admin/cursos/'
     | '/_admin/alunos/$id/editar'
@@ -374,6 +386,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/alunos/'
       preLoaderRoute: typeof AdminAlunosIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/_student/aluno/prova-final': {
+      id: '/_student/aluno/prova-final'
+      path: '/aluno/prova-final'
+      fullPath: '/aluno/prova-final'
+      preLoaderRoute: typeof StudentAlunoProvaFinalRouteImport
+      parentRoute: typeof StudentRoute
     }
     '/_student/aluno/perfil': {
       id: '/_student/aluno/perfil'
@@ -486,6 +505,7 @@ interface StudentRouteChildren {
   StudentAlunoDashboardRoute: typeof StudentAlunoDashboardRoute
   StudentAlunoFinanceiroRoute: typeof StudentAlunoFinanceiroRoute
   StudentAlunoPerfilRoute: typeof StudentAlunoPerfilRoute
+  StudentAlunoProvaFinalRoute: typeof StudentAlunoProvaFinalRoute
   StudentAlunoCursoIdRoute: typeof StudentAlunoCursoIdRoute
 }
 
@@ -493,6 +513,7 @@ const StudentRouteChildren: StudentRouteChildren = {
   StudentAlunoDashboardRoute: StudentAlunoDashboardRoute,
   StudentAlunoFinanceiroRoute: StudentAlunoFinanceiroRoute,
   StudentAlunoPerfilRoute: StudentAlunoPerfilRoute,
+  StudentAlunoProvaFinalRoute: StudentAlunoProvaFinalRoute,
   StudentAlunoCursoIdRoute: StudentAlunoCursoIdRoute,
 }
 
@@ -509,3 +530,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
