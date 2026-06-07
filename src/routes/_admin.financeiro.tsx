@@ -247,7 +247,7 @@ function Financeiro() {
       const { data, error } = await filterByPolo(q);
       if (error) throw error;
 
-      return data.filter(p => p.numero === maxNums[p.matricula_id]);
+      return data.filter((p: any) => p.numero === maxNums[p.matricula_id]);
     },
     enabled: activeFilter === "ultimas"
   });
@@ -267,10 +267,10 @@ function Financeiro() {
       const { data, error } = await filterByPolo(q);
       if (error) throw error;
 
-      return data.map(p => ({
+      return data.map((p: any) => ({
         ...p,
         diasAtraso: differenceInDays(startOfDay(today), startOfDay(parseISO(p.data_vencimento)))
-      })).sort((a, b) => b.diasAtraso - a.diasAtraso);
+      })).sort((a: any, b: any) => b.diasAtraso - a.diasAtraso);
     },
     enabled: activeFilter === "atraso"
   });
