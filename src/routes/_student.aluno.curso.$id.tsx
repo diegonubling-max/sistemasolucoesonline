@@ -111,6 +111,9 @@ function StudentCourse() {
   });
 
   const activeAula = curso?.aulas?.find(a => a.id === (activeAulaId || curso.aulas[0]?.id));
+  const activeAulaIndex = curso?.aulas?.findIndex(a => a.id === activeAula?.id) ?? -1;
+  const nextAula = curso?.aulas?.[activeAulaIndex + 1];
+  const prevAula = curso?.aulas?.[activeAulaIndex - 1];
 
   if (loadingCurso) {
     return (
@@ -239,7 +242,8 @@ function StudentCourse() {
                         variant="outline" 
                         size="sm" 
                         className="bg-transparent border-gray-200 text-gray-700 hover:bg-gray-50"
-                        disabled
+                        disabled={!prevAula}
+                        onClick={() => prevAula && setActiveAulaId(prevAula.id)}
                     >
                         ⬅ Anterior
                     </Button>
@@ -247,7 +251,8 @@ function StudentCourse() {
                         variant="default" 
                         size="sm" 
                         className="bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white shadow-lg shadow-[#2D6ADF]/20"
-                        disabled
+                        disabled={!nextAula}
+                        onClick={() => nextAula && setActiveAulaId(nextAula.id)}
                     >
                         Próxima ➡
                     </Button>
