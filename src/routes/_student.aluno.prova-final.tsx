@@ -171,7 +171,7 @@ function ProvaFinalPage() {
                 Instruções Importantes
               </h4>
               <ul className="text-sm text-blue-700 space-y-2 list-disc pl-5">
-                <li>Você terá <strong>4 horas</strong> para concluir as 100 questões.</li>
+                <li>Você terá <strong>4 horas</strong> para concluir as 10 questões de cada matéria.</li>
                 <li>As matérias seguem uma ordem fixa e você não poderá voltar para a anterior.</li>
                 <li>Certifique-se de estar em um ambiente calmo e com boa conexão.</li>
                 <li>Ao clicar em começar, o cronômetro será iniciado.</li>
