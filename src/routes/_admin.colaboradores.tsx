@@ -61,7 +61,7 @@ const formSchema = z.object({
   setor: z.string().min(1, "Selecione um setor"),
 });
 
-const SETORES = ["Vendedor", "Setor de Provas", "Cobrança", "Administrativo", "Outros"];
+const SETORES = ["Vendedor", "Setor de Provas", "Cobrança", "Administrativo", "Admin Polo", "Outros"];
 
 const PERMISSIONS_LIST = [
   { id: 'ver_alunos', label: 'Ver Alunos' },
