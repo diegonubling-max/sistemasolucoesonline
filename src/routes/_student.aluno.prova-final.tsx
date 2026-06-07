@@ -104,10 +104,9 @@ function ProvaFinalPage() {
         <CardContent className="py-12 text-center space-y-6">
           <Calendar className="h-16 w-16 mx-auto text-gray-400" />
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Nenhuma Prova Agendada</h2>
+            <h2 className="text-2xl font-bold">Prova Final</h2>
             <p className="text-muted-foreground">
-              Você ainda não tem um horário agendado para sua Prova Final.
-              Entre em contato com a secretaria para agendar.
+              Sua Prova Final está disponível para agendamento!
             </p>
           </div>
           <Button 
@@ -122,7 +121,6 @@ function ProvaFinalPage() {
     );
   }
 
-  // Verificar se já chegou a hora
   const dataHoraStr = `${agendamento.data_prova}T${agendamento.hora_prova}`;
   const dataHoraProva = parseISO(dataHoraStr);
   const agora = new Date();
@@ -131,9 +129,11 @@ function ProvaFinalPage() {
   return (
     <Card className="max-w-2xl mx-auto overflow-hidden">
       <CardHeader className="bg-primary text-primary-foreground py-10 text-center">
-        <CardTitle className="text-3xl font-bold">Sua Prova Final</CardTitle>
+        <CardTitle className="text-3xl font-bold">Prova Final</CardTitle>
         <CardDescription className="text-primary-foreground/80 text-lg">
-          {podeComecar ? "Tudo pronto para começar!" : "Seu agendamento está confirmado."}
+          {podeComecar 
+            ? "Tudo pronto para começar!" 
+            : `Sua Prova Final está agendada para o dia ${format(parseISO(agendamento.data_prova), 'dd/MM/yyyy')} às ${agendamento.hora_prova.substring(0, 5)}. Prepare-se!`}
         </CardDescription>
       </CardHeader>
       <CardContent className="py-8 space-y-8">

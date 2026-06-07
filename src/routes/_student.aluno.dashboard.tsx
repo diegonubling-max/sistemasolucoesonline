@@ -290,15 +290,33 @@ function StudentDashboard() {
                             <h3 className="text-white font-bold text-base leading-tight line-clamp-2">
                               {curso.nome}
                             </h3>
-                            {isProvaFinal && isReleased && (
-                              <p className="text-yellow-400 text-[10px] font-bold mt-1 uppercase tracking-wider">
-                                Sua Prova Final está disponível para agendamento!
-                              </p>
-                            )}
-                            {isProvaFinal && !isReleased && (
-                              <p className="text-white/80 text-[10px] font-medium mt-1 uppercase tracking-wider">
-                                Faltam {daysRemaining} dias
-                              </p>
+                            {isProvaFinal && (
+                              <div className="mt-1">
+                                {agendamento ? (
+                                  (() => {
+                                    const dataHoraStr = `${agendamento.data_prova}T${agendamento.hora_prova}`;
+                                    const dataHoraProva = new Date(dataHoraStr);
+                                    const agora = new Date();
+                                    const podeComecar = agora >= dataHoraProva;
+                                    
+                                    return (
+                                      <p className={cn("text-[10px] font-bold uppercase tracking-wider", podeComecar ? "text-green-400" : "text-yellow-400")}>
+                                        {podeComecar 
+                                          ? "Tudo pronto para começar!" 
+                                          : `Agendada para ${new Date(agendamento.data_prova + 'T00:00:00').toLocaleDateString('pt-BR')} às ${agendamento.hora_prova.substring(0, 5)}. Prepare-se!`}
+                                      </p>
+                                    );
+                                  })()
+                                ) : isReleased ? (
+                                  <p className="text-yellow-400 text-[10px] font-bold uppercase tracking-wider">
+                                    Sua Prova Final está disponível para agendamento!
+                                  </p>
+                                ) : (
+                                  <p className="text-white/80 text-[10px] font-medium uppercase tracking-wider">
+                                    Faltam {daysRemaining} dias
+                                  </p>
+                                )}
+                              </div>
                             )}
                             {!isProvaFinal && (
                               <p className="text-gray-400 text-[10px] font-medium mt-1 uppercase tracking-widest">
