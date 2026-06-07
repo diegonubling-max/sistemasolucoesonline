@@ -283,35 +283,14 @@ function AdminSettings() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="p-8">
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <div className="flex items-center gap-2 text-red-600">
-              <Settings className="h-5 w-5" />
-              <CardTitle>Erro ao carregar configurações</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-red-700">
-              Não foi possível carregar as configurações do sistema. Isso pode ser um problema de permissão ou conexão.
-            </p>
-            <div className="bg-white/50 p-3 rounded border border-red-100 font-mono text-xs text-red-800 overflow-auto">
-              {(fetchError as any)?.message || "Erro desconhecido"}
-            </div>
-            <Button 
-              variant="outline" 
-              className="border-red-300 text-red-700 hover:bg-red-100"
-              onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-configs"] })}
-            >
-              Tentar novamente
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const tabs = [
+    { id: "geral", label: "Geral", icon: School },
+    { id: "asaas", label: "Integração Asaas", icon: Link2 },
+    { id: "contrato", label: "Modelo de Contrato", icon: FileText },
+    { id: "webhook", label: "Webhook", icon: Bell },
+    { id: "admins", label: "Administradores", icon: ShieldPlus },
+  ];
+
 
 
   return (
