@@ -128,22 +128,18 @@ function Financeiro() {
   };
 
   const { data: globalStats } = useQuery({
-    queryKey: ["financeiro-global-stats", selectedPoloId],
+    queryKey: ["financeiro-global-stats", selectedPoloId, userRole, colabData],
     queryFn: async () => {
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
-      let colabPoloId: string | null = null;
-      if (!isSuperAdmin && session?.user?.id) {
-        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
-        colabPoloId = colab?.polo_id || null;
-      }
+      console.log("DEBUG [Financeiro Global Stats]:", { isSuperAdmin, selectedPoloId, colabPoloId: colabData?.polo_id });
 
       const [pagoMes, abertoMes, atrasado, totalAberto] = await Promise.all([
-        filterByPolo(supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")), colabPoloId),
-        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd")), colabPoloId),
-        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd")), colabPoloId),
-        filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento"), colabPoloId),
+        filterByPolo(supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
@@ -163,15 +159,17 @@ function Financeiro() {
   });
 
   const { data: recebimentos, refetch: refetchRecebimentos } = useQuery({
-    queryKey: ["financeiro-recebimentos", recPeriod],
+    queryKey: ["financeiro-recebimentos", recPeriod, selectedPoloId, userRole, colabData],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("parcelas")
         .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("status", "pago")
         .gte("data_pagamento", recPeriod.start)
         .lte("data_pagamento", recPeriod.end)
         .order("data_pagamento", { ascending: false });
+      
+      const { data, error } = await filterByPolo(q);
       if (error) throw error;
       return data;
     },
@@ -179,15 +177,17 @@ function Financeiro() {
   });
 
   const { data: aReceber, refetch: refetchAReceber } = useQuery({
-    queryKey: ["financeiro-a-receber", aRecPeriod],
+    queryKey: ["financeiro-a-receber", aRecPeriod, selectedPoloId, userRole, colabData],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("parcelas")
         .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("status", "aberto")
         .gte("data_vencimento", aRecPeriod.start)
         .lte("data_vencimento", aRecPeriod.end)
         .order("data_vencimento", { ascending: true });
+      
+      const { data, error } = await filterByPolo(q);
       if (error) throw error;
       return data;
     },
@@ -195,19 +195,21 @@ function Financeiro() {
   });
 
   const { data: primeiras, refetch: refetchPrimeiras } = useQuery({
-    queryKey: ["financeiro-primeiras", primeirasMonth],
+    queryKey: ["financeiro-primeiras", primeirasMonth, selectedPoloId, userRole, colabData],
     queryFn: async () => {
       const [year, month] = primeirasMonth.split("-");
       const start = format(new Date(Number(year), Number(month) - 1, 1), "yyyy-MM-dd");
       const end = format(endOfMonth(new Date(Number(year), Number(month) - 1, 1)), "yyyy-MM-dd");
       
-      const { data, error } = await supabase
+      let q = supabase
         .from("parcelas")
         .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("numero", 1)
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
         .order("data_vencimento", { ascending: true });
+      
+      const { data, error } = await filterByPolo(q);
       if (error) throw error;
       return data;
     },
@@ -215,7 +217,7 @@ function Financeiro() {
   });
 
   const { data: ultimas, refetch: refetchUltimas } = useQuery({
-    queryKey: ["financeiro-ultimas", ultimasMonth],
+    queryKey: ["financeiro-ultimas", ultimasMonth, selectedPoloId, userRole, colabData],
     queryFn: async () => {
       const [year, month] = ultimasMonth.split("-");
       const start = format(new Date(Number(year), Number(month) - 1, 1), "yyyy-MM-dd");
@@ -235,13 +237,14 @@ function Financeiro() {
         }
       });
 
-      const { data, error } = await supabase
+      let q = supabase
         .from("parcelas")
         .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
         .order("data_vencimento", { ascending: true });
       
+      const { data, error } = await filterByPolo(q);
       if (error) throw error;
 
       return data.filter(p => p.numero === maxNums[p.matricula_id]);
@@ -250,9 +253,9 @@ function Financeiro() {
   });
 
   const { data: atraso, refetch: refetchAtraso } = useQuery({
-    queryKey: ["financeiro-atraso", atrasoPeriod],
+    queryKey: ["financeiro-atraso", atrasoPeriod, selectedPoloId, userRole, colabData],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("parcelas")
         .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("status", "aberto")
@@ -260,6 +263,8 @@ function Financeiro() {
         .gte("data_vencimento", atrasoPeriod.start)
         .lte("data_vencimento", atrasoPeriod.end)
         .order("data_vencimento", { ascending: true });
+      
+      const { data, error } = await filterByPolo(q);
       if (error) throw error;
 
       return data.map(p => ({
@@ -271,13 +276,14 @@ function Financeiro() {
   });
 
   const { data: matriculasVendedora, refetch: refetchVendedora } = useQuery({
-    queryKey: ["financeiro-vendedora", vendedoraPeriod, selectedVendedora],
+    queryKey: ["financeiro-vendedora", vendedoraPeriod, selectedVendedora, selectedPoloId, userRole, colabData],
     queryFn: async () => {
       let query = supabase
         .from("matriculas")
         .select(`
           id,
           created_at,
+          polo_id,
           alunos!inner (
             nome,
             vendedora
@@ -295,6 +301,8 @@ function Financeiro() {
       if (selectedVendedora !== "todas") {
         query = query.eq("alunos.vendedora", selectedVendedora);
       }
+
+      query = filterByPolo(query);
 
       const { data, error } = await query;
       if (error) throw error;
