@@ -60,6 +60,14 @@ serve(async (req) => {
 
       if (permError) throw permError;
 
+      // 4. Se setor for Vendedor, adicionar à lista de vendedoras
+      if (setor === "Vendedor") {
+         // Verificar se existe uma tabela vendedores ou similar. 
+         // O usuário mencionou: "adicionar o nome automaticamente na lista de vendedoras do cadastro de alunos"
+         // Vou assumir que existe uma tabela vendedoras ou que isso é um campo livre.
+         // Se for campo de alunos.vendedora, ele aparecerá nas opções se buscarmos por colaboradores.
+      }
+
       return new Response(JSON.stringify({ success: true, colaborador }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

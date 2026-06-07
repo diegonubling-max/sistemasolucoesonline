@@ -281,15 +281,18 @@ function ColaboradoresList() {
                             { id: 'agendar_provas', label: 'Agendar Provas' },
                             { id: 'ver_relatorios', label: 'Ver Relatórios' },
                             { id: 'ver_configuracoes', label: 'Ver Configurações' },
-                          ].map(perm => (
-                            <div key={perm.id} className="flex items-center justify-between">
-                              <span className="text-sm font-medium">{perm.label}</span>
-                              <Switch 
-                                checked={c.colaborador_permissoes?.[0]?.[perm.id] ?? false} 
-                                onCheckedChange={(val) => handlePermToggle(c.id, perm.id, val)}
-                              />
-                            </div>
-                          ))}
+                          ].map(perm => {
+                            const permsObj = c.colaborador_permissoes?.[0] as any;
+                            return (
+                              <div key={perm.id} className="flex items-center justify-between">
+                                <span className="text-sm font-medium">{perm.label}</span>
+                                <Switch 
+                                  checked={permsObj?.[perm.id] ?? false} 
+                                  onCheckedChange={(val) => handlePermToggle(c.id, perm.id, val)}
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
                       </DialogContent>
                     </Dialog>

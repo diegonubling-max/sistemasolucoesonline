@@ -18,6 +18,7 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const { session } = useAuth();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
   const [recreating, setRecreating] = useState(false);
