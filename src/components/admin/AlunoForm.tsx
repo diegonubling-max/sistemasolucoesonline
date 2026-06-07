@@ -1,9 +1,10 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,6 +87,27 @@ export function AlunoForm({
   submitLabel?: string;
   isEdit?: boolean;
 }) {
+  const [vendedoras, setVendedoras] = useState<string[]>(["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"]);
+  const [polos, setPolos] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadOptions() {
+      const { data: colabs } = await supabase
+        .from('colaboradores')
+        .select('nome')
+        .eq('setor', 'Vendedor');
+      
+      if (colabs && colabs.length > 0) {
+        const nomes = colabs.map(c => c.nome);
+        setVendedoras(prev => [...new Set([...prev, ...nomes])]);
+      }
+
+      const { data: listPolos } = await supabase.from('polos').select('id, nome').eq('ativo', true);
+      if (listPolos) setPolos(listPolos);
+    }
+    loadOptions();
+  }, []);
+
   const form = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -248,6 +270,25 @@ export function AlunoForm({
                 {VENDEDORAS.map((v) => (
                   <SelectItem key={v} value={v}>
                     {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          {/* 8.1 Polo */}
+          <Field label="Polo *" error={errors.polo_id?.message as string}>
+            <Select
+              value={form.watch("polo_id")}
+              onValueChange={(v) => form.setValue("polo_id", v, { shouldValidate: true })}
+            >
+              <SelectTrigger data-name="polo_id">
+                <SelectValue placeholder="selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                {polos.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.nome}
                   </SelectItem>
                 ))}
               </SelectContent>
