@@ -42,11 +42,7 @@ export const WhatsAppButton = () => {
   const nome = alunoData?.nome || "";
   const ctr = alunoData?.ctr || "";
   
-  const message = rawMessage
-    .replace("[nome]", nome)
-    .replace("[ctr]", ctr.toString());
-
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}`;
 
   return (
     <div className="fixed bottom-6 right-6 z-[999]">
