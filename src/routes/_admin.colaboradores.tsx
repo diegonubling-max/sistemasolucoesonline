@@ -82,6 +82,18 @@ function ColaboradoresList() {
   const [editingColab, setEditingColab] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   
+  // State for permissions during creation/editing
+  const [formPerms, setFormPerms] = useState<Record<string, boolean>>({
+    ver_alunos: false,
+    cadastrar_alunos: false,
+    fazer_matriculas: false,
+    ver_financeiro: false,
+    dar_baixa_pagamentos: false,
+    agendar_provas: false,
+    ver_relatorios: false,
+    ver_configuracoes: false,
+  });
+  
   const { data: userRole, isLoading: loadingRole } = useQuery({
     queryKey: ["user-role", session?.user?.id],
     queryFn: async () => {
