@@ -190,7 +190,6 @@ function ProvaFinalPage() {
               className="w-full h-14 text-lg font-bold bg-[#1E3A5F] text-white rounded-md transition-all hover:bg-[#2D6ADF] flex items-center justify-center relative z-50 cursor-pointer shadow-lg active:scale-95"
               onClick={() => {
                 console.log("CLIQUE NO BOTÃO - INICIANDO REDIRECIONAMENTO");
-                alert("Redirecionando para a prova...");
                 window.location.href = '/aluno/prova-final/realizar';
               }}
             >
