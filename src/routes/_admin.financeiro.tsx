@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { startOfMonth, endOfMonth, format, isBefore, parseISO, startOfDay, differenceInDays } from "date-fns";
 import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, Calendar, Hash, UserX, BarChart3 } from "lucide-react";
@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { SalesReport } from "@/components/admin/financeiro/SalesReport";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
@@ -42,6 +43,46 @@ function Financeiro() {
   
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
+
+  // States for filters
+  const [recPeriod, setRecPeriod] = useState({ 
+    start: format(startOfMonth(today), "yyyy-MM-dd"), 
+    end: format(endOfMonth(today), "yyyy-MM-dd") 
+  });
+  const [aRecPeriod, setARecPeriod] = useState({ 
+    start: format(startOfMonth(today), "yyyy-MM-dd"), 
+    end: format(endOfMonth(today), "yyyy-MM-dd") 
+  });
+  const [primeirasMonth, setPrimeirasMonth] = useState(format(today, "yyyy-MM"));
+  const [ultimasMonth, setUltimasMonth] = useState(format(today, "yyyy-MM"));
+  const [atrasoPeriod, setAtrasoPeriod] = useState({
+    start: format(startOfMonth(today), "yyyy-MM-dd"),
+    end: format(today, "yyyy-MM-dd")
+  });
+  const [vendedoraPeriod, setVendedoraPeriod] = useState({ 
+    start: format(startOfMonth(today), "yyyy-MM-dd"), 
+    end: format(endOfMonth(today), "yyyy-MM-dd") 
+  });
+  const [selectedVendedora, setSelectedVendedora] = useState<string>("todas");
+
+  // Lowering status modal state
+  const [baixaModal, setBaixaModal] = useState<{ 
+    id: string; 
+    open: boolean; 
+    date: string;
+    isCard?: boolean;
+    valor?: number;
+    parcelas?: number;
+  } | null>(null);
+
+  const [resumoBaixa, setResumoBaixa] = useState<{
+    formaPagamento: string;
+    parcelas?: number;
+    valorBruto: number;
+    taxa?: number;
+    valorLiquido: number;
+    dataPagamento: string;
+  } | null>(null);
 
   useEffect(() => {
     const handlePoloChange = () => {
@@ -80,10 +121,10 @@ function Financeiro() {
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
-      let colabPoloId = null;
+      let colabPoloId: string | null = null;
       if (!isSuperAdmin && session?.user?.id) {
         const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
-        colabPoloId = colab?.polo_id;
+        colabPoloId = colab?.polo_id || null;
       }
 
       const [pagoMes, abertoMes, atrasado, totalAberto] = await Promise.all([
