@@ -23,7 +23,8 @@ serve(async (req) => {
       }
     );
 
-    const { action, email, password, nome, polo_id, setor } = await req.json();
+    const body = await req.json();
+    const { action, email, password, nome, polo_id, setor, id, ativo, permissoes } = body;
 
     if (action === "create_colaborador") {
       // 1. Criar no Auth
@@ -44,31 +45,110 @@ serve(async (req) => {
           nome,
           email,
           polo_id,
-          setor
+          setor,
+          ativo: true
         })
         .select()
         .single();
 
       if (colabError) throw colabError;
 
-      // 3. Criar permissões padrão (todas false por padrão)
+      // 3. Criar permissões
       const { error: permError } = await supabaseAdmin
         .from("colaborador_permissoes")
         .insert({
-          colaborador_id: colaborador.id
+          colaborador_id: colaborador.id,
+          ...permissoes
         });
 
       if (permError) throw permError;
 
-      // 4. Se setor for Vendedor, adicionar à lista de vendedoras
-      if (setor === "Vendedor") {
-         // Verificar se existe uma tabela vendedores ou similar. 
-         // O usuário mencionou: "adicionar o nome automaticamente na lista de vendedoras do cadastro de alunos"
-         // Vou assumir que existe uma tabela vendedoras ou que isso é um campo livre.
-         // Se for campo de alunos.vendedora, ele aparecerá nas opções se buscarmos por colaboradores.
+      return new Response(JSON.stringify({ success: true, colaborador }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "update_colaborador") {
+      if (!id) throw new Error("ID do colaborador não informado");
+
+      // 1. Buscar colaborador para pegar o user_id
+      const { data: colab, error: findError } = await supabaseAdmin
+        .from("colaboradores")
+        .select("user_id")
+        .eq("id", id)
+        .single();
+      
+      if (findError) throw findError;
+
+      // 2. Atualizar Auth se necessário
+      const authUpdates: any = {};
+      if (email) authUpdates.email = email;
+      if (password) authUpdates.password = password;
+      if (nome) authUpdates.user_metadata = { nome };
+
+      if (Object.keys(authUpdates).length > 0) {
+        const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
+          colab.user_id,
+          authUpdates
+        );
+        if (authError) throw authError;
       }
 
-      return new Response(JSON.stringify({ success: true, colaborador }), {
+      // 3. Atualizar tabela colaboradores
+      const colabUpdates: any = {};
+      if (nome) colabUpdates.nome = nome;
+      if (email) colabUpdates.email = email;
+      if (polo_id) colabUpdates.polo_id = polo_id;
+      if (setor) colabUpdates.setor = setor;
+      if (ativo !== undefined) colabUpdates.ativo = ativo;
+
+      const { error: colabError } = await supabaseAdmin
+        .from("colaboradores")
+        .update(colabUpdates)
+        .eq("id", id);
+
+      if (colabError) throw colabError;
+
+      // 4. Atualizar permissões se enviadas
+      if (permissoes) {
+        const { error: permError } = await supabaseAdmin
+          .from("colaborador_permissoes")
+          .update(permissoes)
+          .eq("colaborador_id", id);
+        
+        if (permError) throw permError;
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "delete_colaborador") {
+      if (!id) throw new Error("ID do colaborador não informado");
+
+      // 1. Buscar para pegar user_id
+      const { data: colab, error: findError } = await supabaseAdmin
+        .from("colaboradores")
+        .select("user_id")
+        .eq("id", id)
+        .single();
+      
+      if (findError) throw findError;
+
+      // 2. Deletar do Auth
+      const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(colab.user_id);
+      if (authError) throw authError;
+
+      // 3. Deletar da tabela colaboradores (permissões deletam em cascata)
+      const { error: colabError } = await supabaseAdmin
+        .from("colaboradores")
+        .delete()
+        .eq("id", id);
+
+      if (colabError) throw colabError;
+
+      return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
