@@ -5,15 +5,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { FileDown, Users, Package, MapPin, TrendingUp, BarChart3, PieChart as PieChartIcon } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Progress } from "@/components/ui/progress";
 import { startOfMonth, endOfMonth, format } from "date-fns";
+import { useAuth } from "@/hooks/use-auth";
+
+interface Origin {
+  name: string;
+  count: number;
+  percent: number;
+}
 
 export function SalesReport() {
+  const { session } = useAuth();
   const today = new Date();
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
+  
   const [filters, setFilters] = useState({
     startDate: format(startOfMonth(today), "yyyy-MM-dd"),
     endDate: format(endOfMonth(today), "yyyy-MM-dd"),
@@ -21,6 +31,48 @@ export function SalesReport() {
     pacote: "todos",
     origem: "todas"
   });
+
+  useEffect(() => {
+    const handlePoloChange = () => {
+      setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+    };
+    window.addEventListener("polo-changed", handlePoloChange);
+    return () => window.removeEventListener("polo-changed", handlePoloChange);
+  }, []);
+
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+      return data?.role;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const { data: colabData } = useQuery({
+    queryKey: ["colaborador-polo", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
+  const filterByPolo = (q: any) => {
+    const colabPoloId = colabData?.polo_id;
+    if (isSuperAdmin) {
+      if (selectedPoloId && selectedPoloId !== 'all') {
+        return q.eq('polo_id', selectedPoloId);
+      }
+    } else if (colabPoloId) {
+      return q.eq('polo_id', colabPoloId);
+    }
+    return q;
+  };
 
   const { data: pacotes } = useQuery({
     queryKey: ["pacotes-list"],
@@ -36,7 +88,7 @@ export function SalesReport() {
   });
 
   const { data: reportData, isLoading } = useQuery({
-    queryKey: ["sales-report-data", filters],
+    queryKey: ["sales-report-data", filters, selectedPoloId, userRole, colabData],
     queryFn: async () => {
       let query = supabase
         .from("matriculas")
@@ -44,6 +96,7 @@ export function SalesReport() {
           id,
           created_at,
           observacao,
+          polo_id,
           alunos!inner (
             nome,
             vendedora,
@@ -73,6 +126,8 @@ export function SalesReport() {
       if (filters.origem !== "todas") {
         query = query.eq("alunos.origem", filters.origem as any);
       }
+
+      query = filterByPolo(query);
 
       const { data, error } = await query;
       if (error) throw error;
@@ -182,7 +237,6 @@ export function SalesReport() {
 
     reportData.forEach(r => {
       const o = r.origem;
-      // Map enum values if necessary, but assuming they match the display labels or we can format them
       const label = o.charAt(0).toUpperCase() + o.slice(1);
       if (!map[label]) map[label] = { total: 0 };
       map[label].total += 1;
@@ -226,7 +280,6 @@ export function SalesReport() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Filtros */}
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -288,14 +341,12 @@ export function SalesReport() {
                   <SelectItem value="Indicação">Indicação</SelectItem>
                   <SelectItem value="Outros">Outros</SelectItem>
                 </SelectContent>
-
               </Select>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card className="bg-gradient-to-br from-[#1E3A5F] to-[#2a528a] text-white">
           <CardContent className="pt-6 px-4">
@@ -359,7 +410,6 @@ export function SalesReport() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Vendas por Vendedora */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -397,7 +447,6 @@ export function SalesReport() {
           </CardContent>
         </Card>
 
-        {/* Vendas por Pacote */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -425,7 +474,6 @@ export function SalesReport() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Vendas por Origem - Detalhado */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -468,7 +516,6 @@ export function SalesReport() {
           </CardContent>
         </Card>
 
-        {/* Gráfico de Pizza - Resumo Visual */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -486,7 +533,7 @@ export function SalesReport() {
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ nome, percent }) => `${nome} ${(percent).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${(percent).toFixed(0)}%`}
                 >
                   {origensStats.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -500,7 +547,6 @@ export function SalesReport() {
         </Card>
       </div>
 
-      {/* Tabela Detalhada */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Tabela Detalhada de Vendas</CardTitle>
