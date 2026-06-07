@@ -1,12 +1,19 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, ListVideo, Tags, Settings } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, Tags, Settings, ChevronDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
@@ -24,6 +31,10 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
   const navigate = useNavigate();
   const [recreating, setRecreating] = useState(false);
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+  
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(() => {
+    return sessionStorage.getItem("selected_polo_id") || "all";
+  });
 
   const { data: userRole } = useQuery({
     queryKey: ["user-role", session?.user?.id],
@@ -40,6 +51,19 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
     enabled: !!session?.user?.id,
   });
 
+  const { data: polos } = useQuery({
+    queryKey: ["polos-ativos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("polos")
+        .select("id, nome")
+        .eq("ativo", true)
+        .order("nome");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: config } = useQuery({
     queryKey: ["admin-sidebar-config"],
     queryFn: async () => {
@@ -53,6 +77,23 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
     },
   });
 
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+  const isAdminPolo = colaborador?.setor === 'Admin Polo' || (colaborador?.colaborador_permissoes?.[0]?.ver_configuracoes);
+
+  useEffect(() => {
+    if (!isSuperAdmin && colaborador?.polo_id) {
+      sessionStorage.setItem("selected_polo_id", colaborador.polo_id);
+      setSelectedPoloId(colaborador.polo_id);
+    }
+  }, [isSuperAdmin, colaborador]);
+
+  const handlePoloChange = (id: string) => {
+    setSelectedPoloId(id);
+    sessionStorage.setItem("selected_polo_id", id);
+    window.dispatchEvent(new Event("polo-changed"));
+    toast.success(`Polo selecionado: ${id === 'all' ? 'Todos os Polos' : polos?.find(p => p.id === id)?.nome}`);
+  };
+
   const isActive = (url: string) => {
     if (url === "/") return path === "/";
     return path === url || path.startsWith(url + "/");
@@ -60,6 +101,7 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    sessionStorage.removeItem("selected_polo_id");
     navigate({ to: "/login" });
   };
 
@@ -83,17 +125,44 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
   };
 
   return (
-    <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen">
+    <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen border-r border-sidebar-border shadow-lg">
       <div className="px-6 py-6 border-b border-sidebar-border">
         <h1 className="text-2xl font-bold tracking-tight">
           <span className="text-white">{nomeEscola.split(' ')[0]}</span> <span className="text-[#2ECC71]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
         </h1>
-        <p className="text-xs text-sidebar-foreground/60 mt-1">Painel Administrativo</p>
+        <p className="text-xs text-sidebar-foreground/60 mt-1 uppercase tracking-wider font-semibold">Painel Administrativo</p>
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1">
+
+      {isSuperAdmin && (
+        <div className="px-3 py-4 border-b border-sidebar-border">
+          <p className="text-[10px] text-sidebar-foreground/50 font-bold uppercase mb-2 px-3 tracking-widest">Seletor de Polo</p>
+          <Select value={selectedPoloId} onValueChange={handlePoloChange}>
+            <SelectTrigger className="w-full bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80 transition-all h-10">
+              <SelectValue placeholder="Selecione o polo" />
+            </SelectTrigger>
+            <SelectContent className="bg-sidebar border-sidebar-border text-sidebar-foreground">
+              <SelectItem value="all" className="focus:bg-sidebar-primary focus:text-white cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span>Todos os Polos</span>
+                </div>
+              </SelectItem>
+              {polos?.map(p => (
+                <SelectItem key={p.id} value={p.id} className="focus:bg-sidebar-primary focus:text-white cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#2ECC71]" />
+                    <span>{p.nome}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {items.map((item) => {
-          const isAdmin = session?.user?.email === 'admin@admin.com' || userRole === 'admin';
-          console.log(`Item: ${item.title}, isAdmin: ${isAdmin}, email: ${session?.user?.email}, role: ${userRole}`);
+          const isAdmin = session?.user?.email === 'admin@admin.com' || isSuperAdmin;
           
           if (item.adminOnly && !isAdmin) return null;
           
@@ -124,9 +193,9 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
             <Link
               key={item.title}
               to={item.url}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-200 ${
                 active
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold shadow-md scale-[1.02]"
                   : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
@@ -136,16 +205,20 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
           );
         })}
       </nav>
-      <div className="p-3 border-t border-sidebar-border space-y-1">
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          onClick={handleRecreateAdmin}
-          disabled={recreating}
-        >
-          {recreating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShieldPlus className="h-4 w-4 mr-2" />}
-          Recriar Admin
-        </Button>
+
+      <div className="p-3 border-t border-sidebar-border space-y-1 bg-sidebar-accent/30">
+        {isSuperAdmin && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-xs"
+            onClick={handleRecreateAdmin}
+            disabled={recreating}
+          >
+            {recreating ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <ShieldPlus className="h-3 w-3 mr-2" />}
+            Recriar Admin
+          </Button>
+        )}
         <Link
           to="/configuracoes"
           className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
@@ -159,7 +232,7 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
         </Link>
         <Button
           variant="ghost"
-          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="w-full justify-start text-sidebar-foreground hover:bg-red-500 hover:text-white transition-colors"
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4 mr-2" />

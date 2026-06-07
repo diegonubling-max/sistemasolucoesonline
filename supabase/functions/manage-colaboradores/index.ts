@@ -32,7 +32,10 @@ serve(async (req) => {
         email,
         password,
         email_confirm: true,
-        user_metadata: { nome, role: 'colaborador' }
+        user_metadata: { 
+          nome, 
+          role: setor === 'Admin Polo' ? 'admin_polo' : 'colaborador' 
+        }
       });
 
       if (authError) throw authError;

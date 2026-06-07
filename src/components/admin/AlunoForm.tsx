@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -89,24 +91,20 @@ export function AlunoForm({
 }) {
   const [vendedoras, setVendedoras] = useState<string[]>(["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"]);
   const [polos, setPolos] = useState<any[]>([]);
+  const { session } = useAuth();
+  const [userPoloId, setUserPoloId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadOptions() {
-      const { data: colabs } = await supabase
-        .from('colaboradores')
-        .select('nome')
-        .eq('setor', 'Vendedor');
-      
-      if (colabs && colabs.length > 0) {
-        const nomes = colabs.map(c => c.nome);
-        setVendedoras(prev => [...new Set([...prev, ...nomes])]);
-      }
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+      return data?.role;
+    },
+    enabled: !!session?.user?.id
+  });
 
-      const { data: listPolos } = await supabase.from('polos').select('id, nome').eq('ativo', true);
-      if (listPolos) setPolos(listPolos);
-    }
-    loadOptions();
-  }, []);
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
 
   const form = useForm<any>({
     resolver: zodResolver(schema),
@@ -116,6 +114,34 @@ export function AlunoForm({
       ativo: initialValues?.ativo === undefined ? "Ativo" : (initialValues.ativo ? "Ativo" : "Inativo")
     },
   });
+
+  useEffect(() => {
+    async function loadOptions() {
+      const { data: colabs } = await supabase
+        .from('colaboradores')
+        .select('nome, polo_id, setor')
+        .eq('setor', 'Vendedor');
+      
+      if (colabs && colabs.length > 0) {
+        const nomes = colabs.map(c => c.nome);
+        setVendedoras(prev => [...new Set([...prev, ...nomes])]);
+      }
+
+      const { data: listPolos } = await supabase.from('polos').select('id, nome').eq('ativo', true);
+      if (listPolos) setPolos(listPolos);
+
+      if (session?.user?.id) {
+        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
+        if (colab?.polo_id) {
+          setUserPoloId(colab.polo_id);
+          if (!isEdit && !form.getValues("polo_id")) {
+            form.setValue("polo_id", colab.polo_id);
+          }
+        }
+      }
+    }
+    loadOptions();
+  }, [session, isEdit]);
 
   const onLocalSubmit = (values: any) => {
     const finalValues = {
@@ -279,6 +305,7 @@ export function AlunoForm({
           {/* 8.1 Polo */}
           <Field label="Polo *" error={errors.polo_id?.message as string}>
             <Select
+              disabled={!isSuperAdmin && !!userPoloId}
               value={form.watch("polo_id")}
               onValueChange={(v) => form.setValue("polo_id", v, { shouldValidate: true })}
             >
@@ -293,6 +320,11 @@ export function AlunoForm({
                 ))}
               </SelectContent>
             </Select>
+            {!isSuperAdmin && userPoloId && (
+              <p className="text-[10px] text-muted-foreground mt-1 italic">
+                Vinculado ao seu polo de origem.
+              </p>
+            )}
           </Field>
 
           {/* 9. Status (Only on Edit) */}

@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { startOfMonth, endOfMonth, format, isBefore, parseISO, startOfDay, differenceInDays } from "date-fns";
 import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, Calendar, Hash, UserX, BarChart3 } from "lucide-react";
@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { SalesReport } from "@/components/admin/financeiro/SalesReport";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
@@ -36,10 +37,12 @@ type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atra
 
 
 function Financeiro() {
+  const { session } = useAuth();
   const queryClient = useQueryClient();
   const today = new Date();
   
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
   // States for filters
   const [recPeriod, setRecPeriod] = useState({ 
@@ -81,17 +84,54 @@ function Financeiro() {
     dataPagamento: string;
   } | null>(null);
 
+  useEffect(() => {
+    const handlePoloChange = () => {
+      setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+    };
+    window.addEventListener("polo-changed", handlePoloChange);
+    return () => window.removeEventListener("polo-changed", handlePoloChange);
+  }, []);
+
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+      return data?.role;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
+  const filterByPolo = (q: any, colabPoloId: string | null) => {
+    if (isSuperAdmin) {
+      if (selectedPoloId && selectedPoloId !== 'all') {
+        return q.eq('polo_id', selectedPoloId);
+      }
+    } else if (colabPoloId) {
+      return q.eq('polo_id', colabPoloId);
+    }
+    return q;
+  };
+
   const { data: globalStats } = useQuery({
-    queryKey: ["financeiro-global-stats"],
+    queryKey: ["financeiro-global-stats", selectedPoloId],
     queryFn: async () => {
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
+      let colabPoloId: string | null = null;
+      if (!isSuperAdmin && session?.user?.id) {
+        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
+        colabPoloId = colab?.polo_id || null;
+      }
+
       const [pagoMes, abertoMes, atrasado, totalAberto] = await Promise.all([
-        supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")),
-        supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd")),
-        supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd")),
-        supabase.from("parcelas").select("valor").neq("status", "isento"),
+        filterByPolo(supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")), colabPoloId),
+        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd")), colabPoloId),
+        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd")), colabPoloId),
+        filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento"), colabPoloId),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);

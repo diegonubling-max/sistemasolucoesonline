@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Plus, Search, Pencil, Eye, Power, Trash2, AlertTriangle, Loader2, FileText, FileCheck, FileWarning } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ContratoAlunoModal } from "@/components/admin/alunos/ContratoAlunoModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/use-auth";
 
 
 export const Route = createFileRoute("/_admin/alunos/")({
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_admin/alunos/")({
 const PAGE_SIZE = 10;
 
 function AlunosList() {
+  const { session } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -44,11 +46,31 @@ function AlunosList() {
   const [globalSearchResult, setGlobalSearchResult] = useState<any>(null);
   const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
 
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
+
+  useEffect(() => {
+    const handlePoloChange = () => {
+      setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+      setPage(0);
+    };
+    window.addEventListener("polo-changed", handlePoloChange);
+    return () => window.removeEventListener("polo-changed", handlePoloChange);
+  }, []);
+
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+      return data?.role;
+    },
+    enabled: !!session?.user?.id
+  });
+
   const handleGlobalSearch = async () => {
     if (!globalSearchCpf) return;
     setIsSearchingGlobal(true);
     try {
-      // Busca aluno pelo CPF em qualquer polo (ignora RLS se possível, mas aqui usaremos a tabela pública)
       const { data, error } = await supabase
         .from("alunos")
         .select("nome, vendedora, created_at, polos(nome), matriculas(id, created_at, parcelas(valor, status))")
@@ -66,18 +88,13 @@ function AlunosList() {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["alunos", search, page],
+    queryKey: ["alunos", search, page, selectedPoloId],
     queryFn: async () => {
-      // Se for colaborador, filtrar pelo polo dele. 
-      // Por simplicidade aqui e seguindo a Parte 4, vou adicionar o filtro se o colaborador estiver presente.
-      // Como não estamos passando via contexto, vamos buscar o colab no queryFn ou assumir RLS.
-      // O requisito diz "Filtrar alunos pelo polo_id do colaborador".
-      
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user.id;
-      
+      const userId = session?.user?.id;
       let colabPoloId = null;
-      if (userId) {
+      let isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
+      if (userId && !isSuperAdmin) {
         const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', userId).maybeSingle();
         colabPoloId = colab?.polo_id;
       }
@@ -88,7 +105,11 @@ function AlunosList() {
         .order("ctr", { ascending: true })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       
-      if (colabPoloId) {
+      if (isSuperAdmin) {
+        if (selectedPoloId && selectedPoloId !== 'all') {
+          q = q.eq('polo_id', selectedPoloId);
+        }
+      } else if (colabPoloId) {
         q = q.eq('polo_id', colabPoloId);
       }
 

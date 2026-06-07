@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Users, BookOpen, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin } from "lucide-react";
+import { Users, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,31 +8,64 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { formatDate } from "@/lib/format";
+import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_admin/")({
   head: () => ({ meta: [{ title: "Dashboard — EduManager" }] }),
   component: Dashboard,
 });
 
+interface Origin {
+  name: string;
+  count: number;
+  percent: number;
+}
+
 function Dashboard() {
-  const { data: stats } = useQuery({
-    queryKey: ["dashboard-stats"],
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
+
+  useEffect(() => {
+    const handlePoloChange = () => {
+      setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+    };
+    window.addEventListener("polo-changed", handlePoloChange);
+    return () => window.removeEventListener("polo-changed", handlePoloChange);
+  }, []);
+
+  const { data: polos } = useQuery({
+    queryKey: ["polos-ativos"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("polos").select("id, nome").eq("ativo", true);
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: stats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ["dashboard-stats", selectedPoloId],
     queryFn: async () => {
       const today = new Date();
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
+      const filterByPolo = (q: any) => {
+        if (selectedPoloId && selectedPoloId !== 'all') {
+          return q.eq('polo_id', selectedPoloId);
+        }
+        return q;
+      };
+
       const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData] = await Promise.all([
-        supabase.from("alunos").select("*", { count: "exact", head: true }),
+        filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
-        supabase.from("matriculas").select("*", { count: "exact", head: true }),
-        supabase.from("alunos").select("*", { count: "exact", head: true }).eq("ativo", true),
-        // Faturamento
-        supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")),
-        supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd")),
-        supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd")),
-        supabase.from("parcelas").select("valor").neq("status", "isento"),
-        supabase.from("alunos").select("origem"),
+        filterByPolo(supabase.from("matriculas").select("*", { count: "exact", head: true })),
+        filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true }).eq("ativo", true)),
+        filterByPolo(supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
+        filterByPolo(supabase.from("alunos").select("origem")),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
@@ -42,21 +75,39 @@ function Dashboard() {
         return acc + val;
       }, 0);
 
-      // Calcular origens
-      const origensMap = (origensData.data ?? []).reduce((acc: Record<string, number>, curr) => {
+      const origensMap = (origensData.data ?? []).reduce((acc: Record<string, number>, curr: any) => {
         const key = curr.origem || 'Outros';
         acc[key] = (acc[key] || 0) + 1;
         return acc;
       }, {});
 
       const totalAlunos = a.count ?? 0;
-      const origens = Object.entries(origensMap)
-        .map(([name, count]) => ({
+      const origens: Origin[] = Object.entries(origensMap)
+        .map(([name, count]: [string, any]) => ({
           name,
-          count,
-          percent: totalAlunos > 0 ? Math.round((count / totalAlunos) * 100) : 0
+          count: Number(count),
+          percent: totalAlunos > 0 ? Math.round((Number(count) / totalAlunos) * 100) : 0
         }))
         .sort((a, b) => b.count - a.count);
+
+      let statsByPolo: any[] = [];
+      if (selectedPoloId === 'all' && polos) {
+        const poloPromises = polos.map(async (p) => {
+          const [alunosPolo, recebidoPolo, matriculasMesPolo] = await Promise.all([
+            supabase.from("alunos").select("*", { count: "exact", head: true }).eq("polo_id", p.id),
+            supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").eq("polo_id", p.id).gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")),
+            supabase.from("matriculas").select("*", { count: "exact", head: true }).eq("polo_id", p.id).gte("created_at", format(firstDay, "yyyy-MM-dd"))
+          ]);
+
+          return {
+            poloNome: p.nome,
+            alunos: alunosPolo.count || 0,
+            recebido: receivedSum(recebidoPolo.data),
+            matriculasMes: matriculasMesPolo.count || 0
+          };
+        });
+        statsByPolo = await Promise.all(poloPromises);
+      }
 
       return {
         alunos: totalAlunos,
@@ -69,19 +120,26 @@ function Dashboard() {
           aReceberMes: sum(abertoMes.data),
           atrasado: sum(atrasado.data),
           totalGeral: sum(totalAberto.data),
-        }
+        },
+        statsByPolo
       };
     },
   });
 
   const { data: recentes } = useQuery({
-    queryKey: ["alunos-recentes"],
+    queryKey: ["alunos-recentes", selectedPoloId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("alunos")
         .select("id, nome, email, created_at")
         .order("created_at", { ascending: false })
         .limit(10);
+      
+      if (selectedPoloId && selectedPoloId !== 'all') {
+        q = q.eq('polo_id', selectedPoloId);
+      }
+
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -99,23 +157,72 @@ function Dashboard() {
     { label: "Em Atraso", value: formatCurrency(stats?.faturamento?.atrasado ?? 0), icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10" },
   ];
 
-  return (
-    <div>
-      <PageHeader title="Dashboard" description="Visão geral do EduManager" />
+  if (isLoadingStats) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-      <h2 className="text-xl font-bold mb-4">Faturamento</h2>
+  return (
+    <div className="animate-in fade-in duration-500">
+      <PageHeader 
+        title="Dashboard" 
+        description={selectedPoloId === 'all' ? "Visão geral de todos os polos" : `Visão geral: ${polos?.find(p => p.id === selectedPoloId)?.nome || 'Polo selecionado'}`} 
+      />
+
+      {selectedPoloId === 'all' && stats?.statsByPolo && stats.statsByPolo.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <div className="w-1 h-6 bg-primary rounded-full" />
+            Cards por Polo
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {stats.statsByPolo.map((poloStat: any) => (
+              <Card key={poloStat.poloNome} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold text-primary flex justify-between items-center">
+                    {poloStat.poloNome}
+                    <Badge variant="outline" className="font-normal">Polo</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Total Alunos:</span>
+                    <span className="text-sm font-bold">{poloStat.alunos}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Recebido Mês:</span>
+                    <span className="text-sm font-bold text-green-600">{formatCurrency(poloStat.recebido)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Matrículas Mês:</span>
+                    <span className="text-sm font-bold text-blue-600">{poloStat.matriculasMes}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <div className="w-1 h-6 bg-green-500 rounded-full" />
+        Faturamento {selectedPoloId !== 'all' && 'do Polo'}
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {faturamentoCards.map((c) => {
           const Icon = c.icon;
           return (
-            <Card key={c.label}>
+            <Card key={c.label} className="border-l-4 border-l-primary/20 hover:border-l-primary transition-all">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">{c.label}</p>
-                    <p className="text-2xl font-bold mt-1">{c.value}</p>
+                    <p className="text-2xl font-bold mt-1 tracking-tight">{c.value}</p>
                   </div>
-                  <div className={`p-2 rounded-full ${c.bg}`}>
+                  <div className={`p-2.5 rounded-xl ${c.bg}`}>
                     <Icon className={`h-6 w-6 ${c.color}`} />
                   </div>
                 </div>
@@ -125,95 +232,108 @@ function Dashboard() {
         })}
       </div>
 
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold">Origem das Matrículas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {(stats?.origens ?? []).map((o) => {
-              let Icon = Pin;
-              if (o.name.toLowerCase().includes("google")) Icon = Search;
-              else if (o.name.toLowerCase().includes("meta") || o.name.toLowerCase().includes("facebook") || o.name.toLowerCase().includes("instagram")) Icon = Smartphone;
-              else if (o.name.toLowerCase().includes("indicação") || o.name.toLowerCase().includes("indicacao")) Icon = UserGroup;
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold flex items-center gap-2">
+              <UserGroup className="h-5 w-5 text-primary" />
+              Origem das Matrículas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {(stats?.origens ?? []).map((o: Origin) => {
+                let Icon = Pin;
+                if (o.name.toLowerCase().includes("google")) Icon = Search;
+                else if (o.name.toLowerCase().includes("meta") || o.name.toLowerCase().includes("facebook") || o.name.toLowerCase().includes("instagram")) Icon = Smartphone;
+                else if (o.name.toLowerCase().includes("indicação") || o.name.toLowerCase().includes("indicacao")) Icon = UserGroup;
 
-              return (
-                <div key={o.name} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-gray-100 rounded-md">
-                        <Icon className="h-4 w-4 text-gray-600" />
+                return (
+                  <div key={o.name} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-gray-100 rounded-md">
+                          <Icon className="h-4 w-4 text-gray-600" />
+                        </div>
+                        <span className="font-medium text-gray-700">{o.name}</span>
                       </div>
-                      <span className="font-medium text-gray-700">{o.name}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground">{o.count} {o.count === 1 ? 'aluno' : 'alunos'}</span>
+                        <span className="font-bold text-gray-900 w-10 text-right">{o.percent}%</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-muted-foreground">{o.count} {o.count === 1 ? 'aluno' : 'alunos'}</span>
-                      <span className="font-bold text-gray-900 w-10 text-right">{o.percent}%</span>
+                    <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-100">
+                      <div 
+                        className="h-full bg-primary transition-all duration-1000 ease-out" 
+                        style={{ width: `${o.percent}%` }}
+                      />
                     </div>
                   </div>
-                  <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                    <div 
-                      className="h-full bg-[#1E3A5F] transition-all duration-1000 ease-out" 
-                      style={{ width: `${o.percent}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-            {(!stats?.origens || stats.origens.length === 0) && (
-              <p className="text-center text-muted-foreground py-4">Nenhuma origem registrada.</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                );
+              })}
+              {(!stats?.origens || stats.origens.length === 0) && (
+                <p className="text-center text-muted-foreground py-4">Nenhuma origem registrada.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {cards.map((c) => {
-          const Icon = c.icon;
-          return (
-            <Card key={c.label}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{c.label}</p>
-                    <p className="text-3xl font-bold mt-1">{c.value}</p>
+        <div className="space-y-4">
+          {cards.map((c) => {
+            const Icon = c.icon;
+            return (
+              <Card key={c.label} className="bg-gradient-to-br from-white to-gray-50/50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground font-medium">{c.label}</p>
+                      <p className="text-3xl font-bold mt-1 tracking-tighter">{c.value}</p>
+                    </div>
+                    <div className="p-3 bg-white rounded-2xl shadow-sm border border-gray-100">
+                      <Icon className={`h-8 w-8 ${c.color}`} />
+                    </div>
                   </div>
-                  <Icon className={`h-8 w-8 ${c.color}`} />
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Últimos alunos cadastrados</CardTitle>
+      <Card className="border-none shadow-lg">
+        <CardHeader className="bg-gray-50/50 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Últimos alunos cadastrados
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="pl-6">Nome</TableHead>
                 <TableHead>E-mail</TableHead>
-                <TableHead>Cadastro</TableHead>
+                <TableHead className="pr-6">Cadastro</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {(recentes ?? []).map((a) => (
-                <TableRow key={a.id}>
-                  <TableCell className="font-medium">
-                    <Link to="/alunos/$id" params={{ id: a.id }} className="hover:text-primary">
+                <TableRow key={a.id} className="group transition-colors">
+                  <TableCell className="font-medium pl-6">
+                    <Link to="/alunos/$id" params={{ id: a.id }} className="hover:text-primary flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                        {a.nome.charAt(0)}
+                      </div>
                       {a.nome}
                     </Link>
                   </TableCell>
-                  <TableCell>{a.email}</TableCell>
-                  <TableCell>{formatDate(a.created_at)}</TableCell>
+                  <TableCell className="text-muted-foreground">{a.email}</TableCell>
+                  <TableCell className="text-muted-foreground pr-6">{formatDate(a.created_at)}</TableCell>
                 </TableRow>
               ))}
               {recentes && recentes.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-6">
+                  <TableCell colSpan={3} className="text-center text-muted-foreground py-10 italic">
                     Nenhum aluno cadastrado ainda.
                   </TableCell>
                 </TableRow>

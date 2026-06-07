@@ -61,7 +61,7 @@ const formSchema = z.object({
   setor: z.string().min(1, "Selecione um setor"),
 });
 
-const SETORES = ["Vendedor", "Setor de Provas", "Cobrança", "Administrativo", "Outros"];
+const SETORES = ["Vendedor", "Setor de Provas", "Cobrança", "Administrativo", "Admin Polo", "Outros"];
 
 const PERMISSIONS_LIST = [
   { id: 'ver_alunos', label: 'Ver Alunos' },
@@ -81,6 +81,26 @@ function ColaboradoresList() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingColab, setEditingColab] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
+
+  useEffect(() => {
+    const handlePoloChange = () => {
+      setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+    };
+    window.addEventListener("polo-changed", handlePoloChange);
+    return () => window.removeEventListener("polo-changed", handlePoloChange);
+  }, []);
+
+  const { data: colaborador } = useQuery({
+    queryKey: ["current-colaborador", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('colaboradores').select('*, colaborador_permissoes(*)').eq('user_id', session.user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
   
   // State for permissions during creation/editing
   const [formPerms, setFormPerms] = useState<Record<string, boolean>>({
@@ -110,23 +130,33 @@ function ColaboradoresList() {
   });
 
   // Access check
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+  const isAdminPolo = (colaborador as any)?.setor === 'Admin Polo' || ((colaborador as any)?.colaborador_permissoes?.[0]?.ver_configuracoes);
+
   useEffect(() => {
     if (!loadingRole && session?.user) {
-      const isAdmin = session.user.email === 'admin@admin.com' || userRole === 'admin';
-      if (!isAdmin) {
+      if (!isSuperAdmin && !isAdminPolo) {
         toast.error("Acesso negado. Apenas administradores podem acessar esta página.");
         navigate({ to: "/" });
       }
     }
-  }, [session, userRole, loadingRole, navigate]);
+  }, [session, userRole, loadingRole, navigate, isSuperAdmin, isAdminPolo]);
 
   const { data: colaboradores, isLoading } = useQuery({
-    queryKey: ["colaboradores"],
+    queryKey: ["colaboradores", selectedPoloId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("colaboradores")
         .select("*, polos(nome), colaborador_permissoes(*)")
         .order("nome");
+      
+      if (!isSuperAdmin && (colaborador as any)?.polo_id) {
+        q = q.eq('polo_id', (colaborador as any).polo_id);
+      } else if (isSuperAdmin && selectedPoloId && selectedPoloId !== 'all') {
+        q = q.eq('polo_id', selectedPoloId);
+      }
+
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -329,7 +359,10 @@ function ColaboradoresList() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {polos?.map(p => (
+                              {polos?.filter(p => {
+                                if (isSuperAdmin) return true;
+                                return p.id === (colaborador as any)?.polo_id;
+                              }).map(p => (
                                 <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
                               ))}
                             </SelectContent>
