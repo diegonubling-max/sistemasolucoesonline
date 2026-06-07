@@ -707,6 +707,143 @@ export type Database = {
           },
         ]
       }
+      prova_agendamentos: {
+        Row: {
+          aluno_id: string | null
+          created_at: string | null
+          data_prova: string
+          hora_prova: string
+          id: string
+          status: string | null
+        }
+        Insert: {
+          aluno_id?: string | null
+          created_at?: string | null
+          data_prova: string
+          hora_prova: string
+          id?: string
+          status?: string | null
+        }
+        Update: {
+          aluno_id?: string | null
+          created_at?: string | null
+          data_prova?: string
+          hora_prova?: string
+          id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prova_agendamentos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prova_questoes: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          enunciado: string
+          id: string
+          materia: string
+          numero: number
+          opcao_a: string
+          opcao_b: string
+          opcao_c: string
+          opcao_d: string
+          resposta_correta: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          enunciado: string
+          id?: string
+          materia: string
+          numero: number
+          opcao_a: string
+          opcao_b: string
+          opcao_c: string
+          opcao_d: string
+          resposta_correta: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          enunciado?: string
+          id?: string
+          materia?: string
+          numero?: number
+          opcao_a?: string
+          opcao_b?: string
+          opcao_c?: string
+          opcao_d?: string
+          resposta_correta?: string
+        }
+        Relationships: []
+      }
+      prova_resultados: {
+        Row: {
+          agendamento_id: string | null
+          aluno_id: string | null
+          aprovado: boolean | null
+          created_at: string | null
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string | null
+          materia: string
+          percentual: number | null
+          respostas: Json | null
+          total_acertos: number | null
+          total_questoes: number | null
+        }
+        Insert: {
+          agendamento_id?: string | null
+          aluno_id?: string | null
+          aprovado?: boolean | null
+          created_at?: string | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          materia: string
+          percentual?: number | null
+          respostas?: Json | null
+          total_acertos?: number | null
+          total_questoes?: number | null
+        }
+        Update: {
+          agendamento_id?: string | null
+          aluno_id?: string | null
+          aprovado?: boolean | null
+          created_at?: string | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          materia?: string
+          percentual?: number | null
+          respostas?: Json | null
+          total_acertos?: number | null
+          total_questoes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prova_resultados_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "prova_agendamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prova_resultados_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       segmentos: {
         Row: {
           ativo: boolean | null
