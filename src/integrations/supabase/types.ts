@@ -102,6 +102,7 @@ export type Database = {
         Row: {
           asaas_customer_id: string | null
           ativo: boolean
+          colaborador_id: string | null
           cpf: string
           created_at: string
           ctr: number
@@ -116,6 +117,7 @@ export type Database = {
           observacao: string | null
           origem: Database["public"]["Enums"]["origem_aluno"]
           origem_detalhe: string | null
+          polo_id: string | null
           responsavel_cpf: string | null
           responsavel_email: string | null
           responsavel_nome: string | null
@@ -128,6 +130,7 @@ export type Database = {
         Insert: {
           asaas_customer_id?: string | null
           ativo?: boolean
+          colaborador_id?: string | null
           cpf: string
           created_at?: string
           ctr?: number
@@ -142,6 +145,7 @@ export type Database = {
           observacao?: string | null
           origem: Database["public"]["Enums"]["origem_aluno"]
           origem_detalhe?: string | null
+          polo_id?: string | null
           responsavel_cpf?: string | null
           responsavel_email?: string | null
           responsavel_nome?: string | null
@@ -154,6 +158,7 @@ export type Database = {
         Update: {
           asaas_customer_id?: string | null
           ativo?: boolean
+          colaborador_id?: string | null
           cpf?: string
           created_at?: string
           ctr?: number
@@ -168,6 +173,7 @@ export type Database = {
           observacao?: string | null
           origem?: Database["public"]["Enums"]["origem_aluno"]
           origem_detalhe?: string | null
+          polo_id?: string | null
           responsavel_cpf?: string | null
           responsavel_email?: string | null
           responsavel_nome?: string | null
@@ -177,7 +183,22 @@ export type Database = {
           tema?: string | null
           vendedora?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "alunos_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alunos_polo_id_fkey"
+            columns: ["polo_id"]
+            isOneToOne: false
+            referencedRelation: "polos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       aulas: {
         Row: {
@@ -219,6 +240,76 @@ export type Database = {
             columns: ["curso_id"]
             isOneToOne: false
             referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      colaborador_permissoes: {
+        Row: {
+          ativo: boolean | null
+          colaborador_id: string | null
+          id: string
+          permissao: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          colaborador_id?: string | null
+          id?: string
+          permissao: string
+        }
+        Update: {
+          ativo?: boolean | null
+          colaborador_id?: string | null
+          id?: string
+          permissao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaborador_permissoes_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      colaboradores: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          email: string
+          id: string
+          nome: string
+          polo_id: string | null
+          setor: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          email: string
+          id?: string
+          nome: string
+          polo_id?: string | null
+          setor: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          nome?: string
+          polo_id?: string | null
+          setor?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaboradores_polo_id_fkey"
+            columns: ["polo_id"]
+            isOneToOne: false
+            referencedRelation: "polos"
             referencedColumns: ["id"]
           },
         ]
@@ -497,21 +588,27 @@ export type Database = {
       matriculas: {
         Row: {
           aluno_id: string
+          colaborador_id: string | null
           created_at: string
           id: string
           observacao: string | null
+          polo_id: string | null
         }
         Insert: {
           aluno_id: string
+          colaborador_id?: string | null
           created_at?: string
           id?: string
           observacao?: string | null
+          polo_id?: string | null
         }
         Update: {
           aluno_id?: string
+          colaborador_id?: string | null
           created_at?: string
           id?: string
           observacao?: string | null
+          polo_id?: string | null
         }
         Relationships: [
           {
@@ -519,6 +616,20 @@ export type Database = {
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matriculas_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matriculas_polo_id_fkey"
+            columns: ["polo_id"]
+            isOneToOne: false
+            referencedRelation: "polos"
             referencedColumns: ["id"]
           },
         ]
@@ -706,6 +817,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      polos: {
+        Row: {
+          ativo: boolean | null
+          cidade: string | null
+          created_at: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          cidade?: string | null
+          created_at?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          ativo?: boolean | null
+          cidade?: string | null
+          created_at?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
       }
       prova_agendamentos: {
         Row: {
