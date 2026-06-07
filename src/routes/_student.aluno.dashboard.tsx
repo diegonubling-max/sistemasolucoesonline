@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, PlayCircle, Loader2, Lock, Smartphone, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,10 +19,12 @@ export const Route = createFileRoute("/_student/aluno/dashboard")({
 
 function StudentDashboard() {
   const { session } = useAuth();
+  const navigate = useNavigate();
   const { isDark } = useStudentTheme();
   const [selectedVitrine, setSelectedVitrine] = useState<any>(null);
   const [showProvaFinalDialog, setShowProvaFinalDialog] = useState(false);
   const [showLockedProvaDialog, setShowLockedProvaDialog] = useState(false);
+  const [showAgendadoDialog, setShowAgendadoDialog] = useState(false);
 
 
   const { data: cursos, isLoading } = useQuery({
@@ -82,6 +84,24 @@ function StudentDashboard() {
       return data;
     },
     enabled: !!session?.user.email,
+  });
+
+  const { data: agendamento } = useQuery({
+    queryKey: ["student-agendamento", studentData?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prova_agendamentos")
+        .select("*")
+        .eq("aluno_id", studentData!.id)
+        .eq("status", "agendado")
+        .order("data_prova", { ascending: true })
+        .order("hora_prova", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!studentData?.id,
   });
 
   const { data: configs } = useQuery({
@@ -301,7 +321,15 @@ function StudentDashboard() {
                         return (
                           <div 
                             key={i} 
-                            onClick={() => isReleased ? setShowProvaFinalDialog(true) : setShowLockedProvaDialog(true)}
+                            onClick={() => {
+                              if (agendamento) {
+                                setShowAgendadoDialog(true);
+                              } else if (isReleased) {
+                                setShowProvaFinalDialog(true);
+                              } else {
+                                setShowLockedProvaDialog(true);
+                              }
+                            }}
                             className="group block w-full"
                           >
                             {cardContent}
@@ -445,6 +473,52 @@ function StudentDashboard() {
                 <Smartphone className="h-5 w-5" />
                 Agendar via WhatsApp
               </a>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAgendadoDialog} onOpenChange={setShowAgendadoDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Sua Prova está Agendada! 🎓
+            </DialogTitle>
+            <DialogDescription className="text-gray-700 pt-2">
+              Você já possui um agendamento para a sua prova final.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-6 space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col items-center text-center space-y-1">
+                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Data</span>
+                <span className="font-bold text-gray-900">
+                  {agendamento && new Date(agendamento.data_prova + 'T00:00:00').toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col items-center text-center space-y-1">
+                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Horário</span>
+                <span className="font-bold text-gray-900">
+                  {agendamento?.hora_prova?.substring(0, 5)}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-start gap-3">
+              <div className="p-2 bg-blue-500 rounded-full text-white">
+                <CheckCircle2 className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs text-blue-800 font-bold uppercase tracking-wider">Acesso</p>
+                <p className="text-sm text-blue-700">A prova será liberada automaticamente no dia e horário agendados na aba "Prova Final".</p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button className="w-full bg-[#1E3A5F]" onClick={() => navigate({ to: "/aluno/prova-final" })}>
+              Ir para Prova Final
             </Button>
           </DialogFooter>
         </DialogContent>
