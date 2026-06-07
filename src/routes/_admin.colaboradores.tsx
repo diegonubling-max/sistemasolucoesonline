@@ -96,7 +96,7 @@ function ColaboradoresList() {
     queryKey: ["current-colaborador", session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
-      const { data } = await supabase.from('colaboradores').select('*').eq('user_id', session.user.id).maybeSingle();
+      const { data } = await supabase.from('colaboradores').select('*, colaborador_permissoes(*)').eq('user_id', session.user.id).maybeSingle();
       return data;
     },
     enabled: !!session?.user?.id
@@ -131,7 +131,7 @@ function ColaboradoresList() {
 
   // Access check
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
-  const isAdminPolo = colaborador?.setor === 'Admin Polo' || (colaborador?.colaborador_permissoes?.[0]?.ver_configuracoes);
+  const isAdminPolo = (colaborador as any)?.setor === 'Admin Polo' || ((colaborador as any)?.colaborador_permissoes?.[0]?.ver_configuracoes);
 
   useEffect(() => {
     if (!loadingRole && session?.user) {
@@ -150,8 +150,8 @@ function ColaboradoresList() {
         .select("*, polos(nome), colaborador_permissoes(*)")
         .order("nome");
       
-      if (!isSuperAdmin && colaborador?.polo_id) {
-        q = q.eq('polo_id', colaborador.polo_id);
+      if (!isSuperAdmin && (colaborador as any)?.polo_id) {
+        q = q.eq('polo_id', (colaborador as any).polo_id);
       } else if (isSuperAdmin && selectedPoloId && selectedPoloId !== 'all') {
         q = q.eq('polo_id', selectedPoloId);
       }
