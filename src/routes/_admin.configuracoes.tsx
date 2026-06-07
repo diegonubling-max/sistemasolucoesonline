@@ -351,6 +351,7 @@ function AdminSettings() {
                       <Select 
                         value={selectedPoloId} 
                         onValueChange={(val) => {
+                          setSelectedPoloId(val);
                           sessionStorage.setItem("selected_polo_id", val);
                           window.dispatchEvent(new Event("polo-changed"));
                         }}
@@ -421,73 +422,47 @@ function AdminSettings() {
                         </CardContent>
                       </Card>
                     </section>
+
+                    <section className="space-y-4">
+                      <div className="flex items-center gap-2 px-1">
+                        <MessageSquare className="h-5 w-5 text-primary" />
+                        <h3 className="text-xl font-semibold text-gray-800">Contato e Suporte</h3>
+                      </div>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">WhatsApp de Suporte</CardTitle>
+                          <CardDescription>Configure o número de WhatsApp que os alunos deste polo verão.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="whatsapp-number">Número do WhatsApp (com DDI e DDD)</Label>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="whatsapp-number"
+                                placeholder="Ex: 5551999999999"
+                                className="pl-9"
+                                value={whatsappSuporte}
+                                onChange={(e) => setWhatsappSuporte(e.target.value)}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end pt-2">
+                            <Button 
+                              onClick={() => updatePoloConfig.mutate({ whatsapp: whatsappSuporte })}
+                              disabled={updatePoloConfig.isPending}
+                              className="w-full sm:w-auto"
+                            >
+                              {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                              Salvar WhatsApp
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </section>
                   </>
                 )}
-
-                          <Button 
-                            onClick={() => updatePoloConfig.mutate({ nome_escola: nomeEscola })}
-                            disabled={updatePoloConfig.isPending}
-                          >
-                            {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                            Salvar
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </section>
-
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                    <MessageSquare className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-semibold text-gray-800">Contato e Suporte</h3>
-                  </div>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">WhatsApp de Suporte</CardTitle>
-                      <CardDescription>Configure o número e a mensagem padrão para o atendimento</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="whatsapp-number">Número do WhatsApp</Label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <Input
-                            id="whatsapp-number"
-                            placeholder="Ex: 5551999999999"
-                            className="pl-9"
-                            value={whatsappSuporte}
-                            onChange={(e) => setWhatsappSuporte(e.target.value)}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Digite o número com DDI e DDD sem espaços ou símbolos. Ex: 5551999999999
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="whatsapp-message">Número do WhatsApp (Suporte)</Label>
-                        <Input
-                          id="whatsapp-number"
-                          placeholder="Ex: 5551999999999"
-                          value={whatsappSuporte}
-                          onChange={(e) => setWhatsappSuporte(e.target.value)}
-                        />
-                      </div>
-
-                      <div className="flex justify-end pt-2">
-                        <Button 
-                          onClick={() => updatePoloConfig.mutate({ whatsapp: whatsappSuporte })}
-                          disabled={updatePoloConfig.isPending}
-                          className="w-full sm:w-auto"
-                        >
-                          {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                          Salvar Alterações do WhatsApp
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </section>
               </div>
             )}
 
