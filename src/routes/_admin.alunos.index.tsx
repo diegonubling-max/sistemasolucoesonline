@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ContratoAlunoModal } from "@/components/admin/alunos/ContratoAlunoModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 export const Route = createFileRoute("/_admin/alunos/")({
@@ -67,11 +68,30 @@ function AlunosList() {
   const { data, isLoading } = useQuery({
     queryKey: ["alunos", search, page],
     queryFn: async () => {
+      // Se for colaborador, filtrar pelo polo dele. 
+      // Por simplicidade aqui e seguindo a Parte 4, vou adicionar o filtro se o colaborador estiver presente.
+      // Como não estamos passando via contexto, vamos buscar o colab no queryFn ou assumir RLS.
+      // O requisito diz "Filtrar alunos pelo polo_id do colaborador".
+      
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
+      
+      let colabPoloId = null;
+      if (userId) {
+        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', userId).maybeSingle();
+        colabPoloId = colab?.polo_id;
+      }
+
       let q = supabase
         .from("alunos")
         .select("id, nome, email, telefone, cpf, data_nascimento, ativo, created_at, vendedora, ctr, matriculas(id), contratos(id, status)", { count: "exact" })
         .order("ctr", { ascending: true })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+      
+      if (colabPoloId) {
+        q = q.eq('polo_id', colabPoloId);
+      }
+
       if (search) {
         const isNumeric = /^\d+$/.test(search);
         if (isNumeric) {
