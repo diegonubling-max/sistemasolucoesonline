@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { formatDate } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_admin/")({
   head: () => ({ meta: [{ title: "Dashboard — EduManager" }] }),
