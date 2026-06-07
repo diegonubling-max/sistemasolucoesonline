@@ -69,10 +69,11 @@ function ProvaFinalPage() {
 
   const startProva = useMutation({
     mutationFn: async () => {
+      if (!agendamento) return;
       const { error } = await supabase
         .from("prova_agendamentos")
         .update({ status: "iniciado" })
-        .eq("id", agendamento?.id);
+        .eq("id", agendamento.id);
       if (error) throw error;
     },
     onSuccess: () => {
