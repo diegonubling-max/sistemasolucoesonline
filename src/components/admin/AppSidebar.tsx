@@ -10,6 +10,7 @@ import { useState } from "react";
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
   { title: "Alunos", url: "/alunos", icon: Users, enabled: true },
+  { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
   { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true },
   { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true },
   { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true },
@@ -74,6 +75,7 @@ export function AppSidebar() {
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
         {items.map((item) => {
+          if (item.adminOnly && session?.user?.email !== 'admin@admin.com') return null; // Simplified admin check
           const Icon = item.icon;
           const active = item.enabled && isActive(item.url);
           if (!item.enabled) {

@@ -19,6 +19,7 @@ import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
 import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
 import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
+import { Route as AdminColaboradoresRouteImport } from './routes/_admin.colaboradores'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
 import { Route as StudentAlunoProvaFinalRouteImport } from './routes/_student.aluno.prova-final'
@@ -81,6 +82,11 @@ const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
 const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminColaboradoresRoute = AdminColaboradoresRouteImport.update({
+  id: '/colaboradores',
+  path: '/colaboradores',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCursosIndexRoute = AdminCursosIndexRouteImport.update({
@@ -164,6 +170,7 @@ const AdminAlunosIdEditarRoute = AdminAlunosIdEditarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/_admin': typeof AdminRouteWithChildren
   '/_student': typeof StudentRouteWithChildren
   '/login': typeof LoginRoute
+  '/_admin/colaboradores': typeof AdminColaboradoresRoute
   '/_admin/configuracoes': typeof AdminConfiguracoesRoute
   '/_admin/financeiro': typeof AdminFinanceiroRoute
   '/_admin/pacotes': typeof AdminPacotesRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/colaboradores'
     | '/configuracoes'
     | '/financeiro'
     | '/pacotes'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/colaboradores'
     | '/configuracoes'
     | '/financeiro'
     | '/pacotes'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/_admin'
     | '/_student'
     | '/login'
+    | '/_admin/colaboradores'
     | '/_admin/configuracoes'
     | '/_admin/financeiro'
     | '/_admin/pacotes'
@@ -397,6 +409,13 @@ declare module '@tanstack/react-router' {
       path: '/configuracoes'
       fullPath: '/configuracoes'
       preLoaderRoute: typeof AdminConfiguracoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/colaboradores': {
+      id: '/_admin/colaboradores'
+      path: '/colaboradores'
+      fullPath: '/colaboradores'
+      preLoaderRoute: typeof AdminColaboradoresRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/cursos/': {
@@ -508,6 +527,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminColaboradoresRoute: typeof AdminColaboradoresRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminPacotesRoute: typeof AdminPacotesRoute
@@ -524,6 +544,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminColaboradoresRoute: AdminColaboradoresRoute,
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminPacotesRoute: AdminPacotesRoute,
@@ -586,3 +607,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
