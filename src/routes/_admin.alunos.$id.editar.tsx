@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { AgendamentoProvaFinal } from "@/components/admin/AgendamentoProvaFinal";
 import { formatCurrency } from "@/lib/format";
 
 export const Route = createFileRoute("/_admin/alunos/$id/editar")({
@@ -173,14 +174,17 @@ function EditarAluno() {
         </TabsContent>
 
         <TabsContent value="prova-final" className="animate-in fade-in-50 duration-300">
-          <ConfigurarProvaFinal 
-            aluno={aluno}
-            matriculaId={matricula?.id}
-            onSuccess={() => {
-              qc.invalidateQueries({ queryKey: ["aluno", id] });
-              qc.invalidateQueries({ queryKey: ["aluno-matricula-edit", id] });
-            }}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ConfigurarProvaFinal 
+              aluno={aluno}
+              matriculaId={matricula?.id}
+              onSuccess={() => {
+                qc.invalidateQueries({ queryKey: ["aluno", id] });
+                qc.invalidateQueries({ queryKey: ["aluno-matricula-edit", id] });
+              }}
+            />
+            <AgendamentoProvaFinal alunoId={id} />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
