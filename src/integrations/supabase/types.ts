@@ -739,6 +739,7 @@ export type Database = {
           numero: number
           observacao: string | null
           parcelas_cartao: number | null
+          polo_id: string | null
           status: Database["public"]["Enums"]["payment_status"]
           taxa_cartao: number | null
           tipo: Database["public"]["Enums"]["payment_type"]
@@ -764,6 +765,7 @@ export type Database = {
           numero: number
           observacao?: string | null
           parcelas_cartao?: number | null
+          polo_id?: string | null
           status?: Database["public"]["Enums"]["payment_status"]
           taxa_cartao?: number | null
           tipo: Database["public"]["Enums"]["payment_type"]
@@ -789,6 +791,7 @@ export type Database = {
           numero?: number
           observacao?: string | null
           parcelas_cartao?: number | null
+          polo_id?: string | null
           status?: Database["public"]["Enums"]["payment_status"]
           taxa_cartao?: number | null
           tipo?: Database["public"]["Enums"]["payment_type"]
@@ -803,6 +806,13 @@ export type Database = {
             columns: ["matricula_id"]
             isOneToOne: false
             referencedRelation: "matriculas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parcelas_polo_id_fkey"
+            columns: ["polo_id"]
+            isOneToOne: false
+            referencedRelation: "polos"
             referencedColumns: ["id"]
           },
         ]
