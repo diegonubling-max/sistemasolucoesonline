@@ -23,15 +23,51 @@ interface Origin {
 }
 
 function Dashboard() {
+  const { session } = useAuth();
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
   useEffect(() => {
     const handlePoloChange = () => {
       setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+      console.log("DEBUG [Dashboard]: Polo alterado para:", sessionStorage.getItem("selected_polo_id"));
     };
     window.addEventListener("polo-changed", handlePoloChange);
     return () => window.removeEventListener("polo-changed", handlePoloChange);
   }, []);
+
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+      return data?.role;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const { data: colabData } = useQuery({
+    queryKey: ["colaborador-polo", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
+  const filterByPolo = (q: any) => {
+    const colabPoloId = colabData?.polo_id;
+    if (isSuperAdmin) {
+      if (selectedPoloId && selectedPoloId !== 'all') {
+        return q.eq('polo_id', selectedPoloId);
+      }
+    } else if (colabPoloId) {
+      return q.eq('polo_id', colabPoloId);
+    }
+    return q;
+  };
 
   const { data: polos } = useQuery({
     queryKey: ["polos-ativos"],
