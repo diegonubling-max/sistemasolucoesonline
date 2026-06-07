@@ -90,6 +90,7 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
   const handlePoloChange = (id: string) => {
     setSelectedPoloId(id);
     sessionStorage.setItem("selected_polo_id", id);
+    console.log("DEBUG [AppSidebar]: Novo polo selecionado no seletor:", id);
     window.dispatchEvent(new Event("polo-changed"));
     toast.success(`Polo selecionado: ${id === 'all' ? 'Todos os Polos' : polos?.find(p => p.id === id)?.nome}`);
   };

@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { formatDate } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_admin/")({
   head: () => ({ meta: [{ title: "Dashboard — EduManager" }] }),
@@ -23,15 +24,51 @@ interface Origin {
 }
 
 function Dashboard() {
+  const { session } = useAuth();
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
   useEffect(() => {
     const handlePoloChange = () => {
       setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+      console.log("DEBUG [Dashboard]: Polo alterado para:", sessionStorage.getItem("selected_polo_id"));
     };
     window.addEventListener("polo-changed", handlePoloChange);
     return () => window.removeEventListener("polo-changed", handlePoloChange);
   }, []);
+
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+      return data?.role;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const { data: colabData } = useQuery({
+    queryKey: ["colaborador-polo", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
+  const filterByPolo = (q: any) => {
+    const colabPoloId = colabData?.polo_id;
+    if (isSuperAdmin) {
+      if (selectedPoloId && selectedPoloId !== 'all') {
+        return q.eq('polo_id', selectedPoloId);
+      }
+    } else if (colabPoloId) {
+      return q.eq('polo_id', colabPoloId);
+    }
+    return q;
+  };
 
   const { data: polos } = useQuery({
     queryKey: ["polos-ativos"],
@@ -43,18 +80,12 @@ function Dashboard() {
   });
 
   const { data: stats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["dashboard-stats", selectedPoloId],
+    queryKey: ["dashboard-stats", selectedPoloId, userRole, colabData],
     queryFn: async () => {
       const today = new Date();
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
-      const filterByPolo = (q: any) => {
-        if (selectedPoloId && selectedPoloId !== 'all') {
-          return q.eq('polo_id', selectedPoloId);
-        }
-        return q;
-      };
 
       const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData] = await Promise.all([
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),

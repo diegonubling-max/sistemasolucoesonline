@@ -136,7 +136,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       // 1. Create matricula
       const { data: m, error: me } = await supabase
         .from("matriculas")
-        .insert({ aluno_id: alunoId })
+        .insert({ aluno_id: alunoId, polo_id: aluno?.polo_id })
         .select("id")
         .single();
       if (me) throw me;
@@ -217,6 +217,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       sortedItems.forEach((p) => {
         allParcelas.push({
           matricula_id: matriculaId,
+          polo_id: aluno.polo_id,
           tipo: p.tipo,
           numero: p.tipo === 'taxa_matricula' ? 0 : p.numero,
           valor: p.valor,
