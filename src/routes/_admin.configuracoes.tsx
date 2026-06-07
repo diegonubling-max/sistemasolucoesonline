@@ -336,26 +336,94 @@ function AdminSettings() {
           <div className="space-y-8">
             {activeTab === 'geral' && (
               <div className="space-y-8 animate-in slide-in-from-right-2 duration-300">
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                    <School className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-semibold text-gray-800">Informações da Escola</h3>
-                  </div>
-                  <Card>
+                {isSuperAdmin && (
+                  <Card className="border-primary/20 bg-primary/5">
                     <CardHeader>
-                      <CardTitle className="text-lg">Nome da escola</CardTitle>
-                      <CardDescription>Este nome será exibido em várias partes do sistema</CardDescription>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Settings className="h-5 w-5 text-primary" />
+                        Seletor de Polo
+                      </CardTitle>
+                      <CardDescription>
+                        Como Super Admin, você deve selecionar um polo para visualizar e editar suas configurações específicas.
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="school-name">Nome da escola</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="school-name"
-                            value={nomeEscola}
-                            onChange={(e) => setNomeEscola(e.target.value)}
-                            placeholder="Nome da sua escola"
-                          />
+                    <CardContent>
+                      <Select 
+                        value={selectedPoloId} 
+                        onValueChange={(val) => {
+                          sessionStorage.setItem("selected_polo_id", val);
+                          window.dispatchEvent(new Event("polo-changed"));
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um polo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Selecione um polo para configurar...</SelectItem>
+                          {polos.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {(!currentPoloId && isSuperAdmin) ? (
+                  <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+                    <School className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground font-medium">Por favor, selecione um polo no seletor acima para gerenciar as configurações.</p>
+                  </div>
+                ) : (
+                  <>
+                    <section className="space-y-4">
+                      <div className="flex items-center gap-2 px-1">
+                        <School className="h-5 w-5 text-primary" />
+                        <h3 className="text-xl font-semibold text-gray-800">Informações da Unidade</h3>
+                      </div>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Nome e Logo</CardTitle>
+                          <CardDescription>Configure como esta unidade aparece para os alunos</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="school-name">Nome da escola neste polo</Label>
+                            <Input
+                              id="school-name"
+                              value={nomeEscola}
+                              onChange={(e) => setNomeEscola(e.target.value)}
+                              placeholder="Ex: Soluções Online - Unidade Matriz"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="logo-url">URL da Logotipo</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                id="logo-url"
+                                value={logoUrl}
+                                onChange={(e) => setLogoUrl(e.target.value)}
+                                placeholder="https://..."
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button 
+                              onClick={() => updatePoloConfig.mutate({ nome_escola: nomeEscola, logo_url: logoUrl })}
+                              disabled={updatePoloConfig.isPending}
+                            >
+                              {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                              Salvar Identidade
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </section>
+                  </>
+                )}
+
                           <Button 
                             onClick={() => updatePoloConfig.mutate({ nome_escola: nomeEscola })}
                             disabled={updatePoloConfig.isPending}
