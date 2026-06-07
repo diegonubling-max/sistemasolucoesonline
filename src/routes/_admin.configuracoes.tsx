@@ -34,20 +34,66 @@ export const Route = createFileRoute("/_admin/configuracoes")({
 
 function AdminSettings() {
   const queryClient = useQueryClient();
+  const { session } = useAuth();
   
-  const { data: configs, isLoading: isConfigsLoading, isError: isConfigsError, error: fetchError } = useQuery({
-    queryKey: ["admin-configs"],
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
+  const [polos, setPolos] = useState<any[]>([]);
+  const [isLoadingPolos, setIsLoadingPolos] = useState(true);
+
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("configuracoes")
-        .select("*");
-      if (error) {
-        console.error("Erro ao buscar configurações:", error);
-        throw error;
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+      return data?.role;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
+  useEffect(() => {
+    async function fetchPolos() {
+      const { data } = await supabase.from("polos").select("*").eq("ativo", true).order("nome");
+      if (data) setPolos(data);
+      setIsLoadingPolos(false);
+    }
+    fetchPolos();
+  }, []);
+
+  useEffect(() => {
+    const handlePoloChange = () => {
+      setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+    };
+    window.addEventListener("polo-changed", handlePoloChange);
+    return () => window.removeEventListener("polo-changed", handlePoloChange);
+  }, []);
+
+  const currentPoloId = isSuperAdmin ? (selectedPoloId === 'all' ? null : selectedPoloId) : null;
+
+  const { data: poloData, isLoading: isLoadingPoloConfig } = useQuery({
+    queryKey: ["polo-config", currentPoloId],
+    queryFn: async () => {
+      if (!currentPoloId && isSuperAdmin) return null;
+      
+      let targetId = currentPoloId;
+      
+      if (!isSuperAdmin) {
+        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session?.user?.id).maybeSingle();
+        targetId = colab?.polo_id;
       }
+
+      if (!targetId) return null;
+
+      const { data, error } = await supabase
+        .from("polos")
+        .select("*")
+        .eq("id", targetId)
+        .single();
+      if (error) throw error;
       return data;
     },
-    retry: 1,
+    enabled: !!session?.user?.id,
   });
 
   const { data: modelos, isLoading: isModelosLoading } = useQuery({
@@ -62,16 +108,15 @@ function AdminSettings() {
     },
   });
 
-  const isLoading = isConfigsLoading || isModelosLoading;
-  const isError = isConfigsError;
-
+  const isLoading = isLoadingPoloConfig || isModelosLoading || isLoadingPolos;
 
   const [whatsappSuporte, setWhatsappSuporte] = useState("");
-  const [mensagemWhatsapp, setMensagemWhatsapp] = useState("");
   const [nomeEscola, setNomeEscola] = useState("");
   const [asaasApiKey, setAsaasApiKey] = useState("");
   const [asaasAmbiente, setAsaasAmbiente] = useState("producao");
   const [asaasWebhookToken, setAsaasWebhookToken] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  
   const [modeloContrato, setModeloContrato] = useState("");
   const [nomeModelo, setNomeModelo] = useState("");
   const [editingModeloId, setEditingModeloId] = useState<string | null>(null);
@@ -82,45 +127,42 @@ function AdminSettings() {
   const [newAdminPassword, setNewAdminPassword] = useState("");
   const [activeTab, setActiveTab] = useState("geral");
 
-  const tabs = [
-    { id: "geral", label: "Geral", icon: School },
-    { id: "asaas", label: "Integração Asaas", icon: Link2 },
-    { id: "contrato", label: "Modelo de Contrato", icon: FileText },
-    { id: "webhook", label: "Webhook", icon: Bell },
-    { id: "admins", label: "Administradores", icon: ShieldPlus },
-  ];
-
-
   useEffect(() => {
-    if (configs) {
-      setWhatsappSuporte(configs.find(c => c.chave === "whatsapp_suporte")?.valor || "");
-      setMensagemWhatsapp(configs.find(c => c.chave === "mensagem_whatsapp")?.valor || "");
-      setNomeEscola(configs.find(c => c.chave === "nome_escola")?.valor || "");
-      setAsaasApiKey(configs.find(c => c.chave === "asaas_api_key")?.valor || "");
-      setAsaasAmbiente(configs.find(c => c.chave === "asaas_ambiente")?.valor || "producao");
-      setAsaasWebhookToken(configs.find(c => c.chave === "asaas_webhook_token")?.valor || "");
-      setModeloContrato(configs.find(c => c.chave === "modelo_contrato")?.valor || "");
+    if (poloData) {
+      setWhatsappSuporte(poloData.whatsapp || "");
+      setNomeEscola(poloData.nome_escola || "");
+      setAsaasApiKey(poloData.asaas_api_key || "");
+      setAsaasAmbiente(poloData.asaas_ambiente || "producao");
+      setAsaasWebhookToken(poloData.asaas_webhook_token || "");
+      setLogoUrl(poloData.logo_url || "");
     }
-  }, [configs]);
+  }, [poloData]);
 
+  const updatePoloConfig = useMutation({
+    mutationFn: async (values: any) => {
+      let targetId = currentPoloId;
+      if (!isSuperAdmin) {
+        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session?.user?.id).maybeSingle();
+        targetId = colab?.polo_id;
+      }
 
+      if (!targetId) throw new Error("Polo não identificado");
 
-  const updateConfig = useMutation({
-    mutationFn: async ({ chave, valor }: { chave: string, valor: string }) => {
       const { error } = await supabase
-        .from("configuracoes")
-        .update({ valor })
-        .eq("chave", chave);
+        .from("polos")
+        .update(values)
+        .eq("id", targetId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-configs"] });
-      toast.success("Configuração salva com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["polo-config"] });
+      toast.success("Configurações salvas com sucesso!");
     },
     onError: (error: any) => {
-      toast.error("Erro ao salvar configuração: " + error.message);
+      toast.error("Erro ao salvar: " + error.message);
     },
   });
+
 
   const saveModeloMutation = useMutation({
     mutationFn: async () => {
