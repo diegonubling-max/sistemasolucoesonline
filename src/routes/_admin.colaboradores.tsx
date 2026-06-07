@@ -359,7 +359,10 @@ function ColaboradoresList() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {polos?.map(p => (
+                              {polos?.filter(p => {
+                                if (isSuperAdmin) return true;
+                                return p.id === (colaborador as any)?.polo_id;
+                              }).map(p => (
                                 <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
                               ))}
                             </SelectContent>
