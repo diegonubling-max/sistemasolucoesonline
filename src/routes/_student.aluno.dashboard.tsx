@@ -649,10 +649,9 @@ function StudentDashboard() {
                     <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2" asChild>
                       <a 
                         href={`https://wa.me/${whatsappSuporte}?text=${encodeURIComponent(
-                          mensagemPadrao
-                            .replace("[nome]", studentData?.nome || "")
-                            .replace("[ctr]", String(studentData?.ctr || ""))
+                          `Olá! Sou o aluno ${studentData?.nome || ""} (CTR: ${studentData?.ctr || ""}) e gostaria de saber mais sobre o curso ${selectedVitrine?.cursos?.nome}`
                         )}`} 
+
                         target="_blank" 
                         rel="noopener noreferrer"
                       >
