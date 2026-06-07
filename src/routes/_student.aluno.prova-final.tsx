@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Lock, MessageSquare, CheckCircle2, AlertTriangle, GraduationCap } from "lucide-react";
-import { format, isAfter, parseISO, addHours } from "date-fns";
-import { useState, useEffect } from "react";
+import { Calendar, Clock, Lock, MessageSquare, CheckCircle2, AlertTriangle, GraduationCap, Loader2 } from "lucide-react";
+import { format, isAfter, parseISO } from "date-fns";
+import { useState } from "react";
 import { toast } from "sonner";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_student/aluno/prova-final")({
   component: ProvaFinalPage,
@@ -71,7 +72,7 @@ function ProvaFinalPage() {
       const { error } = await supabase
         .from("prova_agendamentos")
         .update({ status: "iniciado" })
-        .eq("id", agendamento.id);
+        .eq("id", agendamento?.id);
       if (error) throw error;
     },
     onSuccess: () => {
