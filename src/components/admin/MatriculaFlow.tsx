@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -193,6 +193,19 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
   const concludeMatricula = useMutation({
     mutationFn: async () => {
       if (!matriculaId || !aluno || !contractContent) throw new Error("Dados incompletos");
+
+      // Buscar ID do colaborador logado
+      const { data: sessionData } = await supabase.auth.getSession();
+      let colaboradorId = null;
+      if (sessionData.session?.user.id) {
+        const { data: colab } = await supabase.from('colaboradores').select('id').eq('user_id', sessionData.session.user.id).maybeSingle();
+        colaboradorId = colab?.id;
+      }
+
+      // Atualizar matrícula com colaborador_id
+      if (colaboradorId) {
+        await supabase.from('matriculas').update({ colaborador_id: colaboradorId }).eq('id', matriculaId);
+      }
 
       const currentPacote = !isNegociacaoPersonalizada ? pacotes?.find(p => p.id === selectedPacote) : null;
       if (!isNegociacaoPersonalizada && !currentPacote) throw new Error("Pacote não encontrado");
