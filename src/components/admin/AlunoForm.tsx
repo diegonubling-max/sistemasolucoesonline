@@ -106,6 +106,15 @@ export function AlunoForm({
 
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
 
+  const form = useForm<any>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      ...defaultValues,
+      ...initialValues,
+      ativo: initialValues?.ativo === undefined ? "Ativo" : (initialValues.ativo ? "Ativo" : "Inativo")
+    },
+  });
+
   useEffect(() => {
     async function loadOptions() {
       const { data: colabs } = await supabase
@@ -125,23 +134,14 @@ export function AlunoForm({
         const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
         if (colab?.polo_id) {
           setUserPoloId(colab.polo_id);
-          if (!isEdit) {
+          if (!isEdit && !form.getValues("polo_id")) {
             form.setValue("polo_id", colab.polo_id);
           }
         }
       }
     }
     loadOptions();
-  }, [session, isEdit, form]);
-
-  const form = useForm<any>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      ...defaultValues,
-      ...initialValues,
-      ativo: initialValues?.ativo === undefined ? "Ativo" : (initialValues.ativo ? "Ativo" : "Inativo")
-    },
-  });
+  }, [session, isEdit]);
 
   const onLocalSubmit = (values: any) => {
     const finalValues = {
