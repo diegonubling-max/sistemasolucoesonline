@@ -215,6 +215,13 @@ function StudentLayout() {
               >
                 Financeiro
               </Link>
+              <Link
+                to="/aluno/prova-final"
+                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
+                activeProps={{ className: "text-white font-bold" }}
+              >
+                Prova Final
+              </Link>
             </nav>
           </div>
 
@@ -275,6 +282,13 @@ function StudentLayout() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Financeiro
+              </Link>
+              <Link
+                to="/aluno/prova-final"
+                className="text-white/80 hover:text-white font-medium p-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Prova Final
               </Link>
               <Link
                 to="/aluno/perfil"

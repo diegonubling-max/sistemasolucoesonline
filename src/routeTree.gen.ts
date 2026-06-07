@@ -21,12 +21,14 @@ import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
 import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
+import { Route as StudentAlunoProvaFinalRouteImport } from './routes/_student.aluno.prova-final'
 import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
 import { Route as StudentAlunoFinanceiroRouteImport } from './routes/_student.aluno.financeiro'
 import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.aluno.dashboard'
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
+import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_student.aluno.prova-final.execucao'
 import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
 import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
 import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
@@ -90,6 +92,11 @@ const AdminAlunosIndexRoute = AdminAlunosIndexRouteImport.update({
   path: '/alunos/',
   getParentRoute: () => AdminRoute,
 } as any)
+const StudentAlunoProvaFinalRoute = StudentAlunoProvaFinalRouteImport.update({
+  id: '/aluno/prova-final',
+  path: '/aluno/prova-final',
+  getParentRoute: () => StudentRoute,
+} as any)
 const StudentAlunoPerfilRoute = StudentAlunoPerfilRouteImport.update({
   id: '/aluno/perfil',
   path: '/aluno/perfil',
@@ -120,6 +127,12 @@ const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
   path: '/alunos/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
+const StudentAlunoProvaFinalExecucaoRoute =
+  StudentAlunoProvaFinalExecucaoRouteImport.update({
+    id: '/execucao',
+    path: '/execucao',
+    getParentRoute: () => StudentAlunoProvaFinalRoute,
+  } as any)
 const StudentAlunoCursoIdRoute = StudentAlunoCursoIdRouteImport.update({
   id: '/aluno/curso/$id',
   path: '/aluno/curso/$id',
@@ -155,12 +168,14 @@ export interface FileRoutesByFullPath {
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
+  '/aluno/prova-final': typeof StudentAlunoProvaFinalRouteWithChildren
   '/alunos/': typeof AdminAlunosIndexRoute
   '/cursos/': typeof AdminCursosIndexRoute
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
+  '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -177,12 +192,14 @@ export interface FileRoutesByTo {
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
+  '/aluno/prova-final': typeof StudentAlunoProvaFinalRouteWithChildren
   '/alunos': typeof AdminAlunosIndexRoute
   '/cursos': typeof AdminCursosIndexRoute
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
+  '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesById {
@@ -202,12 +219,14 @@ export interface FileRoutesById {
   '/_student/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/_student/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/_student/aluno/perfil': typeof StudentAlunoPerfilRoute
+  '/_student/aluno/prova-final': typeof StudentAlunoProvaFinalRouteWithChildren
   '/_admin/alunos/': typeof AdminAlunosIndexRoute
   '/_admin/cursos/': typeof AdminCursosIndexRoute
   '/_admin/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/_admin/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/_admin/cursos/$id/editar': typeof AdminCursosIdEditarRoute
   '/_student/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
+  '/_student/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -226,12 +245,14 @@ export interface FileRouteTypes {
     | '/aluno/dashboard'
     | '/aluno/financeiro'
     | '/aluno/perfil'
+    | '/aluno/prova-final'
     | '/alunos/'
     | '/cursos/'
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
     | '/aluno/curso/$id'
+    | '/aluno/prova-final/execucao'
     | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -248,12 +269,14 @@ export interface FileRouteTypes {
     | '/aluno/dashboard'
     | '/aluno/financeiro'
     | '/aluno/perfil'
+    | '/aluno/prova-final'
     | '/alunos'
     | '/cursos'
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
     | '/aluno/curso/$id'
+    | '/aluno/prova-final/execucao'
     | '/alunos/$id'
   id:
     | '__root__'
@@ -272,12 +295,14 @@ export interface FileRouteTypes {
     | '/_student/aluno/dashboard'
     | '/_student/aluno/financeiro'
     | '/_student/aluno/perfil'
+    | '/_student/aluno/prova-final'
     | '/_admin/alunos/'
     | '/_admin/cursos/'
     | '/_admin/alunos/$id/editar'
     | '/_admin/cursos/$id/aulas'
     | '/_admin/cursos/$id/editar'
     | '/_student/aluno/curso/$id'
+    | '/_student/aluno/prova-final/execucao'
     | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -375,6 +400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_student/aluno/prova-final': {
+      id: '/_student/aluno/prova-final'
+      path: '/aluno/prova-final'
+      fullPath: '/aluno/prova-final'
+      preLoaderRoute: typeof StudentAlunoProvaFinalRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/_student/aluno/perfil': {
       id: '/_student/aluno/perfil'
       path: '/aluno/perfil'
@@ -416,6 +448,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/alunos/$id/'
       preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/_student/aluno/prova-final/execucao': {
+      id: '/_student/aluno/prova-final/execucao'
+      path: '/execucao'
+      fullPath: '/aluno/prova-final/execucao'
+      preLoaderRoute: typeof StudentAlunoProvaFinalExecucaoRouteImport
+      parentRoute: typeof StudentAlunoProvaFinalRoute
     }
     '/_student/aluno/curso/$id': {
       id: '/_student/aluno/curso/$id'
@@ -482,10 +521,25 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface StudentAlunoProvaFinalRouteChildren {
+  StudentAlunoProvaFinalExecucaoRoute: typeof StudentAlunoProvaFinalExecucaoRoute
+}
+
+const StudentAlunoProvaFinalRouteChildren: StudentAlunoProvaFinalRouteChildren =
+  {
+    StudentAlunoProvaFinalExecucaoRoute: StudentAlunoProvaFinalExecucaoRoute,
+  }
+
+const StudentAlunoProvaFinalRouteWithChildren =
+  StudentAlunoProvaFinalRoute._addFileChildren(
+    StudentAlunoProvaFinalRouteChildren,
+  )
+
 interface StudentRouteChildren {
   StudentAlunoDashboardRoute: typeof StudentAlunoDashboardRoute
   StudentAlunoFinanceiroRoute: typeof StudentAlunoFinanceiroRoute
   StudentAlunoPerfilRoute: typeof StudentAlunoPerfilRoute
+  StudentAlunoProvaFinalRoute: typeof StudentAlunoProvaFinalRouteWithChildren
   StudentAlunoCursoIdRoute: typeof StudentAlunoCursoIdRoute
 }
 
@@ -493,6 +547,7 @@ const StudentRouteChildren: StudentRouteChildren = {
   StudentAlunoDashboardRoute: StudentAlunoDashboardRoute,
   StudentAlunoFinanceiroRoute: StudentAlunoFinanceiroRoute,
   StudentAlunoPerfilRoute: StudentAlunoPerfilRoute,
+  StudentAlunoProvaFinalRoute: StudentAlunoProvaFinalRouteWithChildren,
   StudentAlunoCursoIdRoute: StudentAlunoCursoIdRoute,
 }
 
