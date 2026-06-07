@@ -143,8 +143,8 @@ function AdminSettings() {
     mutationFn: async (values: any) => {
       let targetId = currentPoloId;
       if (!isSuperAdmin) {
-        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session?.user?.id).maybeSingle();
-        targetId = colab?.polo_id;
+        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session?.user?.id || "").maybeSingle();
+        targetId = colab?.polo_id || null;
       }
 
       if (!targetId) throw new Error("Polo não identificado");
