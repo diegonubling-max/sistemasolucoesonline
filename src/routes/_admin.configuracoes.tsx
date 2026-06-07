@@ -378,10 +378,10 @@ function AdminSettings() {
                             placeholder="Nome da sua escola"
                           />
                           <Button 
-                            onClick={() => updateConfig.mutate({ chave: "nome_escola", valor: nomeEscola })}
-                            disabled={updateConfig.isPending}
+                            onClick={() => updatePoloConfig.mutate({ nome_escola: nomeEscola })}
+                            disabled={updatePoloConfig.isPending}
                           >
-                            {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                            {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                             Salvar
                           </Button>
                         </div>
