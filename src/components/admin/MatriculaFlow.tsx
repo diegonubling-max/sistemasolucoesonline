@@ -217,6 +217,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       sortedItems.forEach((p) => {
         allParcelas.push({
           matricula_id: matriculaId,
+          polo_id: aluno.polo_id,
           tipo: p.tipo,
           numero: p.tipo === 'taxa_matricula' ? 0 : p.numero,
           valor: p.valor,
