@@ -82,24 +82,31 @@ function ColaboradoresList() {
   const [editingColab, setEditingColab] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // State for permissions during creation/editing
-  const [formPerms, setFormPerms] = useState<Record<string, boolean>>({
-    ver_alunos: false,
-    cadastrar_alunos: false,
-    fazer_matriculas: false,
-    ver_financeiro: false,
-    dar_baixa_pagamentos: false,
-    agendar_provas: false,
-    ver_relatorios: false,
-    ver_configuracoes: false,
+  const { data: userRole, isLoading: loadingRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.role;
+    },
+    enabled: !!session?.user?.id,
   });
 
   // Access check
   useEffect(() => {
-    if (session?.user?.email !== 'admin@admin.com') {
-      navigate({ to: "/" });
+    if (!loadingRole && session?.user) {
+      const isAdmin = session.user.email === 'admin@admin.com' || userRole === 'admin';
+      if (!isAdmin) {
+        toast.error("Acesso negado. Apenas administradores podem acessar esta página.");
+        navigate({ to: "/" });
+      }
     }
-  }, [session, navigate]);
+  }, [session, userRole, loadingRole, navigate]);
 
   const { data: colaboradores, isLoading } = useQuery({
     queryKey: ["colaboradores"],
