@@ -324,7 +324,26 @@ function ProvaFinalPage() {
       <CardHeader className="bg-primary text-primary-foreground py-10 text-center">
         <CardTitle className="text-3xl font-bold">Prova Final</CardTitle>
         <CardDescription className="text-primary-foreground/80 text-lg">
-          {podeComecar ? "Tudo pronto para começar!" : `Sua Prova Final está agendada para o dia ${format(parseISO(agendamento.data_prova), 'dd/MM/yyyy')} às ${agendamento.hora_prova.substring(0, 5)}. Prepare-se!`}
+          {(() => {
+            const dataHoraStr = `${agendamento.data_prova}T${agendamento.hora_prova}`;
+            const dataHoraProva = parseISO(dataHoraStr);
+            const agora = new Date();
+            const hoje = format(agora, 'yyyy-MM-dd');
+            const dataProva = agendamento.data_prova;
+            
+            if (isAfter(agora, dataHoraProva)) {
+              return "🎯 Sua Prova Final está liberada! Clique para começar agora!";
+            }
+            
+            if (hoje === dataProva) {
+              return `Sua prova é HOJE às ${agendamento.hora_prova.substring(0, 5)}! Prepare-se, você consegue! 💪`;
+            }
+            
+            const diffTime = dataHoraProva.getTime() - agora.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return `Sua Prova Final está agendada! Faltam ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'} — ${format(parseISO(dataProva), 'dd/MM/yyyy')} às ${agendamento.hora_prova.substring(0, 5)}. Continue estudando! 📚`;
+          })()}
         </CardDescription>
       </CardHeader>
       <CardContent className="py-8 space-y-8">
