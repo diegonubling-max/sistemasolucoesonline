@@ -23,6 +23,7 @@ function StudentDashboard() {
   const [selectedVitrine, setSelectedVitrine] = useState<any>(null);
   const [showProvaFinalDialog, setShowProvaFinalDialog] = useState(false);
   const [showLockedProvaDialog, setShowLockedProvaDialog] = useState(false);
+  const [showAgendadoDialog, setShowAgendadoDialog] = useState(false);
 
 
   const { data: cursos, isLoading } = useQuery({

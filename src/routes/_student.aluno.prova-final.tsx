@@ -44,7 +44,8 @@ function ProvaFinalPage() {
         .select("*")
         .eq("aluno_id", aluno!.id)
         .in("status", ["agendado", "iniciado"])
-        .order("created_at", { ascending: false })
+        .order("data_prova", { ascending: true })
+        .order("hora_prova", { ascending: true })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
