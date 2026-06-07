@@ -186,17 +186,16 @@ function ProvaFinalPage() {
                 <li>Ao clicar em começar, o cronômetro será iniciado.</li>
               </ul>
             </div>
-            <Button 
-              className="w-full h-14 text-lg font-bold"
+            <button 
+              className="w-full h-14 text-lg font-bold bg-primary text-primary-foreground rounded-md transition-colors hover:bg-primary/90 flex items-center justify-center relative z-50"
               onClick={() => {
-                console.log("Botão Começar Prova clicado");
-                startProva.mutate();
+                console.log("clicou!");
+                window.location.href = '/aluno/prova-final/realizar';
               }}
-              disabled={startProva.isPending}
             >
-              {startProva.isPending ? <Loader2 className="animate-spin mr-2" /> : <PlayIcon className="mr-2" />}
+              <PlayIcon className="mr-2" />
               Começar Prova Agora
-            </Button>
+            </button>
           </div>
         )}
       </CardContent>
