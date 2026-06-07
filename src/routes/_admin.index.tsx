@@ -80,18 +80,12 @@ function Dashboard() {
   });
 
   const { data: stats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["dashboard-stats", selectedPoloId],
+    queryKey: ["dashboard-stats", selectedPoloId, userRole, colabData],
     queryFn: async () => {
       const today = new Date();
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
 
-      const filterByPolo = (q: any) => {
-        if (selectedPoloId && selectedPoloId !== 'all') {
-          return q.eq('polo_id', selectedPoloId);
-        }
-        return q;
-      };
 
       const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData] = await Promise.all([
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),
