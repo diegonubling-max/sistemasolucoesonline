@@ -12,6 +12,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Iniciando processamento de cobrança por polo...");
+    
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -21,9 +23,11 @@ serve(async (req) => {
     const { parcela_id, tipo, action = 'create' } = body;
     console.log(`Recebido: parcela_id=${parcela_id}, tipo=${tipo}, action=${action}`);
 
-    if (!parcela_id) throw new Error("ID da parcela é obrigatório.");
+    if (!parcela_id) {
+      throw new Error("ID da parcela é obrigatório.");
+    }
 
-    // Buscar dados da parcela e do aluno (para obter polo_id)
+    // 1. Buscar dados da parcela e do polo através do aluno
     const { data: parcela, error: parcelaError } = await supabaseClient
       .from("parcelas")
       .select(`
@@ -39,21 +43,26 @@ serve(async (req) => {
       .eq("id", parcela_id)
       .single();
 
-    if (parcelaError || !parcela) throw new Error("Parcela ou aluno não encontrados.");
+    if (parcelaError || !parcela) {
+      console.error("Erro ao buscar parcela:", parcelaError);
+      throw new Error("Parcela não encontrada.");
+    }
 
-    const aluno = parcela.matriculas.alunos;
-    const polo = aluno.polos;
+    const matricula = parcela.matriculas;
+    const aluno = Array.isArray(matricula) ? matricula[0]?.alunos : matricula?.alunos;
+    const polo = aluno?.polos;
 
     if (!polo || !polo.asaas_api_key) {
-        throw new Error(`Configurações Asaas não encontradas para o polo do aluno (${polo?.nome || 'Polo Desconhecido'}).`);
+      throw new Error(`Configurações do Asaas não encontradas para o polo ${polo?.nome || 'não identificado'}.`);
     }
 
     const asaas_api_key = polo.asaas_api_key;
-    const asaas_ambiente = polo.asaas_ambiente || 'sandbox';
+    const asaas_ambiente = polo.asaas_ambiente || "producao";
 
     const asaasBaseUrl = asaas_ambiente === "producao" 
       ? "https://www.asaas.com/api/v3" 
       : "https://sandbox.asaas.com/api/v3";
+
 
     // ... (rest of the logic remains largely the same, using asaas_api_key and asaasBaseUrl from the polo)
     // IMPORTANT: Make sure the customer creation and payment creation use these values
