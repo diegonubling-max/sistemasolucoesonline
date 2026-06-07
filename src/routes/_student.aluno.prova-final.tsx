@@ -70,7 +70,11 @@ function ProvaFinalPage() {
 
   const startProva = useMutation({
     mutationFn: async () => {
-      if (!agendamento) return;
+      console.log("Mutation executando", agendamento);
+      if (!agendamento) {
+        console.error("Erro: agendamento não encontrado para iniciar prova");
+        return;
+      }
       const { error } = await supabase
         .from("prova_agendamentos")
         .update({ status: "iniciado" })
@@ -78,8 +82,13 @@ function ProvaFinalPage() {
       if (error) throw error;
     },
     onSuccess: () => {
+      console.log("onSuccess chamado, navegando para /aluno/prova-final/realizar...");
       navigate({ to: "/aluno/prova-final/realizar" });
     },
+    onError: (error) => {
+      console.error("Erro na mutation startProva:", error);
+      toast.error("Erro ao iniciar a prova. Tente novamente.");
+    }
   });
 
   if (loadingAgendamento) return <div className="p-8 text-center">Carregando...</div>;
@@ -179,7 +188,10 @@ function ProvaFinalPage() {
             </div>
             <Button 
               className="w-full h-14 text-lg font-bold"
-              onClick={() => startProva.mutate()}
+              onClick={() => {
+                console.log("Botão Começar Prova clicado");
+                startProva.mutate();
+              }}
               disabled={startProva.isPending}
             >
               {startProva.isPending ? <Loader2 className="animate-spin mr-2" /> : <PlayIcon className="mr-2" />}
