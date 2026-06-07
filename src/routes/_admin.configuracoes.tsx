@@ -398,29 +398,22 @@ function AdminSettings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="whatsapp-message">Mensagem pré-definida</Label>
-                        <Textarea
-                          id="whatsapp-message"
-                          rows={4}
-                          placeholder="Olá! Preciso de ajuda..."
-                          value={mensagemWhatsapp}
-                          onChange={(e) => setMensagemWhatsapp(e.target.value)}
+                        <Label htmlFor="whatsapp-message">Número do WhatsApp (Suporte)</Label>
+                        <Input
+                          id="whatsapp-number"
+                          placeholder="Ex: 5551999999999"
+                          value={whatsappSuporte}
+                          onChange={(e) => setWhatsappSuporte(e.target.value)}
                         />
-                        <p className="text-xs text-muted-foreground">
-                          Use <code className="bg-muted px-1 rounded text-primary">[nome]</code> e <code className="bg-muted px-1 rounded text-primary">[ctr]</code> para incluir os dados do aluno automaticamente
-                        </p>
                       </div>
 
                       <div className="flex justify-end pt-2">
                         <Button 
-                          onClick={() => updateMultipleConfigs.mutate([
-                            { chave: "whatsapp_suporte", valor: whatsappSuporte },
-                            { chave: "mensagem_whatsapp", valor: mensagemWhatsapp }
-                          ])}
-                          disabled={updateMultipleConfigs.isPending}
+                          onClick={() => updatePoloConfig.mutate({ whatsapp: whatsappSuporte })}
+                          disabled={updatePoloConfig.isPending}
                           className="w-full sm:w-auto"
                         >
-                          {updateMultipleConfigs.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                          {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                           Salvar Alterações do WhatsApp
                         </Button>
                       </div>
