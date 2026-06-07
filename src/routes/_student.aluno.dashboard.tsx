@@ -340,13 +340,7 @@ function StudentDashboard() {
                           <div 
                             key={i} 
                             onClick={() => {
-                              if (agendamento) {
-                                setShowAgendadoDialog(true);
-                              } else if (isReleased) {
-                                setShowProvaFinalDialog(true);
-                              } else {
-                                setShowLockedProvaDialog(true);
-                              }
+                              navigate({ to: "/aluno/prova-final" });
                             }}
                             className="group block w-full"
                           >
