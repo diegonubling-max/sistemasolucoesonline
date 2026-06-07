@@ -6,15 +6,17 @@ import { useAuth } from "@/hooks/use-auth";
 export const WhatsAppButton = () => {
   const { session } = useAuth();
   
-  const { data: configs } = useQuery({
-    queryKey: ["global-configs"],
+  const { data: poloData } = useQuery({
+    queryKey: ["student-polo-config", session?.user.email],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("configuracoes")
-        .select("chave, valor");
-      if (error) throw error;
-      return data;
+      const { data } = await supabase
+        .from("alunos")
+        .select("polos(whatsapp)")
+        .eq("email", session?.user.email ?? "")
+        .single();
+      return (data as any)?.polos;
     },
+    enabled: !!session?.user.email,
   });
 
   const { data: alunoData } = useQuery({
@@ -31,8 +33,9 @@ export const WhatsAppButton = () => {
     enabled: !!session?.user.email,
   });
 
-  const whatsappNumber = configs?.find(c => c.chave === "whatsapp_suporte")?.valor;
-  const rawMessage = configs?.find(c => c.chave === "mensagem_whatsapp")?.valor || "";
+  const whatsappNumber = poloData?.whatsapp;
+  const messageText = `Olá! Sou o aluno ${alunoData?.nome || ""} (CTR: ${alunoData?.ctr || ""}) e preciso de suporte.`;
+
 
   if (!whatsappNumber) return null;
 
