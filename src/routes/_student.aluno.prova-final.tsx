@@ -104,10 +104,9 @@ function ProvaFinalPage() {
         <CardContent className="py-12 text-center space-y-6">
           <Calendar className="h-16 w-16 mx-auto text-gray-400" />
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Nenhuma Prova Agendada</h2>
+            <h2 className="text-2xl font-bold">Prova Final</h2>
             <p className="text-muted-foreground">
-              Você ainda não tem um horário agendado para sua Prova Final.
-              Entre em contato com a secretaria para agendar.
+              Sua Prova Final está disponível para agendamento!
             </p>
           </div>
           <Button 
