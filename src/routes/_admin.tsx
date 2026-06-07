@@ -1,22 +1,45 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { AppSidebar } from "@/components/admin/AppSidebar";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_admin")({
   component: AdminLayout,
 });
 
 function AdminLayout() {
-  const { session, loading } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [colaborador, setColaborador] = useState<any>(null);
+  const [loadingColab, setLoadingColab] = useState(true);
 
   useEffect(() => {
-    if (!loading && !session) navigate({ to: "/login" });
-  }, [loading, session, navigate]);
+    async function checkColab() {
+      if (!session?.user) {
+        setLoadingColab(false);
+        return;
+      }
 
-  if (loading || !session) {
+      const { data, error } = await supabase
+        .from('colaboradores')
+        .select('*, colaborador_permissoes(*)')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      
+      if (data) setColaborador(data);
+      setLoadingColab(false);
+    }
+    
+    if (!authLoading) checkColab();
+  }, [session, authLoading]);
+
+  useEffect(() => {
+    if (!authLoading && !session) navigate({ to: "/login" });
+  }, [authLoading, session, navigate]);
+
+  if (authLoading || loadingColab) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -24,12 +47,14 @@ function AdminLayout() {
     );
   }
 
+  if (!session) return null;
+
   return (
     <div className="min-h-screen flex bg-background">
-      <AppSidebar />
+      <AppSidebar colaborador={colaborador} />
       <main className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto px-8 py-8">
-          <Outlet />
+          <Outlet context={{ colaborador }} />
         </div>
       </main>
     </div>

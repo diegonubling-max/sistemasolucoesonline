@@ -6,18 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
-  { title: "Alunos", url: "/alunos", icon: Users, enabled: true },
+  { title: "Alunos", url: "/alunos", icon: Users, enabled: true, perm: 'ver_alunos' },
   { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
   { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true },
   { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true },
   { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ colaborador }: { colaborador?: any }) {
   const { session } = useAuth();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
@@ -76,7 +77,14 @@ export function AppSidebar() {
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
         {items.map((item) => {
-          if (item.adminOnly && session?.user?.email !== 'admin@admin.com') return null; // Simplified admin check
+          const isAdmin = session?.user?.email === 'admin@admin.com';
+          if (item.adminOnly && !isAdmin) return null;
+          
+          if (colaborador && item.perm) {
+            const perms = colaborador.colaborador_permissoes?.[0];
+            if (perms && !perms[item.perm]) return null;
+          }
+
           const Icon = item.icon;
           const active = item.enabled && isActive(item.url);
           if (!item.enabled) {

@@ -38,6 +38,31 @@ function AlunosList() {
   const [page, setPage] = useState(0);
   const [studentToDelete, setStudentToDelete] = useState<{ id: string; nome: string; email: string; hasMatriculas: boolean } | null>(null);
   const [studentForContract, setStudentForContract] = useState<any | null>(null);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [globalSearchCpf, setGlobalSearchCpf] = useState("");
+  const [globalSearchResult, setGlobalSearchResult] = useState<any>(null);
+  const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
+
+  const handleGlobalSearch = async () => {
+    if (!globalSearchCpf) return;
+    setIsSearchingGlobal(true);
+    try {
+      // Busca aluno pelo CPF em qualquer polo (ignora RLS se possível, mas aqui usaremos a tabela pública)
+      const { data, error } = await supabase
+        .from("alunos")
+        .select("nome, vendedora, created_at, polos(nome), matriculas(id, created_at, parcelas(valor, status))")
+        .eq("cpf", globalSearchCpf.replace(/\D/g, ''))
+        .single();
+      
+      if (error) throw new Error("Aluno não encontrado em nenhum polo.");
+      setGlobalSearchResult(data);
+    } catch (e: any) {
+      toast.error(e.message);
+      setGlobalSearchResult(null);
+    } finally {
+      setIsSearchingGlobal(false);
+    }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["alunos", search, page],
@@ -103,9 +128,14 @@ function AlunosList() {
         title="Alunos"
         description={`${data?.count ?? 0} aluno(s) no total`}
         actions={
-          <Button onClick={() => navigate({ to: "/alunos/novo" })}>
-            <Plus className="h-4 w-4 mr-2" /> Novo aluno
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowGlobalSearch(true)}>
+              <Search className="h-4 w-4 mr-2" /> Buscar em todos os polos
+            </Button>
+            <Button onClick={() => navigate({ to: "/alunos/novo" })}>
+              <Plus className="h-4 w-4 mr-2" /> Novo aluno
+            </Button>
+          </div>
         }
       />
 
@@ -297,6 +327,57 @@ function AlunosList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showGlobalSearch} onOpenChange={setShowGlobalSearch}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Busca Global por CPF</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Digite o CPF (apenas números)" 
+                value={globalSearchCpf}
+                onChange={(e) => setGlobalSearchCpf(e.target.value)}
+              />
+              <Button onClick={handleGlobalSearch} disabled={isSearchingGlobal}>
+                {isSearchingGlobal ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
+              </Button>
+            </div>
+
+            {globalSearchResult && (
+              <Card className="bg-muted/50">
+                <CardContent className="pt-6 space-y-2">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <p><span className="font-bold">Nome:</span> {globalSearchResult.nome}</p>
+                    <p><span className="font-bold">Polo:</span> {globalSearchResult.polos?.nome}</p>
+                    <p><span className="font-bold">Vendedor:</span> {globalSearchResult.vendedora}</p>
+                    <p><span className="font-bold">Matrícula:</span> {formatDate(globalSearchResult.created_at)}</p>
+                  </div>
+                  <div className="mt-4">
+                    <p className="font-bold text-sm mb-2">Resumo de Parcelas:</p>
+                    <div className="space-y-1">
+                      {globalSearchResult.matriculas?.[0]?.parcelas?.map((p: any, idx: number) => (
+                        <div key={idx} className="flex justify-between text-xs border-b pb-1">
+                          <span>Parcela {idx + 1}</span>
+                          <span>R$ {p.valor}</span>
+                          <Badge variant={p.status === 'pago' ? 'default' : 'destructive'} className="text-[10px] h-4">
+                            {p.status}
+                          </Badge>
+                        </div>
+                      ))}
+                      {!globalSearchResult.matriculas?.[0]?.parcelas?.length && (
+                        <p className="text-xs text-muted-foreground italic">Nenhuma parcela encontrada.</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <ContratoAlunoModal 
         aluno={studentForContract}
         isOpen={!!studentForContract}
