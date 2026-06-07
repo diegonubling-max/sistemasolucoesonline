@@ -108,14 +108,19 @@ function AlunoLogin() {
             .maybeSingle();
 
           if (aluno) {
-            const { data: sessao } = await supabase
-              .from('aluno_sessoes')
-              .insert({ aluno_id: aluno.id })
-              .select('id')
-              .single();
+            // Verificar se já existe uma sessão ativa no sessionStorage
+            const existingSessaoId = sessionStorage.getItem('aluno_sessao_id');
             
-            if (sessao) {
-              localStorage.setItem('aluno_sessao_id', sessao.id);
+            if (!existingSessaoId) {
+              const { data: sessao } = await supabase
+                .from('aluno_sessoes')
+                .insert({ aluno_id: aluno.id })
+                .select('id')
+                .single();
+              
+              if (sessao) {
+                sessionStorage.setItem('aluno_sessao_id', sessao.id);
+              }
             }
           }
         }
