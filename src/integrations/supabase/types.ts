@@ -246,22 +246,46 @@ export type Database = {
       }
       colaborador_permissoes: {
         Row: {
-          ativo: boolean | null
-          colaborador_id: string | null
+          agendar_provas: boolean | null
+          cadastrar_alunos: boolean | null
+          colaborador_id: string
+          created_at: string
+          dar_baixa_pagamentos: boolean | null
+          fazer_matriculas: boolean | null
           id: string
-          permissao: string
+          updated_at: string
+          ver_alunos: boolean | null
+          ver_configuracoes: boolean | null
+          ver_financeiro: boolean | null
+          ver_relatorios: boolean | null
         }
         Insert: {
-          ativo?: boolean | null
-          colaborador_id?: string | null
+          agendar_provas?: boolean | null
+          cadastrar_alunos?: boolean | null
+          colaborador_id: string
+          created_at?: string
+          dar_baixa_pagamentos?: boolean | null
+          fazer_matriculas?: boolean | null
           id?: string
-          permissao: string
+          updated_at?: string
+          ver_alunos?: boolean | null
+          ver_configuracoes?: boolean | null
+          ver_financeiro?: boolean | null
+          ver_relatorios?: boolean | null
         }
         Update: {
-          ativo?: boolean | null
-          colaborador_id?: string | null
+          agendar_provas?: boolean | null
+          cadastrar_alunos?: boolean | null
+          colaborador_id?: string
+          created_at?: string
+          dar_baixa_pagamentos?: boolean | null
+          fazer_matriculas?: boolean | null
           id?: string
-          permissao?: string
+          updated_at?: string
+          ver_alunos?: boolean | null
+          ver_configuracoes?: boolean | null
+          ver_financeiro?: boolean | null
+          ver_relatorios?: boolean | null
         }
         Relationships: [
           {
