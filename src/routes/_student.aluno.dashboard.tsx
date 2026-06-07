@@ -104,19 +104,21 @@ function StudentDashboard() {
     enabled: !!studentData?.id,
   });
 
-  const { data: configs } = useQuery({
-    queryKey: ["student-configs"],
+  const { data: poloData } = useQuery({
+    queryKey: ["student-polo-data", studentData?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("configuracoes")
-        .select("chave, valor");
-      if (error) throw error;
-      return data;
+      const { data: aluno } = await supabase
+        .from("alunos")
+        .select("polos(*)")
+        .eq("id", studentData!.id)
+        .single();
+      return (aluno as any)?.polos;
     },
+    enabled: !!studentData?.id,
   });
 
-  const whatsappSuporte = configs?.find(c => c.chave === "whatsapp_suporte")?.valor || "";
-  const mensagemPadrao = configs?.find(c => c.chave === "mensagem_whatsapp")?.valor || "";
+  const whatsappSuporte = poloData?.whatsapp || "";
+  const nomeEscola = poloData?.nome_escola || "Soluções Online";
 
   const { data: vitrine } = useQuery({
     queryKey: ["student-vitrine", session?.user.email],
@@ -647,10 +649,9 @@ function StudentDashboard() {
                     <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2" asChild>
                       <a 
                         href={`https://wa.me/${whatsappSuporte}?text=${encodeURIComponent(
-                          mensagemPadrao
-                            .replace("[nome]", studentData?.nome || "")
-                            .replace("[ctr]", String(studentData?.ctr || ""))
+                          `Olá! Sou o aluno ${studentData?.nome || ""} (CTR: ${studentData?.ctr || ""}) e gostaria de saber mais sobre o curso ${selectedVitrine?.cursos?.nome}`
                         )}`} 
+
                         target="_blank" 
                         rel="noopener noreferrer"
                       >

@@ -854,25 +854,43 @@ export type Database = {
       }
       polos: {
         Row: {
+          asaas_ambiente: string | null
+          asaas_api_key: string | null
+          asaas_webhook_token: string | null
           ativo: boolean | null
           cidade: string | null
           created_at: string | null
           id: string
+          logo_url: string | null
           nome: string
+          nome_escola: string | null
+          whatsapp: string | null
         }
         Insert: {
+          asaas_ambiente?: string | null
+          asaas_api_key?: string | null
+          asaas_webhook_token?: string | null
           ativo?: boolean | null
           cidade?: string | null
           created_at?: string | null
           id?: string
+          logo_url?: string | null
           nome: string
+          nome_escola?: string | null
+          whatsapp?: string | null
         }
         Update: {
+          asaas_ambiente?: string | null
+          asaas_api_key?: string | null
+          asaas_webhook_token?: string | null
           ativo?: boolean | null
           cidade?: string | null
           created_at?: string | null
           id?: string
+          logo_url?: string | null
           nome?: string
+          nome_escola?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }

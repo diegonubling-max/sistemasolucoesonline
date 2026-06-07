@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Settings, Save, Loader2, MessageSquare, School, Phone, 
   Link2, FileText, Copy, ShieldPlus, Bell, Plus, Trash2,
-  Eye, EyeOff
+  Eye, EyeOff, Upload
 } from "lucide-react";
 
 
@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { useAuth } from "@/hooks/use-auth";
 
 
 
@@ -34,20 +35,66 @@ export const Route = createFileRoute("/_admin/configuracoes")({
 
 function AdminSettings() {
   const queryClient = useQueryClient();
+  const { session } = useAuth();
   
-  const { data: configs, isLoading: isConfigsLoading, isError: isConfigsError, error: fetchError } = useQuery({
-    queryKey: ["admin-configs"],
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
+  const [polos, setPolos] = useState<any[]>([]);
+  const [isLoadingPolos, setIsLoadingPolos] = useState(true);
+
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("configuracoes")
-        .select("*");
-      if (error) {
-        console.error("Erro ao buscar configurações:", error);
-        throw error;
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+      return data?.role;
+    },
+    enabled: !!session?.user?.id
+  });
+
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
+  useEffect(() => {
+    async function fetchPolos() {
+      const { data } = await supabase.from("polos").select("*").eq("ativo", true).order("nome");
+      if (data) setPolos(data);
+      setIsLoadingPolos(false);
+    }
+    fetchPolos();
+  }, []);
+
+  useEffect(() => {
+    const handlePoloChange = () => {
+      setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+    };
+    window.addEventListener("polo-changed", handlePoloChange);
+    return () => window.removeEventListener("polo-changed", handlePoloChange);
+  }, []);
+
+  const currentPoloId = isSuperAdmin ? (selectedPoloId === 'all' ? null : selectedPoloId) : null;
+
+  const { data: poloData, isLoading: isLoadingPoloConfig } = useQuery({
+    queryKey: ["polo-config", currentPoloId],
+    queryFn: async () => {
+      if (!currentPoloId && isSuperAdmin) return null;
+      
+      let targetId = currentPoloId;
+      
+      if (!isSuperAdmin) {
+        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session?.user?.id || "").maybeSingle();
+        targetId = colab?.polo_id || null;
       }
+
+      if (!targetId) return null;
+
+      const { data, error } = await supabase
+        .from("polos")
+        .select("*")
+        .eq("id", targetId)
+        .single();
+      if (error) throw error;
       return data;
     },
-    retry: 1,
+    enabled: !!session?.user?.id,
   });
 
   const { data: modelos, isLoading: isModelosLoading } = useQuery({
@@ -62,16 +109,15 @@ function AdminSettings() {
     },
   });
 
-  const isLoading = isConfigsLoading || isModelosLoading;
-  const isError = isConfigsError;
-
+  const isLoading = isLoadingPoloConfig || isModelosLoading || isLoadingPolos;
 
   const [whatsappSuporte, setWhatsappSuporte] = useState("");
-  const [mensagemWhatsapp, setMensagemWhatsapp] = useState("");
   const [nomeEscola, setNomeEscola] = useState("");
   const [asaasApiKey, setAsaasApiKey] = useState("");
   const [asaasAmbiente, setAsaasAmbiente] = useState("producao");
   const [asaasWebhookToken, setAsaasWebhookToken] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  
   const [modeloContrato, setModeloContrato] = useState("");
   const [nomeModelo, setNomeModelo] = useState("");
   const [editingModeloId, setEditingModeloId] = useState<string | null>(null);
@@ -82,45 +128,42 @@ function AdminSettings() {
   const [newAdminPassword, setNewAdminPassword] = useState("");
   const [activeTab, setActiveTab] = useState("geral");
 
-  const tabs = [
-    { id: "geral", label: "Geral", icon: School },
-    { id: "asaas", label: "Integração Asaas", icon: Link2 },
-    { id: "contrato", label: "Modelo de Contrato", icon: FileText },
-    { id: "webhook", label: "Webhook", icon: Bell },
-    { id: "admins", label: "Administradores", icon: ShieldPlus },
-  ];
-
-
   useEffect(() => {
-    if (configs) {
-      setWhatsappSuporte(configs.find(c => c.chave === "whatsapp_suporte")?.valor || "");
-      setMensagemWhatsapp(configs.find(c => c.chave === "mensagem_whatsapp")?.valor || "");
-      setNomeEscola(configs.find(c => c.chave === "nome_escola")?.valor || "");
-      setAsaasApiKey(configs.find(c => c.chave === "asaas_api_key")?.valor || "");
-      setAsaasAmbiente(configs.find(c => c.chave === "asaas_ambiente")?.valor || "producao");
-      setAsaasWebhookToken(configs.find(c => c.chave === "asaas_webhook_token")?.valor || "");
-      setModeloContrato(configs.find(c => c.chave === "modelo_contrato")?.valor || "");
+    if (poloData) {
+      setWhatsappSuporte(poloData.whatsapp || "");
+      setNomeEscola(poloData.nome_escola || "");
+      setAsaasApiKey(poloData.asaas_api_key || "");
+      setAsaasAmbiente(poloData.asaas_ambiente || "producao");
+      setAsaasWebhookToken(poloData.asaas_webhook_token || "");
+      setLogoUrl(poloData.logo_url || "");
     }
-  }, [configs]);
+  }, [poloData]);
 
+  const updatePoloConfig = useMutation({
+    mutationFn: async (values: any) => {
+      let targetId = currentPoloId;
+      if (!isSuperAdmin) {
+        const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session?.user?.id || "").maybeSingle();
+        targetId = colab?.polo_id || null;
+      }
 
+      if (!targetId) throw new Error("Polo não identificado");
 
-  const updateConfig = useMutation({
-    mutationFn: async ({ chave, valor }: { chave: string, valor: string }) => {
       const { error } = await supabase
-        .from("configuracoes")
-        .update({ valor })
-        .eq("chave", chave);
+        .from("polos")
+        .update(values)
+        .eq("id", targetId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-configs"] });
-      toast.success("Configuração salva com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["polo-config"] });
+      toast.success("Configurações salvas com sucesso!");
     },
     onError: (error: any) => {
-      toast.error("Erro ao salvar configuração: " + error.message);
+      toast.error("Erro ao salvar: " + error.message);
     },
   });
+
 
   const saveModeloMutation = useMutation({
     mutationFn: async () => {
@@ -240,35 +283,14 @@ function AdminSettings() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="p-8">
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <div className="flex items-center gap-2 text-red-600">
-              <Settings className="h-5 w-5" />
-              <CardTitle>Erro ao carregar configurações</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-red-700">
-              Não foi possível carregar as configurações do sistema. Isso pode ser um problema de permissão ou conexão.
-            </p>
-            <div className="bg-white/50 p-3 rounded border border-red-100 font-mono text-xs text-red-800 overflow-auto">
-              {(fetchError as any)?.message || "Erro desconhecido"}
-            </div>
-            <Button 
-              variant="outline" 
-              className="border-red-300 text-red-700 hover:bg-red-100"
-              onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-configs"] })}
-            >
-              Tentar novamente
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const tabs = [
+    { id: "geral", label: "Geral", icon: School },
+    { id: "asaas", label: "Integração Asaas", icon: Link2 },
+    { id: "contrato", label: "Modelo de Contrato", icon: FileText },
+    { id: "webhook", label: "Webhook", icon: Bell },
+    { id: "admins", label: "Administradores", icon: ShieldPlus },
+  ];
+
 
 
   return (
@@ -314,97 +336,133 @@ function AdminSettings() {
           <div className="space-y-8">
             {activeTab === 'geral' && (
               <div className="space-y-8 animate-in slide-in-from-right-2 duration-300">
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                    <School className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-semibold text-gray-800">Informações da Escola</h3>
-                  </div>
-                  <Card>
+                {isSuperAdmin && (
+                  <Card className="border-primary/20 bg-primary/5">
                     <CardHeader>
-                      <CardTitle className="text-lg">Nome da escola</CardTitle>
-                      <CardDescription>Este nome será exibido em várias partes do sistema</CardDescription>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Settings className="h-5 w-5 text-primary" />
+                        Seletor de Polo
+                      </CardTitle>
+                      <CardDescription>
+                        Como Super Admin, você deve selecionar um polo para visualizar e editar suas configurações específicas.
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="school-name">Nome da escola</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="school-name"
-                            value={nomeEscola}
-                            onChange={(e) => setNomeEscola(e.target.value)}
-                            placeholder="Nome da sua escola"
-                          />
-                          <Button 
-                            onClick={() => updateConfig.mutate({ chave: "nome_escola", valor: nomeEscola })}
-                            disabled={updateConfig.isPending}
-                          >
-                            {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                            Salvar
-                          </Button>
-                        </div>
-                      </div>
+                    <CardContent>
+                      <Select 
+                        value={selectedPoloId} 
+                        onValueChange={(val) => {
+                          setSelectedPoloId(val);
+                          sessionStorage.setItem("selected_polo_id", val);
+                          window.dispatchEvent(new Event("polo-changed"));
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um polo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Selecione um polo para configurar...</SelectItem>
+                          {polos.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </CardContent>
                   </Card>
-                </section>
+                )}
 
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                    <MessageSquare className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-semibold text-gray-800">Contato e Suporte</h3>
+                {(!currentPoloId && isSuperAdmin) ? (
+                  <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+                    <School className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground font-medium">Por favor, selecione um polo no seletor acima para gerenciar as configurações.</p>
                   </div>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">WhatsApp de Suporte</CardTitle>
-                      <CardDescription>Configure o número e a mensagem padrão para o atendimento</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="whatsapp-number">Número do WhatsApp</Label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <Input
-                            id="whatsapp-number"
-                            placeholder="Ex: 5551999999999"
-                            className="pl-9"
-                            value={whatsappSuporte}
-                            onChange={(e) => setWhatsappSuporte(e.target.value)}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Digite o número com DDI e DDD sem espaços ou símbolos. Ex: 5551999999999
-                        </p>
+                ) : (
+                  <>
+                    <section className="space-y-4">
+                      <div className="flex items-center gap-2 px-1">
+                        <School className="h-5 w-5 text-primary" />
+                        <h3 className="text-xl font-semibold text-gray-800">Informações da Unidade</h3>
                       </div>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Nome e Logo</CardTitle>
+                          <CardDescription>Configure como esta unidade aparece para os alunos</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="school-name">Nome da escola neste polo</Label>
+                            <Input
+                              id="school-name"
+                              value={nomeEscola}
+                              onChange={(e) => setNomeEscola(e.target.value)}
+                              placeholder="Ex: Soluções Online - Unidade Matriz"
+                            />
+                          </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="whatsapp-message">Mensagem pré-definida</Label>
-                        <Textarea
-                          id="whatsapp-message"
-                          rows={4}
-                          placeholder="Olá! Preciso de ajuda..."
-                          value={mensagemWhatsapp}
-                          onChange={(e) => setMensagemWhatsapp(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Use <code className="bg-muted px-1 rounded text-primary">[nome]</code> e <code className="bg-muted px-1 rounded text-primary">[ctr]</code> para incluir os dados do aluno automaticamente
-                        </p>
-                      </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="logo-url">URL da Logotipo</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                id="logo-url"
+                                value={logoUrl}
+                                onChange={(e) => setLogoUrl(e.target.value)}
+                                placeholder="https://..."
+                              />
+                            </div>
+                          </div>
 
-                      <div className="flex justify-end pt-2">
-                        <Button 
-                          onClick={() => updateMultipleConfigs.mutate([
-                            { chave: "whatsapp_suporte", valor: whatsappSuporte },
-                            { chave: "mensagem_whatsapp", valor: mensagemWhatsapp }
-                          ])}
-                          disabled={updateMultipleConfigs.isPending}
-                          className="w-full sm:w-auto"
-                        >
-                          {updateMultipleConfigs.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                          Salvar Alterações do WhatsApp
-                        </Button>
+                          <div className="flex justify-end">
+                            <Button 
+                              onClick={() => updatePoloConfig.mutate({ nome_escola: nomeEscola, logo_url: logoUrl })}
+                              disabled={updatePoloConfig.isPending}
+                            >
+                              {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                              Salvar Identidade
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </section>
+
+                    <section className="space-y-4">
+                      <div className="flex items-center gap-2 px-1">
+                        <MessageSquare className="h-5 w-5 text-primary" />
+                        <h3 className="text-xl font-semibold text-gray-800">Contato e Suporte</h3>
                       </div>
-                    </CardContent>
-                  </Card>
-                </section>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">WhatsApp de Suporte</CardTitle>
+                          <CardDescription>Configure o número de WhatsApp que os alunos deste polo verão.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="whatsapp-number">Número do WhatsApp (com DDI e DDD)</Label>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="whatsapp-number"
+                                placeholder="Ex: 5551999999999"
+                                className="pl-9"
+                                value={whatsappSuporte}
+                                onChange={(e) => setWhatsappSuporte(e.target.value)}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end pt-2">
+                            <Button 
+                              onClick={() => updatePoloConfig.mutate({ whatsapp: whatsappSuporte })}
+                              disabled={updatePoloConfig.isPending}
+                              className="w-full sm:w-auto"
+                            >
+                              {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                              Salvar WhatsApp
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </section>
+                  </>
+                )}
               </div>
             )}
 
@@ -437,10 +495,10 @@ function AdminSettings() {
                           </button>
                         </div>
                         <Button 
-                          onClick={() => updateConfig.mutate({ chave: "asaas_api_key", valor: asaasApiKey })}
-                          disabled={updateConfig.isPending}
+                          onClick={() => updatePoloConfig.mutate({ asaas_api_key: asaasApiKey })}
+                          disabled={updatePoloConfig.isPending}
                         >
-                          {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                          {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                           Salvar
                         </Button>
                       </div>
@@ -472,10 +530,10 @@ function AdminSettings() {
                           </Select>
                         </div>
                         <Button 
-                          onClick={() => updateConfig.mutate({ chave: "asaas_ambiente", valor: asaasAmbiente })}
-                          disabled={updateConfig.isPending}
+                          onClick={() => updatePoloConfig.mutate({ asaas_ambiente: asaasAmbiente })}
+                          disabled={updatePoloConfig.isPending}
                         >
-                          {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                          {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                           Salvar
                         </Button>
                       </div>
@@ -514,10 +572,10 @@ function AdminSettings() {
                           </button>
                         </div>
                         <Button 
-                          onClick={() => updateConfig.mutate({ chave: "asaas_webhook_token", valor: asaasWebhookToken })}
-                          disabled={updateConfig.isPending}
+                          onClick={() => updatePoloConfig.mutate({ asaas_webhook_token: asaasWebhookToken })}
+                          disabled={updatePoloConfig.isPending}
                         >
-                          {updateConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                          {updatePoloConfig.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                           Salvar
                         </Button>
                       </div>

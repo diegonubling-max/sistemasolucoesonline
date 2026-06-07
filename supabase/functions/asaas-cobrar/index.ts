@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Iniciando processamento de cobrança...");
+    console.log("Iniciando processamento de cobrança por polo...");
     
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -27,40 +27,17 @@ serve(async (req) => {
       throw new Error("ID da parcela é obrigatório.");
     }
 
-    // 2. Buscar configurações do Asaas
-    console.log("Buscando configurações do Asaas...");
-    const { data: configs, error: configError } = await supabaseClient
-      .from("configuracoes")
-      .select("chave, valor");
-
-    if (configError) {
-      console.error("Erro ao buscar configurações:", configError);
-      throw configError;
-    }
-
-    const asaas_api_key = configs.find(c => c.chave === "asaas_api_key")?.valor;
-    const asaas_ambiente = configs.find(c => c.chave === "asaas_ambiente")?.valor;
-
-    if (!asaas_api_key || !asaas_ambiente) {
-      const faltantes = [];
-      if (!asaas_api_key) faltantes.push("asaas_api_key");
-      if (!asaas_ambiente) faltantes.push("asaas_ambiente");
-      console.error(`Configurações obrigatórias não encontradas na tabela configuracoes: ${faltantes.join(", ")}`);
-      throw new Error(`Configurações do Asaas incompletas. Cadastre na tabela configuracoes: ${faltantes.join(", ")}.`);
-    }
-
-    const asaasBaseUrl = asaas_ambiente === "producao" 
-      ? "https://www.asaas.com/api/v3" 
-      : "https://sandbox.asaas.com/api/v3";
-
-    // 3. Buscar dados da parcela
+    // 1. Buscar dados da parcela e do polo através do aluno
     const { data: parcela, error: parcelaError } = await supabaseClient
       .from("parcelas")
       .select(`
         *,
         matriculas (
           aluno_id,
-          alunos (*)
+          alunos (
+            *,
+            polos (*)
+          )
         )
       `)
       .eq("id", parcela_id)
@@ -70,6 +47,21 @@ serve(async (req) => {
       console.error("Erro ao buscar parcela:", parcelaError);
       throw new Error("Parcela não encontrada.");
     }
+
+    const matricula = parcela.matriculas;
+    const aluno = Array.isArray(matricula) ? matricula[0]?.alunos : matricula?.alunos;
+    const polo = aluno?.polos;
+
+    if (!polo || !polo.asaas_api_key) {
+      throw new Error(`Configurações do Asaas não encontradas para o polo ${polo?.nome || 'não identificado'}.`);
+    }
+
+    const asaas_api_key = polo.asaas_api_key;
+    const asaas_ambiente = polo.asaas_ambiente || "producao";
+
+    const asaasBaseUrl = asaas_ambiente === "producao" 
+      ? "https://www.asaas.com/api/v3" 
+      : "https://sandbox.asaas.com/api/v3";
 
     // SE AÇÃO FOR BUSCAR COBRANÇA EXISTENTE
     if (action === 'fetch' || (parcela.asaas_id && action !== 'create')) {
@@ -146,9 +138,6 @@ serve(async (req) => {
 
     // SE FOR CRIAÇÃO (FLUXO ORIGINAL)
     if (!tipo) throw new Error("Tipo de cobrança é obrigatório para criação.");
-
-    const matricula = parcela.matriculas;
-    const aluno = Array.isArray(matricula) ? matricula[0]?.alunos : matricula?.alunos;
 
     if (!aluno) throw new Error("Aluno não encontrado para esta parcela.");
 
