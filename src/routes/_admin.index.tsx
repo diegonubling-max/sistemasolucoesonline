@@ -9,11 +9,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PageHeader } from "@/components/admin/PageHeader";
 import { formatDate } from "@/lib/format";
 import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_admin/")({
   head: () => ({ meta: [{ title: "Dashboard — EduManager" }] }),
   component: Dashboard,
 });
+
+interface Origin {
+  name: string;
+  count: number;
+  percent: number;
+}
 
 function Dashboard() {
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
@@ -51,10 +58,9 @@ function Dashboard() {
 
       const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData] = await Promise.all([
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),
-        supabase.from("cursos").select("*", { count: "exact", head: true }), // Cursos são globais
+        supabase.from("cursos").select("*", { count: "exact", head: true }),
         filterByPolo(supabase.from("matriculas").select("*", { count: "exact", head: true })),
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true }).eq("ativo", true)),
-        // Faturamento
         filterByPolo(supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd"))),
         filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
         filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd"))),
@@ -69,22 +75,21 @@ function Dashboard() {
         return acc + val;
       }, 0);
 
-      const origensMap = (origensData.data ?? []).reduce((acc: Record<string, number>, curr) => {
+      const origensMap = (origensData.data ?? []).reduce((acc: Record<string, number>, curr: any) => {
         const key = curr.origem || 'Outros';
         acc[key] = (acc[key] || 0) + 1;
         return acc;
       }, {});
 
       const totalAlunos = a.count ?? 0;
-      const origens = Object.entries(origensMap)
-        .map(([name, count]) => ({
+      const origens: Origin[] = Object.entries(origensMap)
+        .map(([name, count]: [string, any]) => ({
           name,
-          count,
-          percent: totalAlunos > 0 ? Math.round((count / totalAlunos) * 100) : 0
+          count: Number(count),
+          percent: totalAlunos > 0 ? Math.round((Number(count) / totalAlunos) * 100) : 0
         }))
         .sort((a, b) => b.count - a.count);
 
-      // Parte 1: Se "Todos os Polos" selecionado, buscar dados por polo para os cards
       let statsByPolo: any[] = [];
       if (selectedPoloId === 'all' && polos) {
         const poloPromises = polos.map(async (p) => {
@@ -237,7 +242,7 @@ function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {(stats?.origens ?? []).map((o) => {
+              {(stats?.origens ?? []).map((o: Origin) => {
                 let Icon = Pin;
                 if (o.name.toLowerCase().includes("google")) Icon = Search;
                 else if (o.name.toLowerCase().includes("meta") || o.name.toLowerCase().includes("facebook") || o.name.toLowerCase().includes("instagram")) Icon = Smartphone;
