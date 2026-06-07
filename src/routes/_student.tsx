@@ -142,15 +142,16 @@ function StudentLayout() {
           setTema(aluno.tema);
         }
       }
-      // Get School Name
-      const { data: configNome } = await supabase
-        .from('configuracoes')
-        .select('valor')
-        .eq('chave', 'nome_escola')
+      // Get Polo Data (School Name and Logo)
+      const { data: alunoPolo } = await supabase
+        .from('alunos')
+        .select('polos(nome_escola, logo_url)')
+        .eq('email', session.user.email ?? '')
         .single();
       
-      if (configNome?.valor) {
-        setNomeEscola(configNome.valor);
+      const poloData = (alunoPolo as any)?.polos;
+      if (poloData?.nome_escola) {
+        setNomeEscola(poloData.nome_escola);
       }
 
       setIsVerifying(false);
