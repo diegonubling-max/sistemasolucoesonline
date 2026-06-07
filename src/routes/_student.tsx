@@ -68,7 +68,7 @@ function StudentLayout() {
   };
 
   useEffect(() => {
-    const sessaoIdLocal = localStorage.getItem('aluno_sessao_id');
+    const sessaoIdLocal = sessionStorage.getItem('aluno_sessao_id');
     if (sessaoIdLocal) {
       setSessaoId(sessaoIdLocal);
     }
@@ -160,10 +160,10 @@ function StudentLayout() {
   }, [loading, session, navigate]);
 
   const handleLogout = async () => {
-    const currentSessaoId = sessaoId || localStorage.getItem('aluno_sessao_id');
+    const currentSessaoId = sessaoId || sessionStorage.getItem('aluno_sessao_id');
     if (currentSessaoId) {
       await encerrarSessao(currentSessaoId);
-      localStorage.removeItem('aluno_sessao_id');
+      sessionStorage.removeItem('aluno_sessao_id');
     }
     await supabase.auth.signOut();
     navigate({ to: "/aluno/login" });
