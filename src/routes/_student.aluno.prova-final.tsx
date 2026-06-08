@@ -366,7 +366,7 @@ function ProvaFinalPage() {
               disabled={ordemSelecionada.length !== materiasDisponiveis.length}
               onClick={() => startProva.mutate()}
             >
-              Começar na ordem escolhida <ArrowRight className="ml-2 h-5 w-5" />
+              Confirmar ordem e iniciar prova <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
           
@@ -467,7 +467,7 @@ function ProvaFinalPage() {
               </h4>
               <ul className="text-sm text-blue-700 space-y-2 list-disc pl-5">
                 <li>Você terá <strong>4 horas</strong> para concluir as 10 questões de cada matéria.</li>
-                <li>Você escolhe a ordem das matérias.</li>
+                <li>Você poderá escolher a ordem das matérias antes de começar.</li>
                 <li>As matérias seguem a ordem que você escolher e não poderá voltar.</li>
                 <li>Certifique-se de estar em ambiente calmo e com boa conexão.</li>
                 <li>Ao clicar em começar, o cronômetro será iniciado.</li>
