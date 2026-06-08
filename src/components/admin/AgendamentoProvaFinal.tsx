@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { Loader2, Calendar as CalendarIcon, CheckCircle2, History, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
+
 
 
 export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
