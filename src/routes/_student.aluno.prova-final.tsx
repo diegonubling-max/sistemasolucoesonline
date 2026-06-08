@@ -73,6 +73,12 @@ function ProvaFinalPage() {
     enabled: !!aluno?.id,
   });
 
+  useEffect(() => {
+    if (agendamento?.status === 'iniciado' && etapa === 'instrucoes') {
+      setEtapa('realizando');
+    }
+  }, [agendamento, etapa]);
+
   const { data: resultados, refetch: refetchResultados } = useQuery({
     queryKey: ["prova-resultados-aluno", aluno?.id],
     queryFn: async () => {
