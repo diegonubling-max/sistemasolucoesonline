@@ -125,33 +125,57 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
                 </thead>
                 <tbody className="divide-y">
                   {agendamentos.map((ag) => (
-                    <tr key={ag.id}>
-                      <td className="px-4 py-2">{format(new Date(ag.data_prova + 'T00:00:00'), 'dd/MM/yyyy')}</td>
-                      <td className="px-4 py-2">{ag.hora_prova.substring(0, 5)}</td>
-                      <td className="px-4 py-2">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          ag.status === 'agendado' ? 'bg-blue-100 text-blue-700' :
-                          ag.status === 'concluido' ? 'bg-green-100 text-green-700' :
-                          ag.status === 'cancelado' ? 'bg-gray-100 text-gray-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {ag.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-right">
-                        {ag.status === 'agendado' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 h-8"
-                            onClick={() => cancelarAgendamento.mutate(ag.id)}
-                          >
-                            Cancelar
-                          </Button>
-                        )}
+                    <tr key={ag.id} className="group">
+                      <td colSpan={4} className="p-0">
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value={ag.id} className="border-none">
+                            <div className="flex items-center px-4 py-3 hover:bg-muted/30 transition-colors">
+                              <div className="flex-1 grid grid-cols-3 items-center">
+                                <div className="text-sm font-medium">
+                                  {format(new Date(ag.data_prova + 'T00:00:00'), 'dd/MM/yyyy')}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {ag.hora_prova.substring(0, 5)}
+                                </div>
+                                <div>
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                    ag.status === 'agendado' ? 'bg-blue-100 text-blue-700' :
+                                    ag.status === 'concluido' ? 'bg-green-100 text-green-700' :
+                                    ag.status === 'cancelado' ? 'bg-gray-100 text-gray-700' :
+                                    'bg-yellow-100 text-yellow-700'
+                                  }`}>
+                                    {ag.status}
+                                  </span>
+                                  <ResultBadge agendamentoId={ag.id} alunoId={alunoId} status={ag.status} />
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                {ag.status === 'concluido' && (
+                                  <AccordionTrigger className="p-0 hover:no-underline" />
+                                )}
+                                {ag.status === 'agendado' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-600 h-8 px-2"
+                                    onClick={() => cancelarAgendamento.mutate(ag.id)}
+                                  >
+                                    Cancelar
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <AccordionContent className="px-4 pb-4">
+                              <DetalhesResultado agendamentoId={ag.id} alunoId={alunoId} />
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
                       </td>
                     </tr>
                   ))}
+
                 </tbody>
               </table>
             </div>
