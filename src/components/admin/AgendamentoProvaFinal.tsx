@@ -117,12 +117,12 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="px-4 py-2 text-left">Data</th>
-                    <th className="px-4 py-2 text-left">Hora</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                    <th className="px-4 py-2 text-right">Ações</th>
+                    <th className="px-4 py-2 text-left w-1/3">Data</th>
+                    <th className="px-4 py-2 text-left w-1/3">Hora</th>
+                    <th className="px-4 py-2 text-left w-1/3">Status / Resultado</th>
                   </tr>
                 </thead>
+
                 <tbody className="divide-y">
                   {agendamentos.map((ag) => (
                     <tr key={ag.id} className="group">
