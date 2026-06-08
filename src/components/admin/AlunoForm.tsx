@@ -38,6 +38,7 @@ const schema = z
     responsavel_cpf: z.string().optional().nullable(),
     responsavel_email: z.string().optional().nullable().or(z.literal("")),
     dias_prova_final: z.coerce.number().min(0).optional(),
+    materias_prova: z.array(z.string()).optional().nullable(),
   })
   .superRefine((data, ctx) => {
     const menor = calcAge(data.data_nascimento) < 18;
