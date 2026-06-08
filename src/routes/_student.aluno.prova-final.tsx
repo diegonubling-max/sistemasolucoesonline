@@ -41,7 +41,7 @@ function ProvaFinalPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("alunos")
-        .select("id, nome, ctr, data_liberacao_prova")
+        .select("id, nome, ctr, data_liberacao_prova, materias_prova")
         .eq("email", session?.user.email ?? "")
         .single();
       if (error) throw error;
