@@ -112,6 +112,7 @@ export type Database = {
           email: string | null
           foto_perfil: string | null
           id: string
+          materias_prova: string[] | null
           menor_de_idade: boolean
           nome: string
           observacao: string | null
@@ -140,6 +141,7 @@ export type Database = {
           email?: string | null
           foto_perfil?: string | null
           id?: string
+          materias_prova?: string[] | null
           menor_de_idade?: boolean
           nome: string
           observacao?: string | null
@@ -168,6 +170,7 @@ export type Database = {
           email?: string | null
           foto_perfil?: string | null
           id?: string
+          materias_prova?: string[] | null
           menor_de_idade?: boolean
           nome?: string
           observacao?: string | null
