@@ -73,11 +73,8 @@ function ProvaFinalPage() {
     enabled: !!aluno?.id,
   });
 
-  useEffect(() => {
-    if (agendamento?.status === 'iniciado' && etapa === 'instrucoes') {
-      setEtapa('realizando');
-    }
-  }, [agendamento, etapa]);
+  // Removido auto-redirecionamento para garantir que o aluno sempre veja as instruções
+  // conforme solicitado: "Nunca pular a tela de orientação independente de como o aluno chegou na prova"
 
   const { data: resultados, refetch: refetchResultados } = useQuery({
     queryKey: ["prova-resultados-aluno", aluno?.id],
@@ -175,7 +172,7 @@ function ProvaFinalPage() {
       
       if (!todasQuestoes) throw new Error("Erro ao buscar questões");
 
-      const resultadosParaInserir = materiasParaRealizar.map(materia => {
+      const resultadosParaInserir = materiasParaRealizar.map((materia: string) => {
         const questoesMateria = todasQuestoes.filter(q => q.materia === materia);
         let acertos = 0;
         
@@ -324,7 +321,7 @@ function ProvaFinalPage() {
         </CardHeader>
         <CardContent className="py-8 space-y-8">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {materiasDisponiveis.map((m) => {
+            {materiasDisponiveis.map((m: string) => {
               const indexOrdem = ordemSelecionada.indexOf(m);
               const selecionada = indexOrdem !== -1;
               return (
@@ -390,8 +387,8 @@ function ProvaFinalPage() {
             <h2 className="text-2xl font-bold">Prova Final</h2>
             <p className="text-muted-foreground">Sua Prova Final está disponível para agendamento!</p>
           </div>
-          <Button className="bg-green-600 hover:bg-green-700 h-12 px-8" onClick={() => window.open("https://wa.me/5551990010689", "_blank")}>
-            <MessageSquare className="mr-2 h-5 w-5" /> Agendar via WhatsApp (51) 99001-0689
+          <Button className="bg-green-600 hover:bg-green-700 h-12 px-8" onClick={() => window.open(`https://wa.me/${aluno?.polos?.whatsapp || "5551990010689"}`, "_blank")}>
+            <MessageSquare className="mr-2 h-5 w-5" /> Agendar via WhatsApp {aluno?.polos?.whatsapp || "(51) 99001-0689"}
           </Button>
         </CardContent>
       </Card>
@@ -507,7 +504,7 @@ function TelaFormatura({ width, height }: any) {
         <h2 className="text-3xl font-bold">Você concluiu sua Prova Final com sucesso!</h2>
         <p className="text-xl text-muted-foreground">Você foi aprovado em todas as matérias.</p>
       </div>
-      <Button className="bg-green-600 hover:bg-green-700 h-16 px-10 text-xl font-bold rounded-2xl" onClick={() => window.open("https://wa.me/5551990010689", "_blank")}>
+      <Button className="bg-green-600 hover:bg-green-700 h-16 px-10 text-xl font-bold rounded-2xl" onClick={() => window.open(`https://wa.me/${aluno?.polos?.whatsapp || "5551990010689"}`, "_blank")}>
         <MessageSquare className="mr-3 h-6 w-6" /> Solicitar Certificado via WhatsApp
       </Button>
     </div>
@@ -550,7 +547,7 @@ function TelaResultados({ resultados, materias }: { resultados: any[], materias:
           <CardContent className="py-8 text-center space-y-6">
             <h3 className="text-xl font-bold text-red-800">Não foi dessa vez...</h3>
             <p className="text-red-700">Ainda precisa ser aprovado em: {reprovadas.join(", ")}.</p>
-            <Button className="bg-green-600 h-12 px-8" onClick={() => window.open("https://wa.me/5551990010689", "_blank")}>
+            <Button className="bg-green-600 h-12 px-8" onClick={() => window.open(`https://wa.me/${aluno?.polos?.whatsapp || "5551990010689"}`, "_blank")}>
               <MessageSquare className="mr-2 h-5 w-5" /> Reagendar via WhatsApp
             </Button>
           </CardContent>
