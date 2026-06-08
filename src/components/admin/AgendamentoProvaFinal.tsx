@@ -185,3 +185,85 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
     </div>
   );
 }
+
+function ResultBadge({ agendamentoId, alunoId, status }: { agendamentoId: string, alunoId: string, status: string }) {
+  const { data: resultados } = useQuery({
+    queryKey: ["prova-resultados", agendamentoId],
+    enabled: status === 'concluido',
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prova_resultados")
+        .select("*")
+        .eq("agendamento_id", agendamentoId)
+        .eq("aluno_id", alunoId);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (!resultados || resultados.length === 0) return null;
+
+  const todasAprovadas = resultados.every(r => r.aprovado);
+
+  return (
+    <Badge className={cn("ml-2", todasAprovadas ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600")}>
+      {todasAprovadas ? "✅ Aprovado" : "❌ Reprovado"}
+    </Badge>
+  );
+}
+
+function DetalhesResultado({ agendamentoId, alunoId }: { agendamentoId: string, alunoId: string }) {
+  const { data: resultados, isLoading } = useQuery({
+    queryKey: ["prova-resultados", agendamentoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prova_resultados")
+        .select("*")
+        .eq("agendamento_id", agendamentoId)
+        .eq("aluno_id", alunoId);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) return <div className="text-xs py-2">Carregando resultados...</div>;
+  if (!resultados || resultados.length === 0) return <div className="text-xs py-2 text-muted-foreground">Nenhum detalhe disponível.</div>;
+
+  const reprovadas = resultados.filter(r => !r.aprovado).map(r => r.materia);
+
+  return (
+    <div className="space-y-3 pt-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {resultados.map((res) => (
+          <div key={res.id} className={cn(
+            "flex items-center justify-between p-2 rounded-md border text-xs",
+            res.aprovado ? "bg-green-50/50 border-green-100 text-green-700" : "bg-red-50/50 border-red-100 text-red-700"
+          )}>
+            <div className="flex items-center gap-2">
+              {res.aprovado ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+              <span className="font-medium">{res.materia}</span>
+            </div>
+            <span className="font-bold">
+              {res.total_acertos}/{res.total_questoes} ({Math.round(Number(res.percentual)) || 0}%)
+            </span>
+          </div>
+        ))}
+      </div>
+      
+      {reprovadas.length > 0 && (
+        <div className="bg-red-50 p-3 rounded-md border border-red-100">
+          <p className="text-xs font-bold text-red-700 flex items-center gap-2">
+            <XCircle className="h-3 w-3" />
+            Matérias que precisam ser refeitas:
+          </p>
+          <ul className="mt-1 list-disc list-inside text-xs text-red-600">
+            {reprovadas.map(m => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
