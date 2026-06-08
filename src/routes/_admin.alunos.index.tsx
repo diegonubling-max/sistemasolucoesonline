@@ -69,15 +69,28 @@ function AlunosList() {
 
   const handleGlobalSearch = async () => {
     if (!globalSearchCpf) return;
+    const normalizedCpf = globalSearchCpf.replace(/\D/g, '');
+    const formattedCpf = normalizedCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    
+    console.log("DEBUG: Buscando CPF global:", {
+      original: globalSearchCpf,
+      normalized: normalizedCpf,
+      formatted: formattedCpf
+    });
+
     setIsSearchingGlobal(true);
     try {
       const { data, error } = await supabase
         .from("alunos")
         .select("nome, vendedora, created_at, polos(nome), matriculas(id, created_at, parcelas(valor, status))")
-        .eq("cpf", globalSearchCpf.replace(/\D/g, ''))
-        .single();
+        .or(`cpf.eq.${normalizedCpf},cpf.eq.${formattedCpf}`)
+        .maybeSingle();
       
-      if (error) throw new Error("Aluno não encontrado em nenhum polo.");
+      console.log("DEBUG: Resultado da busca global:", data);
+      
+      if (error) throw error;
+      if (!data) throw new Error("Aluno não encontrado em nenhum polo.");
+      
       setGlobalSearchResult(data);
     } catch (e: any) {
       toast.error(e.message);
@@ -409,18 +422,26 @@ function AlunosList() {
                   </div>
                   <div className="mt-4">
                     <p className="font-bold text-sm mb-2">Resumo de Parcelas:</p>
-                    <div className="space-y-1">
-                      {globalSearchResult.matriculas?.[0]?.parcelas?.map((p: any, idx: number) => (
-                        <div key={idx} className="flex justify-between text-xs border-b pb-1">
-                          <span>Parcela {idx + 1}</span>
-                          <span>R$ {p.valor}</span>
-                          <Badge variant={p.status === 'pago' ? 'default' : 'destructive'} className="text-[10px] h-4">
-                            {p.status}
-                          </Badge>
+                    <div className="space-y-4">
+                      {globalSearchResult.matriculas?.map((m: any, mIdx: number) => (
+                        <div key={mIdx} className="space-y-1">
+                          {m.parcelas?.length > 0 ? (
+                            m.parcelas.map((p: any, pIdx: number) => (
+                              <div key={pIdx} className="flex justify-between text-xs border-b pb-1">
+                                <span>{globalSearchResult.matriculas.length > 1 ? `Matrícula ${mIdx + 1} - ` : ""}Parcela {pIdx + 1}</span>
+                                <span>R$ {p.valor}</span>
+                                <Badge variant={p.status === 'pago' ? 'default' : 'destructive'} className="text-[10px] h-4">
+                                  {p.status}
+                                </Badge>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic">Nenhuma parcela na matrícula {mIdx + 1}.</p>
+                          )}
                         </div>
                       ))}
-                      {!globalSearchResult.matriculas?.[0]?.parcelas?.length && (
-                        <p className="text-xs text-muted-foreground italic">Nenhuma parcela encontrada.</p>
+                      {(!globalSearchResult.matriculas || globalSearchResult.matriculas.length === 0) && (
+                        <p className="text-xs text-muted-foreground italic">Nenhuma matrícula encontrada.</p>
                       )}
                     </div>
                   </div>
