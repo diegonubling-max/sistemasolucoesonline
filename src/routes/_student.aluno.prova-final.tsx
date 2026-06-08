@@ -147,7 +147,7 @@ function ProvaFinalPage() {
       }
     }
 
-    if (currentMateriaIndex < MATERIAS.length - 1) {
+    if (currentMateriaIndex < materiasParaRealizar.length - 1) {
       setCurrentMateriaIndex(prev => prev + 1);
       window.scrollTo(0, 0);
     } else {
@@ -169,7 +169,7 @@ function ProvaFinalPage() {
       
       if (!todasQuestoes) throw new Error("Erro ao buscar questões");
 
-      const resultadosParaInserir = MATERIAS.map(materia => {
+      const resultadosParaInserir = materiasParaRealizar.map(materia => {
         const questoesMateria = todasQuestoes.filter(q => q.materia === materia);
         let acertos = 0;
         
