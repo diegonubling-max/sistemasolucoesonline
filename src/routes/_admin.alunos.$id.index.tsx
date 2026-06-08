@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText } from "lucide-react";
-import { jsPDF } from "jspdf";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isBefore, startOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -202,45 +202,102 @@ function AlunoDetalhes() {
 
       if (error) throw error;
       
-      // Generate PDF
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      
-      // Header - Title
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.text("DECLARAÇÃO DE MATRÍCULA", pageWidth / 2, 40, { align: "center" });
-
-      // Body Text
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-      
-      const texto = `Declaramos para devidos fins que o(a) aluno(a) ${aluno.nome}, portador(a) do CPF ${aluno.cpf} está devidamente matriculado(a) em nossa Escola realizando aulas do preparatório para o processo de prova de proficiência do Curso EJA – Ensino Médio junto a uma de nossas certificadoras.`;
-      
-      const splitText = doc.splitTextToSize(texto, pageWidth - 40);
-      doc.text(splitText, 20, 60, { align: "justify" });
-      
-      doc.text("Sem mais no momento.", 20, 90);
-
-      // Date
+      // Generate HTML for Print
       const hoje = new Date();
-      const cidade = poloInfo?.cidade || "Brasil";
+      const cidade = poloInfo?.cidade || "Florianópolis";
       const dataFormatada = `${cidade}, ${hoje.getDate()} de ${hoje.toLocaleString('pt-BR', { month: 'long' })} de ${hoje.getFullYear()}`;
-      doc.text(dataFormatada, 20, 110);
-
-      // Signature
-      doc.line(pageWidth / 2 - 40, 160, pageWidth / 2 + 40, 160);
-      doc.setFontSize(10);
-      doc.text(poloInfo?.nome || "Escola Soluções Online", pageWidth / 2, 165, { align: "center" });
-      if (poloInfo?.cnpj) {
-        doc.text(`CNPJ: ${poloInfo.cnpj}`, pageWidth / 2, 170, { align: "center" });
-      }
-      if (poloInfo?.endereco) {
-        const addrSplit = doc.splitTextToSize(poloInfo.endereco, pageWidth - 40);
-        doc.text(addrSplit, pageWidth / 2, 175, { align: "center" });
+      
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        throw new Error("Não foi possível abrir a janela de impressão. Verifique se o bloqueador de popups está ativado.");
       }
 
-      doc.save(`Declaracao_Matricula_${aluno.nome.replace(/\s+/g, '_')}.pdf`);
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Declaração de Matrícula - ${aluno.nome}</title>
+            <style>
+                @page {
+                    size: A4;
+                    margin: 0;
+                }
+                body {
+                    margin: 0;
+                    padding: 0;
+                    width: 210mm;
+                    height: 297mm;
+                    background-image: url('https://5b395dc8-3c40-4219-b045-de4f2ca28917.supabase.co/storage/v1/object/public/templates/Declaracao_florianopolis.png');
+                    background-size: cover;
+                    background-repeat: no-repeat;
+                    font-family: Arial, sans-serif;
+                    position: relative;
+                }
+                .title {
+                    position: absolute;
+                    top: 38%;
+                    left: 15%;
+                    right: 5%;
+                    text-align: center;
+                    font-weight: bold;
+                    text-decoration: underline;
+                    font-size: 16px;
+                }
+                .body-text {
+                    position: absolute;
+                    top: 46%;
+                    left: 15%;
+                    right: 5%;
+                    font-size: 12px;
+                    line-height: 2;
+                    text-align: justify;
+                }
+                .footer-text {
+                    position: absolute;
+                    top: 68%;
+                    left: 15%;
+                    font-size: 12px;
+                }
+                .date-location {
+                    position: absolute;
+                    top: 74%;
+                    right: 5%;
+                    text-align: right;
+                    font-size: 12px;
+                }
+                @media print {
+                    .no-print {
+                        display: none;
+                    }
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="title">DECLARAÇÃO DE MATRÍCULA</div>
+            <div class="body-text">
+                Declaramos para devidos fins que o(a) aluno(a) ${aluno.nome}, portador(a) do CPF ${aluno.cpf} está devidamente matriculado(a) em nossa Escola realizando aulas do preparatório para o processo de prova de proficiência do Curso EJA – Ensino Médio junto a uma de nossas certificadoras.
+            </div>
+            <div class="footer-text">Sem mais no momento.</div>
+            <div class="date-location">${dataFormatada}</div>
+            <script>
+                window.onload = function() {
+                    setTimeout(() => {
+                        window.print();
+                        // window.close(); // Opcional: fechar após imprimir
+                    }, 500);
+                };
+            </script>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
     },
     onSuccess: () => {
       toast.success("Declaração gerada e registrada com sucesso!");
