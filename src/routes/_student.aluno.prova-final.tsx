@@ -226,11 +226,10 @@ function ProvaFinalPage() {
   const aprovadoEmTudo = resultadosRecentes && resultsAllPassed(resultadosRecentes, materiasParaRealizar);
 
   if (aprovadoEmTudo || (agendamento?.status === 'concluido' && etapa === 'instrucoes')) {
-    if (aprovadoEmTudo) return <TelaFormatura width={width} height={height} />;
+    if (aprovadoEmTudo) return <TelaFormatura width={width} height={height} whatsapp={aluno?.polos?.whatsapp} />;
     if (resultadosRecentes && resultadosRecentes.length > 0) {
-      // Usamos as matérias que realmente têm resultados para garantir que mostramos apenas o que foi feito
       const materiasFeitas = resultadosRecentes.map(r => r.materia);
-      return <TelaResultados resultados={resultadosRecentes} materias={materiasFeitas} />;
+      return <TelaResultados resultados={resultadosRecentes} materias={materiasFeitas} whatsapp={aluno?.polos?.whatsapp} />;
     }
   }
 
@@ -377,21 +376,39 @@ function ProvaFinalPage() {
     );
   }
 
-  // Etapa Instruções
+  // Etapa Instruções - Caso não agendada, mostrar popup (Dialog) conforme solicitado
   if (!agendamento) {
     return (
-      <Card className="max-w-2xl mx-auto border-2 border-dashed border-gray-200">
-        <CardContent className="py-12 text-center space-y-6">
-          <Calendar className="h-16 w-16 mx-auto text-gray-400" />
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Prova Final</h2>
-            <p className="text-muted-foreground">Sua Prova Final está disponível para agendamento!</p>
-          </div>
-          <Button className="bg-green-600 hover:bg-green-700 h-12 px-8" onClick={() => window.open(`https://wa.me/${aluno?.polos?.whatsapp || "5551990010689"}`, "_blank")}>
-            <MessageSquare className="mr-2 h-5 w-5" /> Agendar via WhatsApp {aluno?.polos?.whatsapp || "(51) 99001-0689"}
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center py-20">
+        <Dialog open={true}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                Prova Final 🎓
+              </DialogTitle>
+              <DialogDescription className="text-gray-700 pt-2 text-center">
+                Sua Prova Final está disponível para agendamento! Clique no botão abaixo para falar com nosso setor de provas e marcar seu exame.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex justify-center py-6">
+              <Calendar className="h-16 w-16 text-gray-400" />
+            </div>
+
+            <DialogFooter>
+              <Button 
+                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2 py-6 text-lg" 
+                onClick={() => window.open(`https://wa.me/${aluno?.polos?.whatsapp || "5551990010689"}?text=${encodeURIComponent("Olá! Gostaria de agendar minha Prova Final.")}`, "_blank")}
+              >
+                <MessageSquare className="h-5 w-5" />
+                Agendar via WhatsApp {aluno?.polos?.whatsapp || "(51) 99001-0689"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        <Calendar className="h-16 w-16 text-gray-200 mb-4" />
+        <h2 className="text-xl font-medium text-gray-400">Aguardando agendamento...</h2>
+      </div>
     );
   }
 
@@ -494,7 +511,7 @@ function resultsAllPassed(resultados: any[], materias: string[]) {
   });
 }
 
-function TelaFormatura({ width, height }: any) {
+function TelaFormatura({ width, height, whatsapp }: { width: number, height: number, whatsapp?: string }) {
   return (
     <div className="max-w-3xl mx-auto text-center space-y-8 py-12">
       <Confetti width={width} height={height} numberOfPieces={300} recycle={false} />
@@ -504,14 +521,14 @@ function TelaFormatura({ width, height }: any) {
         <h2 className="text-3xl font-bold">Você concluiu sua Prova Final com sucesso!</h2>
         <p className="text-xl text-muted-foreground">Você foi aprovado em todas as matérias.</p>
       </div>
-      <Button className="bg-green-600 hover:bg-green-700 h-16 px-10 text-xl font-bold rounded-2xl" onClick={() => window.open(`https://wa.me/${aluno?.polos?.whatsapp || "5551990010689"}`, "_blank")}>
+      <Button className="bg-green-600 hover:bg-green-700 h-16 px-10 text-xl font-bold rounded-2xl" onClick={() => window.open(`https://wa.me/${whatsapp || "5551990010689"}`, "_blank")}>
         <MessageSquare className="mr-3 h-6 w-6" /> Solicitar Certificado via WhatsApp
       </Button>
     </div>
   );
 }
 
-function TelaResultados({ resultados, materias }: { resultados: any[], materias: string[] }) {
+function TelaResultados({ resultados, materias, whatsapp }: { resultados: any[], materias: string[], whatsapp?: string }) {
   const reprovadas = materias.filter(m => {
     const res = resultados.find(r => r.materia === m);
     return !res || !res.aprovado;
@@ -547,7 +564,7 @@ function TelaResultados({ resultados, materias }: { resultados: any[], materias:
           <CardContent className="py-8 text-center space-y-6">
             <h3 className="text-xl font-bold text-red-800">Não foi dessa vez...</h3>
             <p className="text-red-700">Ainda precisa ser aprovado em: {reprovadas.join(", ")}.</p>
-            <Button className="bg-green-600 h-12 px-8" onClick={() => window.open(`https://wa.me/${aluno?.polos?.whatsapp || "5551990010689"}`, "_blank")}>
+            <Button className="bg-green-600 h-12 px-8" onClick={() => window.open(`https://wa.me/${whatsapp || "5551990010689"}`, "_blank")}>
               <MessageSquare className="mr-2 h-5 w-5" /> Reagendar via WhatsApp
             </Button>
           </CardContent>
