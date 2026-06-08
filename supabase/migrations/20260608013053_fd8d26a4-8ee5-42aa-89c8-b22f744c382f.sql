@@ -1,0 +1,2 @@
+ALTER TABLE public.alunos ADD COLUMN materias_prova TEXT[] DEFAULT '{}';
+COMMENT ON COLUMN public.alunos.materias_prova IS 'Lista de matérias selecionadas para a prova final do aluno. Se vazio, todas as matérias são liberadas.';

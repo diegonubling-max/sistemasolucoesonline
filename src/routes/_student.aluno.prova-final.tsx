@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Lock, MessageSquare, CheckCircle2, AlertTriangle, GraduationCap, Loader2, ArrowRight } from "lucide-react";
+import { Calendar, Clock, Lock, MessageSquare, CheckCircle2, AlertTriangle, GraduationCap, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { format, isAfter, parseISO } from "date-fns";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_student/aluno/prova-final")({
   component: ProvaFinalPage,
 });
 
-const MATERIAS = [
+const MATERIAS_BASE = [
   "Geografia", "História", "Filosofia", "Sociologia", "Português", 
   "Inglês", "Biologia", "Química", "Física", "Matemática"
 ];
@@ -27,13 +27,12 @@ function ProvaFinalPage() {
   const { width, height } = useWindowSize();
   
   // Estados da Prova
-  const [etapa, setEtapa] = useState<'instrucoes' | 'realizando' | 'resultado'>('instrucoes');
+  const [etapa, setEtapa] = useState<'instrucoes' | 'escolher_ordem' | 'realizando' | 'resultado'>('instrucoes');
   const [currentMateriaIndex, setCurrentMateriaIndex] = useState(0);
   const [respostas, setRespostas] = useState<Record<string, string>>({}); 
   const [timeLeft, setTimeLeft] = useState(4 * 60 * 60);
   const [isFinishing, setIsFinishing] = useState(false);
-
-  const materiaAtual = MATERIAS[currentMateriaIndex];
+  const [ordemSelecionada, setOrdemSelecionada] = useState<string[]>([]);
 
   // Queries
   const { data: aluno } = useQuery({
@@ -41,7 +40,7 @@ function ProvaFinalPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("alunos")
-        .select("id, nome, ctr, data_liberacao_prova")
+        .select("id, nome, ctr, data_liberacao_prova, materias_prova")
         .eq("email", session?.user.email ?? "")
         .single();
       if (error) throw error;
@@ -49,6 +48,13 @@ function ProvaFinalPage() {
     },
     enabled: !!session?.user.email,
   });
+
+  const materiasDisponiveis = aluno?.materias_prova && aluno.materias_prova.length > 0 
+    ? aluno.materias_prova 
+    : MATERIAS_BASE;
+
+  const materiasParaRealizar = ordemSelecionada.length > 0 ? ordemSelecionada : materiasDisponiveis;
+  const materiaAtual = materiasParaRealizar[currentMateriaIndex];
 
   const { data: agendamento, isLoading: loadingAgendamento, refetch: refetchAgendamento } = useQuery({
     queryKey: ["current-prova-agendamento", aluno?.id],
@@ -66,6 +72,12 @@ function ProvaFinalPage() {
     },
     enabled: !!aluno?.id,
   });
+
+  useEffect(() => {
+    if (agendamento?.status === 'iniciado' && etapa === 'instrucoes') {
+      setEtapa('realizando');
+    }
+  }, [agendamento, etapa]);
 
   const { data: resultados, refetch: refetchResultados } = useQuery({
     queryKey: ["prova-resultados-aluno", aluno?.id],
@@ -141,7 +153,7 @@ function ProvaFinalPage() {
       }
     }
 
-    if (currentMateriaIndex < MATERIAS.length - 1) {
+    if (currentMateriaIndex < materiasParaRealizar.length - 1) {
       setCurrentMateriaIndex(prev => prev + 1);
       window.scrollTo(0, 0);
     } else {
@@ -163,7 +175,7 @@ function ProvaFinalPage() {
       
       if (!todasQuestoes) throw new Error("Erro ao buscar questões");
 
-      const resultadosParaInserir = MATERIAS.map(materia => {
+      const resultadosParaInserir = materiasParaRealizar.map(materia => {
         const questoesMateria = todasQuestoes.filter(q => q.materia === materia);
         let acertos = 0;
         
@@ -214,11 +226,15 @@ function ProvaFinalPage() {
 
   // Tela de Resultado (quando agendamento está concluído ou etapa é resultado)
   const resultadosRecentes = resultados?.filter(r => r.agendamento_id === agendamento?.id);
-  const aprovadoEmTudo = resultadosRecentes && resultsAllPassed(resultadosRecentes, MATERIAS);
+  const aprovadoEmTudo = resultadosRecentes && resultsAllPassed(resultadosRecentes, materiasParaRealizar);
 
   if (aprovadoEmTudo || (agendamento?.status === 'concluido' && etapa === 'instrucoes')) {
     if (aprovadoEmTudo) return <TelaFormatura width={width} height={height} />;
-    if (resultadosRecentes && resultadosRecentes.length > 0) return <TelaResultados resultados={resultadosRecentes} materias={MATERIAS} />;
+    if (resultadosRecentes && resultadosRecentes.length > 0) {
+      // Usamos as matérias que realmente têm resultados para garantir que mostramos apenas o que foi feito
+      const materiasFeitas = resultadosRecentes.map(r => r.materia);
+      return <TelaResultados resultados={resultadosRecentes} materias={materiasFeitas} />;
+    }
   }
 
   // Renderização condicional por Etapa
@@ -228,7 +244,7 @@ function ProvaFinalPage() {
         <div className="sticky top-20 z-10 bg-white border-b p-4 rounded-xl shadow-md flex justify-between items-center">
           <div>
             <h2 className="text-xl font-bold text-primary">{materiaAtual}</h2>
-            <p className="text-sm text-muted-foreground">Matéria {currentMateriaIndex + 1} de {MATERIAS.length}</p>
+            <p className="text-sm text-muted-foreground">Matéria {currentMateriaIndex + 1} de {materiasParaRealizar.length}</p>
           </div>
           <div className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xl font-bold",
@@ -284,8 +300,8 @@ function ProvaFinalPage() {
 
         <div className="flex justify-end pt-8">
           <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl" onClick={handleProximaMateria} disabled={isFinishing}>
-            {isFinishing ? <Loader2 className="animate-spin mr-2" /> : currentMateriaIndex === MATERIAS.length - 1 ? <CheckCircle2 className="mr-2" /> : <ArrowRight className="ml-2" />}
-            {currentMateriaIndex === MATERIAS.length - 1 ? "Finalizar Prova" : "Próxima Matéria"}
+            {isFinishing ? <Loader2 className="animate-spin mr-2" /> : currentMateriaIndex === materiasParaRealizar.length - 1 ? <CheckCircle2 className="mr-2" /> : <ArrowRight className="ml-2" />}
+            {currentMateriaIndex === materiasParaRealizar.length - 1 ? "Finalizar Prova" : "Próxima Matéria"}
           </Button>
         </div>
       </div>
@@ -293,7 +309,75 @@ function ProvaFinalPage() {
   }
 
   if (etapa === 'resultado' && resultadosRecentes) {
-    return <TelaResultados resultados={resultadosRecentes} materias={MATERIAS} />;
+    const materiasFeitas = resultadosRecentes.map(r => r.materia);
+    return <TelaResultados resultados={resultadosRecentes} materias={materiasFeitas} />;
+  }
+
+  if (etapa === 'escolher_ordem') {
+    return (
+      <Card className="max-w-4xl mx-auto overflow-hidden">
+        <CardHeader className="bg-primary text-primary-foreground py-8 text-center">
+          <CardTitle className="text-2xl font-bold">Escolha a ordem das matérias</CardTitle>
+          <CardDescription className="text-primary-foreground/80">
+            Clique nos cards na sequência que deseja realizar a prova.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="py-8 space-y-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {materiasDisponiveis.map((m) => {
+              const indexOrdem = ordemSelecionada.indexOf(m);
+              const selecionada = indexOrdem !== -1;
+              return (
+                <div 
+                  key={m}
+                  onClick={() => {
+                    if (selecionada) {
+                      setOrdemSelecionada(prev => prev.filter(item => item !== m));
+                    } else {
+                      setOrdemSelecionada(prev => [...prev, m]);
+                    }
+                  }}
+                  className={cn(
+                    "relative p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center space-y-2 h-32",
+                    selecionada ? "border-primary bg-primary/5 ring-2 ring-primary ring-offset-2" : "border-gray-100 hover:border-primary/50 hover:bg-gray-50"
+                  )}
+                >
+                  {selecionada && (
+                    <div className="absolute -top-2 -right-2 bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-lg">
+                      {indexOrdem + 1}º
+                    </div>
+                  )}
+                  < GraduationCap className={cn("h-8 w-8", selecionada ? "text-primary" : "text-gray-400")} />
+                  <span className={cn("font-bold text-sm", selecionada ? "text-primary" : "text-gray-600")}>{m}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex gap-4">
+            <Button variant="outline" className="flex-1 h-12" onClick={() => {
+              setEtapa('instrucoes');
+              setOrdemSelecionada([]);
+            }}>
+              <ArrowLeft className="mr-2 h-5 w-5" /> Voltar
+            </Button>
+            <Button 
+              className="flex-[2] h-12 bg-[#1E3A5F] hover:bg-[#2D6ADF]" 
+              disabled={ordemSelecionada.length !== materiasDisponiveis.length}
+              onClick={() => startProva.mutate()}
+            >
+              Começar na ordem escolhida <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+          
+          {ordemSelecionada.length > 0 && ordemSelecionada.length < materiasDisponiveis.length && (
+            <p className="text-center text-sm text-muted-foreground animate-pulse">
+              Selecione mais {materiasDisponiveis.length - ordemSelecionada.length} matérias para continuar
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
   // Etapa Instruções
@@ -375,16 +459,17 @@ function ProvaFinalPage() {
             <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl space-y-4">
               <h4 className="font-bold text-blue-800 flex items-center gap-2"><AlertTriangle className="h-5 w-5" /> Instruções Importantes</h4>
               <ul className="text-sm text-blue-700 space-y-2 list-disc pl-5">
-                <li>Você terá <strong>4 horas</strong> para concluir as 10 questões de cada matéria.</li>
-                <li>As matérias seguem uma ordem fixa e você não poderá voltar para a anterior.</li>
+                <li>Você terá <strong>4 horas</strong> para concluir as matérias disponíveis.</li>
+                <li>Você poderá escolher a ordem das matérias antes de começar.</li>
+                <li>Uma vez iniciada uma matéria, você não poderá voltar para a anterior.</li>
                 <li>Ao clicar em começar, o cronômetro será iniciado.</li>
               </ul>
             </div>
             <button 
               className="w-full h-14 text-lg font-bold bg-[#1E3A5F] text-white rounded-md transition-all hover:bg-[#2D6ADF] flex items-center justify-center relative z-50 cursor-pointer shadow-lg"
-              onClick={() => startProva.mutate()}
+              onClick={() => setEtapa('escolher_ordem')}
             >
-              Começar Prova Agora
+              Prosseguir para Escolha de Matérias
             </button>
           </div>
         )}

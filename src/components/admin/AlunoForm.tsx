@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
 const VENDEDORAS = ["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"] as const;
@@ -38,6 +39,7 @@ const schema = z
     responsavel_cpf: z.string().optional().nullable(),
     responsavel_email: z.string().optional().nullable().or(z.literal("")),
     dias_prova_final: z.coerce.number().min(0).optional(),
+    materias_prova: z.array(z.string()).optional().nullable(),
   })
   .superRefine((data, ctx) => {
     const menor = calcAge(data.data_nascimento) < 18;
@@ -398,28 +400,61 @@ export function AlunoForm({
 
       <Card className="border-blue-200 bg-blue-50/30">
         <CardHeader>
-          <CardTitle className="text-blue-800">Prazo para Prova Final</CardTitle>
+          <CardTitle className="text-blue-800">Prova Final</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Field label="Dias configurados" error={errors.dias_prova_final?.message as string}>
-            <Input 
-              type="number" 
-              {...form.register("dias_prova_final")} 
-              placeholder="Ex: 60"
-            />
-          </Field>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Field label="Prazo em dias" error={errors.dias_prova_final?.message as string}>
+              <Input 
+                type="number" 
+                {...form.register("dias_prova_final")} 
+                placeholder="Ex: 60"
+              />
+            </Field>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Data da Matrícula</Label>
-            <div className="p-2 bg-white rounded-md border text-sm">
-              {initialValues?.created_at ? format(new Date(initialValues.created_at), "dd/MM/yyyy") : "—"}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground">Data da Matrícula</Label>
+              <div className="p-2 bg-white rounded-md border text-sm">
+                {initialValues?.created_at ? format(new Date(initialValues.created_at), "dd/MM/yyyy") : "—"}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground">Liberação Estimada</Label>
+              <div className="p-2 bg-white rounded-md border text-sm font-bold text-blue-700">
+                {format(calculatedReleaseDate, "dd/MM/yyyy")}
+              </div>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Liberação Estimada</Label>
-            <div className="p-2 bg-white rounded-md border text-sm font-bold text-blue-700">
-              {format(calculatedReleaseDate, "dd/MM/yyyy")}
+          <div className="space-y-4">
+            <Label className="text-sm font-semibold">Matérias Disponíveis</Label>
+            <p className="text-xs text-muted-foreground">Se nenhuma for marcada, todas as 10 serão liberadas automaticamente.</p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {[
+                "Geografia", "História", "Filosofia", "Sociologia", "Português", 
+                "Inglês", "Biologia", "Química", "Física", "Matemática"
+              ].map((m) => {
+                const currentMaterias = form.watch("materias_prova") || [];
+                const isSelected = currentMaterias.includes(m);
+                return (
+                  <div 
+                    key={m} 
+                    className={cn(
+                      "flex items-center space-x-2 p-2 rounded border cursor-pointer transition-colors bg-white",
+                      isSelected && "bg-blue-50 border-blue-300"
+                    )}
+                    onClick={() => {
+                      const prev = form.getValues("materias_prova") || [];
+                      const next = prev.includes(m) ? prev.filter((i: string) => i !== m) : [...prev, m];
+                      form.setValue("materias_prova", next, { shouldDirty: true });
+                    }}
+                  >
+                    <Checkbox checked={isSelected} onCheckedChange={() => {}} />
+                    <span className="text-xs font-medium">{m}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </CardContent>
