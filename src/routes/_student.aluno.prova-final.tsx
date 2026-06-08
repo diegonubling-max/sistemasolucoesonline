@@ -220,11 +220,11 @@ function ProvaFinalPage() {
 
   // Tela de Resultado (quando agendamento está concluído ou etapa é resultado)
   const resultadosRecentes = resultados?.filter(r => r.agendamento_id === agendamento?.id);
-  const aprovadoEmTudo = resultadosRecentes && resultsAllPassed(resultadosRecentes, MATERIAS);
+  const aprovadoEmTudo = resultadosRecentes && resultsAllPassed(resultadosRecentes, materiasParaRealizar);
 
   if (aprovadoEmTudo || (agendamento?.status === 'concluido' && etapa === 'instrucoes')) {
     if (aprovadoEmTudo) return <TelaFormatura width={width} height={height} />;
-    if (resultadosRecentes && resultadosRecentes.length > 0) return <TelaResultados resultados={resultadosRecentes} materias={MATERIAS} />;
+    if (resultadosRecentes && resultadosRecentes.length > 0) return <TelaResultados resultados={resultadosRecentes} materias={materiasParaRealizar} />;
   }
 
   // Renderização condicional por Etapa
@@ -234,7 +234,7 @@ function ProvaFinalPage() {
         <div className="sticky top-20 z-10 bg-white border-b p-4 rounded-xl shadow-md flex justify-between items-center">
           <div>
             <h2 className="text-xl font-bold text-primary">{materiaAtual}</h2>
-            <p className="text-sm text-muted-foreground">Matéria {currentMateriaIndex + 1} de {MATERIAS.length}</p>
+            <p className="text-sm text-muted-foreground">Matéria {currentMateriaIndex + 1} de {materiasParaRealizar.length}</p>
           </div>
           <div className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xl font-bold",
@@ -290,8 +290,8 @@ function ProvaFinalPage() {
 
         <div className="flex justify-end pt-8">
           <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl" onClick={handleProximaMateria} disabled={isFinishing}>
-            {isFinishing ? <Loader2 className="animate-spin mr-2" /> : currentMateriaIndex === MATERIAS.length - 1 ? <CheckCircle2 className="mr-2" /> : <ArrowRight className="ml-2" />}
-            {currentMateriaIndex === MATERIAS.length - 1 ? "Finalizar Prova" : "Próxima Matéria"}
+            {isFinishing ? <Loader2 className="animate-spin mr-2" /> : currentMateriaIndex === materiasParaRealizar.length - 1 ? <CheckCircle2 className="mr-2" /> : <ArrowRight className="ml-2" />}
+            {currentMateriaIndex === materiasParaRealizar.length - 1 ? "Finalizar Prova" : "Próxima Matéria"}
           </Button>
         </div>
       </div>
@@ -299,7 +299,74 @@ function ProvaFinalPage() {
   }
 
   if (etapa === 'resultado' && resultadosRecentes) {
-    return <TelaResultados resultados={resultadosRecentes} materias={MATERIAS} />;
+    return <TelaResultados resultados={resultadosRecentes} materias={materiasParaRealizar} />;
+  }
+
+  if (etapa === 'escolher_ordem') {
+    return (
+      <Card className="max-w-4xl mx-auto overflow-hidden">
+        <CardHeader className="bg-primary text-primary-foreground py-8 text-center">
+          <CardTitle className="text-2xl font-bold">Escolha a ordem das matérias</CardTitle>
+          <CardDescription className="text-primary-foreground/80">
+            Clique nos cards na sequência que deseja realizar a prova.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="py-8 space-y-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {materiasDisponiveis.map((m) => {
+              const indexOrdem = ordemSelecionada.indexOf(m);
+              const selecionada = indexOrdem !== -1;
+              return (
+                <div 
+                  key={m}
+                  onClick={() => {
+                    if (selecionada) {
+                      setOrdemSelecionada(prev => prev.filter(item => item !== m));
+                    } else {
+                      setOrdemSelecionada(prev => [...prev, m]);
+                    }
+                  }}
+                  className={cn(
+                    "relative p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center space-y-2 h-32",
+                    selecionada ? "border-primary bg-primary/5 ring-2 ring-primary ring-offset-2" : "border-gray-100 hover:border-primary/50 hover:bg-gray-50"
+                  )}
+                >
+                  {selecionada && (
+                    <div className="absolute -top-2 -right-2 bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-lg">
+                      {indexOrdem + 1}º
+                    </div>
+                  )}
+                  < GraduationCap className={cn("h-8 w-8", selecionada ? "text-primary" : "text-gray-400")} />
+                  <span className={cn("font-bold text-sm", selecionada ? "text-primary" : "text-gray-600")}>{m}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex gap-4">
+            <Button variant="outline" className="flex-1 h-12" onClick={() => {
+              setEtapa('instrucoes');
+              setOrdemSelecionada([]);
+            }}>
+              <ArrowLeft className="mr-2 h-5 w-5" /> Voltar
+            </Button>
+            <Button 
+              className="flex-[2] h-12 bg-[#1E3A5F] hover:bg-[#2D6ADF]" 
+              disabled={ordemSelecionada.length !== materiasDisponiveis.length}
+              onClick={() => startProva.mutate()}
+            >
+              Começar na ordem escolhida <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+          
+          {ordemSelecionada.length > 0 && ordemSelecionada.length < materiasDisponiveis.length && (
+            <p className="text-center text-sm text-muted-foreground animate-pulse">
+              Selecione mais {materiasDisponiveis.length - ordemSelecionada.length} matérias para continuar
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
   // Etapa Instruções
@@ -381,16 +448,17 @@ function ProvaFinalPage() {
             <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl space-y-4">
               <h4 className="font-bold text-blue-800 flex items-center gap-2"><AlertTriangle className="h-5 w-5" /> Instruções Importantes</h4>
               <ul className="text-sm text-blue-700 space-y-2 list-disc pl-5">
-                <li>Você terá <strong>4 horas</strong> para concluir as 10 questões de cada matéria.</li>
-                <li>As matérias seguem uma ordem fixa e você não poderá voltar para a anterior.</li>
+                <li>Você terá <strong>4 horas</strong> para concluir as matérias disponíveis.</li>
+                <li>Você poderá escolher a ordem das matérias antes de começar.</li>
+                <li>Uma vez iniciada uma matéria, você não poderá voltar para a anterior.</li>
                 <li>Ao clicar em começar, o cronômetro será iniciado.</li>
               </ul>
             </div>
             <button 
               className="w-full h-14 text-lg font-bold bg-[#1E3A5F] text-white rounded-md transition-all hover:bg-[#2D6ADF] flex items-center justify-center relative z-50 cursor-pointer shadow-lg"
-              onClick={() => startProva.mutate()}
+              onClick={() => setEtapa('escolher_ordem')}
             >
-              Começar Prova Agora
+              Prosseguir para Escolha de Matérias
             </button>
           </div>
         )}
