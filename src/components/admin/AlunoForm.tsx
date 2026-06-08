@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
 const VENDEDORAS = ["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"] as const;
