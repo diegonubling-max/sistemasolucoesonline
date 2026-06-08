@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck } from "lucide-react";
+import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isBefore, startOfDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -151,6 +152,99 @@ function AlunoDetalhes() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: declaracoes } = useQuery({
+    queryKey: ["aluno-declaracoes", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("declaracoes_matricula")
+        .select("*, gerado_por_colab:colaboradores(nome)")
+        .eq("aluno_id", id)
+        .order("gerado_em", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: poloInfo } = useQuery({
+    queryKey: ["polo-info", aluno?.polo_id],
+    queryFn: async () => {
+      if (!aluno?.polo_id) return null;
+      const { data, error } = await supabase
+        .from("polos")
+        .select("nome, cnpj, endereco, cidade")
+        .eq("id", aluno.polo_id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!aluno?.polo_id,
+  });
+
+  const gerarDeclaracao = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const { data: colab } = await supabase
+        .from("colaboradores")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const { error } = await supabase.from("declaracoes_matricula").insert({
+        aluno_id: id,
+        gerado_por: colab?.id,
+      });
+
+      if (error) throw error;
+      
+      // Generate PDF
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Header - Title
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("DECLARAÇÃO DE MATRÍCULA", pageWidth / 2, 40, { align: "center" });
+
+      // Body Text
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      
+      const texto = `Declaramos para devidos fins que o(a) aluno(a) ${aluno.nome}, portador(a) do CPF ${aluno.cpf} está devidamente matriculado(a) em nossa Escola realizando aulas do preparatório para o processo de prova de proficiência do Curso EJA – Ensino Médio junto a uma de nossas certificadoras.`;
+      
+      const splitText = doc.splitTextToSize(texto, pageWidth - 40);
+      doc.text(splitText, 20, 60, { align: "justify" });
+      
+      doc.text("Sem mais no momento.", 20, 90);
+
+      // Date
+      const hoje = new Date();
+      const cidade = poloInfo?.cidade || "Brasil";
+      const dataFormatada = `${cidade}, ${hoje.getDate()} de ${hoje.toLocaleString('pt-BR', { month: 'long' })} de ${hoje.getFullYear()}`;
+      doc.text(dataFormatada, 20, 110);
+
+      // Signature
+      doc.line(pageWidth / 2 - 40, 160, pageWidth / 2 + 40, 160);
+      doc.setFontSize(10);
+      doc.text(poloInfo?.nome || "Escola Soluções Online", pageWidth / 2, 165, { align: "center" });
+      if (poloInfo?.cnpj) {
+        doc.text(`CNPJ: ${poloInfo.cnpj}`, pageWidth / 2, 170, { align: "center" });
+      }
+      if (poloInfo?.endereco) {
+        const addrSplit = doc.splitTextToSize(poloInfo.endereco, pageWidth - 40);
+        doc.text(addrSplit, pageWidth / 2, 175, { align: "center" });
+      }
+
+      doc.save(`Declaracao_Matricula_${aluno.nome.replace(/\s+/g, '_')}.pdf`);
+    },
+    onSuccess: () => {
+      toast.success("Declaração gerada e registrada com sucesso!");
+      qc.invalidateQueries({ queryKey: ["aluno-declaracoes", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: contratoAssinado } = useQuery({
@@ -365,6 +459,10 @@ function AlunoDetalhes() {
                 <Pencil className="h-4 w-4 mr-2" /> Editar
               </Link>
             </Button>
+            <Button variant="outline" className="text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => gerarDeclaracao.mutate()} disabled={gerarDeclaracao.isPending}>
+              {gerarDeclaracao.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+              Gerar Declaração
+            </Button>
           </>
         }
       />
@@ -505,6 +603,33 @@ function AlunoDetalhes() {
                     </div>
                   </div>
                 ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><FileText className="h-5 w-5" /> Histórico de Declarações</CardTitle></CardHeader>
+            <CardContent>
+              {!declaracoes?.length ? (
+                <p className="text-sm text-muted-foreground">Nenhuma declaração gerada ainda.</p>
+              ) : (
+                <div className="space-y-4">
+                  {declaracoes.map((d) => (
+                    <div key={d.id} className="flex items-center justify-between p-3 border rounded-md text-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-50 rounded-full text-orange-600"><FileText className="h-4 w-4" /></div>
+                        <div>
+                          <p className="font-medium">Declaração de Matrícula</p>
+                          <p className="text-xs text-muted-foreground">Gerado por: {(d.gerado_por_colab as any)?.nome || "Sistema"}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-medium">{format(new Date(d.gerado_em), "dd/MM/yyyy")}</p>
+                        <p className="text-[10px] text-muted-foreground">{format(new Date(d.gerado_em), "HH:mm")}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
