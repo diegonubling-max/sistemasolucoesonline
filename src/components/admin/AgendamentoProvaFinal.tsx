@@ -128,7 +128,7 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
                 <tbody className="divide-y">
                   {agendamentos.map((ag) => (
                     <tr key={ag.id} className="group">
-                      <td colSpan={4} className="p-0">
+                      <td colSpan={3} className="p-0">
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value={ag.id} className="border-none">
                             <div className="flex items-center px-4 py-3 hover:bg-muted/30 transition-colors">
@@ -148,7 +148,9 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
                                   }`}>
                                     {ag.status}
                                   </span>
-                                  <ResultBadge agendamentoId={ag.id} alunoId={alunoId} status={ag.status} />
+                                  {ag.status === 'concluido' && (
+                                    <ResultBadge agendamentoId={ag.id} alunoId={alunoId as string} status={ag.status} />
+                                  )}
                                 </div>
                               </div>
                               
@@ -170,13 +172,14 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
                             </div>
                             
                             <AccordionContent className="px-4 pb-4">
-                              <DetalhesResultado agendamentoId={ag.id} alunoId={alunoId} />
+                              <DetalhesResultado agendamentoId={ag.id} alunoId={alunoId as string} />
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
                       </td>
                     </tr>
                   ))}
+
 
                 </tbody>
               </table>
