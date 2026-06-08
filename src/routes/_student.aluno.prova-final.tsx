@@ -230,7 +230,11 @@ function ProvaFinalPage() {
 
   if (aprovadoEmTudo || (agendamento?.status === 'concluido' && etapa === 'instrucoes')) {
     if (aprovadoEmTudo) return <TelaFormatura width={width} height={height} />;
-    if (resultadosRecentes && resultadosRecentes.length > 0) return <TelaResultados resultados={resultadosRecentes} materias={materiasParaRealizar} />;
+    if (resultadosRecentes && resultadosRecentes.length > 0) {
+      // Usamos as matérias que realmente têm resultados para garantir que mostramos apenas o que foi feito
+      const materiasFeitas = resultadosRecentes.map(r => r.materia);
+      return <TelaResultados resultados={resultadosRecentes} materias={materiasFeitas} />;
+    }
   }
 
   // Renderização condicional por Etapa
