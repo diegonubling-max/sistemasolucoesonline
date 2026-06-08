@@ -513,6 +513,45 @@ export type Database = {
           },
         ]
       }
+      declaracoes_matricula: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          gerado_em: string
+          gerado_por: string | null
+          id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          gerado_em?: string
+          gerado_por?: string | null
+          id?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          gerado_em?: string
+          gerado_por?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "declaracoes_matricula_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "declaracoes_matricula_gerado_por_fkey"
+            columns: ["gerado_por"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads_diarios: {
         Row: {
           created_at: string | null
@@ -862,7 +901,9 @@ export type Database = {
           asaas_webhook_token: string | null
           ativo: boolean | null
           cidade: string | null
+          cnpj: string | null
           created_at: string | null
+          endereco: string | null
           id: string
           logo_url: string | null
           nome: string
@@ -875,7 +916,9 @@ export type Database = {
           asaas_webhook_token?: string | null
           ativo?: boolean | null
           cidade?: string | null
+          cnpj?: string | null
           created_at?: string | null
+          endereco?: string | null
           id?: string
           logo_url?: string | null
           nome: string
@@ -888,7 +931,9 @@ export type Database = {
           asaas_webhook_token?: string | null
           ativo?: boolean | null
           cidade?: string | null
+          cnpj?: string | null
           created_at?: string | null
+          endereco?: string | null
           id?: string
           logo_url?: string | null
           nome?: string
