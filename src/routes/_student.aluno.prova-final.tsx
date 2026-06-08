@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Lock, MessageSquare, CheckCircle2, AlertTriangle, GraduationCap, Loader2, ArrowRight } from "lucide-react";
+import { Calendar, Clock, Lock, MessageSquare, CheckCircle2, AlertTriangle, GraduationCap, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { format, isAfter, parseISO } from "date-fns";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
