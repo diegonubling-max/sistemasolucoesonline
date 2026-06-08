@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_student/aluno/prova-final")({
   component: ProvaFinalPage,
 });
 
-const MATERIAS = [
+const MATERIAS_BASE = [
   "Geografia", "História", "Filosofia", "Sociologia", "Português", 
   "Inglês", "Biologia", "Química", "Física", "Matemática"
 ];
@@ -27,16 +27,24 @@ function ProvaFinalPage() {
   const { width, height } = useWindowSize();
   
   // Estados da Prova
-  const [etapa, setEtapa] = useState<'instrucoes' | 'realizando' | 'resultado'>('instrucoes');
+  const [etapa, setEtapa] = useState<'instrucoes' | 'escolher_ordem' | 'realizando' | 'resultado'>('instrucoes');
   const [currentMateriaIndex, setCurrentMateriaIndex] = useState(0);
   const [respostas, setRespostas] = useState<Record<string, string>>({}); 
   const [timeLeft, setTimeLeft] = useState(4 * 60 * 60);
   const [isFinishing, setIsFinishing] = useState(false);
-
-  const materiaAtual = MATERIAS[currentMateriaIndex];
+  const [ordemSelecionada, setOrdemSelecionada] = useState<string[]>([]);
 
   // Queries
   const { data: aluno } = useQuery({
+...
+  });
+
+  const materiasDisponiveis = aluno?.materias_prova && aluno.materias_prova.length > 0 
+    ? aluno.materias_prova 
+    : MATERIAS_BASE;
+
+  const materiasParaRealizar = ordemSelecionada.length > 0 ? ordemSelecionada : materiasDisponiveis;
+  const materiaAtual = materiasParaRealizar[currentMateriaIndex];
     queryKey: ["student-data-prova", session?.user.email],
     queryFn: async () => {
       const { data, error } = await supabase
