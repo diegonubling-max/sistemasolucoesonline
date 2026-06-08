@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Lock, MessageSquare, CheckCircle2, AlertTriangle, GraduationCap, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { format, isAfter, parseISO } from "date-fns";
