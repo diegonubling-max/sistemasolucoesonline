@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Loader2, Calendar as CalendarIcon, CheckCircle2, History } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon, CheckCircle2, History, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
+
+
 
 export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
   const qc = useQueryClient();
@@ -114,41 +119,68 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="px-4 py-2 text-left">Data</th>
-                    <th className="px-4 py-2 text-left">Hora</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                    <th className="px-4 py-2 text-right">Ações</th>
+                    <th className="px-4 py-2 text-left w-1/3">Data</th>
+                    <th className="px-4 py-2 text-left w-1/3">Hora</th>
+                    <th className="px-4 py-2 text-left w-1/3">Status / Resultado</th>
                   </tr>
                 </thead>
+
                 <tbody className="divide-y">
                   {agendamentos.map((ag) => (
-                    <tr key={ag.id}>
-                      <td className="px-4 py-2">{format(new Date(ag.data_prova + 'T00:00:00'), 'dd/MM/yyyy')}</td>
-                      <td className="px-4 py-2">{ag.hora_prova.substring(0, 5)}</td>
-                      <td className="px-4 py-2">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          ag.status === 'agendado' ? 'bg-blue-100 text-blue-700' :
-                          ag.status === 'concluido' ? 'bg-green-100 text-green-700' :
-                          ag.status === 'cancelado' ? 'bg-gray-100 text-gray-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {ag.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-right">
-                        {ag.status === 'agendado' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 h-8"
-                            onClick={() => cancelarAgendamento.mutate(ag.id)}
-                          >
-                            Cancelar
-                          </Button>
-                        )}
+                    <tr key={ag.id} className="group">
+                      <td colSpan={3} className="p-0">
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value={ag.id} className="border-none">
+                            <div className="flex items-center px-4 py-3 hover:bg-muted/30 transition-colors">
+                              <div className="flex-1 grid grid-cols-3 items-center">
+                                <div className="text-sm font-medium">
+                                  {format(new Date(ag.data_prova + 'T00:00:00'), 'dd/MM/yyyy')}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {ag.hora_prova.substring(0, 5)}
+                                </div>
+                                <div>
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                    ag.status === 'agendado' ? 'bg-blue-100 text-blue-700' :
+                                    ag.status === 'concluido' ? 'bg-green-100 text-green-700' :
+                                    ag.status === 'cancelado' ? 'bg-gray-100 text-gray-700' :
+                                    'bg-yellow-100 text-yellow-700'
+                                  }`}>
+                                    {ag.status}
+                                  </span>
+                                  {ag.status === 'concluido' && (
+                                    <ResultBadge agendamentoId={ag.id} alunoId={alunoId as string} status={ag.status} />
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                {ag.status === 'concluido' && (
+                                  <AccordionTrigger className="p-0 hover:no-underline" />
+                                )}
+                                {ag.status === 'agendado' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-600 h-8 px-2"
+                                    onClick={() => cancelarAgendamento.mutate(ag.id)}
+                                  >
+                                    Cancelar
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <AccordionContent className="px-4 pb-4">
+                              <DetalhesResultado agendamentoId={ag.id} alunoId={alunoId as string} />
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
                       </td>
                     </tr>
                   ))}
+
+
                 </tbody>
               </table>
             </div>
@@ -158,3 +190,85 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
     </div>
   );
 }
+
+function ResultBadge({ agendamentoId, alunoId, status }: { agendamentoId: string, alunoId: string, status: string }) {
+  const { data: resultados } = useQuery({
+    queryKey: ["prova-resultados", agendamentoId],
+    enabled: status === 'concluido',
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prova_resultados")
+        .select("*")
+        .eq("agendamento_id", agendamentoId)
+        .eq("aluno_id", alunoId);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (!resultados || resultados.length === 0) return null;
+
+  const todasAprovadas = resultados.every(r => r.aprovado);
+
+  return (
+    <Badge className={cn("ml-2", todasAprovadas ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600")}>
+      {todasAprovadas ? "✅ Aprovado" : "❌ Reprovado"}
+    </Badge>
+  );
+}
+
+function DetalhesResultado({ agendamentoId, alunoId }: { agendamentoId: string, alunoId: string }) {
+  const { data: resultados, isLoading } = useQuery({
+    queryKey: ["prova-resultados", agendamentoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prova_resultados")
+        .select("*")
+        .eq("agendamento_id", agendamentoId)
+        .eq("aluno_id", alunoId);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) return <div className="text-xs py-2">Carregando resultados...</div>;
+  if (!resultados || resultados.length === 0) return <div className="text-xs py-2 text-muted-foreground">Nenhum detalhe disponível.</div>;
+
+  const reprovadas = resultados.filter(r => !r.aprovado).map(r => r.materia);
+
+  return (
+    <div className="space-y-3 pt-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {resultados.map((res) => (
+          <div key={res.id} className={cn(
+            "flex items-center justify-between p-2 rounded-md border text-xs",
+            res.aprovado ? "bg-green-50/50 border-green-100 text-green-700" : "bg-red-50/50 border-red-100 text-red-700"
+          )}>
+            <div className="flex items-center gap-2">
+              {res.aprovado ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+              <span className="font-medium">{res.materia}</span>
+            </div>
+            <span className="font-bold">
+              {res.total_acertos}/{res.total_questoes} ({Math.round(Number(res.percentual)) || 0}%)
+            </span>
+          </div>
+        ))}
+      </div>
+      
+      {reprovadas.length > 0 && (
+        <div className="bg-red-50 p-3 rounded-md border border-red-100">
+          <p className="text-xs font-bold text-red-700 flex items-center gap-2">
+            <XCircle className="h-3 w-3" />
+            Matérias que precisam ser refeitas:
+          </p>
+          <ul className="mt-1 list-disc list-inside text-xs text-red-600">
+            {reprovadas.map(m => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
