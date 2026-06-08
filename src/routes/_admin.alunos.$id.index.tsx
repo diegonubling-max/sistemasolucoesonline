@@ -206,109 +206,22 @@ function AlunoDetalhes() {
       // Generate HTML for Print
       const hoje = new Date();
       const cidade = poloInfo?.cidade || "Florianópolis";
-      const dataFormatada = `${cidade}, ${hoje.getDate()} de ${hoje.toLocaleString('pt-BR', { month: 'long' })} de ${hoje.getFullYear()}`;
-      
+      const dataExtenso = `${cidade}, ${hoje.getDate().toString().padStart(2, '0')} de ${hoje.toLocaleString('pt-BR', { month: 'long' })} de ${hoje.getFullYear()}`;
+
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         throw new Error("Não foi possível abrir a janela de impressão. Verifique se o bloqueador de popups está ativado.");
       }
 
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Declaração de Matrícula - ${aluno.nome}</title>
-            <style>
-                @page {
-                    size: A4;
-                    margin: 0;
-                }
-                body {
-                    margin: 0;
-                    padding: 0;
-                    width: 210mm;
-                    height: 297mm;
-                    font-family: Arial, sans-serif;
-                    position: relative;
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
-                }
-                .background-img {
-                    width: 100%;
-                    height: 100%;
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    z-index: 0;
-                    object-fit: cover;
-                }
-                .content-container {
-                    position: relative;
-                    z-index: 1;
-                    width: 100%;
-                    height: 100%;
-                }
-                .title {
-                    position: absolute;
-                    top: 38%;
-                    left: 15%;
-                    right: 5%;
-                    text-align: center;
-                    font-weight: bold;
-                    text-decoration: underline;
-                    font-size: 16px;
-                }
-                .body-text {
-                    position: absolute;
-                    top: 46%;
-                    left: 15%;
-                    right: 5%;
-                    font-size: 12px;
-                    line-height: 2;
-                    text-align: justify;
-                }
-                .footer-text {
-                    position: absolute;
-                    top: 68%;
-                    left: 15%;
-                    font-size: 12px;
-                }
-                .date-location {
-                    position: absolute;
-                    top: 74%;
-                    right: 5%;
-                    text-align: right;
-                    font-size: 12px;
-                }
-                @media print {
-                    .no-print {
-                        display: none;
-                    }
-                }
-            </style>
-        </head>
-        <body>
-            <img src="https://5b395dc8-3c40-4219-b045-de4f2ca28917.supabase.co/storage/v1/object/public/templates/Declaracao_florianopolis.png" class="background-img" alt="Fundo">
-            <div class="content-container">
-                <div class="title">DECLARAÇÃO DE MATRÍCULA</div>
-                <div class="body-text">
-                    Declaramos para devidos fins que o(a) aluno(a) ${aluno.nome}, portador(a) do CPF ${aluno.cpf} está devidamente matriculado(a) em nossa Escola realizando aulas do preparatório para o processo de prova de proficiência do Curso EJA – Ensino Médio junto a uma de nossas certificadoras.
-                </div>
-                <div class="footer-text">Sem mais no momento.</div>
-                <div class="date-location">${dataFormatada}</div>
-            </div>
-            <script>
-                window.onload = function() {
-                    setTimeout(() => {
-                        window.print();
-                        // window.close(); // Opcional: fechar após imprimir
-                    }, 500);
-                };
-            </script>
-        </body>
-        </html>
-      `;
+      const htmlContent = declaracaoTemplate
+        .replace(/\{\{NOME_ALUNO\}\}/g, aluno.nome ?? "")
+        .replace(/\{\{CPF_ALUNO\}\}/g, aluno.cpf ?? "")
+        .replace(/\{\{CIDADE\}\}/g, cidade)
+        .replace(/\{\{DATA_EXTENSO\}\}/g, dataExtenso)
+        .replace(
+          /<\/body>/i,
+          `<script>window.addEventListener('load', function(){ setTimeout(function(){ window.print(); }, 600); });</script></body>`
+        );
 
       printWindow.document.write(htmlContent);
       printWindow.document.close();
