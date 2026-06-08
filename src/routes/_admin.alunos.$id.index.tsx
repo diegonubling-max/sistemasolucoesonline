@@ -184,6 +184,8 @@ function AlunoDetalhes() {
 
   const gerarDeclaracao = useMutation({
     mutationFn: async () => {
+      if (!aluno) throw new Error("Dados do aluno não carregados");
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
