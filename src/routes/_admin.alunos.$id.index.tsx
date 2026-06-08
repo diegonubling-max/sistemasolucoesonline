@@ -228,11 +228,25 @@ function AlunoDetalhes() {
                     padding: 0;
                     width: 210mm;
                     height: 297mm;
-                    background-image: url('https://5b395dc8-3c40-4219-b045-de4f2ca28917.supabase.co/storage/v1/object/public/templates/Declaracao_florianopolis.png');
-                    background-size: cover;
-                    background-repeat: no-repeat;
                     font-family: Arial, sans-serif;
                     position: relative;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                .background-img {
+                    width: 100%;
+                    height: 100%;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    z-index: 0;
+                    object-fit: cover;
+                }
+                .content-container {
+                    position: relative;
+                    z-index: 1;
+                    width: 100%;
+                    height: 100%;
                 }
                 .title {
                     position: absolute;
@@ -270,20 +284,19 @@ function AlunoDetalhes() {
                     .no-print {
                         display: none;
                     }
-                    body {
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
-                    }
                 }
             </style>
         </head>
         <body>
-            <div class="title">DECLARAÇÃO DE MATRÍCULA</div>
-            <div class="body-text">
-                Declaramos para devidos fins que o(a) aluno(a) ${aluno.nome}, portador(a) do CPF ${aluno.cpf} está devidamente matriculado(a) em nossa Escola realizando aulas do preparatório para o processo de prova de proficiência do Curso EJA – Ensino Médio junto a uma de nossas certificadoras.
+            <img src="https://5b395dc8-3c40-4219-b045-de4f2ca28917.supabase.co/storage/v1/object/public/templates/Declaracao_florianopolis.png" class="background-img" alt="Fundo">
+            <div class="content-container">
+                <div class="title">DECLARAÇÃO DE MATRÍCULA</div>
+                <div class="body-text">
+                    Declaramos para devidos fins que o(a) aluno(a) ${aluno.nome}, portador(a) do CPF ${aluno.cpf} está devidamente matriculado(a) em nossa Escola realizando aulas do preparatório para o processo de prova de proficiência do Curso EJA – Ensino Médio junto a uma de nossas certificadoras.
+                </div>
+                <div class="footer-text">Sem mais no momento.</div>
+                <div class="date-location">${dataFormatada}</div>
             </div>
-            <div class="footer-text">Sem mais no momento.</div>
-            <div class="date-location">${dataFormatada}</div>
             <script>
                 window.onload = function() {
                     setTimeout(() => {
