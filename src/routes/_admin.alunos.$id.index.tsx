@@ -24,6 +24,7 @@ import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
 import { generateAsaasCobrar } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
+import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
   head: () => ({ meta: [{ title: "Aluno — Soluções Online" }] }),
