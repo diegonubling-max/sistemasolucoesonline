@@ -309,7 +309,8 @@ function ProvaFinalPage() {
   }
 
   if (etapa === 'resultado' && resultadosRecentes) {
-    return <TelaResultados resultados={resultadosRecentes} materias={materiasParaRealizar} />;
+    const materiasFeitas = resultadosRecentes.map(r => r.materia);
+    return <TelaResultados resultados={resultadosRecentes} materias={materiasFeitas} />;
   }
 
   if (etapa === 'escolher_ordem') {
