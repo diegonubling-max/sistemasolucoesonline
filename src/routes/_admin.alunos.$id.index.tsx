@@ -25,6 +25,8 @@ import { Switch } from "@/components/ui/switch";
 import { generateAsaasCobrar } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
+import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
+
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
   head: () => ({ meta: [{ title: "Aluno — Soluções Online" }] }),
@@ -458,9 +460,11 @@ function AlunoDetalhes() {
           <TabsTrigger value="geral">Dados Gerais</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
           <TabsTrigger value="vitrine">Vitrine</TabsTrigger>
+          <TabsTrigger value="progresso">Progresso</TabsTrigger>
           <TabsTrigger value="historico" className="flex items-center gap-2">
             <History className="h-4 w-4" /> Histórico
           </TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="geral">
@@ -619,7 +623,13 @@ function AlunoDetalhes() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="progresso" className="space-y-6">
+          <ProgressoAulas alunoId={id} />
+        </TabsContent>
       </Tabs>
+
+
 
       <BaixaModal open={showBaixaModal} onOpenChange={setShowBaixaModal} isLoading={darBaixa.isPending} valorOriginal={selectedParcelaValor} onConfirm={(data) => darBaixa.mutate(data)} />
       <ResumoBaixaModal open={!!resumoBaixa} onOpenChange={() => setResumoBaixa(null)} data={resumoBaixa} />
