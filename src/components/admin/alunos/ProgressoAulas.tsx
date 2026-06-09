@@ -28,10 +28,18 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
 
       if (coursesError) throw coursesError;
 
-      const cursos = matriculaCursos?.map(mc => ({
-        id: mc.curso_id,
-        nome: (mc.cursos as any)?.nome || "Curso sem nome"
-      })) || [];
+      // Garantir cursos únicos caso haja mais de uma matrícula
+      const cursosMap = new Map();
+      matriculaCursos?.forEach(mc => {
+        if (!cursosMap.has(mc.curso_id)) {
+          cursosMap.set(mc.curso_id, {
+            id: mc.curso_id,
+            nome: (mc.cursos as any)?.nome || "Curso sem nome"
+          });
+        }
+      });
+      const cursos = Array.from(cursosMap.values());
+
 
       // 2. Para cada curso, buscar total de aulas e aulas assistidas
       const cursoIds = cursos.map(c => c.id);
