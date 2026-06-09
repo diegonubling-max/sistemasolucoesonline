@@ -622,10 +622,13 @@ function AlunoDetalhes() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
         <TabsContent value="progresso" className="space-y-6">
           <ProgressoAulas alunoId={id} />
         </TabsContent>
       </Tabs>
+
 
 
       <BaixaModal open={showBaixaModal} onOpenChange={setShowBaixaModal} isLoading={darBaixa.isPending} valorOriginal={selectedParcelaValor} onConfirm={(data) => darBaixa.mutate(data)} />
