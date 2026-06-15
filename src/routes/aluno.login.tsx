@@ -137,18 +137,22 @@ function AlunoLogin() {
       return;
     }
 
-    const { data: aluno, error: alunoError } = await supabase
-      .from('alunos')
-      .select('email')
-      .or(`ctr.eq.${ctr.trim()},ctr.eq.${parseInt(ctr.trim()) || 0}`)
-      .maybeSingle();
+    const ctrInt = parseInt(ctr.trim());
+    if (isNaN(ctrInt)) {
+      toast.error("CTR inválido");
+      return;
+    }
 
-    if (alunoError || !aluno || !aluno.email) {
+    const { data: email, error: alunoError } = await supabase.rpc('buscar_email_por_ctr', {
+      p_ctr: ctrInt,
+    });
+
+    if (alunoError || !email) {
       toast.error("CTR não encontrado");
       return;
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(aluno.email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `https://sistemasolucoesonline.lovable.app/aluno/perfil`,
     });
     if (error) toast.error(error.message);
