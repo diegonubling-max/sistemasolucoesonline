@@ -204,6 +204,7 @@ function Dashboard() {
         title="Dashboard" 
         description={selectedPoloId === 'all' ? "Visão geral de todos os polos" : `Visão geral: ${polos?.find(p => p.id === selectedPoloId)?.nome || 'Polo selecionado'}`} 
       />
+      <VitrineInteresse selectedPoloId={selectedPoloId} colabPoloId={colabData?.polo_id} isSuperAdmin={isSuperAdmin} />
 
       {selectedPoloId === 'all' && stats?.statsByPolo && stats.statsByPolo.length > 0 && (
         <div className="mb-8">
