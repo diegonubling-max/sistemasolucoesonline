@@ -46,44 +46,40 @@ function AlunoLogin() {
         throw new Error('A senha é obrigatória');
       }
 
-      // 1. Buscar o aluno pelo CTR
-      const { data: aluno, error: alunoError } = await supabase
-        .from('alunos')
-        .select('email, nome, ctr')
-        .eq('ctr', ctrInt)
-        .maybeSingle();
+      // 1. Buscar email do aluno pelo CTR via RPC (anon não tem leitura na tabela alunos)
+      const { data: email, error: alunoError } = await supabase.rpc('buscar_email_por_ctr', {
+        p_ctr: ctrInt,
+      });
+
+      console.log('[login aluno] CTR:', ctrInt, '→ email:', email, 'err:', alunoError);
 
       if (alunoError) throw new Error('Erro ao buscar aluno: ' + alunoError.message);
-      
-      if (!aluno) {
+
+      if (!email) {
         throw new Error('CTR inválido');
       }
 
-      if (!aluno.email) {
-        throw new Error('Aluno sem e-mail cadastrado. Procure a secretaria.');
-      }
-
-      // 2. Chamar a RPC para garantir que o usuário existe no Supabase Auth
-      // Passamos a senha digitada - se for a primeira vez, ela será definida
+      // 2. Garantir que o usuário existe no Supabase Auth (cria com a senha digitada na primeira vez)
       const { error: rpcError } = await supabase.rpc('criar_acesso_aluno', {
-        p_email: aluno.email,
+        p_email: email,
         p_senha: passwordValue,
-        p_ctr: aluno.ctr
+        p_ctr: ctrInt,
       });
 
       if (rpcError) {
-        console.error('Erro ao preparar acesso:', rpcError);
-        // Não lançamos erro aqui pois o usuário pode já existir
+        console.error('[login aluno] erro criar_acesso_aluno:', rpcError);
       }
 
-      // 3. Autenticar com o email encontrado e a senha digitada
+      // 3. Autenticar
       const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: aluno.email,
+        email,
         password: passwordValue,
       });
 
+      console.log('[login aluno] authError:', authError);
+
       if (authError) {
-        if (authError.message === "Invalid login credentials") {
+        if (authError.message === 'Invalid login credentials') {
           throw new Error('Senha incorreta');
         }
         throw new Error(authError.message);
