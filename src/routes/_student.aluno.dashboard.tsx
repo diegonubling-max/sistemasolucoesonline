@@ -412,9 +412,35 @@ function StudentDashboard() {
               return (
                 <div 
                   key={item.id} 
-                  onClick={() => setSelectedVitrine(item)}
+                  onClick={async () => {
+                    setSelectedVitrine(item);
+                    try {
+                      if (studentData?.id && curso?.id) {
+                        const today = new Date().toISOString().slice(0, 10);
+                        const { data: existing } = await supabase
+                          .from("vitrine_cliques")
+                          .select("id")
+                          .eq("aluno_id", studentData.id)
+                          .eq("curso_id", curso.id)
+                          .gte("clicado_em", `${today}T00:00:00Z`)
+                          .lte("clicado_em", `${today}T23:59:59Z`)
+                          .limit(1);
+                        if (!existing || existing.length === 0) {
+                          const { data: alunoRow } = await supabase
+                            .from("alunos").select("polo_id").eq("id", studentData.id).maybeSingle();
+                          await supabase.from("vitrine_cliques").insert({
+                            aluno_id: studentData.id,
+                            curso_id: curso.id,
+                            polo_id: (alunoRow as any)?.polo_id ?? null,
+                            clicado_em: new Date().toISOString(),
+                          });
+                        }
+                      }
+                    } catch (e) { console.warn("vitrine_cliques insert failed", e); }
+                  }}
                   className="group cursor-pointer block w-full"
                 >
+
                   <div className="relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center justify-center">
                       {curso.thumbnail_url ? (
