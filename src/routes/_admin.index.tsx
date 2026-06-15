@@ -11,6 +11,8 @@ import { formatDate } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
+import { VitrineInteresse } from "@/components/admin/VitrineInteresse";
+
 
 export const Route = createFileRoute("/_admin/")({
   head: () => ({ meta: [{ title: "Dashboard — EduManager" }] }),
