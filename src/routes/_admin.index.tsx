@@ -333,7 +333,10 @@ function Dashboard() {
         </div>
       </div>
 
+      <VitrineInteresse selectedPoloId={selectedPoloId} colabPoloId={colabData?.polo_id} isSuperAdmin={isSuperAdmin} />
+
       <Card className="border-none shadow-lg">
+
         <CardHeader className="bg-gray-50/50 border-b border-gray-100">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
