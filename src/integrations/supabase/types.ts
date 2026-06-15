@@ -1127,6 +1127,58 @@ export type Database = {
         }
         Relationships: []
       }
+      vitrine_cliques: {
+        Row: {
+          aluno_id: string
+          clicado_dia: string | null
+          clicado_em: string
+          created_at: string
+          curso_id: string
+          id: string
+          polo_id: string | null
+        }
+        Insert: {
+          aluno_id: string
+          clicado_dia?: string | null
+          clicado_em?: string
+          created_at?: string
+          curso_id: string
+          id?: string
+          polo_id?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          clicado_dia?: string | null
+          clicado_em?: string
+          created_at?: string
+          curso_id?: string
+          id?: string
+          polo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vitrine_cliques_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vitrine_cliques_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vitrine_cliques_polo_id_fkey"
+            columns: ["polo_id"]
+            isOneToOne: false
+            referencedRelation: "polos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
