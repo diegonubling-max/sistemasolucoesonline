@@ -156,7 +156,7 @@ function AlunoLogin() {
       redirectTo: `https://sistemasolucoesonline.lovable.app/aluno/perfil`,
     });
     if (error) toast.error(error.message);
-    else toast.success("E-mail de recuperação enviado para " + aluno.email);
+    else toast.success("E-mail de recuperação enviado para " + email);
   };
 
   return (
