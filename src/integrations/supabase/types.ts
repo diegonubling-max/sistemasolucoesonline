@@ -1188,6 +1188,7 @@ export type Database = {
         Args: { p_ip: string; p_nome: string; p_token: string }
         Returns: undefined
       }
+      buscar_email_por_ctr: { Args: { p_ctr: number }; Returns: string }
       criar_acesso_aluno: {
         Args: { p_ctr: number; p_email: string; p_senha: string }
         Returns: undefined
