@@ -825,7 +825,7 @@ function Financeiro() {
 
             {selectedVendedora === "todas" && matriculasVendedora && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                {["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"].map(v => {
+                {(vendedorasList ?? []).map(({ nome: v }) => {
                   const filtered = matriculasVendedora.filter(m => m.vendedora === v);
                   const totalVal = filtered.reduce((acc, curr) => acc + curr.valorTotal, 0);
                   return (
