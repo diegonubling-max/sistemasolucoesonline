@@ -254,18 +254,14 @@ function AlunosList() {
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[80px]">CTR</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Vendedora</TableHead>
-                <TableHead>Matrícula</TableHead>
-                <TableHead>Cadastro</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
+            <TableBody>
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                    Carregando...
+                  </TableCell>
+                </TableRow>
+              )}
             <TableBody>
               {isLoading && (
                 <TableRow>
