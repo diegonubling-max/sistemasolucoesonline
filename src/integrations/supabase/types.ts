@@ -102,6 +102,8 @@ export type Database = {
         Row: {
           asaas_customer_id: string | null
           ativo: boolean
+          cadastrado_por: string | null
+          cadastrado_por_id: string | null
           colaborador_id: string | null
           cpf: string
           created_at: string
@@ -131,6 +133,8 @@ export type Database = {
         Insert: {
           asaas_customer_id?: string | null
           ativo?: boolean
+          cadastrado_por?: string | null
+          cadastrado_por_id?: string | null
           colaborador_id?: string | null
           cpf: string
           created_at?: string
@@ -160,6 +164,8 @@ export type Database = {
         Update: {
           asaas_customer_id?: string | null
           ativo?: boolean
+          cadastrado_por?: string | null
+          cadastrado_por_id?: string | null
           colaborador_id?: string | null
           cpf?: string
           created_at?: string
