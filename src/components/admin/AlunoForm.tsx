@@ -127,12 +127,21 @@ export function AlunoForm({
     enabled: !!session?.user?.id,
   });
 
+  const initialStatus = (() => {
+    if (initialValues?.status) {
+      const map: Record<string, string> = { ativo: "Ativo", inadimplente: "Inadimplente", trancado: "Trancado", formado: "Formado", inativo: "Inativo" };
+      return map[String(initialValues.status)] ?? "Ativo";
+    }
+    if (initialValues?.ativo === undefined) return "Ativo";
+    return initialValues.ativo ? "Ativo" : "Inativo";
+  })();
+
   const form = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
       ...defaultValues,
       ...initialValues,
-      ativo: initialValues?.ativo === undefined ? "Ativo" : (initialValues.ativo ? "Ativo" : "Inativo")
+      ativo: initialStatus,
     },
   });
 
@@ -185,10 +194,16 @@ export function AlunoForm({
 
 
   const onLocalSubmit = (values: any) => {
-    const finalValues = {
+    const sel = values.ativo as string;
+    const statusMap: Record<string, string> = { Ativo: "ativo", Inadimplente: "inadimplente", Trancado: "trancado", Formado: "formado", Inativo: "inativo" };
+    const status = statusMap[sel] ?? "ativo";
+    const finalValues: any = {
       ...values,
-      ativo: values.ativo === "Ativo"
+      status,
+      ativo: status !== "inativo",
     };
+    if (status === "trancado") finalValues.trancado_em = new Date().toISOString();
+    if (status === "formado") finalValues.formado_em = new Date().toISOString();
     onSubmit(finalValues);
   };
 
@@ -197,7 +212,7 @@ export function AlunoForm({
       form.reset({
         ...defaultValues,
         ...initialValues,
-        ativo: initialValues.ativo === undefined ? "Ativo" : (initialValues.ativo ? "Ativo" : "Inativo")
+        ativo: initialStatus,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -386,6 +401,9 @@ export function AlunoForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inadimplente">Inadimplente</SelectItem>
+                  <SelectItem value="Trancado">Trancado</SelectItem>
+                  <SelectItem value="Formado">Formado 🎓</SelectItem>
                   <SelectItem value="Inativo">Inativo</SelectItem>
                 </SelectContent>
               </Select>
