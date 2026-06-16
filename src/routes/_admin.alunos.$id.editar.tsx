@@ -100,18 +100,36 @@ function EditarAluno() {
 
       const { error } = await supabase
         .from("alunos")
-        .update({ 
-          ...rest, 
+        .update({
+          ...rest,
           email: finalEmail,
-          responsavel_email: v.responsavel_email || null 
+          responsavel_email: v.responsavel_email || null
         })
         .eq("id", id);
       if (error) throw error;
+
+      // Parte 4 — Estorno de comissões ao inativar
+      const virouInativo = rest.status === "inativo" && aluno?.status !== "inativo";
+      if (virouInativo) {
+        const houveDevolucao = typeof window !== "undefined"
+          && window.confirm("Houve devolução de valor para o aluno?\n\nSe sim, as comissões geradas serão marcadas como estornadas na competência deste mês.");
+        if (houveDevolucao) {
+          const hoje = new Date();
+          const competencia = format(new Date(hoje.getFullYear(), hoje.getMonth(), 1), "yyyy-MM-dd");
+          const { error: estErr } = await supabase
+            .from("comissoes")
+            .update({ estornado: true, estornado_em: new Date().toISOString(), estorno_competencia: competencia })
+            .eq("aluno_id", id)
+            .eq("estornado", false);
+          if (estErr) throw estErr;
+        }
+      }
     },
     onSuccess: () => {
       toast.success("Dados do aluno atualizados!");
       qc.invalidateQueries({ queryKey: ["alunos"] });
       qc.invalidateQueries({ queryKey: ["aluno", id] });
+      qc.invalidateQueries({ queryKey: ["comissoes"] });
     },
     onError: (e: Error) => toast.error("Erro ao salvar dados", { description: e.message }),
   });
