@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useStudentTheme } from "./_student";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { BannerCarousel } from "@/components/student/BannerCarousel";
 
 export const Route = createFileRoute("/_student/aluno/dashboard")({
   head: () => ({ meta: [{ title: "Meus Cursos — Soluções Online" }] }),
@@ -170,18 +171,8 @@ function StudentDashboard() {
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
-      {/* Welcome Banner */}
-      <div className="relative h-40 md:h-80 rounded-2xl overflow-hidden bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF] flex items-center px-4 sm:px-8 md:px-12 shadow-2xl">
-        <div className="relative z-10 space-y-4 max-w-2xl">
-          <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white tracking-tight">
-            Bem-vindo(a) de volta!
-          </h1>
-          <p className="text-sm sm:text-lg md:text-xl text-white/80">
-            Continue seus estudos de onde você parou.
-          </p>
-        </div>
-        <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-white/10 to-transparent pointer-events-none" />
-      </div>
+      {/* Welcome Banner / Carrossel do polo */}
+      <BannerCarousel poloId={(poloData as any)?.id} />
 
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-900">Meus Cursos</h2>

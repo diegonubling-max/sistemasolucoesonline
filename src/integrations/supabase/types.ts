@@ -262,6 +262,47 @@ export type Database = {
           },
         ]
       }
+      banners_polo: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          id: string
+          imagem_url: string
+          ordem: number
+          polo_id: string
+          titulo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          id?: string
+          imagem_url: string
+          ordem?: number
+          polo_id: string
+          titulo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          id?: string
+          imagem_url?: string
+          ordem?: number
+          polo_id?: string
+          titulo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banners_polo_polo_id_fkey"
+            columns: ["polo_id"]
+            isOneToOne: false
+            referencedRelation: "polos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colaborador_permissoes: {
         Row: {
           agendar_provas: boolean | null
