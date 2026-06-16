@@ -135,16 +135,24 @@ function StudentLayout() {
       // Get student data
       const { data: aluno } = await supabase
         .from('alunos')
-        .select('id, nome, tema')
+        .select('id, nome, tema, status')
         .eq('email', session.user.email ?? '')
         .single();
       
       if (aluno) {
         setUserName(aluno.nome);
         setAlunoId(aluno.id);
+        setAlunoStatus((aluno as any).status ?? 'ativo');
         if (aluno.tema === 'claro' || aluno.tema === 'escuro') {
           setTema(aluno.tema);
         }
+        if ((aluno as any).status === 'inativo') {
+          setAcessoBloqueado(true);
+          setIsVerifying(false);
+          return;
+        }
+        // Verifica inadimplência automática
+        verificarInadimplenciaAuto(aluno.id, (aluno as any).status).catch(() => {});
       }
       // Get Polo Data (School Name and Logo)
       const { data: alunoPolo } = await supabase
