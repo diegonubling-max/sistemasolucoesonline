@@ -349,7 +349,7 @@ export function AlunoForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_placeholder" disabled>selecione...</SelectItem>
-                {VENDEDORAS.map((v) => (
+                {vendedoras.map((v: string) => (
                   <SelectItem key={v} value={v}>
                     {v}
                   </SelectItem>
