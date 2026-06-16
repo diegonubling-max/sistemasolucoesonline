@@ -239,10 +239,11 @@ function ProvaExecucaoPage() {
       </div>
 
       {/* Footer de Navegação */}
-      <div className="flex justify-end pt-8">
+      <div className="flex justify-end pt-4 sm:pt-8 sticky bottom-0 sm:static bg-gradient-to-t from-gray-50 via-gray-50 to-transparent sm:bg-none pb-2 sm:pb-0 -mx-3 sm:mx-0 px-3 sm:px-0">
         <Button 
           size="lg" 
-          className="h-14 px-8 text-lg font-bold rounded-xl"
+          className="h-14 w-full sm:w-auto px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl"
+
           onClick={handleProximaMateria}
           disabled={isFinishing}
         >
