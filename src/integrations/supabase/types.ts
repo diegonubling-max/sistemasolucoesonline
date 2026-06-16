@@ -270,6 +270,7 @@ export type Database = {
           created_at: string
           dar_baixa_pagamentos: boolean | null
           fazer_matriculas: boolean | null
+          gerenciar_prova_final: boolean | null
           id: string
           updated_at: string
           ver_alunos: boolean | null
@@ -284,6 +285,7 @@ export type Database = {
           created_at?: string
           dar_baixa_pagamentos?: boolean | null
           fazer_matriculas?: boolean | null
+          gerenciar_prova_final?: boolean | null
           id?: string
           updated_at?: string
           ver_alunos?: boolean | null
@@ -298,6 +300,7 @@ export type Database = {
           created_at?: string
           dar_baixa_pagamentos?: boolean | null
           fazer_matriculas?: boolean | null
+          gerenciar_prova_final?: boolean | null
           id?: string
           updated_at?: string
           ver_alunos?: boolean | null

@@ -1,0 +1,1 @@
+ALTER TABLE public.colaborador_permissoes ADD COLUMN IF NOT EXISTS gerenciar_prova_final boolean DEFAULT false;
