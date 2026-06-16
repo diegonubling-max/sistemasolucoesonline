@@ -194,10 +194,16 @@ export function AlunoForm({
 
 
   const onLocalSubmit = (values: any) => {
-    const finalValues = {
+    const sel = values.ativo as string;
+    const statusMap: Record<string, string> = { Ativo: "ativo", Inadimplente: "inadimplente", Trancado: "trancado", Formado: "formado", Inativo: "inativo" };
+    const status = statusMap[sel] ?? "ativo";
+    const finalValues: any = {
       ...values,
-      ativo: values.ativo === "Ativo"
+      status,
+      ativo: status !== "inativo",
     };
+    if (status === "trancado") finalValues.trancado_em = new Date().toISOString();
+    if (status === "formado") finalValues.formado_em = new Date().toISOString();
     onSubmit(finalValues);
   };
 
@@ -206,7 +212,7 @@ export function AlunoForm({
       form.reset({
         ...defaultValues,
         ...initialValues,
-        ativo: initialValues.ativo === undefined ? "Ativo" : (initialValues.ativo ? "Ativo" : "Inativo")
+        ativo: initialStatus,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
