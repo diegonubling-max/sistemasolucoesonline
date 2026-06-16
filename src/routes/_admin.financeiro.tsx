@@ -28,6 +28,7 @@ import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { SalesReport } from "@/components/admin/financeiro/SalesReport";
 import { ComissoesReport } from "@/components/admin/financeiro/ComissoesReport";
 import { useAuth } from "@/hooks/use-auth";
+import { useVendedoras } from "@/hooks/use-vendedoras";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
@@ -40,6 +41,7 @@ type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atra
 function Financeiro() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
+  const { data: vendedorasList } = useVendedoras();
   const today = new Date();
   
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
@@ -811,10 +813,9 @@ function Financeiro() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todas">Todas as vendedoras</SelectItem>
-                    <SelectItem value="Gislaine">Gislaine</SelectItem>
-                    <SelectItem value="Vera">Vera</SelectItem>
-                    <SelectItem value="Gabrielly">Gabrielly</SelectItem>
-                    <SelectItem value="Maria Eduarda">Maria Eduarda</SelectItem>
+                    {(vendedorasList ?? []).map((v) => (
+                      <SelectItem key={v.id} value={v.nome}>{v.nome}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Input type="date" className="w-40" value={vendedoraPeriod.start} onChange={(e) => setVendedoraPeriod(p => ({ ...p, start: e.target.value }))} />
@@ -826,7 +827,7 @@ function Financeiro() {
 
             {selectedVendedora === "todas" && matriculasVendedora && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                {["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"].map(v => {
+                {(vendedorasList ?? []).map(({ nome: v }) => {
                   const filtered = matriculasVendedora.filter(m => m.vendedora === v);
                   const totalVal = filtered.reduce((acc, curr) => acc + curr.valorTotal, 0);
                   return (

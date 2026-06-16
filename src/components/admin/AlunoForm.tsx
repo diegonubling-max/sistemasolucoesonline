@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
-const VENDEDORAS = ["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"] as const;
 const SEXOS = ["Masculino", "Feminino"] as const;
 
 const schema = z
@@ -92,7 +91,7 @@ export function AlunoForm({
   submitLabel?: string;
   isEdit?: boolean;
 }) {
-  const [vendedoras, setVendedoras] = useState<string[]>(["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"]);
+  const [vendedoras, setVendedoras] = useState<string[]>([]);
   const [polos, setPolos] = useState<any[]>([]);
   const { session } = useAuth();
   const [userPoloId, setUserPoloId] = useState<string | null>(null);
@@ -149,12 +148,13 @@ export function AlunoForm({
     async function loadOptions() {
       const { data: colabs } = await supabase
         .from('colaboradores')
-        .select('nome, polo_id, setor')
-        .eq('setor', 'Vendedor');
-      
-      if (colabs && colabs.length > 0) {
-        const nomes = colabs.map(c => c.nome);
-        setVendedoras(prev => [...new Set([...prev, ...nomes])]);
+        .select('nome')
+        .eq('setor', 'Vendedor')
+        .eq('ativo', true)
+        .order('nome', { ascending: true });
+
+      if (colabs) {
+        setVendedoras(colabs.map((c: any) => c.nome));
       }
 
       const { data: listPolos } = await supabase.from('polos').select('id, nome').eq('ativo', true);
@@ -349,7 +349,7 @@ export function AlunoForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_placeholder" disabled>selecione...</SelectItem>
-                {VENDEDORAS.map((v) => (
+                {vendedoras.map((v: string) => (
                   <SelectItem key={v} value={v}>
                     {v}
                   </SelectItem>
