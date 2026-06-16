@@ -475,7 +475,7 @@ function AlunoDetalhes() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     Dados cadastrais
-                    {aluno.ativo ? <Badge className="bg-accent">Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}
+                    <StatusAlunoBadge status={(aluno as any).status} />
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4 text-sm">
