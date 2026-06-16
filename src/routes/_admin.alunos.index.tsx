@@ -249,7 +249,6 @@ function AlunosList() {
                 <TableHead>Telefone</TableHead>
                 <TableHead>Vendedora</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Matrícula</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -257,7 +256,7 @@ function AlunosList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
@@ -274,13 +273,6 @@ function AlunosList() {
                   <TableCell>{a.telefone}</TableCell>
                   <TableCell>{a.vendedora}</TableCell>
                   <TableCell><StatusAlunoBadge status={(a as any).status} /></TableCell>
-                  <TableCell>
-                    {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
-                      <Badge className="bg-green-500 text-white hover:bg-green-600">Matriculado</Badge>
-                    ) : (
-                      <Badge className="bg-yellow-500 text-white hover:bg-yellow-600">Pendente</Badge>
-                    )}
-                  </TableCell>
                   <TableCell>{formatDate(a.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
@@ -344,7 +336,7 @@ function AlunosList() {
               ))}
               {!isLoading && data?.rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhum aluno encontrado.
                   </TableCell>
                 </TableRow>
