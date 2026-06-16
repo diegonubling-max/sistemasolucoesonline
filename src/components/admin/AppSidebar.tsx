@@ -236,6 +236,16 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
             Configurações
           </Link>
         )}
+        {colaborador && !isSuperAdmin && (
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            onClick={() => setChangePwdOpen(true)}
+          >
+            <KeyRound className="h-4 w-4 mr-2" />
+            Alterar Senha
+          </Button>
+        )}
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground hover:bg-red-500 hover:text-white transition-colors"
@@ -245,6 +255,7 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
           Sair
         </Button>
       </div>
+      <ChangePasswordModal open={changePwdOpen} onOpenChange={setChangePwdOpen} />
     </aside>
   );
 }
