@@ -148,12 +148,13 @@ export function AlunoForm({
     async function loadOptions() {
       const { data: colabs } = await supabase
         .from('colaboradores')
-        .select('nome, polo_id, setor')
-        .eq('setor', 'Vendedor');
-      
-      if (colabs && colabs.length > 0) {
-        const nomes = colabs.map(c => c.nome);
-        setVendedoras(prev => [...new Set([...prev, ...nomes])]);
+        .select('nome')
+        .eq('setor', 'Vendedor')
+        .eq('ativo', true)
+        .order('nome', { ascending: true });
+
+      if (colabs) {
+        setVendedoras(colabs.map((c: any) => c.nome));
       }
 
       const { data: listPolos } = await supabase.from('polos').select('id, nome').eq('ativo', true);
