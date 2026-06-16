@@ -17,12 +17,12 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
-  { title: "Alunos", url: "/alunos", icon: Users, enabled: true, perm: 'ver_alunos' },
-  { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true },
-  { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true },
-  { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true },
+  { title: "Alunos", url: "/alunos", icon: Users, enabled: true, perm: 'ver_alunos' as const },
+  { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true, adminOnly: true },
+  { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true, adminOnly: true },
+  { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true, adminOnly: true },
   { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' as const },
 ];
 
 export function AppSidebar({ colaborador }: { colaborador?: any }) {
