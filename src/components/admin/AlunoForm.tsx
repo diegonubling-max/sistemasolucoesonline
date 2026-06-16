@@ -109,6 +109,24 @@ export function AlunoForm({
 
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
 
+  const { data: canManageProvaFinal } = useQuery({
+    queryKey: ["perm-gerenciar-prova-final", session?.user?.id, isSuperAdmin],
+    queryFn: async () => {
+      if (isSuperAdmin) return true;
+      if (!session?.user?.id) return false;
+      const { data: colab } = await supabase
+        .from('colaboradores')
+        .select('id, colaborador_permissoes(gerenciar_prova_final)')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      const perms: any = Array.isArray((colab as any)?.colaborador_permissoes)
+        ? (colab as any).colaborador_permissoes[0]
+        : (colab as any)?.colaborador_permissoes;
+      return Boolean(perms?.gerenciar_prova_final);
+    },
+    enabled: !!session?.user?.id,
+  });
+
   const form = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
