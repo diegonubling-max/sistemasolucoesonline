@@ -1,0 +1,244 @@
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Wallet, ChevronDown, ChevronRight, CheckCircle, Loader2 } from "lucide-react";
+import { formatCurrency, formatDate } from "@/lib/format";
+import { format, endOfMonth, addMonths, startOfMonth } from "date-fns";
+import { toast } from "sonner";
+
+interface ComissaoRow {
+  id: string;
+  vendedora: string;
+  aluno_id: string | null;
+  matricula_id: string | null;
+  tipo_pagamento: string;
+  valor: number;
+  status: string | null;
+  competencia: string;
+  data_pagamento: string | null;
+  estornado: boolean;
+  estorno_competencia: string | null;
+  created_at: string;
+  alunos?: { nome: string | null; ctr: number | null } | null;
+}
+
+export function ComissoesReport() {
+  const qc = useQueryClient();
+  const [mes, setMes] = useState<string>(format(new Date(), "yyyy-MM"));
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const competencia = useMemo(() => {
+    const [y, m] = mes.split("-").map(Number);
+    return format(startOfMonth(new Date(y, m - 1, 1)), "yyyy-MM-dd");
+  }, [mes]);
+
+  const dataPagamentoPrevista = useMemo(() => {
+    const [y, m] = mes.split("-").map(Number);
+    return format(new Date(y, m, 20), "yyyy-MM-dd"); // dia 20 do mês seguinte
+  }, [mes]);
+
+  const { data: comissoes, isLoading } = useQuery({
+    queryKey: ["comissoes", competencia],
+    queryFn: async () => {
+      // Geradas no mês + estornos do mês
+      const { data, error } = await supabase
+        .from("comissoes")
+        .select("*, alunos(nome, ctr)")
+        .or(`competencia.eq.${competencia},estorno_competencia.eq.${competencia}`)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as ComissaoRow[];
+    },
+  });
+
+  const marcarPago = useMutation({
+    mutationFn: async (vendedora: string) => {
+      const { error } = await supabase
+        .from("comissoes")
+        .update({ status: "pago", data_pagamento: dataPagamentoPrevista })
+        .eq("vendedora", vendedora)
+        .eq("competencia", competencia)
+        .neq("status", "pago");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Comissões marcadas como pagas!");
+      qc.invalidateQueries({ queryKey: ["comissoes", competencia] });
+    },
+    onError: (e: Error) => toast.error("Erro ao marcar como pago", { description: e.message }),
+  });
+
+  // Agrupa por vendedora
+  const grupos = useMemo(() => {
+    const map = new Map<string, {
+      vendedora: string;
+      vendas: ComissaoRow[];
+      estornos: ComissaoRow[];
+      totalGerado: number;
+      totalEstornos: number;
+      liquido: number;
+      todasPagas: boolean;
+    }>();
+    for (const c of comissoes ?? []) {
+      const g = map.get(c.vendedora) ?? {
+        vendedora: c.vendedora,
+        vendas: [],
+        estornos: [],
+        totalGerado: 0,
+        totalEstornos: 0,
+        liquido: 0,
+        todasPagas: true,
+      };
+      const isEstornoDoMes = c.estornado && c.estorno_competencia === competencia;
+      const isGeradaDoMes = c.competencia === competencia;
+      if (isGeradaDoMes) {
+        g.vendas.push(c);
+        if (!c.estornado) g.totalGerado += Number(c.valor);
+        if (c.status !== "pago") g.todasPagas = false;
+      }
+      if (isEstornoDoMes) {
+        g.estornos.push(c);
+        g.totalEstornos += Number(c.valor);
+      }
+      g.liquido = g.totalGerado - g.totalEstornos;
+      map.set(c.vendedora, g);
+    }
+    return Array.from(map.values()).sort((a, b) => a.vendedora.localeCompare(b.vendedora));
+  }, [comissoes, competencia]);
+
+  return (
+    <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
+      <CardContent className="pt-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Wallet className="h-5 w-5 text-emerald-600" />
+            Comissões — competência {format(new Date(mes + "-01"), "MM/yyyy")}
+          </h3>
+          <div className="flex items-center gap-2">
+            <Input type="month" className="w-44" value={mes} onChange={(e) => setMes(e.target.value)} />
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              Pagamento previsto: {formatDate(dataPagamentoPrevista)}
+            </Badge>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="py-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-8"></TableHead>
+                <TableHead>Vendedora</TableHead>
+                <TableHead className="text-center">Vendas</TableHead>
+                <TableHead className="text-right">Comissões</TableHead>
+                <TableHead className="text-right">Estornos</TableHead>
+                <TableHead className="text-right">Líquido</TableHead>
+                <TableHead>Pagamento</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {grupos.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    Nenhuma comissão nesta competência.
+                  </TableCell>
+                </TableRow>
+              )}
+              {grupos.map((g) => {
+                const isOpen = expanded === g.vendedora;
+                return (
+                  <>
+                    <TableRow key={g.vendedora} className="cursor-pointer" onClick={() => setExpanded(isOpen ? null : g.vendedora)}>
+                      <TableCell>
+                        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </TableCell>
+                      <TableCell className="font-medium">{g.vendedora}</TableCell>
+                      <TableCell className="text-center">{g.vendas.filter(v => !v.estornado).length}</TableCell>
+                      <TableCell className="text-right text-green-700 font-semibold">{formatCurrency(g.totalGerado)}</TableCell>
+                      <TableCell className="text-right text-red-600">
+                        {g.totalEstornos > 0 ? `- ${formatCurrency(g.totalEstornos)}` : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-bold">{formatCurrency(g.liquido)}</TableCell>
+                      <TableCell className="text-sm">{formatDate(dataPagamentoPrevista)}</TableCell>
+                      <TableCell>
+                        {g.todasPagas && g.vendas.length > 0 ? (
+                          <Badge className="bg-green-500 hover:bg-green-500">Pago</Badge>
+                        ) : (
+                          <Badge className="bg-yellow-500 hover:bg-yellow-500">A pagar</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={g.todasPagas || g.liquido <= 0 || marcarPago.isPending}
+                          onClick={(e) => { e.stopPropagation(); marcarPago.mutate(g.vendedora); }}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" /> Marcar como pago
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {isOpen && (
+                      <TableRow>
+                        <TableCell colSpan={9} className="bg-muted/30 p-4">
+                          <div className="text-sm font-semibold mb-2">Detalhe das vendas</div>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Aluno</TableHead>
+                                <TableHead>Tipo</TableHead>
+                                <TableHead className="text-right">Valor</TableHead>
+                                <TableHead>Gerada em</TableHead>
+                                <TableHead>Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {g.vendas.map((v) => (
+                                <TableRow key={v.id}>
+                                  <TableCell>{v.alunos?.nome ?? "—"}</TableCell>
+                                  <TableCell className="capitalize">{v.tipo_pagamento}</TableCell>
+                                  <TableCell className="text-right">{formatCurrency(Number(v.valor))}</TableCell>
+                                  <TableCell>{formatDate(v.created_at)}</TableCell>
+                                  <TableCell>
+                                    {v.estornado ? (
+                                      <Badge variant="destructive">Estornada</Badge>
+                                    ) : v.status === "pago" ? (
+                                      <Badge className="bg-green-500 hover:bg-green-500">Pago</Badge>
+                                    ) : (
+                                      <Badge className="bg-yellow-500 hover:bg-yellow-500">A pagar</Badge>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                              {g.estornos.length > 0 && g.estornos.map((v) => (
+                                <TableRow key={`est-${v.id}`} className="bg-red-50/40">
+                                  <TableCell>{v.alunos?.nome ?? "—"}</TableCell>
+                                  <TableCell className="capitalize">Estorno — {v.tipo_pagamento}</TableCell>
+                                  <TableCell className="text-right text-red-600">- {formatCurrency(Number(v.valor))}</TableCell>
+                                  <TableCell>{formatDate(v.estorno_competencia)}</TableCell>
+                                  <TableCell><Badge variant="destructive">Estornada</Badge></TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

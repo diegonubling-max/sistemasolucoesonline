@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { SalesReport } from "@/components/admin/financeiro/SalesReport";
+import { ComissoesReport } from "@/components/admin/financeiro/ComissoesReport";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_admin/financeiro")({
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/_admin/financeiro")({
   component: Financeiro,
 });
 
-type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | "vendedora" | "vendas" | null;
+type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | "vendedora" | "vendas" | "comissoes" | null;
 
 
 function Financeiro() {
@@ -451,6 +452,7 @@ function Financeiro() {
     { id: "atraso", label: "Alunos em", sub: "Atraso", icon: UserX },
     { id: "vendedora", label: "Matrículas por", sub: "Vendedora", icon: Wallet },
     { id: "vendas", label: "Relatório de", sub: "Vendas", icon: BarChart3 },
+    { id: "comissoes", label: "Comissões", sub: "Vendedoras", icon: Wallet },
   ];
 
 
@@ -884,6 +886,10 @@ function Financeiro() {
       )}
 
       {activeFilter === "vendas" && <SalesReport />}
+
+      {activeFilter === "comissoes" && <ComissoesReport />}
+
+
 
 
       <BaixaModal 

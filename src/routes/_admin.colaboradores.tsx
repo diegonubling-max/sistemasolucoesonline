@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Shield, Trash2, Loader2, Users, MoreHorizontal, UserCheck, UserMinus } from "lucide-react";
+import { Plus, Search, Pencil, Shield, Trash2, Loader2, Users, MoreHorizontal, UserCheck, UserMinus, Wallet } from "lucide-react";
+import { ComissoesColaboradorDialog } from "@/components/admin/colaboradores/ComissoesColaboradorDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +83,7 @@ function ColaboradoresList() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingColab, setEditingColab] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [comissoesVendedora, setComissoesVendedora] = useState<string | null>(null);
   
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
@@ -495,6 +497,11 @@ function ColaboradoresList() {
                         }}>
                           <Pencil className="h-4 w-4 mr-2" /> Editar
                         </DropdownMenuItem>
+                        {c.setor === "Vendedor" && (
+                          <DropdownMenuItem onClick={() => setComissoesVendedora(c.nome)}>
+                            <Wallet className="h-4 w-4 mr-2 text-emerald-600" /> Comissões
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => statusMutation.mutate({ id: c.id, ativo: !c.ativo })}>
                           {c.ativo ? (
                             <><UserMinus className="h-4 w-4 mr-2 text-red-500" /> Inativar</>
@@ -522,6 +529,12 @@ function ColaboradoresList() {
           </Table>
         </CardContent>
       </Card>
+
+      <ComissoesColaboradorDialog
+        open={!!comissoesVendedora}
+        onOpenChange={(o) => !o && setComissoesVendedora(null)}
+        vendedora={comissoesVendedora}
+      />
     </div>
   );
 }
