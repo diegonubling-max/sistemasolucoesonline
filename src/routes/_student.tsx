@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { InadimplenciaAlerts } from "@/components/student/InadimplenciaAlerts";
+import { verificarInadimplenciaAuto } from "@/lib/aluno-status";
 
 const StudentThemeContext = createContext<{ isDark: boolean }>({ isDark: true });
 export const useStudentTheme = () => useContext(StudentThemeContext);
@@ -31,6 +32,8 @@ function StudentLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tema, setTema] = useState<"claro" | "escuro">("claro");
   const [alunoId, setAlunoId] = useState<string | null>(null);
+  const [alunoStatus, setAlunoStatus] = useState<string | null>(null);
+  const [acessoBloqueado, setAcessoBloqueado] = useState(false);
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
   const [sessaoId, setSessaoId] = useState<string | null>(null);
 
@@ -132,16 +135,24 @@ function StudentLayout() {
       // Get student data
       const { data: aluno } = await supabase
         .from('alunos')
-        .select('id, nome, tema')
+        .select('id, nome, tema, status')
         .eq('email', session.user.email ?? '')
         .single();
       
       if (aluno) {
         setUserName(aluno.nome);
         setAlunoId(aluno.id);
+        setAlunoStatus((aluno as any).status ?? 'ativo');
         if (aluno.tema === 'claro' || aluno.tema === 'escuro') {
           setTema(aluno.tema);
         }
+        if ((aluno as any).status === 'inativo') {
+          setAcessoBloqueado(true);
+          setIsVerifying(false);
+          return;
+        }
+        // Verifica inadimplência automática
+        verificarInadimplenciaAuto(aluno.id, (aluno as any).status).catch(() => {});
       }
       // Get Polo Data (School Name and Logo)
       const { data: alunoPolo } = await supabase
@@ -179,7 +190,23 @@ function StudentLayout() {
     );
   }
 
+  if (acessoBloqueado) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center space-y-4 border">
+          <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center">
+            <LogOut className="h-8 w-8 text-red-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Acesso bloqueado</h1>
+          <p className="text-gray-600">Sua conta está inativa. Entre em contato com a secretaria para mais informações.</p>
+          <Button onClick={handleLogout} className="w-full">Sair</Button>
+        </div>
+      </div>
+    );
+  }
+
   const isDark = false; // Tema sempre claro conforme solicitado
+  void alunoStatus;
 
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-300 bg-gray-50 text-gray-900">

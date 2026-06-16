@@ -26,6 +26,7 @@ import { generateAsaasCobrar } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
+import { StatusAlunoBadge, type AlunoStatus } from "@/lib/aluno-status";
 
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
@@ -420,8 +421,28 @@ function AlunoDetalhes() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const updateStatus = useMutation({
+    mutationFn: async (novo: AlunoStatus) => {
+      const patch: any = { status: novo };
+      if (novo === "trancado") patch.trancado_em = new Date().toISOString();
+      if (novo === "formado") patch.formado_em = new Date().toISOString();
+      if (novo === "inativo") patch.ativo = false;
+      if (novo === "ativo") patch.ativo = true;
+      const { error } = await supabase.from("alunos").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, novo) => {
+      toast.success(`Status atualizado para ${novo}`);
+      qc.invalidateQueries({ queryKey: ["aluno", id] });
+      qc.invalidateQueries({ queryKey: ["alunos"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!aluno) return <p className="text-muted-foreground">Aluno não encontrado.</p>;
+
+  const statusAtual = ((aluno as any).status ?? "ativo") as AlunoStatus;
 
   return (
     <div className="space-y-6 pb-20">
@@ -451,6 +472,26 @@ function AlunoDetalhes() {
               {gerarDeclaracao.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
               Gerar Declaração
             </Button>
+            {statusAtual !== "trancado" && statusAtual !== "formado" && statusAtual !== "inativo" && (
+              <Button variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50" onClick={() => updateStatus.mutate("trancado")} disabled={updateStatus.isPending}>
+                <Lock className="h-4 w-4 mr-2" /> Trancar Matrícula
+              </Button>
+            )}
+            {statusAtual !== "ativo" && (
+              <Button variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" onClick={() => updateStatus.mutate("ativo")} disabled={updateStatus.isPending}>
+                <CheckCircle2 className="h-4 w-4 mr-2" /> Reativar
+              </Button>
+            )}
+            {statusAtual !== "formado" && (
+              <Button variant="outline" className="text-blue-700 border-blue-300 hover:bg-blue-50" onClick={() => updateStatus.mutate("formado")} disabled={updateStatus.isPending}>
+                <GraduationCap className="h-4 w-4 mr-2" /> Marcar como Formado
+              </Button>
+            )}
+            {statusAtual !== "inativo" && (
+              <Button variant="outline" className="text-gray-700 border-gray-300 hover:bg-gray-50" onClick={() => updateStatus.mutate("inativo")} disabled={updateStatus.isPending}>
+                <AlertCircle className="h-4 w-4 mr-2" /> Inativar
+              </Button>
+            )}
           </>
         }
       />
@@ -474,7 +515,7 @@ function AlunoDetalhes() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     Dados cadastrais
-                    {aluno.ativo ? <Badge className="bg-accent">Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}
+                    <StatusAlunoBadge status={(aluno as any).status} />
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4 text-sm">

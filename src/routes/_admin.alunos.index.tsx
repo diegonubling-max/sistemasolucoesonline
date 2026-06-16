@@ -24,6 +24,8 @@ import {
 import { ContratoAlunoModal } from "@/components/admin/alunos/ContratoAlunoModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StatusAlunoBadge, STATUS_LIST, STATUS_CONFIG } from "@/lib/aluno-status";
 
 
 export const Route = createFileRoute("/_admin/alunos/")({
@@ -45,6 +47,7 @@ function AlunosList() {
   const [globalSearchCpf, setGlobalSearchCpf] = useState("");
   const [globalSearchResult, setGlobalSearchResult] = useState<any>(null);
   const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
@@ -101,7 +104,7 @@ function AlunosList() {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["alunos", search, page, selectedPoloId, userRole],
+    queryKey: ["alunos", search, page, selectedPoloId, userRole, statusFilter],
     queryFn: async () => {
       const userId = session?.user?.id;
       let colabPoloId = null;
@@ -122,9 +125,13 @@ function AlunosList() {
 
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, created_at, vendedora, ctr, matriculas(id), contratos(id, status)", { count: "exact" })
+        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, matriculas(id), contratos(id, status)", { count: "exact" })
         .order("ctr", { ascending: true })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+
+      if (statusFilter !== "all") {
+        q = q.eq('status', statusFilter);
+      }
       
       if (isSuperAdmin) {
         if (selectedPoloId && selectedPoloId !== 'all') {
@@ -207,17 +214,30 @@ function AlunosList() {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="relative mb-4 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, e-mail ou CTR..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(0);
-              }}
-              className="pl-9"
-            />
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="relative max-w-sm flex-1 min-w-[220px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, e-mail ou CTR..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(0);
+                }}
+                className="pl-9"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                {STATUS_LIST.map((s) => (
+                  <SelectItem key={s} value={s}>{STATUS_CONFIG[s].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Table>
@@ -228,6 +248,7 @@ function AlunosList() {
                 <TableHead>E-mail</TableHead>
                 <TableHead>Telefone</TableHead>
                 <TableHead>Vendedora</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Matrícula</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -236,7 +257,7 @@ function AlunosList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
@@ -252,6 +273,7 @@ function AlunosList() {
                   <TableCell>{a.email}</TableCell>
                   <TableCell>{a.telefone}</TableCell>
                   <TableCell>{a.vendedora}</TableCell>
+                  <TableCell><StatusAlunoBadge status={(a as any).status} /></TableCell>
                   <TableCell>
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
                       <Badge className="bg-green-500 text-white hover:bg-green-600">Matriculado</Badge>
@@ -322,7 +344,7 @@ function AlunosList() {
               ))}
               {!isLoading && data?.rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     Nenhum aluno encontrado.
                   </TableCell>
                 </TableRow>
