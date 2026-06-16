@@ -31,7 +31,7 @@ interface ComissaoRow {
 export function ComissoesReport() {
   const qc = useQueryClient();
   const [mes, setMes] = useState<string>(format(new Date(), "yyyy-MM"));
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [openVendedora, setOpenVendedora] = useState<string | null>(null);
 
   const competencia = useMemo(() => {
     const [y, m] = mes.split("-").map(Number);
