@@ -28,6 +28,7 @@ import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { SalesReport } from "@/components/admin/financeiro/SalesReport";
 import { ComissoesReport } from "@/components/admin/financeiro/ComissoesReport";
 import { useAuth } from "@/hooks/use-auth";
+import { useVendedoras } from "@/hooks/use-vendedoras";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
