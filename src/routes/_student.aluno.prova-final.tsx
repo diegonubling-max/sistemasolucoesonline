@@ -377,7 +377,9 @@ function ProvaFinalPage() {
     );
   }
 
-  // Etapa Instruções - Caso não agendada, mostrar popup (Dialog) conforme solicitado
+  const whatsappNumero = aluno?.polos?.whatsapp || "5551990010689";
+
+  // CASO 1 — Sem agendamento: popup para agendar via WhatsApp
   if (!agendamento) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -391,18 +393,18 @@ function ProvaFinalPage() {
                 Sua Prova Final está disponível para agendamento! Clique no botão abaixo para falar com nosso setor de provas e marcar seu exame.
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="flex justify-center py-6">
               <Calendar className="h-16 w-16 text-gray-400" />
             </div>
 
             <DialogFooter>
-              <Button 
-                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2 py-6 text-lg" 
-                onClick={() => window.open(`https://wa.me/${aluno?.polos?.whatsapp || "5551990010689"}?text=${encodeURIComponent("Olá! Gostaria de agendar minha Prova Final.")}`, "_blank")}
+              <Button
+                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2 py-6 text-lg"
+                onClick={() => window.open(`https://wa.me/${whatsappNumero}?text=${encodeURIComponent("Olá! Gostaria de agendar minha Prova Final.")}`, "_blank")}
               >
                 <MessageSquare className="h-5 w-5" />
-                Agendar via WhatsApp {aluno?.polos?.whatsapp || "(51) 99001-0689"}
+                Agendar via WhatsApp
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -413,41 +415,78 @@ function ProvaFinalPage() {
     );
   }
 
+  // Combina data + hora em um único datetime e compara com agora
   const dataHoraStr = `${agendamento.data_prova}T${agendamento.hora_prova}`;
   const dataHoraProva = parseISO(dataHoraStr);
   const agora = new Date();
-  const podeComecar = isAfter(agora, dataHoraProva);
+  const podeComecar = agora.getTime() >= dataHoraProva.getTime();
 
-  console.log("Debug Prova Final:", { 
-    agendamentoId: agendamento?.id, 
-    status: agendamento?.status, 
-    data: agendamento?.data_prova, 
+  console.log("Debug Prova Final:", {
+    agendamentoId: agendamento?.id,
+    status: agendamento?.status,
+    data: agendamento?.data_prova,
     hora: agendamento?.hora_prova,
     podeComecar,
     agora: format(agora, 'yyyy-MM-dd HH:mm:ss'),
     dataHoraProva: format(dataHoraProva, 'yyyy-MM-dd HH:mm:ss')
   });
 
+  // CASO 2 — Agendada mas a data/hora ainda não chegou: tela informativa (sem popup)
+  if (!podeComecar) {
+    const diffMs = dataHoraProva.getTime() - agora.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const dataFmt = format(parseISO(agendamento.data_prova), 'dd/MM/yyyy');
+    const horaFmt = agendamento.hora_prova.substring(0, 5);
+
+    return (
+      <Card className="max-w-2xl mx-auto overflow-hidden">
+        <CardHeader className="bg-primary text-primary-foreground py-10 text-center">
+          <div className="flex justify-center mb-4">
+            <Calendar className="h-20 w-20" />
+          </div>
+          <CardTitle className="text-3xl font-bold">
+            Sua Prova Final está agendada!
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="py-8 space-y-6 text-center">
+          <div className="space-y-2">
+            <p className="text-2xl font-bold">
+              Data: {dataFmt} às {horaFmt}
+            </p>
+            <p className="text-lg text-muted-foreground">
+              {diffDays <= 0
+                ? `Prepare-se! Sua prova é HOJE.`
+                : `Prepare-se! ${diffDays === 1 ? 'Falta 1 dia.' : `Faltam ${diffDays} dias.`}`}
+            </p>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl flex items-start gap-3 text-left">
+            <Lock className="h-5 w-5 text-yellow-600 mt-0.5 shrink-0" />
+            <p className="text-sm text-yellow-700">
+              A prova será liberada automaticamente no dia e horário agendados.
+            </p>
+          </div>
+
+          <Button
+            variant="outline"
+            className="w-full h-12 gap-2 border-[#25D366] text-[#128C7E] hover:bg-[#25D366]/10"
+            onClick={() => window.open(`https://wa.me/${whatsappNumero}?text=${encodeURIComponent("Olá! Tenho uma dúvida sobre minha Prova Final.")}`, "_blank")}
+          >
+            <MessageSquare className="h-5 w-5" />
+            Tirar dúvidas via WhatsApp
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // CASO 3 — Chegou o dia e a hora: tela de orientações + "Começar Prova Agora"
   return (
     <Card className="max-w-2xl mx-auto overflow-hidden">
       <CardHeader className="bg-primary text-primary-foreground py-10 text-center">
-        <CardTitle className="text-3xl font-bold">
-          {podeComecar ? "Sua Prova Final" : "Prova Final"}
-        </CardTitle>
+        <CardTitle className="text-3xl font-bold">Sua Prova Final</CardTitle>
         <CardDescription className="text-primary-foreground/80 text-lg">
-          {podeComecar ? "Tudo pronto para começar!" : (() => {
-            const hoje = format(agora, 'yyyy-MM-dd');
-            const dataProva = agendamento.data_prova;
-            
-            if (hoje === dataProva) {
-              return `Sua prova é HOJE às ${agendamento.hora_prova.substring(0, 5)}! Prepare-se! 💪`;
-            }
-            
-            const diffTime = dataHoraProva.getTime() - agora.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            return `Sua Prova Final está agendada! Faltam ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'} — ${format(parseISO(dataProva), 'dd/MM/yyyy')} às ${agendamento.hora_prova.substring(0, 5)}.`;
-          })()}
+          Tudo pronto para começar!
         </CardDescription>
       </CardHeader>
       <CardContent className="py-8 space-y-8">
@@ -464,41 +503,25 @@ function ProvaFinalPage() {
           </div>
         </div>
 
-        {!podeComecar && (
-          <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-xl flex items-start gap-4">
-            <Lock className="h-6 w-6 text-yellow-600 mt-1" />
-            <div className="space-y-1">
-              <h4 className="font-bold text-yellow-800">Aguarde o horário</h4>
-              <p className="text-sm text-yellow-700">A prova será liberada automaticamente no dia e horário agendados. Mantenha esta página aberta.</p>
-            </div>
-          </div>
-        )}
+        <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl space-y-4">
+          <h4 className="font-bold text-blue-800 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" /> Instruções Importantes
+          </h4>
+          <ul className="text-sm text-blue-700 space-y-2 list-disc pl-5">
+            <li>Você terá <strong>4 horas</strong> para concluir as 10 questões de cada matéria.</li>
+            <li>Você poderá escolher a ordem das matérias antes de começar.</li>
+            <li>As matérias seguem a ordem que você escolher e não poderá voltar.</li>
+            <li>Certifique-se de estar em ambiente calmo e com boa conexão.</li>
+            <li>Ao clicar em começar, o cronômetro será iniciado.</li>
+          </ul>
+        </div>
 
-        {podeComecar && (
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl space-y-4">
-              <h4 className="font-bold text-blue-800 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" /> Instruções Importantes
-              </h4>
-              <ul className="text-sm text-blue-700 space-y-2 list-disc pl-5">
-                <li>Você terá <strong>4 horas</strong> para concluir as 10 questões de cada matéria.</li>
-                <li>Você poderá escolher a ordem das matérias antes de começar.</li>
-                <li>As matérias seguem a ordem que você escolher e não poderá voltar.</li>
-                <li>Certifique-se de estar em ambiente calmo e com boa conexão.</li>
-                <li>Ao clicar em começar, o cronômetro será iniciado.</li>
-              </ul>
-            </div>
-            <Button 
-              className="w-full h-14 text-lg font-bold bg-[#1E3A5F] hover:bg-[#2D6ADF] shadow-lg rounded-xl"
-              onClick={() => {
-                console.log("Prosseguindo para escolha de ordem...");
-                setEtapa('escolher_ordem');
-              }}
-            >
-              Começar Prova Agora <ArrowRight className="ml-2 h-6 w-6" />
-            </Button>
-          </div>
-        )}
+        <Button
+          className="w-full h-14 text-lg font-bold bg-[#1E3A5F] hover:bg-[#2D6ADF] shadow-lg rounded-xl"
+          onClick={() => setEtapa('escolher_ordem')}
+        >
+          Começar Prova Agora <ArrowRight className="ml-2 h-6 w-6" />
+        </Button>
       </CardContent>
     </Card>
   );
