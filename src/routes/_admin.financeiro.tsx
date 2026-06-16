@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { SalesReport } from "@/components/admin/financeiro/SalesReport";
+import { ComissoesReport } from "@/components/admin/financeiro/ComissoesReport";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_admin/financeiro")({
