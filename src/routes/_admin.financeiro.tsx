@@ -887,7 +887,7 @@ function Financeiro() {
 
       {activeFilter === "vendas" && <SalesReport />}
 
-      {activeFilter === "comissoes" && <ComissoesReport />}
+      {activeFilter === "comissoes" && <ComissoesReport poloId={selectedPoloId} />}
 
 
 
