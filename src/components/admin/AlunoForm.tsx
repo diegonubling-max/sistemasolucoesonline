@@ -91,7 +91,7 @@ export function AlunoForm({
   submitLabel?: string;
   isEdit?: boolean;
 }) {
-  const [vendedoras, setVendedoras] = useState<string[]>(["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"]);
+  const [vendedoras, setVendedoras] = useState<string[]>([]);
   const [polos, setPolos] = useState<any[]>([]);
   const { session } = useAuth();
   const [userPoloId, setUserPoloId] = useState<string | null>(null);
