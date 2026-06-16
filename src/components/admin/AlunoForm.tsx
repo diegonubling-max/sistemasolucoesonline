@@ -401,6 +401,9 @@ export function AlunoForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inadimplente">Inadimplente</SelectItem>
+                  <SelectItem value="Trancado">Trancado</SelectItem>
+                  <SelectItem value="Formado">Formado 🎓</SelectItem>
                   <SelectItem value="Inativo">Inativo</SelectItem>
                 </SelectContent>
               </Select>
