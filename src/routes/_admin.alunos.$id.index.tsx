@@ -472,6 +472,26 @@ function AlunoDetalhes() {
               {gerarDeclaracao.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
               Gerar Declaração
             </Button>
+            {statusAtual !== "trancado" && statusAtual !== "formado" && statusAtual !== "inativo" && (
+              <Button variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50" onClick={() => updateStatus.mutate("trancado")} disabled={updateStatus.isPending}>
+                <Lock className="h-4 w-4 mr-2" /> Trancar Matrícula
+              </Button>
+            )}
+            {statusAtual !== "ativo" && (
+              <Button variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" onClick={() => updateStatus.mutate("ativo")} disabled={updateStatus.isPending}>
+                <CheckCircle2 className="h-4 w-4 mr-2" /> Reativar
+              </Button>
+            )}
+            {statusAtual !== "formado" && (
+              <Button variant="outline" className="text-blue-700 border-blue-300 hover:bg-blue-50" onClick={() => updateStatus.mutate("formado")} disabled={updateStatus.isPending}>
+                <GraduationCap className="h-4 w-4 mr-2" /> Marcar como Formado
+              </Button>
+            )}
+            {statusAtual !== "inativo" && (
+              <Button variant="outline" className="text-gray-700 border-gray-300 hover:bg-gray-50" onClick={() => updateStatus.mutate("inativo")} disabled={updateStatus.isPending}>
+                <AlertCircle className="h-4 w-4 mr-2" /> Inativar
+              </Button>
+            )}
           </>
         }
       />
