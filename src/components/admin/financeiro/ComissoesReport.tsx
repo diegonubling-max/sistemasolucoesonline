@@ -25,10 +25,10 @@ interface ComissaoRow {
   estornado: boolean;
   estorno_competencia: string | null;
   created_at: string;
-  alunos?: { nome: string | null; ctr: number | null } | null;
+  alunos?: { nome: string | null; ctr: number | null; polo_id: string | null } | null;
 }
 
-export function ComissoesReport() {
+export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
   const qc = useQueryClient();
   const [mes, setMes] = useState<string>(format(new Date(), "yyyy-MM"));
   const [openVendedora, setOpenVendedora] = useState<string | null>(null);
@@ -44,14 +44,16 @@ export function ComissoesReport() {
   }, [mes]);
 
   const { data: comissoes, isLoading } = useQuery({
-    queryKey: ["comissoes", competencia],
+    queryKey: ["comissoes", competencia, poloId],
     queryFn: async () => {
-      // Geradas no mês + estornos do mês
-      const { data, error } = await supabase
+      const filtraPolo = poloId && poloId !== "all";
+      let query = supabase
         .from("comissoes")
-        .select("*, alunos(nome, ctr)")
+        .select(filtraPolo ? "*, alunos!inner(nome, ctr, polo_id)" : "*, alunos(nome, ctr, polo_id)")
         .or(`competencia.eq.${competencia},estorno_competencia.eq.${competencia}`)
         .order("created_at", { ascending: false });
+      if (filtraPolo) query = query.eq("alunos.polo_id", poloId);
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as ComissaoRow[];
     },
