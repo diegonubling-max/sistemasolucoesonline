@@ -220,17 +220,19 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
             Recriar Admin
           </Button>
         )}
-        <Link
-          to="/configuracoes"
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-            isActive("/configuracoes")
-              ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          }`}
-        >
-          <Settings className="h-4 w-4" />
-          Configurações
-        </Link>
+        {(isSuperAdmin || colaborador?.colaborador_permissoes?.[0]?.ver_configuracoes) && (
+          <Link
+            to="/configuracoes"
+            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+              isActive("/configuracoes")
+                ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            }`}
+          >
+            <Settings className="h-4 w-4" />
+            Configurações
+          </Link>
+        )}
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground hover:bg-red-500 hover:text-white transition-colors"
