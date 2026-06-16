@@ -359,6 +359,69 @@ export type Database = {
           },
         ]
       }
+      comissoes: {
+        Row: {
+          aluno_id: string | null
+          competencia: string
+          created_at: string | null
+          data_pagamento: string | null
+          estornado: boolean | null
+          estornado_em: string | null
+          estorno_competencia: string | null
+          id: string
+          matricula_id: string | null
+          status: string | null
+          tipo_pagamento: string
+          valor: number
+          vendedora: string
+        }
+        Insert: {
+          aluno_id?: string | null
+          competencia: string
+          created_at?: string | null
+          data_pagamento?: string | null
+          estornado?: boolean | null
+          estornado_em?: string | null
+          estorno_competencia?: string | null
+          id?: string
+          matricula_id?: string | null
+          status?: string | null
+          tipo_pagamento: string
+          valor: number
+          vendedora: string
+        }
+        Update: {
+          aluno_id?: string | null
+          competencia?: string
+          created_at?: string | null
+          data_pagamento?: string | null
+          estornado?: boolean | null
+          estornado_em?: string | null
+          estorno_competencia?: string | null
+          id?: string
+          matricula_id?: string | null
+          status?: string | null
+          tipo_pagamento?: string
+          valor?: number
+          vendedora?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissoes_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_matricula_id_fkey"
+            columns: ["matricula_id"]
+            isOneToOne: false
+            referencedRelation: "matriculas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       configuracoes: {
         Row: {
           chave: string
