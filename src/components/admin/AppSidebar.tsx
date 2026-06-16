@@ -32,6 +32,8 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
   const navigate = useNavigate();
   const [recreating, setRecreating] = useState(false);
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+  const [changePwdOpen, setChangePwdOpen] = useState(false);
+
   
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => {
     return sessionStorage.getItem("selected_polo_id") || "all";
