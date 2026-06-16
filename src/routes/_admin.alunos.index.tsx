@@ -24,6 +24,8 @@ import {
 import { ContratoAlunoModal } from "@/components/admin/alunos/ContratoAlunoModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StatusAlunoBadge, STATUS_LIST, STATUS_CONFIG } from "@/lib/aluno-status";
 
 
 export const Route = createFileRoute("/_admin/alunos/")({
