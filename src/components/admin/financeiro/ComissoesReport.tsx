@@ -6,9 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Wallet, ChevronDown, ChevronRight, CheckCircle, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Wallet, CheckCircle, Loader2, Eye, DollarSign } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { format, endOfMonth, addMonths, startOfMonth } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import { toast } from "sonner";
 
 interface ComissaoRow {
