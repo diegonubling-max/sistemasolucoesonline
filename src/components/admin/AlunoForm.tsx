@@ -505,6 +505,7 @@ export function AlunoForm({
           </div>
         </CardContent>
       </Card>
+      )}
 
       <div className="flex justify-end gap-2">
         <Button type="submit" disabled={submitting}>
