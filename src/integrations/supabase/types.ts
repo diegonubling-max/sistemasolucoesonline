@@ -112,6 +112,7 @@ export type Database = {
           data_nascimento: string
           dias_prova_final: number | null
           email: string | null
+          formado_em: string | null
           foto_perfil: string | null
           id: string
           materias_prova: string[] | null
@@ -126,8 +127,10 @@ export type Database = {
           responsavel_nome: string | null
           responsavel_telefone: string | null
           sexo: Database["public"]["Enums"]["sexo_aluno"]
+          status: string | null
           telefone: string
           tema: string | null
+          trancado_em: string | null
           vendedora: string | null
         }
         Insert: {
@@ -143,6 +146,7 @@ export type Database = {
           data_nascimento: string
           dias_prova_final?: number | null
           email?: string | null
+          formado_em?: string | null
           foto_perfil?: string | null
           id?: string
           materias_prova?: string[] | null
@@ -157,8 +161,10 @@ export type Database = {
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
           sexo: Database["public"]["Enums"]["sexo_aluno"]
+          status?: string | null
           telefone: string
           tema?: string | null
+          trancado_em?: string | null
           vendedora?: string | null
         }
         Update: {
@@ -174,6 +180,7 @@ export type Database = {
           data_nascimento?: string
           dias_prova_final?: number | null
           email?: string | null
+          formado_em?: string | null
           foto_perfil?: string | null
           id?: string
           materias_prova?: string[] | null
@@ -188,8 +195,10 @@ export type Database = {
           responsavel_nome?: string | null
           responsavel_telefone?: string | null
           sexo?: Database["public"]["Enums"]["sexo_aluno"]
+          status?: string | null
           telefone?: string
           tema?: string | null
+          trancado_em?: string | null
           vendedora?: string | null
         }
         Relationships: [
