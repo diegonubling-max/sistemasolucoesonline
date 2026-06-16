@@ -134,7 +134,6 @@ export function ComissoesReport() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-8"></TableHead>
                 <TableHead>Vendedora</TableHead>
                 <TableHead className="text-center">Vendas</TableHead>
                 <TableHead className="text-right">Comissões</TableHead>
@@ -148,97 +147,144 @@ export function ComissoesReport() {
             <TableBody>
               {grupos.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhuma comissão nesta competência.
                   </TableCell>
                 </TableRow>
               )}
-              {grupos.map((g) => {
-                const isOpen = expanded === g.vendedora;
-                return (
-                  <>
-                    <TableRow key={g.vendedora} className="cursor-pointer" onClick={() => setExpanded(isOpen ? null : g.vendedora)}>
-                      <TableCell>
-                        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                      </TableCell>
-                      <TableCell className="font-medium">{g.vendedora}</TableCell>
-                      <TableCell className="text-center">{g.vendas.filter(v => !v.estornado).length}</TableCell>
-                      <TableCell className="text-right text-green-700 font-semibold">{formatCurrency(g.totalGerado)}</TableCell>
-                      <TableCell className="text-right text-red-600">
-                        {g.totalEstornos > 0 ? `- ${formatCurrency(g.totalEstornos)}` : "—"}
-                      </TableCell>
-                      <TableCell className="text-right font-bold">{formatCurrency(g.liquido)}</TableCell>
-                      <TableCell className="text-sm">{formatDate(dataPagamentoPrevista)}</TableCell>
-                      <TableCell>
-                        {g.todasPagas && g.vendas.length > 0 ? (
-                          <Badge className="bg-green-500 hover:bg-green-500">Pago</Badge>
-                        ) : (
-                          <Badge className="bg-yellow-500 hover:bg-yellow-500">A pagar</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={g.todasPagas || g.liquido <= 0 || marcarPago.isPending}
-                          onClick={(e) => { e.stopPropagation(); marcarPago.mutate(g.vendedora); }}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" /> Marcar como pago
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {isOpen && (
-                      <TableRow>
-                        <TableCell colSpan={9} className="bg-muted/30 p-4">
-                          <div className="text-sm font-semibold mb-2">Detalhe das vendas</div>
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Aluno</TableHead>
-                                <TableHead>Tipo</TableHead>
-                                <TableHead className="text-right">Valor</TableHead>
-                                <TableHead>Gerada em</TableHead>
-                                <TableHead>Status</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {g.vendas.map((v) => (
-                                <TableRow key={v.id}>
-                                  <TableCell>{v.alunos?.nome ?? "—"}</TableCell>
-                                  <TableCell className="capitalize">{v.tipo_pagamento}</TableCell>
-                                  <TableCell className="text-right">{formatCurrency(Number(v.valor))}</TableCell>
-                                  <TableCell>{formatDate(v.created_at)}</TableCell>
-                                  <TableCell>
-                                    {v.estornado ? (
-                                      <Badge variant="destructive">Estornada</Badge>
-                                    ) : v.status === "pago" ? (
-                                      <Badge className="bg-green-500 hover:bg-green-500">Pago</Badge>
-                                    ) : (
-                                      <Badge className="bg-yellow-500 hover:bg-yellow-500">A pagar</Badge>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                              {g.estornos.length > 0 && g.estornos.map((v) => (
-                                <TableRow key={`est-${v.id}`} className="bg-red-50/40">
-                                  <TableCell>{v.alunos?.nome ?? "—"}</TableCell>
-                                  <TableCell className="capitalize">Estorno — {v.tipo_pagamento}</TableCell>
-                                  <TableCell className="text-right text-red-600">- {formatCurrency(Number(v.valor))}</TableCell>
-                                  <TableCell>{formatDate(v.estorno_competencia)}</TableCell>
-                                  <TableCell><Badge variant="destructive">Estornada</Badge></TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableCell>
-                      </TableRow>
+              {grupos.map((g) => (
+                <TableRow
+                  key={g.vendedora}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => setOpenVendedora(g.vendedora)}
+                >
+                  <TableCell className="font-medium">{g.vendedora}</TableCell>
+                  <TableCell className="text-center">{g.vendas.filter(v => !v.estornado).length}</TableCell>
+                  <TableCell className="text-right text-green-700 font-semibold">{formatCurrency(g.totalGerado)}</TableCell>
+                  <TableCell className="text-right text-red-600">
+                    {g.totalEstornos > 0 ? `- ${formatCurrency(g.totalEstornos)}` : "—"}
+                  </TableCell>
+                  <TableCell className="text-right font-bold">{formatCurrency(g.liquido)}</TableCell>
+                  <TableCell className="text-sm">{formatDate(dataPagamentoPrevista)}</TableCell>
+                  <TableCell>
+                    {g.todasPagas && g.vendas.length > 0 ? (
+                      <Badge className="bg-green-500 hover:bg-green-500">Pago</Badge>
+                    ) : (
+                      <Badge className="bg-yellow-500 hover:bg-yellow-500">A pagar</Badge>
                     )}
-                  </>
-                );
-              })}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={g.todasPagas || g.liquido <= 0 || marcarPago.isPending}
+                      onClick={(e) => { e.stopPropagation(); marcarPago.mutate(g.vendedora); }}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" /> Marcar como pago
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         )}
+
+        <Dialog open={!!openVendedora} onOpenChange={(o) => !o && setOpenVendedora(null)}>
+          <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+            {(() => {
+              const g = grupos.find(x => x.vendedora === openVendedora);
+              if (!g) return null;
+              const totalAlunos = new Set(g.vendas.filter(v => !v.estornado).map(v => v.aluno_id)).size;
+              return (
+                <>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Wallet className="h-5 w-5 text-emerald-600" />
+                      Comissões de {g.vendedora} — {format(new Date(mes + "-01"), "MM/yyyy")}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Aluno</TableHead>
+                        <TableHead>CTR</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead className="text-right">Valor</TableHead>
+                        <TableHead>Gerada em</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {g.vendas.map((v) => (
+                        <TableRow key={v.id}>
+                          <TableCell>{v.alunos?.nome ?? "—"}</TableCell>
+                          <TableCell>{v.alunos?.ctr ?? "—"}</TableCell>
+                          <TableCell className="capitalize">{v.tipo_pagamento}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(Number(v.valor))}</TableCell>
+                          <TableCell>{formatDate(v.created_at)}</TableCell>
+                          <TableCell>
+                            {v.estornado ? (
+                              <Badge variant="destructive">Estornada</Badge>
+                            ) : v.status === "pago" ? (
+                              <Badge className="bg-green-500 hover:bg-green-500">Pago</Badge>
+                            ) : (
+                              <Badge className="bg-yellow-500 hover:bg-yellow-500">A pagar</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-1 justify-end">
+                              {v.aluno_id && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => window.open(`/alunos/${v.aluno_id}`, "_blank")}
+                                    title="Ver aluno"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => window.open(`/alunos/${v.aluno_id}?tab=financeiro`, "_blank")}
+                                    title="Financeiro"
+                                  >
+                                    <DollarSign className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {g.estornos.map((v) => (
+                        <TableRow key={`est-${v.id}`} className="bg-red-50/40">
+                          <TableCell>{v.alunos?.nome ?? "—"}</TableCell>
+                          <TableCell>{v.alunos?.ctr ?? "—"}</TableCell>
+                          <TableCell className="capitalize">Estorno — {v.tipo_pagamento}</TableCell>
+                          <TableCell className="text-right text-red-600">- {formatCurrency(Number(v.valor))}</TableCell>
+                          <TableCell>{formatDate(v.estorno_competencia)}</TableCell>
+                          <TableCell><Badge variant="destructive">Estornada</Badge></TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <DialogFooter className="border-t pt-4 mt-4">
+                    <div className="flex flex-wrap gap-6 w-full justify-between text-sm">
+                      <div><span className="text-muted-foreground">Total de alunos:</span> <strong>{totalAlunos}</strong></div>
+                      <div><span className="text-muted-foreground">Total de comissões:</span> <strong className="text-green-700">{formatCurrency(g.totalGerado)}</strong></div>
+                      <div><span className="text-muted-foreground">Estornos:</span> <strong className="text-red-600">{formatCurrency(g.totalEstornos)}</strong></div>
+                      <div><span className="text-muted-foreground">Líquido a pagar:</span> <strong>{formatCurrency(g.liquido)}</strong></div>
+                    </div>
+                  </DialogFooter>
+                </>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
+
       </CardContent>
     </Card>
   );
