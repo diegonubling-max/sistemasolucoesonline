@@ -88,6 +88,8 @@ function AdminLayout() {
 
   if (!session) return null;
 
+  const mustChangePassword = !!colaborador && !isSuperAdmin && colaborador.primeiro_acesso === true;
+
   return (
     <div className="min-h-screen flex bg-background">
       <AppSidebar colaborador={colaborador} />
@@ -96,6 +98,14 @@ function AdminLayout() {
           <Outlet />
         </div>
       </main>
+      {mustChangePassword && (
+        <ChangePasswordModal
+          open
+          forced
+          colaboradorId={colaborador.id}
+          onSuccess={() => setColaborador({ ...colaborador, primeiro_acesso: false })}
+        />
+      )}
     </div>
   );
 }
