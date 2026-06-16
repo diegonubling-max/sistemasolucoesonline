@@ -183,13 +183,13 @@ function StudentLayout() {
   return (
     <div className="min-h-screen flex flex-col transition-colors duration-300 bg-gray-50 text-gray-900">
       <header className="bg-[#1E3A5F] border-b border-black/5 sticky top-0 z-20 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link to="/aluno/dashboard" className="flex items-center gap-2">
-              <div className="bg-[#2D6ADF]/10 p-1.5 rounded-lg mr-1">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 h-16 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-8 min-w-0 flex-1">
+            <Link to="/aluno/dashboard" className="flex items-center gap-2 min-w-0">
+              <div className="bg-[#2D6ADF]/10 p-1.5 rounded-lg mr-1 shrink-0">
                 <School className="h-5 w-5 text-[#2D6ADF]" />
               </div>
-              <span className="text-xl font-bold">
+              <span className="text-base sm:text-xl font-bold truncate">
                 <span className="text-white">{nomeEscola.split(' ')[0]}</span>{" "}
                 <span className="text-[#2D6ADF]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
               </span>
@@ -310,7 +310,7 @@ function StudentLayout() {
       </header>
 
       <main className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
           <StudentThemeContext.Provider value={{ isDark }}>
             <Outlet />
           </StudentThemeContext.Provider>

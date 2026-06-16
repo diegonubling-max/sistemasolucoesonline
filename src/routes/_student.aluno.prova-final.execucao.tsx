@@ -174,21 +174,22 @@ function ProvaExecucaoPage() {
   if (loadingQuestoes) return <div className="p-8 text-center">Carregando questões...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
+    <div className="max-w-4xl mx-auto space-y-6 pb-24">
       {/* Header Fixo com Cronômetro */}
-      <div className="sticky top-20 z-10 bg-white border-b p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold text-primary">{materiaAtual}</h2>
-          <p className="text-sm text-muted-foreground">Matéria {currentMateriaIndex + 1} de {MATERIAS.length}</p>
+      <div className="sticky top-16 sm:top-20 z-10 bg-white border-b p-3 sm:p-4 rounded-xl shadow-md flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-xl font-bold text-primary truncate">{materiaAtual}</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">Matéria {currentMateriaIndex + 1} de {MATERIAS.length}</p>
         </div>
         <div className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xl font-bold",
+          "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-mono text-lg sm:text-xl font-bold self-start sm:self-auto",
           timeLeft < 600 ? "bg-red-100 text-red-600 animate-pulse" : "bg-primary/10 text-primary"
         )}>
-          <Clock className="h-6 w-6" />
+          <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
           {formatTime(timeLeft)}
         </div>
       </div>
+
 
       {/* Lista de Questões */}
       <div className="space-y-8">
@@ -213,7 +214,7 @@ function ProvaExecucaoPage() {
                       key={opt}
                       onClick={() => handleResponder(q.id, opt)}
                       className={cn(
-                        "w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 group",
+                        "w-full text-left p-4 min-h-[56px] rounded-xl border-2 transition-all flex items-center gap-3 sm:gap-4 group active:scale-[0.99]",
                         isSelected 
                           ? "border-primary bg-primary/5 shadow-inner" 
                           : "border-gray-100 hover:border-primary/50 hover:bg-gray-50"
@@ -238,10 +239,11 @@ function ProvaExecucaoPage() {
       </div>
 
       {/* Footer de Navegação */}
-      <div className="flex justify-end pt-8">
+      <div className="flex justify-end pt-4 sm:pt-8 sticky bottom-0 sm:static bg-gradient-to-t from-gray-50 via-gray-50 to-transparent sm:bg-none pb-2 sm:pb-0 -mx-3 sm:mx-0 px-3 sm:px-0">
         <Button 
           size="lg" 
-          className="h-14 px-8 text-lg font-bold rounded-xl"
+          className="h-14 w-full sm:w-auto px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl"
+
           onClick={handleProximaMateria}
           disabled={isFinishing}
         >

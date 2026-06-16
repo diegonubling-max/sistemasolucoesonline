@@ -199,7 +199,7 @@ function StudentCourse() {
           <Link to="/aluno/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-1 text-sm font-medium transition-colors">
             <ChevronLeft className="h-4 w-4" /> Voltar para o início
           </Link>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{curso?.nome}</h1>
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 tracking-tight">{curso?.nome}</h1>
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
              <span>{curso?.aulas?.length} aulas</span>
              <span className="h-1 w-1 rounded-full bg-gray-300" />
@@ -290,7 +290,7 @@ function StudentCourse() {
 
         {/* Sidebar (Lesson List) */}
         <div className="lg:col-span-3">
-          <div className="bg-white border-gray-200 shadow-lg rounded-xl border overflow-hidden flex flex-col h-full max-h-[calc(100vh-12rem)] transition-colors">
+          <div className="bg-white border-gray-200 shadow-lg rounded-xl border overflow-hidden flex flex-col h-full lg:max-h-[calc(100vh-12rem)] transition-colors">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                 <span className="font-bold text-gray-900">Lista de aulas</span>
                 <span className="text-xs text-gray-500">{curso?.aulas?.length} vídeos</span>

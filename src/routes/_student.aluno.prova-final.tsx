@@ -346,7 +346,7 @@ function ProvaFinalPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="py-8 space-y-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             {materiasDisponiveis.map((m: string) => {
               const indexOrdem = ordemSelecionada.indexOf(m);
               const selecionada = indexOrdem !== -1;
