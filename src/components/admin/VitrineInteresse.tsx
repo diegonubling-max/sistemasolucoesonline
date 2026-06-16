@@ -26,7 +26,7 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
     queryFn: async () => {
       let q = supabase
         .from("vitrine_cliques")
-        .select("id, clicado_em, polo_id, alunos(nome), cursos(nome)")
+        .select("id, clicado_em, polo_id, alunos(id, nome, telefone), cursos(nome)")
         .order("clicado_em", { ascending: false })
         .limit(expanded ? 200 : 20);
       if (effectivePolo) q = q.eq("polo_id", effectivePolo);
