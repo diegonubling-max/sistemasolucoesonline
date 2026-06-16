@@ -497,6 +497,11 @@ function ColaboradoresList() {
                         }}>
                           <Pencil className="h-4 w-4 mr-2" /> Editar
                         </DropdownMenuItem>
+                        {c.setor === "Vendedor" && (
+                          <DropdownMenuItem onClick={() => setComissoesVendedora(c.nome)}>
+                            <Wallet className="h-4 w-4 mr-2 text-emerald-600" /> Comissões
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => statusMutation.mutate({ id: c.id, ativo: !c.ativo })}>
                           {c.ativo ? (
                             <><UserMinus className="h-4 w-4 mr-2 text-red-500" /> Inativar</>
