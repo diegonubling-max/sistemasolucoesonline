@@ -26,6 +26,7 @@ import { generateAsaasCobrar } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
+import { StatusAlunoBadge, type AlunoStatus } from "@/lib/aluno-status";
 
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
