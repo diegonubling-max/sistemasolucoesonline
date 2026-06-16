@@ -40,6 +40,7 @@ const schema = z
     responsavel_email: z.string().optional().nullable().or(z.literal("")),
     dias_prova_final: z.coerce.number().min(0).optional(),
     materias_prova: z.array(z.string()).optional().nullable(),
+    polo_id: z.string().uuid("Polo é obrigatório"),
   })
   .superRefine((data, ctx) => {
     const menor = calcAge(data.data_nascimento) < 18;
@@ -130,20 +131,40 @@ export function AlunoForm({
       }
 
       const { data: listPolos } = await supabase.from('polos').select('id, nome').eq('ativo', true);
-      if (listPolos) setPolos(listPolos);
+      const polosList = listPolos ?? [];
+      if (listPolos) setPolos(polosList);
 
+      let colabPoloId: string | null = null;
       if (session?.user?.id) {
         const { data: colab } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
         if (colab?.polo_id) {
+          colabPoloId = colab.polo_id;
           setUserPoloId(colab.polo_id);
-          if (!isEdit && !form.getValues("polo_id")) {
-            form.setValue("polo_id", colab.polo_id);
-          }
         }
+      }
+
+      if (isEdit || form.getValues("polo_id")) return;
+
+      const superAdmin = session?.user?.email === 'diegonubling@gmail.com';
+      if (!superAdmin && colabPoloId) {
+        form.setValue("polo_id", colabPoloId);
+        return;
+      }
+
+      if (superAdmin) {
+        const selected = typeof window !== 'undefined' ? sessionStorage.getItem('selected_polo_id') : null;
+        let target: string | undefined;
+        if (selected && selected !== 'all' && polosList.some(p => p.id === selected)) {
+          target = selected;
+        } else {
+          target = polosList.find(p => p.nome?.toLowerCase().includes('florianópolis') || p.nome?.toLowerCase().includes('florianopolis'))?.id;
+        }
+        if (target) form.setValue("polo_id", target);
       }
     }
     loadOptions();
   }, [session, isEdit]);
+
 
   const onLocalSubmit = (values: any) => {
     const finalValues = {
@@ -305,29 +326,35 @@ export function AlunoForm({
           </Field>
 
           {/* 8.1 Polo */}
-          <Field label="Polo *" error={errors.polo_id?.message as string}>
-            <Select
-              disabled={!isSuperAdmin && !!userPoloId}
-              value={form.watch("polo_id")}
-              onValueChange={(v) => form.setValue("polo_id", v, { shouldValidate: true })}
-            >
-              <SelectTrigger data-name="polo_id">
-                <SelectValue placeholder="selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                {polos.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {!isSuperAdmin && userPoloId && (
+          {isSuperAdmin ? (
+            <Field label="Polo *" error={errors.polo_id?.message as string}>
+              <Select
+                value={form.watch("polo_id")}
+                onValueChange={(v) => form.setValue("polo_id", v, { shouldValidate: true })}
+              >
+                <SelectTrigger data-name="polo_id">
+                  <SelectValue placeholder="selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {polos.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          ) : (
+            <Field label="Polo">
+              <div className="p-2 bg-muted/40 rounded-md border text-sm">
+                {polos.find(p => p.id === form.watch("polo_id"))?.nome ?? "—"}
+              </div>
               <p className="text-[10px] text-muted-foreground mt-1 italic">
-                Vinculado ao seu polo de origem.
+                Vinculado automaticamente ao seu polo de origem.
               </p>
-            )}
-          </Field>
+            </Field>
+          )}
+
 
           {/* 9. Status (Only on Edit) */}
           {isEdit && (
