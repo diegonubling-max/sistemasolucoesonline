@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, MessageCircle, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -25,7 +26,7 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
     queryFn: async () => {
       let q = supabase
         .from("vitrine_cliques")
-        .select("id, clicado_em, polo_id, alunos(nome), cursos(nome)")
+        .select("id, clicado_em, polo_id, alunos(id, nome, telefone), cursos(nome)")
         .order("clicado_em", { ascending: false })
         .limit(expanded ? 200 : 20);
       if (effectivePolo) q = q.eq("polo_id", effectivePolo);
@@ -59,11 +60,41 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
               const dataFmt = format(dt, "dd/MM/yyyy", { locale: ptBR });
               const aluno = c.alunos?.nome ?? "Aluno";
               const curso = c.cursos?.nome ?? "curso";
+              const alunoId = c.alunos?.id;
+              const telefone = c.alunos?.telefone;
+              const telefoneLimpo = telefone ? telefone.replace(/\D/g, "") : "";
+              const mensagem = encodeURIComponent(
+                `Olá ${aluno}! Vi que você se interessou pelo curso ${curso}. Posso te ajudar com mais informações?`
+              );
+              const waLink = telefoneLimpo
+                ? `https://wa.me/55${telefoneLimpo}?text=${mensagem}`
+                : null;
+
               return (
-                <li key={c.id} className="px-6 py-3 text-sm hover:bg-gray-50">
-                  <span className="font-medium">{aluno}</span>{" "}clicou em{" "}
-                  <span className="font-medium text-primary">{curso}</span>{" "}
-                  <span className="text-muted-foreground">às {hora} de {dataFmt}</span>
+                <li key={c.id} className="px-6 py-3 text-sm hover:bg-gray-50 flex items-center justify-between gap-3">
+                  <span>
+                    <span className="font-medium">{aluno}</span>{" "}clicou em{" "}
+                    <span className="font-medium text-primary">{curso}</span>{" "}
+                    <span className="text-muted-foreground">às {hora} de {dataFmt}</span>
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {alunoId && (
+                      <Link to="/alunos/$id" params={{ id: alunoId }}>
+                        <Button variant="outline" size="sm" className="h-8 gap-1">
+                          <User className="h-4 w-4" />
+                          Ver aluno
+                        </Button>
+                      </Link>
+                    )}
+                    {waLink && (
+                      <a href={waLink} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" className="h-8 gap-1 bg-green-600 hover:bg-green-700 text-white">
+                          <MessageCircle className="h-4 w-4" />
+                          WhatsApp
+                        </Button>
+                      </a>
+                    )}
+                  </div>
                 </li>
               );
             })}
