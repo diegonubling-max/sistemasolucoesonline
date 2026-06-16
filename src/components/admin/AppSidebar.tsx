@@ -1,6 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, Tags, Settings, ChevronDown, Check } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, Tags, Settings, ChevronDown, Check, KeyRound } from "lucide-react";
+import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
   const navigate = useNavigate();
   const [recreating, setRecreating] = useState(false);
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+  const [changePwdOpen, setChangePwdOpen] = useState(false);
+
   
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => {
     return sessionStorage.getItem("selected_polo_id") || "all";
@@ -233,6 +236,16 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
             Configurações
           </Link>
         )}
+        {colaborador && !isSuperAdmin && (
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            onClick={() => setChangePwdOpen(true)}
+          >
+            <KeyRound className="h-4 w-4 mr-2" />
+            Alterar Senha
+          </Button>
+        )}
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground hover:bg-red-500 hover:text-white transition-colors"
@@ -242,6 +255,7 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
           Sair
         </Button>
       </div>
+      <ChangePasswordModal open={changePwdOpen} onOpenChange={setChangePwdOpen} />
     </aside>
   );
 }

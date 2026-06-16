@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { AppSidebar } from "@/components/admin/AppSidebar";
+import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_admin")({
@@ -87,6 +88,8 @@ function AdminLayout() {
 
   if (!session) return null;
 
+  const mustChangePassword = !!colaborador && !isSuperAdmin && colaborador.primeiro_acesso === true;
+
   return (
     <div className="min-h-screen flex bg-background">
       <AppSidebar colaborador={colaborador} />
@@ -95,6 +98,14 @@ function AdminLayout() {
           <Outlet />
         </div>
       </main>
+      {mustChangePassword && (
+        <ChangePasswordModal
+          open
+          forced
+          colaboradorId={colaborador.id}
+          onSuccess={() => setColaborador({ ...colaborador, primeiro_acesso: false })}
+        />
+      )}
     </div>
   );
 }

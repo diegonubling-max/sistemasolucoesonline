@@ -367,6 +367,7 @@ export type Database = {
           id: string
           nome: string
           polo_id: string | null
+          primeiro_acesso: boolean
           setor: string
           user_id: string | null
         }
@@ -377,6 +378,7 @@ export type Database = {
           id?: string
           nome: string
           polo_id?: string | null
+          primeiro_acesso?: boolean
           setor: string
           user_id?: string | null
         }
@@ -387,6 +389,7 @@ export type Database = {
           id?: string
           nome?: string
           polo_id?: string | null
+          primeiro_acesso?: boolean
           setor?: string
           user_id?: string | null
         }
