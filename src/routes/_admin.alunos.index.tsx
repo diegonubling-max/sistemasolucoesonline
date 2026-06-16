@@ -256,7 +256,7 @@ function AlunosList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
