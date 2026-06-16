@@ -91,6 +91,7 @@ function ProvaFinalPage() {
         .single();
 
       console.log("[ProvaFinal] resultado da query de agendamentos:", { aluno_id: alunoAgendamento.id, data, error });
+      if (error?.code === "PGRST116") return null;
       if (error) throw error;
       return data;
     },
@@ -408,7 +409,7 @@ function ProvaFinalPage() {
   if (!agendamento) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <Dialog open={true}>
+        <Dialog open={showPopup} onOpenChange={setShowPopup}>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
