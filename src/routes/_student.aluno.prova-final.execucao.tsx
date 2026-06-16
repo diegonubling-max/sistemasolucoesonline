@@ -174,21 +174,22 @@ function ProvaExecucaoPage() {
   if (loadingQuestoes) return <div className="p-8 text-center">Carregando questões...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
+    <div className="max-w-4xl mx-auto space-y-6 pb-24">
       {/* Header Fixo com Cronômetro */}
-      <div className="sticky top-20 z-10 bg-white border-b p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold text-primary">{materiaAtual}</h2>
-          <p className="text-sm text-muted-foreground">Matéria {currentMateriaIndex + 1} de {MATERIAS.length}</p>
+      <div className="sticky top-16 sm:top-20 z-10 bg-white border-b p-3 sm:p-4 rounded-xl shadow-md flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-xl font-bold text-primary truncate">{materiaAtual}</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">Matéria {currentMateriaIndex + 1} de {MATERIAS.length}</p>
         </div>
         <div className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xl font-bold",
+          "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-mono text-lg sm:text-xl font-bold self-start sm:self-auto",
           timeLeft < 600 ? "bg-red-100 text-red-600 animate-pulse" : "bg-primary/10 text-primary"
         )}>
-          <Clock className="h-6 w-6" />
+          <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
           {formatTime(timeLeft)}
         </div>
       </div>
+
 
       {/* Lista de Questões */}
       <div className="space-y-8">
