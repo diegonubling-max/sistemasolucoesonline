@@ -310,7 +310,7 @@ function StudentLayout() {
       </header>
 
       <main className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
           <StudentThemeContext.Provider value={{ isDark }}>
             <Outlet />
           </StudentThemeContext.Provider>
