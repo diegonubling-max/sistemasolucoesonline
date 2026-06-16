@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_admin/financeiro")({
   component: Financeiro,
 });
 
-type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | "vendedora" | "vendas" | null;
+type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | "vendedora" | "vendas" | "comissoes" | null;
 
 
 function Financeiro() {
