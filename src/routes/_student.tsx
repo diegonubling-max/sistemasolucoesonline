@@ -32,6 +32,8 @@ function StudentLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tema, setTema] = useState<"claro" | "escuro">("claro");
   const [alunoId, setAlunoId] = useState<string | null>(null);
+  const [alunoStatus, setAlunoStatus] = useState<string | null>(null);
+  const [acessoBloqueado, setAcessoBloqueado] = useState(false);
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
   const [sessaoId, setSessaoId] = useState<string | null>(null);
 
