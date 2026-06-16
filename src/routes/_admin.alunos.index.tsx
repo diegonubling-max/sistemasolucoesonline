@@ -262,14 +262,6 @@ function AlunosList() {
                   </TableCell>
                 </TableRow>
               )}
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
-                    Carregando...
-                  </TableCell>
-                </TableRow>
-              )}
               {data?.rows.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell>
@@ -281,6 +273,7 @@ function AlunosList() {
                   <TableCell>{a.email}</TableCell>
                   <TableCell>{a.telefone}</TableCell>
                   <TableCell>{a.vendedora}</TableCell>
+                  <TableCell><StatusAlunoBadge status={(a as any).status} /></TableCell>
                   <TableCell>
                     {Array.isArray(a.matriculas) && a.matriculas.length > 0 ? (
                       <Badge className="bg-green-500 text-white hover:bg-green-600">Matriculado</Badge>
