@@ -452,6 +452,7 @@ function Financeiro() {
     { id: "atraso", label: "Alunos em", sub: "Atraso", icon: UserX },
     { id: "vendedora", label: "Matrículas por", sub: "Vendedora", icon: Wallet },
     { id: "vendas", label: "Relatório de", sub: "Vendas", icon: BarChart3 },
+    { id: "comissoes", label: "Comissões", sub: "Vendedoras", icon: Wallet },
   ];
 
 
