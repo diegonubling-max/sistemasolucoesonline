@@ -127,12 +127,21 @@ export function AlunoForm({
     enabled: !!session?.user?.id,
   });
 
+  const initialStatus = (() => {
+    if (initialValues?.status) {
+      const map: Record<string, string> = { ativo: "Ativo", inadimplente: "Inadimplente", trancado: "Trancado", formado: "Formado", inativo: "Inativo" };
+      return map[String(initialValues.status)] ?? "Ativo";
+    }
+    if (initialValues?.ativo === undefined) return "Ativo";
+    return initialValues.ativo ? "Ativo" : "Inativo";
+  })();
+
   const form = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
       ...defaultValues,
       ...initialValues,
-      ativo: initialValues?.ativo === undefined ? "Ativo" : (initialValues.ativo ? "Ativo" : "Inativo")
+      ativo: initialStatus,
     },
   });
 
