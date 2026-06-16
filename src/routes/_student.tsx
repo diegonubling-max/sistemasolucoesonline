@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { InadimplenciaAlerts } from "@/components/student/InadimplenciaAlerts";
 
 const StudentThemeContext = createContext<{ isDark: boolean }>({ isDark: true });
 export const useStudentTheme = () => useContext(StudentThemeContext);
@@ -309,6 +310,7 @@ function StudentLayout() {
         )}
       </header>
 
+      <InadimplenciaAlerts alunoId={alunoId} nomeAluno={userName} />
       <main className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
           <StudentThemeContext.Provider value={{ isDark }}>
