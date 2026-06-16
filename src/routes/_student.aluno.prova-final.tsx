@@ -405,7 +405,51 @@ function ProvaFinalPage() {
 
   const whatsappNumero = aluno?.polos?.whatsapp || "5551990010689";
 
-  // CASO 1 — Sem agendamento: popup para agendar via WhatsApp
+  // ESTADO 1 — Prova ainda não liberada (hoje < data_liberacao_prova)
+  if (aluno?.data_liberacao_prova && !agendamento) {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const dataLiberacao = parseISO(aluno.data_liberacao_prova);
+    dataLiberacao.setHours(0, 0, 0, 0);
+
+    if (hoje.getTime() < dataLiberacao.getTime()) {
+      const diffMs = dataLiberacao.getTime() - hoje.getTime();
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const dataLibFmt = format(dataLiberacao, 'dd/MM/yyyy');
+
+      return (
+        <Card className="max-w-2xl mx-auto overflow-hidden">
+          <CardHeader className="bg-primary text-primary-foreground py-10 text-center">
+            <div className="flex justify-center mb-4">
+              <Lock className="h-20 w-20" />
+            </div>
+            <CardTitle className="text-3xl font-bold">
+              Sua prova ainda não está liberada
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-8 space-y-6 text-center">
+            <div className="space-y-2">
+              <p className="text-2xl font-bold">
+                {diffDays === 1 ? 'Falta 1 dia' : `Faltam ${diffDays} dias`} para você poder agendar
+              </p>
+              <p className="text-lg text-muted-foreground">
+                Data de liberação: <strong>{dataLibFmt}</strong>
+              </p>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl flex items-start gap-3 text-left">
+              <Clock className="h-5 w-5 text-yellow-600 mt-0.5 shrink-0" />
+              <p className="text-sm text-yellow-700">
+                Continue assistindo às aulas e se preparando. Em breve você poderá agendar sua Prova Final.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+  }
+
+  // ESTADO 2 — Liberada mas sem agendamento: popup para agendar via WhatsApp
   if (!agendamento) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
