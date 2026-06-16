@@ -529,6 +529,12 @@ function ColaboradoresList() {
           </Table>
         </CardContent>
       </Card>
+
+      <ComissoesColaboradorDialog
+        open={!!comissoesVendedora}
+        onOpenChange={(o) => !o && setComissoesVendedora(null)}
+        vendedora={comissoesVendedora}
+      />
     </div>
   );
 }
