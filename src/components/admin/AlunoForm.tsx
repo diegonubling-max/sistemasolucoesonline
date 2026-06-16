@@ -443,6 +443,7 @@ export function AlunoForm({
         </CardContent>
       </Card>
 
+      {canManageProvaFinal && (
       <Card className="border-blue-200 bg-blue-50/30">
         <CardHeader>
           <CardTitle className="text-blue-800">Prova Final</CardTitle>
