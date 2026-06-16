@@ -515,13 +515,32 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
                 .split(' ')[0];
-              
+
+              // Identifica quem está cadastrando
+              const { data: { user: currentUser } } = await supabase.auth.getUser();
+              let cadastradoPorNome: string | null = null;
+              let cadastradoPorId: string | null = currentUser?.id ?? null;
+              if (currentUser) {
+                if (currentUser.email === 'diegonubling@gmail.com') {
+                  cadastradoPorNome = 'Diego (Admin)';
+                } else {
+                  const { data: colab } = await supabase
+                    .from('colaboradores')
+                    .select('nome')
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle();
+                  cadastradoPorNome = colab?.nome ?? currentUser.email ?? null;
+                }
+              }
+
               const { email, ...rest } = v;
               const studentToInsert = {
                 ...rest,
                 responsavel_email: v.responsavel_email || null,
                 menor_de_idade: calcAge(v.data_nascimento) < 18,
-                email: email || null
+                email: email || null,
+                cadastrado_por: cadastradoPorNome,
+                cadastrado_por_id: cadastradoPorId,
               };
 
               // 1. Create student record
