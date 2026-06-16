@@ -887,6 +887,10 @@ function Financeiro() {
 
       {activeFilter === "vendas" && <SalesReport />}
 
+      {activeFilter === "comissoes" && <ComissoesReport />}
+
+
+
 
       <BaixaModal 
         open={baixaModal?.open || false}
