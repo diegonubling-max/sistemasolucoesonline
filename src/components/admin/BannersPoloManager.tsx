@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,7 +68,7 @@ export function BannersPoloManager({ isSuperAdmin }: BannersPoloManagerProps) {
   });
 
   // Auto-select first polo
-  useMemo(() => {
+  useEffect(() => {
     if (!selectedPoloId && polos && polos.length > 0) {
       setSelectedPoloId(polos[0].id);
     }
