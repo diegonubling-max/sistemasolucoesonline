@@ -811,10 +811,9 @@ function Financeiro() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todas">Todas as vendedoras</SelectItem>
-                    <SelectItem value="Gislaine">Gislaine</SelectItem>
-                    <SelectItem value="Vera">Vera</SelectItem>
-                    <SelectItem value="Gabrielly">Gabrielly</SelectItem>
-                    <SelectItem value="Maria Eduarda">Maria Eduarda</SelectItem>
+                    {(vendedorasList ?? []).map((v) => (
+                      <SelectItem key={v.id} value={v.nome}>{v.nome}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Input type="date" className="w-40" value={vendedoraPeriod.start} onChange={(e) => setVendedoraPeriod(p => ({ ...p, start: e.target.value }))} />
