@@ -57,6 +57,14 @@ function ProvaFinalPage() {
   const materiasParaRealizar = ordemSelecionada.length > 0 ? ordemSelecionada : materiasDisponiveis;
   const materiaAtual = materiasParaRealizar[currentMateriaIndex];
 
+  useEffect(() => {
+    console.log("[ProvaFinal] Auth user:", { user_id: session?.user.id, email: session?.user.email });
+  }, [session?.user.id, session?.user.email]);
+
+  useEffect(() => {
+    if (aluno) console.log("[ProvaFinal] aluno encontrado em public.alunos:", { aluno_id: aluno.id, ctr: aluno.ctr });
+  }, [aluno]);
+
   const { data: agendamento, isLoading: loadingAgendamento, refetch: refetchAgendamento } = useQuery({
     queryKey: ["current-prova-agendamento", aluno?.id],
     queryFn: async () => {
@@ -68,11 +76,14 @@ function ProvaFinalPage() {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      console.log("[ProvaFinal] query prova_agendamentos:", { aluno_id: aluno!.id, data, error });
       if (error) throw error;
       return data;
     },
     enabled: !!aluno?.id,
   });
+
+
 
   // Removido auto-redirecionamento para garantir que o aluno sempre veja as instruções
   // conforme solicitado: "Nunca pular a tela de orientação independente de como o aluno chegou na prova"
