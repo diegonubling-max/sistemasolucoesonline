@@ -34,6 +34,7 @@ function ProvaFinalPage() {
   const [timeLeft, setTimeLeft] = useState(4 * 60 * 60);
   const [isFinishing, setIsFinishing] = useState(false);
   const [ordemSelecionada, setOrdemSelecionada] = useState<string[]>([]);
+  const [showPopup, setShowPopup] = useState(true);
 
   // Queries
   const { data: aluno } = useQuery({
@@ -66,21 +67,34 @@ function ProvaFinalPage() {
   }, [aluno]);
 
   const { data: agendamento, isLoading: loadingAgendamento, refetch: refetchAgendamento } = useQuery({
-    queryKey: ["current-prova-agendamento", aluno?.id],
+    queryKey: ["current-prova-agendamento", session?.user.email],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("[ProvaFinal] Auth user:", { user_id: user?.id, email: user?.email });
+
+      if (!user?.email) throw new Error("Usuário logado não encontrado");
+
+      const { data: alunoAgendamento, error: alunoError } = await supabase
+        .from("alunos")
+        .select("id")
+        .eq("email", user.email)
+        .single();
+
+      console.log("[ProvaFinal] aluno_id encontrado na tabela alunos:", { aluno_id: alunoAgendamento?.id, error: alunoError });
+      if (alunoError) throw alunoError;
+
       const { data, error } = await supabase
         .from("prova_agendamentos")
         .select("*")
-        .eq("aluno_id", aluno!.id)
-        .in("status", ["agendado", "iniciado", "concluido"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      console.log("[ProvaFinal] query prova_agendamentos:", { aluno_id: aluno!.id, data, error });
+        .eq("aluno_id", alunoAgendamento.id)
+        .eq("status", "agendado")
+        .single();
+
+      console.log("[ProvaFinal] resultado da query de agendamentos:", { aluno_id: alunoAgendamento.id, data, error });
       if (error) throw error;
       return data;
     },
-    enabled: !!aluno?.id,
+    enabled: !!session?.user.email,
   });
 
 
