@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Settings, Save, Loader2, MessageSquare, School, Phone, 
   Link2, FileText, Copy, ShieldPlus, Bell, Plus, Trash2,
-  Eye, EyeOff, Upload
+  Eye, EyeOff, Upload, Image as ImageIcon
 } from "lucide-react";
+import { BannersPoloManager } from "@/components/admin/BannersPoloManager";
 
 
 import { supabase } from "@/integrations/supabase/client";
@@ -288,7 +289,8 @@ function AdminSettings() {
     { id: "asaas", label: "Integração Asaas", icon: Link2 },
     { id: "contrato", label: "Modelo de Contrato", icon: FileText },
     { id: "webhook", label: "Webhook", icon: Bell },
-    { id: "admins", label: "Administradores", icon: ShieldPlus },
+    { id: "banners", label: "Banners dos Polos", icon: ImageIcon },
+    ...(isSuperAdmin ? [{ id: "admins", label: "Administradores", icon: ShieldPlus }] : []),
   ];
 
 
@@ -716,6 +718,12 @@ function AdminSettings() {
                     </CardContent>
                   </Card>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'banners' && (
+              <div className="animate-in slide-in-from-right-2 duration-300">
+                <BannersPoloManager isSuperAdmin={isSuperAdmin} />
               </div>
             )}
 
