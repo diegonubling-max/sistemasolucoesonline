@@ -249,7 +249,6 @@ function AlunosList() {
                 <TableHead>Telefone</TableHead>
                 <TableHead>Vendedora</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Matrícula</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
