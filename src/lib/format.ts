@@ -45,10 +45,10 @@ export function formatDate(date: string | null | undefined) {
 }
 
 export function generateStudentPassword(name: string): string {
-  if (!name) return "123";
+  if (!name) return "1234";
   const firstName = name.split(" ")[0].toLowerCase();
   const normalized = firstName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-  return `123${normalized}`;
+  return `1234${normalized}`;
 }
 
 export function formatCurrency(value: number | string | null | undefined) {
