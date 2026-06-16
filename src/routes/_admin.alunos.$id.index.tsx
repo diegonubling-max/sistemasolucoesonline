@@ -413,7 +413,7 @@ function AlunoDetalhes() {
   const handleCopyAccessData = () => {
     if (!aluno) return;
     const primeiroNome = aluno.nome.split(" ")[0];
-    const senhaGerada = '123' + primeiroNome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(' ')[0];
+    const senhaGerada = '1234' + primeiroNome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(' ')[0];
     const text = `*SEJA BEM VINDO*\n\nLogin: ${aluno.ctr}\nSenha: ${senhaGerada}\n\nhttps://sistemasolucoesonline.lovable.app/aluno/login`;
     navigator.clipboard.writeText(text);
     toast.success("Dados copiados!");
