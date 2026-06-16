@@ -17,12 +17,12 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
-  { title: "Alunos", url: "/alunos", icon: Users, enabled: true, perm: 'ver_alunos' },
-  { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true },
-  { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true },
-  { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true },
+  { title: "Alunos", url: "/alunos", icon: Users, enabled: true, perm: 'ver_alunos' as const },
+  { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true, adminOnly: true },
+  { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true, adminOnly: true },
+  { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true, adminOnly: true },
   { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' as const },
 ];
 
 export function AppSidebar({ colaborador }: { colaborador?: any }) {
@@ -220,17 +220,19 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
             Recriar Admin
           </Button>
         )}
-        <Link
-          to="/configuracoes"
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-            isActive("/configuracoes")
-              ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          }`}
-        >
-          <Settings className="h-4 w-4" />
-          Configurações
-        </Link>
+        {(isSuperAdmin || colaborador?.colaborador_permissoes?.[0]?.ver_configuracoes) && (
+          <Link
+            to="/configuracoes"
+            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+              isActive("/configuracoes")
+                ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            }`}
+          >
+            <Settings className="h-4 w-4" />
+            Configurações
+          </Link>
+        )}
         <Button
           variant="ghost"
           className="w-full justify-start text-sidebar-foreground hover:bg-red-500 hover:text-white transition-colors"
