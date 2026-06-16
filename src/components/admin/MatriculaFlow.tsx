@@ -510,7 +510,7 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             submitLabel="Salvar e continuar"
             onSubmit={async (v) => {
               const primeiroNome = v.nome.split(' ')[0];
-              const senhaGerada = '123' + primeiroNome
+              const senhaGerada = '1234' + primeiroNome
                 .toLowerCase()
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
