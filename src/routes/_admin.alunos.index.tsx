@@ -47,6 +47,7 @@ function AlunosList() {
   const [globalSearchCpf, setGlobalSearchCpf] = useState("");
   const [globalSearchResult, setGlobalSearchResult] = useState<any>(null);
   const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
