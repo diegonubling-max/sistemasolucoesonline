@@ -484,7 +484,8 @@ function AlunoDetalhes() {
                   <Info label="Nascimento" value={formatDate(aluno.data_nascimento)} />
                   <Info label="Origem" value={aluno.origem} />
                   <Info label="Vendedora" value={aluno.vendedora} />
-                  <Info label="Cadastrado em" value={formatDate(aluno.created_at)} />
+                  <Info label="Cadastrado por" value={(aluno as any).cadastrado_por} />
+                  <Info label="Data do cadastro" value={formatDate(aluno.created_at)} />
                 </CardContent>
               </Card>
               {aluno.observacao && (
