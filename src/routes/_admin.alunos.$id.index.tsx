@@ -421,8 +421,28 @@ function AlunoDetalhes() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const updateStatus = useMutation({
+    mutationFn: async (novo: AlunoStatus) => {
+      const patch: any = { status: novo };
+      if (novo === "trancado") patch.trancado_em = new Date().toISOString();
+      if (novo === "formado") patch.formado_em = new Date().toISOString();
+      if (novo === "inativo") patch.ativo = false;
+      if (novo === "ativo") patch.ativo = true;
+      const { error } = await supabase.from("alunos").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, novo) => {
+      toast.success(`Status atualizado para ${novo}`);
+      qc.invalidateQueries({ queryKey: ["aluno", id] });
+      qc.invalidateQueries({ queryKey: ["alunos"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!aluno) return <p className="text-muted-foreground">Aluno não encontrado.</p>;
+
+  const statusAtual = ((aluno as any).status ?? "ativo") as AlunoStatus;
 
   return (
     <div className="space-y-6 pb-20">
