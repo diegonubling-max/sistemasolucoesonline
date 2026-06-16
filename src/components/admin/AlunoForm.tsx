@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
-const VENDEDORAS = ["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"] as const;
 const SEXOS = ["Masculino", "Feminino"] as const;
 
 const schema = z
