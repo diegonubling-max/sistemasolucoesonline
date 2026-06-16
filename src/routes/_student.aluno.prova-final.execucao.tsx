@@ -214,7 +214,7 @@ function ProvaExecucaoPage() {
                       key={opt}
                       onClick={() => handleResponder(q.id, opt)}
                       className={cn(
-                        "w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 group",
+                        "w-full text-left p-4 min-h-[56px] rounded-xl border-2 transition-all flex items-center gap-3 sm:gap-4 group active:scale-[0.99]",
                         isSelected 
                           ? "border-primary bg-primary/5 shadow-inner" 
                           : "border-gray-100 hover:border-primary/50 hover:bg-gray-50"
