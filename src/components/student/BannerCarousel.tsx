@@ -1,14 +1,32 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 interface BannerCarouselProps {
-  poloId: string | null | undefined;
+  poloId?: string | null;
 }
 
-export function BannerCarousel({ poloId }: BannerCarouselProps) {
+export function BannerCarousel({ poloId: poloIdProp }: BannerCarouselProps) {
+  const { session } = useAuth();
   const [index, setIndex] = useState(0);
+
+  // Busca o polo_id direto do aluno logado (fallback caso prop não venha)
+  const { data: poloIdFromAluno } = useQuery({
+    queryKey: ["banner-aluno-polo", session?.user.email],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("alunos")
+        .select("polo_id")
+        .eq("email", session?.user.email ?? "")
+        .maybeSingle();
+      return (data as any)?.polo_id ?? null;
+    },
+    enabled: !!session?.user.email && !poloIdProp,
+  });
+
+  const poloId = poloIdProp ?? poloIdFromAluno ?? null;
 
   const { data: banners } = useQuery({
     queryKey: ["student-banners", poloId],
@@ -34,7 +52,6 @@ export function BannerCarousel({ poloId }: BannerCarouselProps) {
     return () => clearInterval(t);
   }, [banners]);
 
-  // Fallback welcome banner
   if (!banners || banners.length === 0) {
     return (
       <div className="relative h-40 md:h-80 rounded-2xl overflow-hidden bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF] flex items-center px-4 sm:px-8 md:px-12 shadow-2xl">
