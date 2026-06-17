@@ -460,20 +460,21 @@ function AlunoDetalhes() {
         navigate({ to: "/alunos/novo", search: { aluno: id, step: 2 } as any });
         return;
       }
-      const { data: mp } = await supabase
-        .from("matricula_pacotes")
-        .select("pacote_id")
+      const { data: parcs } = await supabase
+        .from("parcelas")
+        .select("id")
         .eq("matricula_id", matricula.id)
-        .maybeSingle();
-      if (!mp) {
+        .limit(1);
+      if (!parcs || parcs.length === 0) {
         navigate({ to: "/alunos/novo", search: { aluno: id, matricula: matricula.id, step: 3 } as any });
         return;
       }
-      navigate({ to: "/alunos/novo", search: { aluno: id, matricula: matricula.id, step: 4 } as any });
+      navigate({ to: "/alunos/novo", search: { aluno: id, matricula: matricula.id, step: 5 } as any });
     } catch (e: any) {
       toast.error(e.message);
     }
   };
+
 
   return (
     <div className="space-y-6 pb-20">
