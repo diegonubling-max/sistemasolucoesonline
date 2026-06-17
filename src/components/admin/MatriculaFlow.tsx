@@ -290,16 +290,8 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         setIsProcessingAsaas(false);
       }
 
-      return {
-        token: contractData.token_unico,
-        link: `https://sistemasolucoesonline.lovable.app/contrato/${contractData.token_unico}`
-      };
-    },
-    onSuccess: async (data) => {
-      setContractLink(data.link);
-      setShowConclusion(true);
-      qc.invalidateQueries({ queryKey: ["alunos"] });
-      // Push para super admin
+      // Push notification para super admin (logo após Asaas, antes do onSuccess)
+      console.log("Enviando push notification...");
       try {
         const [{ data: polo }, { data: colab }] = await Promise.all([
           aluno?.polo_id
@@ -312,14 +304,27 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             return supabase.from("colaboradores").select("nome").eq("user_id", uid).maybeSingle();
           })(),
         ]);
-        console.log("Enviando push notification...");
         await sendPushNotification(
           "🎉 Nova Matrícula!",
           `Aluno: ${aluno?.nome ?? ""} | Polo: ${(polo as any)?.nome ?? "—"} | Vendedora: ${(colab as any)?.nome ?? "—"}`,
         );
-        console.log("Push notification enviada");
-      } catch (e) { console.error("Erro ao enviar push:", e); }
+        console.log("Push notification enviada com sucesso");
+      } catch (e) {
+        console.error("Erro no push:", e);
+      }
+
+
+      return {
+        token: contractData.token_unico,
+        link: `https://sistemasolucoesonline.lovable.app/contrato/${contractData.token_unico}`
+      };
     },
+    onSuccess: async (data) => {
+      setContractLink(data.link);
+      setShowConclusion(true);
+      qc.invalidateQueries({ queryKey: ["alunos"] });
+    },
+
     onError: (e: any) => {
       setIsProcessingAsaas(false);
       toast.error(e.message);
