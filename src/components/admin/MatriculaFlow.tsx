@@ -369,10 +369,20 @@ export function MatriculaFlow({
         console.error("Erro WhatsApp boas-vindas:", e);
       }
 
+      // Marca cadastro completo do aluno
+      try {
+        if (aluno?.id) {
+          await supabase.from("alunos").update({ cadastro_completo: true } as any).eq("id", aluno.id);
+        }
+      } catch (e) {
+        console.error("Erro ao marcar cadastro_completo:", e);
+      }
+
       // Só depois abre o modal de sucesso
       setContractLink(data.link);
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
+
     },
 
 
