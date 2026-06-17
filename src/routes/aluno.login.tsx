@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { sendBoasVindasPrimeiroAcesso } from "@/services/zApiService";
 
 export const Route = createFileRoute("/aluno/login")({
   component: AlunoLogin,
@@ -99,7 +100,7 @@ function AlunoLogin() {
         if (roleData?.role === 'aluno') {
           const { data: aluno } = await supabase
             .from('alunos')
-            .select('id')
+            .select('id, nome, telefone, primeiro_acesso')
             .eq('email', data.user.email ?? '')
             .maybeSingle();
 
@@ -117,6 +118,22 @@ function AlunoLogin() {
               if (sessao) {
                 sessionStorage.setItem('aluno_sessao_id', sessao.id);
               }
+            }
+
+            // Primeiro acesso: enviar WhatsApp de boas-vindas
+            if (aluno.primeiro_acesso) {
+              try {
+                await sendBoasVindasPrimeiroAcesso({
+                  telefone: aluno.telefone ?? '',
+                  nome: aluno.nome ?? '',
+                });
+              } catch (e) {
+                console.error('[primeiro_acesso] erro ao enviar WhatsApp:', e);
+              }
+              await supabase
+                .from('alunos')
+                .update({ primeiro_acesso: false })
+                .eq('id', aluno.id);
             }
           }
         }
