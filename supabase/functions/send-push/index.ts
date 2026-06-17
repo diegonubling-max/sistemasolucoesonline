@@ -83,23 +83,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Find super admin user id by email
-    const { data: usersList, error: uErr } = await supabase.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000,
-    });
-    if (uErr) throw uErr;
-    const admin = usersList.users.find((u) => u.email === SUPER_ADMIN_EMAIL);
-    if (!admin) {
-      return new Response(JSON.stringify({ ok: true, sent: 0 }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
+    // All tokens in push_tokens are super admin tokens (only super admin registers).
     const { data: tokens, error: tErr } = await supabase
       .from("push_tokens")
-      .select("token")
-      .eq("user_id", admin.id);
+      .select("token");
     if (tErr) throw tErr;
 
     if (!tokens || tokens.length === 0) {
