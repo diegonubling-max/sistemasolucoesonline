@@ -121,7 +121,13 @@ function AlunoLogin() {
             }
 
             // Primeiro acesso: enviar WhatsApp de boas-vindas
+            console.log('[primeiro_acesso] Verificando primeiro acesso do aluno...', {
+              aluno_id: aluno.id,
+              primeiro_acesso: aluno.primeiro_acesso,
+              telefone: aluno.telefone,
+            });
             if (aluno.primeiro_acesso) {
+              console.log('[primeiro_acesso] Primeiro acesso detectado, enviando mensagem...');
               try {
                 await sendBoasVindasPrimeiroAcesso({
                   telefone: aluno.telefone ?? '',
@@ -130,10 +136,17 @@ function AlunoLogin() {
               } catch (e) {
                 console.error('[primeiro_acesso] erro ao enviar WhatsApp:', e);
               }
-              await supabase
+              const { error: updErr } = await supabase
                 .from('alunos')
                 .update({ primeiro_acesso: false })
                 .eq('id', aluno.id);
+              if (updErr) {
+                console.error('[primeiro_acesso] erro ao atualizar flag:', updErr);
+              } else {
+                console.log('[primeiro_acesso] Mensagem enviada e primeiro_acesso atualizado');
+              }
+            } else {
+              console.log('[primeiro_acesso] Não é primeiro acesso, pulando envio.');
             }
           }
         }
