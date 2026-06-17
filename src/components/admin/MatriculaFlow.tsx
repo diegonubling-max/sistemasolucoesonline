@@ -290,6 +290,30 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         setIsProcessingAsaas(false);
       }
 
+      // Push notification para super admin (logo após Asaas, antes do onSuccess)
+      console.log("Enviando push notification...");
+      try {
+        const [{ data: polo }, { data: colab }] = await Promise.all([
+          aluno?.polo_id
+            ? supabase.from("polos").select("nome").eq("id", aluno.polo_id).maybeSingle()
+            : Promise.resolve({ data: null } as any),
+          (async () => {
+            const { data: s } = await supabase.auth.getSession();
+            const uid = s.session?.user.id;
+            if (!uid) return { data: null } as any;
+            return supabase.from("colaboradores").select("nome").eq("user_id", uid).maybeSingle();
+          })(),
+        ]);
+        await sendPushNotification(
+          "🎉 Nova Matrícula!",
+          `Aluno: ${aluno?.nome ?? ""} | Polo: ${(polo as any)?.nome ?? "—"} | Vendedora: ${(colab as any)?.nome ?? "—"}`,
+        );
+        console.log("Push notification enviada com sucesso");
+      } catch (e) {
+        console.error("Erro no push:", e);
+      }
+
+
       return {
         token: contractData.token_unico,
         link: `https://sistemasolucoesonline.lovable.app/contrato/${contractData.token_unico}`
