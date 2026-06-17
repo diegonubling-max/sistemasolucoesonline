@@ -120,3 +120,21 @@ Continue seus estudos acessando:
 👉 ${SITE_URL} 📚`;
   await sendWhatsApp(params.telefone, msg);
 }
+
+export async function sendBoasVindasPrimeiroAcesso(params: {
+  telefone: string;
+  nome: string;
+}) {
+  const primeiroNome = (params.nome || "").trim().split(/\s+/)[0] || params.nome;
+  const msg = `*🎓 Soluções Online*
+
+Olá, *${primeiroNome}*! 👋
+
+Que alegria ver você aqui! Cada vez que você abre seus estudos, está construindo um futuro melhor para você e sua família. 💪
+
+Saiba que você não está sozinho nessa jornada. Nossa equipe acredita no seu potencial e torce muito pelo seu sucesso! 🌟
+
+Bons estudos e conte sempre conosco!
+_Equipe Soluções Online_ 📚`;
+  await sendWhatsApp(params.telefone, msg);
+}
