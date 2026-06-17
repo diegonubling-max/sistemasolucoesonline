@@ -479,17 +479,18 @@ function AlunoDetalhes() {
   return (
     <div className="space-y-6 pb-20">
       {(aluno as any).cadastro_completo === false && (
-        <button
-          onClick={continuarCadastro}
-          className="w-full text-left bg-yellow-50 border-2 border-yellow-300 hover:bg-yellow-100 transition-colors rounded-lg p-4 flex items-center gap-3"
-        >
-          <AlertCircle className="h-5 w-5 text-yellow-700 shrink-0" />
+        <div className="w-full bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 flex items-center gap-4 shadow-sm">
+          <AlertCircle className="h-8 w-8 text-yellow-700 shrink-0" />
           <div className="flex-1">
-            <p className="font-bold text-yellow-900 text-sm">⚠️ Cadastro incompleto — clique aqui para continuar</p>
-            <p className="text-xs text-yellow-800">Finalize a matrícula deste aluno de onde parou.</p>
+            <p className="font-bold text-yellow-900">⚠️ Cadastro incompleto</p>
+            <p className="text-sm text-yellow-800">A matrícula deste aluno ainda não foi finalizada. Continue de onde parou.</p>
           </div>
-        </button>
+          <Button onClick={continuarCadastro} className="bg-yellow-600 hover:bg-yellow-700 text-white shrink-0">
+            Continuar Cadastro <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+          </Button>
+        </div>
       )}
+
 
       <PageHeader
         title={`${aluno.nome} | CTR #${aluno.ctr}`}
