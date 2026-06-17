@@ -41,11 +41,11 @@ type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atra
 function Financeiro() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
-  const { data: vendedorasList } = useVendedoras();
   const today = new Date();
-  
+
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
+  const { data: vendedorasList } = useVendedoras(selectedPoloId);
 
   // States for filters
   const [recPeriod, setRecPeriod] = useState({ 
