@@ -312,11 +312,13 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
             return supabase.from("colaboradores").select("nome").eq("user_id", uid).maybeSingle();
           })(),
         ]);
-        sendPushNotification(
+        console.log("Enviando push notification...");
+        await sendPushNotification(
           "🎉 Nova Matrícula!",
           `Aluno: ${aluno?.nome ?? ""} | Polo: ${(polo as any)?.nome ?? "—"} | Vendedora: ${(colab as any)?.nome ?? "—"}`,
         );
-      } catch (e) { console.error(e); }
+        console.log("Push notification enviada");
+      } catch (e) { console.error("Erro ao enviar push:", e); }
     },
     onError: (e: any) => {
       setIsProcessingAsaas(false);
