@@ -211,7 +211,7 @@ function AlunoDetalhes() {
       // Generate HTML for Print
       const hoje = new Date();
       const cidade = poloInfo?.cidade || "Florianópolis";
-      const dataExtenso = `${cidade}, ${hoje.getDate().toString().padStart(2, '0')} de ${hoje.toLocaleString('pt-BR', { month: 'long' })} de ${hoje.getFullYear()}`;
+      const dataExtenso = `${hoje.getDate().toString().padStart(2, '0')} de ${hoje.toLocaleString('pt-BR', { month: 'long' })} de ${hoje.getFullYear()}`;
 
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
