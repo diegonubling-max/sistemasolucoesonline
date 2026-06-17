@@ -290,7 +290,13 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         setIsProcessingAsaas(false);
       }
 
-      // Push notification para super admin (logo após Asaas, antes do onSuccess)
+      return {
+        token: contractData.token_unico,
+        link: `https://sistemasolucoesonline.lovable.app/contrato/${contractData.token_unico}`
+      };
+    },
+    onSuccess: async (data) => {
+      // Push notification ANTES de abrir o modal de sucesso
       console.log("Enviando push notification...");
       try {
         const [{ data: polo }, { data: colab }] = await Promise.all([
@@ -308,22 +314,17 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
           "🎉 Nova Matrícula!",
           `Aluno: ${aluno?.nome ?? ""} | Polo: ${(polo as any)?.nome ?? "—"} | Vendedora: ${(colab as any)?.nome ?? "—"}`,
         );
-        console.log("Push notification enviada com sucesso");
+        console.log("Push enviado!");
       } catch (e) {
-        console.error("Erro no push:", e);
+        console.error("Erro push:", e);
       }
 
-
-      return {
-        token: contractData.token_unico,
-        link: `https://sistemasolucoesonline.lovable.app/contrato/${contractData.token_unico}`
-      };
-    },
-    onSuccess: async (data) => {
+      // Só depois abre o modal de sucesso
       setContractLink(data.link);
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
     },
+
 
     onError: (e: any) => {
       setIsProcessingAsaas(false);
