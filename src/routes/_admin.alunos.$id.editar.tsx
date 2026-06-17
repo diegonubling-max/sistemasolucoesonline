@@ -407,9 +407,37 @@ function EditarCursos({ matriculaId, alunoId, cursosDisponiveis, cursosAtuais, o
     }
   };
 
-  const filtered = cursosDisponiveis.filter((c: any) => 
-    c.nome.toLowerCase().includes(search.toLowerCase())
+  const { data: segmentos } = useQuery({
+    queryKey: ["segmentos-ativos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("segmentos")
+        .select("id, nome")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true })
+        .order("nome", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const termo = search.toLowerCase();
+  const filtered = cursosDisponiveis.filter((c: any) =>
+    c.nome.toLowerCase().includes(termo)
   );
+
+  const grupos: { id: string | null; nome: string; cursos: any[] }[] = [
+    ...(segmentos || []).map((s: any) => ({
+      id: s.id,
+      nome: s.nome,
+      cursos: filtered.filter((c: any) => c.segmento_id === s.id),
+    })),
+    {
+      id: null,
+      nome: "Sem segmento",
+      cursos: filtered.filter((c: any) => !c.segmento_id),
+    },
+  ].filter((g) => g.cursos.length > 0);
 
   return (
     <Card>
@@ -417,8 +445,8 @@ function EditarCursos({ matriculaId, alunoId, cursosDisponiveis, cursosAtuais, o
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Pesquisar curso..." 
+            <Input
+              placeholder="Pesquisar curso..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -430,22 +458,31 @@ function EditarCursos({ matriculaId, alunoId, cursosDisponiveis, cursosAtuais, o
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[500px] overflow-y-auto pr-2">
-          {filtered.map((c: any) => (
-            <div 
-              key={c.id}
-              className={cn(
-                "flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-muted/50",
-                selected.includes(c.id) && "bg-primary/5 border-primary"
-              )}
-              onClick={() => {
-                setSelected(prev => 
-                  prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
-                );
-              }}
-            >
-              <Checkbox checked={selected.includes(c.id)} onCheckedChange={() => {}} />
-              <span className="text-sm font-medium">{c.nome}</span>
+        <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
+          {grupos.map((g) => (
+            <div key={g.id ?? "sem-segmento"} className="space-y-2">
+              <h4 className="text-sm font-bold uppercase tracking-wide text-muted-foreground border-b pb-1">
+                {g.nome}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {g.cursos.map((c: any) => (
+                  <div
+                    key={c.id}
+                    className={cn(
+                      "flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-muted/50",
+                      selected.includes(c.id) && "bg-primary/5 border-primary"
+                    )}
+                    onClick={() => {
+                      setSelected((prev) =>
+                        prev.includes(c.id) ? prev.filter((id) => id !== c.id) : [...prev, c.id]
+                      );
+                    }}
+                  >
+                    <Checkbox checked={selected.includes(c.id)} onCheckedChange={() => {}} />
+                    <span className="text-sm font-medium">{c.nome}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
