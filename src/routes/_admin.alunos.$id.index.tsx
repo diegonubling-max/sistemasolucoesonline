@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText } from "lucide-react";
@@ -37,6 +37,7 @@ export const Route = createFileRoute("/_admin/alunos/$id/")({
 
 function AlunoDetalhes() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const [showResetDefaultModal, setShowResetDefaultModal] = useState(false);
   const [showPasswordResult, setShowPasswordResult] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
@@ -446,8 +447,49 @@ function AlunoDetalhes() {
 
   const statusAtual = ((aluno as any).status ?? "ativo") as AlunoStatus;
 
+  const continuarCadastro = async () => {
+    try {
+      const { data: ms } = await supabase
+        .from("matriculas")
+        .select("id")
+        .eq("aluno_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const matricula = ms && ms[0];
+      if (!matricula) {
+        navigate({ to: "/alunos/novo", search: { aluno: id, step: 2 } as any });
+        return;
+      }
+      const { data: mp } = await supabase
+        .from("matricula_pacotes")
+        .select("pacote_id")
+        .eq("matricula_id", matricula.id)
+        .maybeSingle();
+      if (!mp) {
+        navigate({ to: "/alunos/novo", search: { aluno: id, matricula: matricula.id, step: 3 } as any });
+        return;
+      }
+      navigate({ to: "/alunos/novo", search: { aluno: id, matricula: matricula.id, step: 4 } as any });
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-20">
+      {(aluno as any).cadastro_completo === false && (
+        <button
+          onClick={continuarCadastro}
+          className="w-full text-left bg-yellow-50 border-2 border-yellow-300 hover:bg-yellow-100 transition-colors rounded-lg p-4 flex items-center gap-3"
+        >
+          <AlertCircle className="h-5 w-5 text-yellow-700 shrink-0" />
+          <div className="flex-1">
+            <p className="font-bold text-yellow-900 text-sm">⚠️ Cadastro incompleto — clique aqui para continuar</p>
+            <p className="text-xs text-yellow-800">Finalize a matrícula deste aluno de onde parou.</p>
+          </div>
+        </button>
+      )}
+
       <PageHeader
         title={`${aluno.nome} | CTR #${aluno.ctr}`}
         description={aluno.email ?? "Sem e-mail"}

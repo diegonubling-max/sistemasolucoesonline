@@ -25,13 +25,26 @@ import { sendPushNotification } from "@/lib/notify";
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
-export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
+export function MatriculaFlow({
+  initialAlunoId,
+  initialMatriculaId,
+  initialStep,
+}: {
+  initialAlunoId?: string;
+  initialMatriculaId?: string;
+  initialStep?: Step;
+}) {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [step, setStep] = useState<Step>(1);
-  const [unlockedSteps, setUnlockedSteps] = useState<Step[]>([1]);
+  const [step, setStep] = useState<Step>(initialStep ?? 1);
+  const [unlockedSteps, setUnlockedSteps] = useState<Step[]>(() => {
+    const s = initialStep ?? 1;
+    const all: Step[] = [1, 2, 3, 4, 5];
+    return all.filter((x) => x <= s) as Step[];
+  });
   const [alunoId, setAlunoId] = useState<string | undefined>(initialAlunoId);
-  const [matriculaId, setMatriculaId] = useState<string | undefined>();
+  const [matriculaId, setMatriculaId] = useState<string | undefined>(initialMatriculaId);
+
   
   // State for Step 2: Cursos
   const [selectedCursos, setSelectedCursos] = useState<string[]>([]);
@@ -119,6 +132,29 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       return data;
     },
   });
+
+  // Resume flow: hidrata cursos e pacote selecionados quando vier com matrículaId
+  useEffect(() => {
+    (async () => {
+      if (!initialMatriculaId) return;
+      const { data: mc } = await supabase
+        .from("matricula_cursos")
+        .select("curso_id")
+        .eq("matricula_id", initialMatriculaId);
+      if (mc && mc.length > 0) {
+        setSelectedCursos(mc.map((r: any) => r.curso_id));
+      }
+      const { data: mp } = await supabase
+        .from("matricula_pacotes")
+        .select("pacote_id")
+        .eq("matricula_id", initialMatriculaId)
+        .maybeSingle();
+      if (mp) {
+        if (mp.pacote_id) setSelectedPacote(mp.pacote_id);
+        else setIsNegociacaoPersonalizada(true);
+      }
+    })();
+  }, [initialMatriculaId]);
 
   const { data: aluno } = useQuery({
     queryKey: ["aluno-matricula", alunoId as string],
@@ -333,10 +369,20 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         console.error("Erro WhatsApp boas-vindas:", e);
       }
 
+      // Marca cadastro completo do aluno
+      try {
+        if (aluno?.id) {
+          await supabase.from("alunos").update({ cadastro_completo: true } as any).eq("id", aluno.id);
+        }
+      } catch (e) {
+        console.error("Erro ao marcar cadastro_completo:", e);
+      }
+
       // Só depois abre o modal de sucesso
       setContractLink(data.link);
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
+
     },
 
 

@@ -125,7 +125,8 @@ function AlunosList() {
 
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, matriculas(id), contratos(id, status)", { count: "exact" })
+        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, cadastro_completo, matriculas(id), contratos(id, status)", { count: "exact" })
+        .order("cadastro_completo", { ascending: true })
         .order("ctr", { ascending: true })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
@@ -268,7 +269,16 @@ function AlunosList() {
                       #{a.ctr}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium">{a.nome}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <span>{a.nome}</span>
+                      {(a as any).cadastro_completo === false && (
+                        <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] px-1.5 py-0">
+                          Incompleto
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{a.email}</TableCell>
                   <TableCell>{a.telefone}</TableCell>
                   <TableCell>{a.vendedora}</TableCell>
