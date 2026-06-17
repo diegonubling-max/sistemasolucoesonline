@@ -7,6 +7,15 @@ function formatPhone(telefone: string): string {
   return numero.startsWith("55") ? numero : "55" + numero;
 }
 
+function getPrimeiroNome(nome: string): string {
+  return (nome || "").trim().split(/\s+/)[0]?.toLowerCase() || "";
+}
+
+function getNomeExibicao(nome: string): string {
+  const primeiro = getPrimeiroNome(nome);
+  return primeiro ? primeiro.charAt(0).toUpperCase() + primeiro.slice(1) : "";
+}
+
 export async function sendWhatsApp(telefone: string, mensagem: string): Promise<void> {
   console.log("[zApi] sendWhatsApp chamado | telefone bruto:", telefone);
   if (!telefone) {
@@ -50,10 +59,11 @@ export async function sendBoasVindasMatricula(params: {
   nome: string;
   ctr: number | string;
 }) {
-  const primeiroNome = (params.nome || "").trim().split(/\s+/)[0]?.toLowerCase() || "";
+  const primeiroNome = getPrimeiroNome(params.nome);
+  const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🎓 Bem-vindo(a) à Soluções Online!*
 
-Olá, *${params.nome}*! Sua matrícula foi realizada com sucesso! 🎉
+Olá, *${nomeExibicao}*! Sua matrícula foi realizada com sucesso! 🎉
 
 📚 *Seus dados de acesso:*
 - Login: *${params.ctr}*
@@ -81,9 +91,10 @@ export async function sendLembreteVencimento(params: {
   valor: number;
   dataVencimento: string; // YYYY-MM-DD
 }) {
+  const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*⚠️ Soluções Online — Lembrete de Pagamento*
 
-Olá, *${params.nome}*! Sua parcela de *R$ ${formatBRL(params.valor)}* vence em *3 dias* (${formatDateBR(
+Olá, *${nomeExibicao}*! Sua parcela de *R$ ${formatBRL(params.valor)}* vence em *3 dias* (${formatDateBR(
     params.dataVencimento,
   )}).
 
@@ -97,9 +108,10 @@ export async function sendAvisoAtraso(params: {
   valor: number;
   dataVencimento: string;
 }) {
+  const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🔴 Soluções Online — Parcela em Atraso*
 
-Olá, *${params.nome}*! Identificamos que sua parcela de *R$ ${formatBRL(params.valor)}* está em atraso desde ${formatDateBR(
+Olá, *${nomeExibicao}*! Identificamos que sua parcela de *R$ ${formatBRL(params.valor)}* está em atraso desde ${formatDateBR(
     params.dataVencimento,
   )}.
 
@@ -112,9 +124,10 @@ export async function sendConfirmacaoPagamento(params: {
   nome: string;
   valor: number;
 }) {
+  const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*✅ Soluções Online — Pagamento Confirmado!*
 
-Olá, *${params.nome}*! Recebemos seu pagamento de *R$ ${formatBRL(params.valor)}* com sucesso!
+Olá, *${nomeExibicao}*! Recebemos seu pagamento de *R$ ${formatBRL(params.valor)}* com sucesso!
 
 Continue seus estudos acessando:
 👉 ${SITE_URL} 📚`;
@@ -125,10 +138,10 @@ export async function sendBoasVindasPrimeiroAcesso(params: {
   telefone: string;
   nome: string;
 }) {
-  const primeiroNome = (params.nome || "").trim().split(/\s+/)[0] || params.nome;
+  const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🎓 Soluções Online*
 
-Olá, *${primeiroNome}*! 👋
+Olá, *${nomeExibicao}*! 👋
 
 Que alegria ver você aqui! Cada vez que você abre seus estudos, está construindo um futuro melhor para você e sua família. 💪
 
