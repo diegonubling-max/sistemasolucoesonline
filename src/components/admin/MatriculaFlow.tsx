@@ -380,6 +380,15 @@ export function MatriculaFlow({
 
       // Só depois abre o modal de sucesso
       setContractLink(data.link);
+      if (aluno) {
+        const primeiroNome = (aluno.nome || "").trim().split(/\s+/)[0]?.toLowerCase() || "";
+        setAccessData({
+          email: aluno.email ?? "",
+          pass: `1234${primeiroNome}`,
+          ctr: aluno.ctr,
+          nome: aluno.nome,
+        });
+      }
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
 
