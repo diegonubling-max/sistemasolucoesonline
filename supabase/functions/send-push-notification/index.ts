@@ -12,7 +12,13 @@ serve(async (req) => {
 
   try {
     const { token, title, body } = await req.json();
-    const serviceAccount = JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT") || "{}");
+    const serviceAccountRaw = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+    console.log("FIREBASE_SERVICE_ACCOUNT presente:", !!serviceAccountRaw);
+    const serviceAccount = JSON.parse(serviceAccountRaw || "{}");
+    console.log("client_email:", serviceAccount.client_email);
+    console.log("project_id:", serviceAccount.project_id);
+    console.log("private_key presente:", !!serviceAccount.private_key);
+    console.log("private_key length:", serviceAccount.private_key?.length);
     const now = Math.floor(Date.now() / 1000);
     const header = { alg: "RS256", typ: "JWT" };
     const payload = {
