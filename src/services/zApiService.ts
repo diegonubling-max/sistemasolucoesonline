@@ -8,21 +8,36 @@ function formatPhone(telefone: string): string {
 }
 
 export async function sendWhatsApp(telefone: string, mensagem: string): Promise<void> {
+  console.log("[zApi] sendWhatsApp chamado | telefone bruto:", telefone);
   if (!telefone) {
     console.warn("[zApi] Telefone vazio, pulando envio");
     return;
   }
+  const phone = formatPhone(telefone);
+  const url = `${Z_API_BASE}/send-text`;
+  const payload = { phone, message: mensagem };
+  console.log("[zApi] Enviando para:", phone);
+  console.log("[zApi] URL:", url);
+  console.log("[zApi] Payload:", JSON.stringify(payload));
   try {
-    const res = await fetch(`${Z_API_BASE}/send-text`, {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Client-Token": Z_API_CLIENT_TOKEN,
       },
-      body: JSON.stringify({ phone: formatPhone(telefone), message: mensagem }),
+      body: JSON.stringify(payload),
     });
-    const json = await res.json().catch(() => ({}));
-    console.log("[zApi] Resultado:", res.status, JSON.stringify(json));
+    const text = await res.text();
+    console.log("[zApi] Status HTTP:", res.status);
+    console.log("[zApi] Resposta bruta:", text);
+    let json: unknown = null;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      console.warn("[zApi] Resposta não é JSON válido");
+    }
+    console.log("[zApi] Resposta JSON:", JSON.stringify(json));
   } catch (e) {
     console.error("[zApi] Erro ao enviar WhatsApp:", e);
   }
