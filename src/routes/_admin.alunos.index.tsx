@@ -125,7 +125,8 @@ function AlunosList() {
 
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, matriculas(id), contratos(id, status)", { count: "exact" })
+        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, cadastro_completo, matriculas(id), contratos(id, status)", { count: "exact" })
+        .order("cadastro_completo", { ascending: true })
         .order("ctr", { ascending: true })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
