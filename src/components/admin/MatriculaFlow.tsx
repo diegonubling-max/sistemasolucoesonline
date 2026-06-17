@@ -323,27 +323,8 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
       setContractLink(data.link);
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
-      // Push para super admin
-      try {
-        const [{ data: polo }, { data: colab }] = await Promise.all([
-          aluno?.polo_id
-            ? supabase.from("polos").select("nome").eq("id", aluno.polo_id).maybeSingle()
-            : Promise.resolve({ data: null } as any),
-          (async () => {
-            const { data: s } = await supabase.auth.getSession();
-            const uid = s.session?.user.id;
-            if (!uid) return { data: null } as any;
-            return supabase.from("colaboradores").select("nome").eq("user_id", uid).maybeSingle();
-          })(),
-        ]);
-        console.log("Enviando push notification...");
-        await sendPushNotification(
-          "🎉 Nova Matrícula!",
-          `Aluno: ${aluno?.nome ?? ""} | Polo: ${(polo as any)?.nome ?? "—"} | Vendedora: ${(colab as any)?.nome ?? "—"}`,
-        );
-        console.log("Push notification enviada");
-      } catch (e) { console.error("Erro ao enviar push:", e); }
     },
+
     onError: (e: any) => {
       setIsProcessingAsaas(false);
       toast.error(e.message);
