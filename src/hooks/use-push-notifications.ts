@@ -14,6 +14,7 @@ function currentPermission(): PushPermission {
 
 async function registerToken(userId: string): Promise<string | null> {
   const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+  await navigator.serviceWorker.ready;
   const messaging = getMessagingSafe();
   if (!messaging) return null;
   const token = await getToken(messaging, {
