@@ -319,6 +319,20 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         console.error("Erro push:", e);
       }
 
+      // WhatsApp boas-vindas (Z-API) — não bloqueia o fluxo
+      try {
+        const { sendBoasVindasMatricula } = await import("@/services/zApiService");
+        if (aluno?.telefone && aluno?.ctr != null) {
+          await sendBoasVindasMatricula({
+            telefone: aluno.telefone,
+            nome: aluno.nome,
+            ctr: aluno.ctr,
+          });
+        }
+      } catch (e) {
+        console.error("Erro WhatsApp boas-vindas:", e);
+      }
+
       // Só depois abre o modal de sucesso
       setContractLink(data.link);
       setShowConclusion(true);

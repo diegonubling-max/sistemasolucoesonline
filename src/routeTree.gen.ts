@@ -29,6 +29,7 @@ import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.alu
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
+import { Route as ApiPublicHooksWhatsappCobrancaRouteImport } from './routes/api/public/hooks/whatsapp-cobranca'
 import { Route as StudentAlunoProvaFinalRealizarRouteImport } from './routes/_student.aluno.prova-final.realizar'
 import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_student.aluno.prova-final.execucao'
 import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
@@ -134,6 +135,12 @@ const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
   path: '/alunos/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksWhatsappCobrancaRoute =
+  ApiPublicHooksWhatsappCobrancaRouteImport.update({
+    id: '/api/public/hooks/whatsapp-cobranca',
+    path: '/api/public/hooks/whatsapp-cobranca',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const StudentAlunoProvaFinalRealizarRoute =
   StudentAlunoProvaFinalRealizarRouteImport.update({
     id: '/realizar',
@@ -191,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
+  '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -217,6 +225,7 @@ export interface FileRoutesByTo {
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
+  '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesById {
@@ -246,6 +255,7 @@ export interface FileRoutesById {
   '/_student/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/_student/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/_student/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
+  '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/aluno/curso/$id'
     | '/aluno/prova-final/execucao'
     | '/aluno/prova-final/realizar'
+    | '/api/public/hooks/whatsapp-cobranca'
     | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/aluno/curso/$id'
     | '/aluno/prova-final/execucao'
     | '/aluno/prova-final/realizar'
+    | '/api/public/hooks/whatsapp-cobranca'
     | '/alunos/$id'
   id:
     | '__root__'
@@ -328,6 +340,7 @@ export interface FileRouteTypes {
     | '/_student/aluno/curso/$id'
     | '/_student/aluno/prova-final/execucao'
     | '/_student/aluno/prova-final/realizar'
+    | '/api/public/hooks/whatsapp-cobranca'
     | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -337,6 +350,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   AlunoLoginRoute: typeof AlunoLoginRoute
   ContratoTokenRoute: typeof ContratoTokenRoute
+  ApiPublicHooksWhatsappCobrancaRoute: typeof ApiPublicHooksWhatsappCobrancaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -481,6 +495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/whatsapp-cobranca': {
+      id: '/api/public/hooks/whatsapp-cobranca'
+      path: '/api/public/hooks/whatsapp-cobranca'
+      fullPath: '/api/public/hooks/whatsapp-cobranca'
+      preLoaderRoute: typeof ApiPublicHooksWhatsappCobrancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_student/aluno/prova-final/realizar': {
       id: '/_student/aluno/prova-final/realizar'
       path: '/realizar'
@@ -603,6 +624,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   AlunoLoginRoute: AlunoLoginRoute,
   ContratoTokenRoute: ContratoTokenRoute,
+  ApiPublicHooksWhatsappCobrancaRoute: ApiPublicHooksWhatsappCobrancaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
