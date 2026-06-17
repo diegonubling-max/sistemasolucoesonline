@@ -678,7 +678,9 @@ export function MatriculaFlow({
                 ctr: studentData.ctr,
                 nome: studentData.nome
               });
-              setShowAccessModal(true);
+              setUnlockedSteps(prev => prev.includes(2) ? prev : [...prev, 2]);
+              setStep(2);
+
             }}
           />
         </div>
