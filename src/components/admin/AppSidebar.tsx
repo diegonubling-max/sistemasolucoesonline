@@ -26,7 +26,7 @@ const items = [
   { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' as const },
 ];
 
-export function AppSidebar({ colaborador }: { colaborador?: any }) {
+export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colaborador?: any; mobileOpen?: boolean; onClose?: () => void }) {
   const { session } = useAuth();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
@@ -96,6 +96,7 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
     console.log("DEBUG [AppSidebar]: Novo polo selecionado no seletor:", id);
     window.dispatchEvent(new Event("polo-changed"));
     toast.success(`Polo selecionado: ${id === 'all' ? 'Todos os Polos' : polos?.find(p => p.id === id)?.nome}`);
+    onClose?.();
   };
 
   const isActive = (url: string) => {
@@ -129,7 +130,15 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
   };
 
   return (
-    <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen border-r border-sidebar-border shadow-lg">
+    <>
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={onClose}
+          aria-hidden
+        />
+      )}
+    <aside className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 w-64 h-screen md:h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border shadow-lg transition-transform duration-200 ease-in-out`}>
       <div className="px-6 py-6 border-b border-sidebar-border">
         <h1 className="text-2xl font-bold tracking-tight">
           <span className="text-white">{nomeEscola.split(' ')[0]}</span> <span className="text-[#2ECC71]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
@@ -197,6 +206,7 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
             <Link
               key={item.title}
               to={item.url}
+              onClick={() => onClose?.()}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-200 ${
                 active
                   ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold shadow-md scale-[1.02]"
@@ -257,5 +267,6 @@ export function AppSidebar({ colaborador }: { colaborador?: any }) {
       </div>
       <ChangePasswordModal open={changePwdOpen} onOpenChange={setChangePwdOpen} />
     </aside>
+    </>
   );
 }
