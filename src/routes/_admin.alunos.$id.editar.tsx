@@ -572,12 +572,39 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
           <Button variant="outline" size="sm" onClick={addParcela}>
             <Plus className="h-4 w-4 mr-2" /> Nova Parcela
           </Button>
+          <Button variant="outline" size="sm" onClick={() => { setNovoDia(""); setShowDiaModal(true); }}>
+            <CalendarIcon className="h-4 w-4 mr-2" /> Alterar dia de vencimento
+          </Button>
           <Button size="sm" onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             Salvar Alterações
           </Button>
         </div>
       </div>
+
+      <Dialog open={showDiaModal} onOpenChange={setShowDiaModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar dia de vencimento das parcelas</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label htmlFor="novo-dia">Novo dia de vencimento</Label>
+              <Input id="novo-dia" type="number" min={1} max={31} value={novoDia} onChange={(e) => setNovoDia(e.target.value)} placeholder="Ex: 10" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Apenas parcelas com status 'pendente' serão alteradas. Parcelas já pagas não serão afetadas.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDiaModal(false)} disabled={alterandoDia}>Cancelar</Button>
+            <Button onClick={handleAlterarDia} disabled={alterandoDia}>
+              {alterandoDia && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Confirmar alteração
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="border rounded-lg overflow-hidden">
         <table className="w-full text-sm">
