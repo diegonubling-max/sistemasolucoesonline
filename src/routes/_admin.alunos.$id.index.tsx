@@ -37,6 +37,7 @@ export const Route = createFileRoute("/_admin/alunos/$id/")({
 
 function AlunoDetalhes() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const [showResetDefaultModal, setShowResetDefaultModal] = useState(false);
   const [showPasswordResult, setShowPasswordResult] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
