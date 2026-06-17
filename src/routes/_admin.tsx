@@ -1,11 +1,12 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { AppSidebar } from "@/components/admin/AppSidebar";
 import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { supabase } from "@/integrations/supabase/client";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_admin")({
   component: AdminLayout,
@@ -25,6 +26,11 @@ function AdminLayout() {
   const [colaborador, setColaborador] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loadingColab, setLoadingColab] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [path]);
 
   useEffect(() => {
     async function checkColab() {
@@ -95,9 +101,22 @@ function AdminLayout() {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <AppSidebar colaborador={colaborador} />
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto px-8 py-8">
+      <AppSidebar colaborador={colaborador} mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <main className="flex-1 overflow-auto w-full md:w-auto">
+        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-2 px-4 h-14 bg-sidebar text-sidebar-foreground border-b border-sidebar-border">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-sidebar-foreground hover:bg-sidebar-accent"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <h1 className="text-base font-bold truncate">Soluções Online</h1>
+          <div className="w-9 h-9" />
+        </header>
+        <div className="max-w-7xl mx-auto px-4 py-4 md:px-8 md:py-8">
           <Outlet />
         </div>
       </main>
