@@ -133,6 +133,29 @@ export function MatriculaFlow({
     },
   });
 
+  // Resume flow: hidrata cursos e pacote selecionados quando vier com matrículaId
+  useEffect(() => {
+    (async () => {
+      if (!initialMatriculaId) return;
+      const { data: mc } = await supabase
+        .from("matricula_cursos")
+        .select("curso_id")
+        .eq("matricula_id", initialMatriculaId);
+      if (mc && mc.length > 0) {
+        setSelectedCursos(mc.map((r: any) => r.curso_id));
+      }
+      const { data: mp } = await supabase
+        .from("matricula_pacotes")
+        .select("pacote_id")
+        .eq("matricula_id", initialMatriculaId)
+        .maybeSingle();
+      if (mp) {
+        if (mp.pacote_id) setSelectedPacote(mp.pacote_id);
+        else setIsNegociacaoPersonalizada(true);
+      }
+    })();
+  }, [initialMatriculaId]);
+
   const { data: aluno } = useQuery({
     queryKey: ["aluno-matricula", alunoId as string],
     enabled: !!alunoId,
