@@ -291,8 +291,21 @@ function AdminSettings() {
     { id: "contrato", label: "Modelo de Contrato", icon: FileText },
     { id: "webhook", label: "Webhook", icon: Bell },
     { id: "banners", label: "Banners dos Polos", icon: ImageIcon },
+    ...(isSuperAdmin ? [{ id: "notificacoes", label: "Notificações", icon: Bell }] : []),
     ...(isSuperAdmin ? [{ id: "admins", label: "Administradores", icon: ShieldPlus }] : []),
   ];
+
+  const { permission: pushPermission, isWorking: pushWorking, requestAndRegister: enablePush } =
+    usePushNotifications(isSuperAdmin, session?.user?.id);
+  const pushStatusLabel =
+    pushPermission === "granted" ? "Ativada"
+    : pushPermission === "denied" ? "Desativada"
+    : pushPermission === "unsupported" ? "Não suportado"
+    : "Pendente";
+  const pushStatusColor =
+    pushPermission === "granted" ? "text-green-600"
+    : pushPermission === "denied" ? "text-red-600"
+    : "text-amber-600";
 
 
 
