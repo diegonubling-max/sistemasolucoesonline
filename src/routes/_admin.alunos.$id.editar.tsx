@@ -467,6 +467,42 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
     valorLiquido: number;
     dataPagamento: string;
   } | null>(null);
+  const [showDiaModal, setShowDiaModal] = useState(false);
+  const [novoDia, setNovoDia] = useState("");
+  const [alterandoDia, setAlterandoDia] = useState(false);
+
+  const handleAlterarDia = async () => {
+    const dia = parseInt(novoDia);
+    if (isNaN(dia) || dia < 1 || dia > 31) {
+      toast.error("Informe um dia válido entre 1 e 31");
+      return;
+    }
+    setAlterandoDia(true);
+    try {
+      const pendentes = localParcelas.filter((p) => p.status === 'aberto');
+      let count = 0;
+      for (const p of pendentes) {
+        const venc = typeof p.data_vencimento === 'string'
+          ? new Date(p.data_vencimento + 'T00:00:00')
+          : new Date(p.data_vencimento);
+        const ano = venc.getFullYear();
+        const mes = venc.getMonth();
+        const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+        const diaFinal = Math.min(dia, ultimoDia);
+        const novaData = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(diaFinal).padStart(2, '0')}`;
+        const { error } = await supabase.from("parcelas").update({ data_vencimento: novaData }).eq("id", p.id);
+        if (error) throw error;
+        count++;
+      }
+      toast.success(`${count} parcelas atualizadas com sucesso!`);
+      setShowDiaModal(false);
+      onSuccess();
+    } catch (e: any) {
+      toast.error("Erro ao alterar vencimentos", { description: e.message });
+    } finally {
+      setAlterandoDia(false);
+    }
+  };
 
   useEffect(() => {
     setLocalParcelas(parcelas);
