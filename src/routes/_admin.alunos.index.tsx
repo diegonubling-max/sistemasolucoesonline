@@ -269,7 +269,16 @@ function AlunosList() {
                       #{a.ctr}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium">{a.nome}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <span>{a.nome}</span>
+                      {(a as any).cadastro_completo === false && (
+                        <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] px-1.5 py-0">
+                          Incompleto
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{a.email}</TableCell>
                   <TableCell>{a.telefone}</TableCell>
                   <TableCell>{a.vendedora}</TableCell>
