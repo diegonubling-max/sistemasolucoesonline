@@ -380,6 +380,15 @@ export function MatriculaFlow({
 
       // Só depois abre o modal de sucesso
       setContractLink(data.link);
+      if (aluno) {
+        const primeiroNome = (aluno.nome || "").trim().split(/\s+/)[0]?.toLowerCase() || "";
+        setAccessData({
+          email: aluno.email ?? "",
+          pass: `1234${primeiroNome}`,
+          ctr: aluno.ctr,
+          nome: aluno.nome,
+        });
+      }
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
 
@@ -1775,34 +1784,10 @@ export function MatriculaFlow({
               </div>
             </div>
 
-            {/* Ações */}
-            <div className="grid grid-cols-1 gap-3 pt-2">
-              <Button 
-                size="lg"
-                className="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold h-14"
-                onClick={() => {
-                  const mensagem = `*SEJA BEM VINDO*\n\n` +
-                                   `Gostaríamos de dar as Boas Vindas e que você seja bem vindo(a) a nossa Escola.\n` +
-                                   `Abaixo segue o seu Login e Senha para assistir as aulas do seu Preparatório e acesso as Apostilas.\n\n` +
-                                   `*Login:* ${accessData?.ctr}\n` +
-                                   `*Senha:* ${accessData?.pass}\n\n` +
-                                   `Suas aulas já estão liberadas para assistir.\n` +
-                                   `Agora basta acessar o Link abaixo e colocar seu Login e Senha.\n\n` +
-                                   `Segue abaixo o link de acesso a Plataforma da Escola Soluções Online\n` +
-                                   `https://sistemasolucoesonline.lovable.app/aluno/login`;
-                  
-                  const encodedMsg = encodeURIComponent(mensagem);
-                  const phone = aluno?.telefone?.replace(/\D/g, "");
-                  window.open(`https://wa.me/${phone}?text=${encodedMsg}`, "_blank");
-                }}
-              >
-                <MessageSquare className="h-5 w-5 mr-2" /> Enviar por WhatsApp
-              </Button>
-            </div>
           </div>
 
           <DialogFooter>
-            <Button variant="ghost" className="w-full" onClick={() => navigate({ to: "/alunos" })}>
+            <Button className="w-full" onClick={() => navigate({ to: "/alunos" })}>
               Fechar
             </Button>
           </DialogFooter>
