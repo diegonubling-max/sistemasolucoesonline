@@ -13,7 +13,7 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 export const VAPID_KEY =
-  "BOZQNRmGVu_taiuoxEwN-2fKT0Jy4e9uO1Wgdt8XXUvG1xC56cmJZ41qoPR81WRXZnCi3hGILRXlCgpAevsugYE";
+  "BIG4YxBu-_as8AlnCLy9rfGChY4sKitvsXW7oV5hziZ6Q8M-JgqC0-VuCTElQ_SO5rG0Piw5VVgkcgAtfFehgBs";
 
 let _messaging: Messaging | null = null;
 export function getMessagingSafe(): Messaging | null {
