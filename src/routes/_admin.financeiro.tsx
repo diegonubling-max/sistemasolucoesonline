@@ -29,6 +29,7 @@ import { SalesReport } from "@/components/admin/financeiro/SalesReport";
 import { ComissoesReport } from "@/components/admin/financeiro/ComissoesReport";
 import { useAuth } from "@/hooks/use-auth";
 import { useVendedoras } from "@/hooks/use-vendedoras";
+import { notifyPagamentoRecebido } from "@/lib/notify";
 
 export const Route = createFileRoute("/_admin/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
@@ -339,6 +340,7 @@ function Financeiro() {
         })
         .eq("id", id);
       if (error) throw error;
+      notifyPagamentoRecebido(id, baixaModal?.valor || 0, data.forma_pagamento);
       return data;
     },
     onSuccess: (data: any) => {

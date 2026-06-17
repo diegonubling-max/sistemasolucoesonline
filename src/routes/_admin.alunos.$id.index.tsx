@@ -27,6 +27,7 @@ import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
 import { StatusAlunoBadge, type AlunoStatus } from "@/lib/aluno-status";
+import { notifyPagamentoRecebido } from "@/lib/notify";
 
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
@@ -267,6 +268,7 @@ function AlunoDetalhes() {
         })
         .eq("id", selectedParcelaId);
       if (error) throw error;
+      notifyPagamentoRecebido(selectedParcelaId, selectedParcelaValor, data.forma_pagamento);
       return data;
     },
     onSuccess: (data: any) => {
