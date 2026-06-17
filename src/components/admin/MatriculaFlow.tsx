@@ -25,13 +25,26 @@ import { sendPushNotification } from "@/lib/notify";
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
-export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
+export function MatriculaFlow({
+  initialAlunoId,
+  initialMatriculaId,
+  initialStep,
+}: {
+  initialAlunoId?: string;
+  initialMatriculaId?: string;
+  initialStep?: Step;
+}) {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [step, setStep] = useState<Step>(1);
-  const [unlockedSteps, setUnlockedSteps] = useState<Step[]>([1]);
+  const [step, setStep] = useState<Step>(initialStep ?? 1);
+  const [unlockedSteps, setUnlockedSteps] = useState<Step[]>(() => {
+    const s = initialStep ?? 1;
+    const all: Step[] = [1, 2, 3, 4, 5];
+    return all.filter((x) => x <= s) as Step[];
+  });
   const [alunoId, setAlunoId] = useState<string | undefined>(initialAlunoId);
-  const [matriculaId, setMatriculaId] = useState<string | undefined>();
+  const [matriculaId, setMatriculaId] = useState<string | undefined>(initialMatriculaId);
+
   
   // State for Step 2: Cursos
   const [selectedCursos, setSelectedCursos] = useState<string[]>([]);
