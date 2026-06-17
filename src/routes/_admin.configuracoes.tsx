@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useAuth } from "@/hooks/use-auth";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 
 
@@ -290,8 +291,21 @@ function AdminSettings() {
     { id: "contrato", label: "Modelo de Contrato", icon: FileText },
     { id: "webhook", label: "Webhook", icon: Bell },
     { id: "banners", label: "Banners dos Polos", icon: ImageIcon },
+    ...(isSuperAdmin ? [{ id: "notificacoes", label: "Notificações", icon: Bell }] : []),
     ...(isSuperAdmin ? [{ id: "admins", label: "Administradores", icon: ShieldPlus }] : []),
   ];
+
+  const { permission: pushPermission, isWorking: pushWorking, requestAndRegister: enablePush } =
+    usePushNotifications(isSuperAdmin, session?.user?.id);
+  const pushStatusLabel =
+    pushPermission === "granted" ? "Ativada"
+    : pushPermission === "denied" ? "Desativada"
+    : pushPermission === "unsupported" ? "Não suportado"
+    : "Pendente";
+  const pushStatusColor =
+    pushPermission === "granted" ? "text-green-600"
+    : pushPermission === "denied" ? "text-red-600"
+    : "text-amber-600";
 
 
 
@@ -585,6 +599,54 @@ function AdminSettings() {
                         Dica: Encontre em Integrações → Webhooks no painel do Asaas
                       </p>
                     </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === 'notificacoes' && isSuperAdmin && (
+              <div className="animate-in slide-in-from-right-2 duration-300">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Bell className="h-5 w-5 text-primary" />
+                      Notificações Push
+                    </CardTitle>
+                    <CardDescription>
+                      Receba notificações de novas matrículas e pagamentos recebidos diretamente no navegador.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Status atual</p>
+                        <p className={cn("text-lg font-semibold", pushStatusColor)}>{pushStatusLabel}</p>
+                      </div>
+                      {pushPermission !== "granted" && pushPermission !== "unsupported" && (
+                        <Button
+                          onClick={() => enablePush()}
+                          disabled={pushWorking || pushPermission === "denied"}
+                        >
+                          {pushWorking ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Bell className="h-4 w-4 mr-2" />}
+                          Ativar Notificações
+                        </Button>
+                      )}
+                    </div>
+                    {pushPermission === "denied" && (
+                      <p className="text-sm text-red-600">
+                        Para receber notificações de matrículas e pagamentos, habilite as notificações nas configurações do seu navegador e recarregue a página.
+                      </p>
+                    )}
+                    {pushPermission === "unsupported" && (
+                      <p className="text-sm text-muted-foreground">
+                        Este navegador não suporta notificações push.
+                      </p>
+                    )}
+                    {pushPermission === "granted" && (
+                      <p className="text-sm text-green-600">
+                        Notificações ativas neste dispositivo.
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               </div>
