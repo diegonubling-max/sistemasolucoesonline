@@ -20,6 +20,7 @@ import { createOrGetAsaasCustomer, generateAsaasCobrar } from "@/services/asaas"
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { sendPushNotification } from "@/lib/notify";
 
 
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -294,10 +295,28 @@ export function MatriculaFlow({ initialAlunoId }: { initialAlunoId?: string }) {
         link: `https://sistemasolucoesonline.lovable.app/contrato/${contractData.token_unico}`
       };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setContractLink(data.link);
       setShowConclusion(true);
       qc.invalidateQueries({ queryKey: ["alunos"] });
+      // Push para super admin
+      try {
+        const [{ data: polo }, { data: colab }] = await Promise.all([
+          aluno?.polo_id
+            ? supabase.from("polos").select("nome").eq("id", aluno.polo_id).maybeSingle()
+            : Promise.resolve({ data: null } as any),
+          (async () => {
+            const { data: s } = await supabase.auth.getSession();
+            const uid = s.session?.user.id;
+            if (!uid) return { data: null } as any;
+            return supabase.from("colaboradores").select("nome").eq("user_id", uid).maybeSingle();
+          })(),
+        ]);
+        sendPushNotification(
+          "🎉 Nova Matrícula!",
+          `Aluno: ${aluno?.nome ?? ""} | Polo: ${(polo as any)?.nome ?? "—"} | Vendedora: ${(colab as any)?.nome ?? "—"}`,
+        );
+      } catch (e) { console.error(e); }
     },
     onError: (e: any) => {
       setIsProcessingAsaas(false);

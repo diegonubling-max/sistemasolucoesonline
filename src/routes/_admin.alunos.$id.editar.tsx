@@ -22,6 +22,7 @@ import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { AgendamentoProvaFinal } from "@/components/admin/AgendamentoProvaFinal";
 import { formatCurrency } from "@/lib/format";
+import { notifyPagamentoRecebido } from "@/lib/notify";
 
 export const Route = createFileRoute("/_admin/alunos/$id/editar")({
   head: () => ({ meta: [{ title: "Editar aluno — EduManager" }] }),
@@ -539,6 +540,8 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
         .eq("id", baixaData.id);
       
       if (error) throw error;
+      notifyPagamentoRecebido(baixaData.id, baixaData.valor, data.forma_pagamento);
+      
       
       if (data.forma_pagamento === 'cartao') {
         setResumoBaixa({

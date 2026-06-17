@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AppSidebar } from "@/components/admin/AppSidebar";
 import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { supabase } from "@/integrations/supabase/client";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 export const Route = createFileRoute("/_admin")({
   component: AdminLayout,
@@ -58,6 +59,8 @@ function AdminLayout() {
   }, [authLoading, session, navigate]);
 
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
+  usePushNotifications(isSuperAdmin, session?.user?.id);
 
   useEffect(() => {
     if (loadingColab || authLoading || !session) return;
