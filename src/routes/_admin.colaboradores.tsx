@@ -146,24 +146,27 @@ function ColaboradoresList() {
     }
   }, [session, userRole, loadingRole, navigate, isSuperAdmin, isAdminPolo]);
 
+  const effectivePoloId = !isSuperAdmin
+    ? ((colaborador as any)?.polo_id ?? null)
+    : (selectedPoloId && selectedPoloId !== 'all' ? selectedPoloId : null);
+
   const { data: colaboradores, isLoading } = useQuery({
-    queryKey: ["colaboradores", selectedPoloId],
+    queryKey: ["colaboradores", isSuperAdmin, effectivePoloId],
     queryFn: async () => {
       let q = supabase
         .from("colaboradores")
         .select("*, polos(nome), colaborador_permissoes(*)")
         .order("nome");
-      
-      if (!isSuperAdmin && (colaborador as any)?.polo_id) {
-        q = q.eq('polo_id', (colaborador as any).polo_id);
-      } else if (isSuperAdmin && selectedPoloId && selectedPoloId !== 'all') {
-        q = q.eq('polo_id', selectedPoloId);
+
+      if (effectivePoloId) {
+        q = q.eq('polo_id', effectivePoloId);
       }
 
       const { data, error } = await q;
       if (error) throw error;
       return data;
     },
+    enabled: !loadingRole && (isSuperAdmin || !!(colaborador as any)?.polo_id),
   });
 
   const { data: polos } = useQuery({
