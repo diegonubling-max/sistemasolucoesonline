@@ -46,16 +46,33 @@ export function usePushNotifications(enabled: boolean, userId: string | undefine
   const [isWorking, setIsWorking] = useState(false);
   const unsubRef = useRef<(() => void) | undefined>(undefined);
 
-  // Auto-register when permission was previously granted
+  // Auto-request permission + register token after login
   useEffect(() => {
     if (!enabled || !userId) return;
-    const perm = currentPermission();
+    let perm = currentPermission();
     setPermission(perm);
-    if (perm !== "granted") return;
+    if (perm === "unsupported") {
+      console.log("Iniciando registro de notificação...");
+      console.log("Navegador não suporta notificações.");
+      return;
+    }
     (async () => {
       try {
-        await registerToken(userId);
-        attachForegroundListener(unsubRef);
+        console.log("Iniciando registro de notificação...");
+        console.log("Permissão atual: " + Notification.permission);
+        if (Notification.permission === "default") {
+          const result = await Notification.requestPermission();
+          console.log("Permissão atual: " + result);
+          perm = result as PushPermission;
+          setPermission(perm);
+        }
+        if (Notification.permission !== "granted") return;
+        const token = await registerToken(userId);
+        console.log("Token obtido: " + token);
+        if (token) {
+          console.log("Token salvo com sucesso");
+          attachForegroundListener(unsubRef);
+        }
       } catch (e) {
         console.error("Push auto-register error:", e);
       }
