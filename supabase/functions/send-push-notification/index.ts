@@ -56,15 +56,18 @@ serve(async (req) => {
       .replace(/\+/g, "-")
       .replace(/\//g, "_");
     const jwt = `${signingInput}.${signatureB64}`;
+    console.log("JWT gerado, chamando OAuth...");
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
     });
     const tokenData = await tokenResponse.json();
+    console.log("OAuth response:", JSON.stringify(tokenData));
     if (!tokenData.access_token) {
       throw new Error(`Token error: ${JSON.stringify(tokenData)}`);
     }
+    console.log("Access token obtido, chamando FCM...");
     const fcmResponse = await fetch(
       `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
       {
@@ -84,7 +87,9 @@ serve(async (req) => {
         }),
       }
     );
+    console.log("FCM status:", fcmResponse.status);
     const fcmData = await fcmResponse.json();
+    console.log("FCM response:", JSON.stringify(fcmData));
     return new Response(JSON.stringify(fcmData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
