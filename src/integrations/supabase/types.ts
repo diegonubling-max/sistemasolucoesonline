@@ -122,6 +122,7 @@ export type Database = {
           origem: Database["public"]["Enums"]["origem_aluno"]
           origem_detalhe: string | null
           polo_id: string | null
+          primeiro_acesso: boolean
           responsavel_cpf: string | null
           responsavel_email: string | null
           responsavel_nome: string | null
@@ -156,6 +157,7 @@ export type Database = {
           origem: Database["public"]["Enums"]["origem_aluno"]
           origem_detalhe?: string | null
           polo_id?: string | null
+          primeiro_acesso?: boolean
           responsavel_cpf?: string | null
           responsavel_email?: string | null
           responsavel_nome?: string | null
@@ -190,6 +192,7 @@ export type Database = {
           origem?: Database["public"]["Enums"]["origem_aluno"]
           origem_detalhe?: string | null
           polo_id?: string | null
+          primeiro_acesso?: boolean
           responsavel_cpf?: string | null
           responsavel_email?: string | null
           responsavel_nome?: string | null
