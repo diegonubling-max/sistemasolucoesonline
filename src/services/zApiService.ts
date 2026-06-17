@@ -50,7 +50,7 @@ export async function sendBoasVindasMatricula(params: {
   nome: string;
   ctr: number | string;
 }) {
-  const primeiroNome = (params.nome || "").trim().split(/\s+/)[0] || "";
+  const primeiroNome = (params.nome || "").trim().split(/\s+/)[0]?.toLowerCase() || "";
   const msg = `*🎓 Bem-vindo(a) à Soluções Online!*
 
 Olá, *${params.nome}*! Sua matrícula foi realizada com sucesso! 🎉
