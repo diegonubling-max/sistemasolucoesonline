@@ -104,6 +104,7 @@ export type Database = {
           ativo: boolean
           cadastrado_por: string | null
           cadastrado_por_id: string | null
+          cadastro_completo: boolean
           colaborador_id: string | null
           cpf: string
           created_at: string
@@ -139,6 +140,7 @@ export type Database = {
           ativo?: boolean
           cadastrado_por?: string | null
           cadastrado_por_id?: string | null
+          cadastro_completo?: boolean
           colaborador_id?: string | null
           cpf: string
           created_at?: string
@@ -174,6 +176,7 @@ export type Database = {
           ativo?: boolean
           cadastrado_por?: string | null
           cadastrado_por_id?: string | null
+          cadastro_completo?: boolean
           colaborador_id?: string | null
           cpf?: string
           created_at?: string
@@ -1037,6 +1040,9 @@ export type Database = {
           nome: string
           nome_escola: string | null
           whatsapp: string | null
+          zapi_client_token: string | null
+          zapi_instance_id: string | null
+          zapi_token: string | null
         }
         Insert: {
           asaas_ambiente?: string | null
@@ -1052,6 +1058,9 @@ export type Database = {
           nome: string
           nome_escola?: string | null
           whatsapp?: string | null
+          zapi_client_token?: string | null
+          zapi_instance_id?: string | null
+          zapi_token?: string | null
         }
         Update: {
           asaas_ambiente?: string | null
@@ -1067,6 +1076,9 @@ export type Database = {
           nome?: string
           nome_escola?: string | null
           whatsapp?: string | null
+          zapi_client_token?: string | null
+          zapi_instance_id?: string | null
+          zapi_token?: string | null
         }
         Relationships: []
       }
