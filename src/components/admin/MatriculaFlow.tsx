@@ -1025,8 +1025,9 @@ export function MatriculaFlow({
                             valor: pacote.valor_total - pacote.valor_matricula
                           });
                         } else if (isNegociacaoPersonalizada) {
+                          const offsetInicial = hoje.getDate() <= dia ? 0 : 1;
                           for (let i = 1; i <= negociacao.numeroParcelas; i++) {
-                            let dataVenc = addMonths(hoje, i);
+                            let dataVenc = addMonths(hoje, offsetInicial + (i - 1));
                             const ultimoDia = lastDayOfMonth(dataVenc);
                             if (dia > ultimoDia.getDate()) {
                               dataVenc = ultimoDia;
@@ -1043,8 +1044,9 @@ export function MatriculaFlow({
                             });
                           }
                         } else {
+                          const offsetInicial = hoje.getDate() <= dia ? 0 : 1;
                           for (let i = 1; i <= (pacote?.numero_parcelas || 0); i++) {
-                            let dataVenc = addMonths(hoje, i);
+                            let dataVenc = addMonths(hoje, offsetInicial + (i - 1));
                             
                             // Lógica para dia do mês
                             const ultimoDia = lastDayOfMonth(dataVenc);
@@ -1062,6 +1064,7 @@ export function MatriculaFlow({
                             });
                           }
                         }
+
                         setParcelasGeradas(novasParcelas);
                         toast.success((!isNegociacaoPersonalizada && pacote?.tipo === 'cartao') ? "Cobrança única de cartão gerada!" : "Parcelas geradas com sucesso!");
                       }}
