@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStudentTheme } from "./_student";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useVideoProgress, detectProvider } from "@/hooks/use-video-progress";
 
 export const Route = createFileRoute("/_student/aluno/curso/$id")({
   head: () => ({ meta: [{ title: "Curso — EduManager" }] }),
@@ -23,31 +24,53 @@ function StudentCourse() {
   const [activeAulaId, setActiveAulaId] = useState<string | null>(null);
   const [lastTrackedAulaId, setLastTrackedAulaId] = useState<string | null>(null);
 
-  // Track lesson view
-  useEffect(() => {
-    const trackView = async () => {
-      if (!activeAulaId || !session?.user.email || activeAulaId === lastTrackedAulaId) return;
-
-      const { data: aluno } = await supabase
+  // Get aluno id once
+  const { data: alunoRow } = useQuery({
+    queryKey: ["aluno-id-by-email", session?.user.email],
+    queryFn: async () => {
+      if (!session?.user.email) return null;
+      const { data } = await supabase
         .from("alunos")
         .select("id")
         .eq("email", session.user.email)
-        .single();
-      
-      if (!aluno) return;
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!session?.user.email,
+  });
+  const alunoId = alunoRow?.id ?? null;
 
-      // Usar a RPC de rastreamento para garantir consistência
+  // Track lesson view (legacy RPC for backwards compat)
+  useEffect(() => {
+    const trackView = async () => {
+      if (!activeAulaId || !alunoId || activeAulaId === lastTrackedAulaId) return;
       await supabase.rpc('registrar_aula_assistida', {
-        p_aluno_id: aluno.id,
+        p_aluno_id: alunoId,
         p_aula_id: activeAulaId,
         p_curso_id: id
       });
-      
       setLastTrackedAulaId(activeAulaId);
     };
-
     trackView();
-  }, [activeAulaId, session, id, lastTrackedAulaId]);
+  }, [activeAulaId, alunoId, id, lastTrackedAulaId]);
+
+  // Load saved progress for active aula (to resume)
+  const { data: aulaProgresso } = useQuery({
+    queryKey: ["aula-progresso", alunoId, activeAulaId],
+    queryFn: async () => {
+      if (!alunoId || !activeAulaId) return null;
+      const { data } = await supabase
+        .from("aluno_aulas_assistidas")
+        .select("ultima_posicao, percentual_assistido, duracao_total")
+        .eq("aluno_id", alunoId)
+        .eq("aula_id", activeAulaId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!alunoId && !!activeAulaId,
+  });
 
   const { data: curso, isLoading: loadingCurso, error: cursoError } = useQuery({
     queryKey: ["student-course", id, session?.user.email],
@@ -115,6 +138,15 @@ function StudentCourse() {
   const nextAula = curso?.aulas?.[activeAulaIndex + 1];
   const prevAula = curso?.aulas?.[activeAulaIndex - 1];
 
+  // Video progress tracking (per active aula)
+  const { iframeRef, percent: livePercent, currentTime, duration } = useVideoProgress({
+    alunoId,
+    aulaId: activeAula?.id ?? null,
+    cursoId: id,
+    url: activeAula?.url_video ?? "",
+    initialPosition: aulaProgresso?.ultima_posicao ?? 0,
+  });
+
   if (loadingCurso) {
     return (
       <div className="space-y-8 animate-pulse">
@@ -149,14 +181,18 @@ function StudentCourse() {
 
   const renderVideoPlayer = (url: string) => {
     if (!url) return <div className="aspect-video bg-black flex items-center justify-center text-white">URL de vídeo não fornecida</div>;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
 
     // YouTube
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      const id = url.includes('v=') ? url.split('v=')[1]?.split('&')[0] : url.split('/').pop();
+      const vid = url.includes('v=') ? url.split('v=')[1]?.split('&')[0] : url.split('/').pop();
+      const src = `https://www.youtube.com/embed/${vid}?enablejsapi=1&origin=${encodeURIComponent(origin)}`;
       return (
         <iframe
+          ref={iframeRef}
           className="w-full h-full"
-          src={`https://www.youtube.com/embed/${id}`}
+          src={src}
+          allow="autoplay; encrypted-media"
           allowFullScreen
         ></iframe>
       );
@@ -164,20 +200,22 @@ function StudentCourse() {
 
     // Vimeo
     if (url.includes('vimeo.com')) {
-      const id = url.split('/').pop();
+      const vid = url.split('/').pop();
       return (
         <iframe
+          ref={iframeRef}
           className="w-full h-full"
-          src={`https://player.vimeo.com/video/${id}`}
+          src={`https://player.vimeo.com/video/${vid}?api=1`}
           allowFullScreen
         ></iframe>
       );
     }
 
-    // Pandavideo (example pattern)
+    // Pandavideo
     if (url.includes('pandavideo.com.br')) {
       return (
         <iframe
+          ref={iframeRef}
           className="w-full h-full"
           src={url}
           allowFullScreen

@@ -2,75 +2,113 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, CheckCircle2, Loader2 } from "lucide-react";
+import { BookOpen, CheckCircle2, Loader2, PlayCircle, Circle } from "lucide-react";
+import { formatSeconds } from "@/hooks/use-video-progress";
 
 interface ProgressoAulasProps {
   alunoId: string;
 }
 
+type AulaProgresso = {
+  id: string;
+  titulo: string;
+  ordem: number;
+  percentual: number;
+  tempo_assistido: number;
+  duracao_total: number;
+};
+
+type CursoProgresso = {
+  id: string;
+  nome: string;
+  aulas: AulaProgresso[];
+  totalAulas: number;
+  aulasConcluidas: number;
+  mediaProgresso: number;
+};
+
 export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
-  const { data: progresso, isLoading } = useQuery({
-    queryKey: ["aluno-progresso-aulas", alunoId],
+  const { data: progresso, isLoading } = useQuery<CursoProgresso[]>({
+    queryKey: ["aluno-progresso-aulas-v2", alunoId],
     queryFn: async () => {
-      // 1. Buscar cursos matriculados
+      // 1. Cursos matriculados
       const { data: matriculas } = await supabase
         .from("matriculas")
         .select("id")
         .eq("aluno_id", alunoId);
-
       const matriculaIds = (matriculas ?? []).map(m => m.id);
       if (matriculaIds.length === 0) return [];
 
-      const { data: matriculaCursos, error: coursesError } = await supabase
+      const { data: matriculaCursos } = await supabase
         .from("matricula_cursos")
         .select("curso_id, cursos(nome)")
         .in("matricula_id", matriculaIds);
 
-      if (coursesError) throw coursesError;
-
-      // Garantir cursos únicos caso haja mais de uma matrícula
-      const cursosMap = new Map();
+      const cursosMap = new Map<string, { id: string; nome: string }>();
       matriculaCursos?.forEach(mc => {
         if (!cursosMap.has(mc.curso_id)) {
           cursosMap.set(mc.curso_id, {
             id: mc.curso_id,
-            nome: (mc.cursos as any)?.nome || "Curso sem nome"
+            nome: (mc.cursos as any)?.nome || "Curso sem nome",
           });
         }
       });
       const cursos = Array.from(cursosMap.values());
-
-
-      // 2. Para cada curso, buscar total de aulas e aulas assistidas
       const cursoIds = cursos.map(c => c.id);
-      
-      // Total de aulas por curso
-      const { data: totalAulasData } = await supabase
+      if (cursoIds.length === 0) return [];
+
+      // 2. Aulas dos cursos
+      const { data: aulasData } = await supabase
         .from("aulas")
-        .select("curso_id")
-        .in("curso_id", cursoIds);
+        .select("id, titulo, ordem, curso_id, ativo")
+        .in("curso_id", cursoIds)
+        .eq("ativo", true)
+        .order("ordem", { ascending: true });
 
-      // Aulas assistidas por curso
-      const { data: assistidasData } = await supabase
+      // 3. Progresso do aluno em cada aula
+      const { data: progressoData } = await supabase
         .from("aluno_aulas_assistidas")
-        .select("curso_id")
+        .select("aula_id, percentual_assistido, tempo_assistido, duracao_total, created_at")
         .eq("aluno_id", alunoId)
-        .in("curso_id", cursoIds);
+        .in("curso_id", cursoIds)
+        .order("created_at", { ascending: false });
 
-      // Processar dados
+      // Map: aula_id -> latest row
+      const progressoMap = new Map<string, any>();
+      progressoData?.forEach(p => {
+        if (!progressoMap.has(p.aula_id)) progressoMap.set(p.aula_id, p);
+      });
+
       return cursos.map(curso => {
-        const total = totalAulasData?.filter(a => a.curso_id === curso.id).length || 0;
-        const assistidas = assistidasData?.filter(a => a.curso_id === curso.id).length || 0;
-        const percentual = total > 0 ? Math.round((assistidas / total) * 100) : 0;
+        const aulas: AulaProgresso[] = (aulasData ?? [])
+          .filter(a => a.curso_id === curso.id)
+          .map(a => {
+            const p = progressoMap.get(a.id);
+            return {
+              id: a.id,
+              titulo: a.titulo,
+              ordem: a.ordem,
+              percentual: Number(p?.percentual_assistido ?? 0),
+              tempo_assistido: Number(p?.tempo_assistido ?? 0),
+              duracao_total: Number(p?.duracao_total ?? 0),
+            };
+          });
+
+        const aulasIniciadas = aulas.filter(a => a.percentual > 0);
+        const mediaProgresso = aulasIniciadas.length > 0
+          ? Math.round(aulasIniciadas.reduce((s, a) => s + a.percentual, 0) / aulasIniciadas.length)
+          : 0;
+        const aulasConcluidas = aulas.filter(a => a.percentual >= 90).length;
 
         return {
           ...curso,
-          total,
-          assistidas,
-          percentual
+          aulas,
+          totalAulas: aulas.length,
+          aulasConcluidas,
+          mediaProgresso,
         };
       });
-    }
+    },
   });
 
   if (isLoading) {
@@ -91,9 +129,21 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
     );
   }
 
-  const totalGeralAulas = progresso.reduce((acc, curr) => acc + curr.total, 0);
-  const totalGeralAssistidas = progresso.reduce((acc, curr) => acc + curr.assistidas, 0);
-  const percentualGeral = totalGeralAulas > 0 ? Math.round((totalGeralAssistidas / totalGeralAulas) * 100) : 0;
+  const totalAulasGeral = progresso.reduce((acc, c) => acc + c.totalAulas, 0);
+  const totalConcluidasGeral = progresso.reduce((acc, c) => acc + c.aulasConcluidas, 0);
+  const aulasIniciadasAll = progresso.flatMap(c => c.aulas).filter(a => a.percentual > 0);
+  const engajamento = aulasIniciadasAll.length > 0
+    ? Math.round(aulasIniciadasAll.reduce((s, a) => s + a.percentual, 0) / aulasIniciadasAll.length)
+    : 0;
+  const percentualGeral = totalAulasGeral > 0
+    ? Math.round((totalConcluidasGeral / totalAulasGeral) * 100)
+    : 0;
+
+  const statusIcon = (pct: number) => {
+    if (pct >= 90) return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+    if (pct >= 1) return <PlayCircle className="h-4 w-4 text-yellow-500" />;
+    return <Circle className="h-4 w-4 text-gray-300" />;
+  };
 
   return (
     <div className="space-y-6">
@@ -106,16 +156,21 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <p className="text-sm text-muted-foreground">Progresso Total</p>
+              <p className="text-sm text-muted-foreground">Aulas concluídas</p>
               <p className="text-2xl font-bold">
-                {totalGeralAssistidas} de {totalGeralAulas} aulas assistidas
+                {totalConcluidasGeral} <span className="text-base font-normal text-muted-foreground">de {totalAulasGeral}</span>
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Percentual Geral</p>
+            <div>
+              <p className="text-sm text-muted-foreground">Conclusão</p>
               <p className="text-2xl font-bold text-primary">{percentualGeral}%</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Engajamento médio</p>
+              <p className="text-2xl font-bold text-yellow-600">{engajamento}%</p>
+              <p className="text-xs text-muted-foreground">média das aulas iniciadas</p>
             </div>
           </div>
           <Progress value={percentualGeral} className="h-3" />
@@ -123,23 +178,44 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
       </Card>
 
       {/* Lista de Cursos */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-4">
         {progresso.map((curso) => (
           <Card key={curso.id}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-md flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
-                {curso.nome}
+              <CardTitle className="text-md flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  {curso.nome}
+                </span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  {curso.aulasConcluidas}/{curso.totalAulas} concluídas · engajamento {curso.mediaProgresso}%
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-sm text-muted-foreground">
-                  {curso.assistidas} de {curso.total} aulas
-                </span>
-                <span className="font-semibold">{curso.percentual}%</span>
-              </div>
-              <Progress value={curso.percentual} className="h-2" />
+              {curso.aulas.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhuma aula cadastrada.</p>
+              ) : (
+                <div className="space-y-3">
+                  {curso.aulas.map((aula) => (
+                    <div key={aula.id} className="space-y-1">
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          {statusIcon(aula.percentual)}
+                          <span className="truncate" title={aula.titulo}>{aula.titulo}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                          {Math.round(aula.percentual)}% assistido
+                          {aula.duracao_total > 0 && (
+                            <> ({formatSeconds(aula.tempo_assistido)} de {formatSeconds(aula.duracao_total)})</>
+                          )}
+                        </span>
+                      </div>
+                      <Progress value={aula.percentual} className="h-1.5" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
