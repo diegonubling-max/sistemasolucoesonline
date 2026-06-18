@@ -44,7 +44,14 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // 1. Buscar alunos migrados com parcelas em aberto sem asaas_id
+    const BATCH_SIZE = 10;
+    let offset = 0;
+    try {
+      const body = await req.json().catch(() => ({}));
+      if (typeof body?.offset === "number") offset = body.offset;
+    } catch {}
+
+    // Buscar lote de alunos migrados
     const { data: alunos, error: alunosError } = await supabase
       .from("alunos")
       .select(
@@ -54,7 +61,9 @@ serve(async (req) => {
            parcelas(id, valor, data_vencimento, status, asaas_id)
          )`
       )
-      .eq("origem_detalhe", "migrado");
+      .eq("origem_detalhe", "migrado")
+      .order("id", { ascending: true })
+      .range(offset, offset + BATCH_SIZE - 1);
 
     if (alunosError) throw alunosError;
 
@@ -70,7 +79,6 @@ serve(async (req) => {
       if (parcelasAbertas.length === 0) continue;
 
       try {
-        // a. Criar/reutilizar cliente no Asaas
         let customerId = aluno.asaas_customer_id;
         if (!customerId) {
           const customer = await asaasFetch("/customers", {
@@ -90,7 +98,6 @@ serve(async (req) => {
             .eq("id", aluno.id);
         }
 
-        // b. Criar cobrança para cada parcela em aberto
         for (const parcela of parcelasAbertas) {
           try {
             const payment = await asaasFetch("/payments", {
@@ -125,11 +132,16 @@ serve(async (req) => {
       }
     }
 
+    const processadosNoLote = alunos?.length ?? 0;
+    const proximoOffset = processadosNoLote < BATCH_SIZE ? null : offset + BATCH_SIZE;
+
     return new Response(
       JSON.stringify({
         success: true,
         clientes_criados: clientesCriados,
         boletos_gerados: boletosGerados,
+        proximo_offset: proximoOffset,
+        total_processado: offset + processadosNoLote,
         erros,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -142,3 +154,4 @@ serve(async (req) => {
     );
   }
 });
+
