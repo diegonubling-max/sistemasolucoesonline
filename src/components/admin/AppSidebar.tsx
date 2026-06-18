@@ -24,6 +24,7 @@ type SidebarItem = {
   perm?: string;
   anyPerm?: string[];
   adminOnly?: boolean;
+  responsavelOnly?: boolean;
 };
 
 const items: SidebarItem[] = [
@@ -33,6 +34,7 @@ const items: SidebarItem[] = [
   { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true, adminOnly: true },
   { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true, adminOnly: true },
   { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
+  { title: "Minha Equipe", url: "/minha-equipe", icon: UsersRound, enabled: true, responsavelOnly: true },
   { title: "Setor de Provas", url: "/setor-provas", icon: ClipboardCheck, enabled: true, anyPerm: ['ver_setor_provas', 'gerenciar_prova_final'] },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' },
 ];
