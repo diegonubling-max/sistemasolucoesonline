@@ -200,8 +200,9 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
           const isAdmin = session?.user?.email === 'admin@admin.com' || isSuperAdmin;
           
           if (item.adminOnly && !isAdmin) return null;
+          if (item.responsavelOnly && !isResponsavel) return null;
           
-          if (colaborador && (item.perm || item.anyPerm)) {
+          if (colaborador && !isResponsavel && (item.perm || item.anyPerm)) {
             const perms = colaborador.colaborador_permissoes?.[0];
             if (item.perm && !perms?.[item.perm]) return null;
             if (item.anyPerm && !item.anyPerm.some((p) => perms?.[p])) return null;
