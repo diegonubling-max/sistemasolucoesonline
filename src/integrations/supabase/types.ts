@@ -63,6 +63,97 @@ export type Database = {
           },
         ]
       }
+      aluno_documentos: {
+        Row: {
+          aluno_id: string
+          comprovante_residencia: boolean | null
+          created_at: string | null
+          d_oficial: boolean | null
+          historico_fund_medio: boolean | null
+          historico_fundamental: boolean | null
+          id: string
+          outros: boolean | null
+          outros_descricao: string | null
+          rec_firma: boolean | null
+          rg_cpf: boolean | null
+          updated_at: string | null
+          visto_confere: boolean | null
+        }
+        Insert: {
+          aluno_id: string
+          comprovante_residencia?: boolean | null
+          created_at?: string | null
+          d_oficial?: boolean | null
+          historico_fund_medio?: boolean | null
+          historico_fundamental?: boolean | null
+          id?: string
+          outros?: boolean | null
+          outros_descricao?: string | null
+          rec_firma?: boolean | null
+          rg_cpf?: boolean | null
+          updated_at?: string | null
+          visto_confere?: boolean | null
+        }
+        Update: {
+          aluno_id?: string
+          comprovante_residencia?: boolean | null
+          created_at?: string | null
+          d_oficial?: boolean | null
+          historico_fund_medio?: boolean | null
+          historico_fundamental?: boolean | null
+          id?: string
+          outros?: boolean | null
+          outros_descricao?: string | null
+          rec_firma?: boolean | null
+          rg_cpf?: boolean | null
+          updated_at?: string | null
+          visto_confere?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aluno_documentos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aluno_documentos_arquivos: {
+        Row: {
+          aluno_id: string
+          created_at: string | null
+          id: string
+          nome_arquivo: string
+          tipo: string | null
+          url: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string | null
+          id?: string
+          nome_arquivo: string
+          tipo?: string | null
+          url: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string | null
+          id?: string
+          nome_arquivo?: string
+          tipo?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aluno_documentos_arquivos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aluno_sessoes: {
         Row: {
           aluno_id: string
@@ -308,6 +399,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      certificadoras: {
+        Row: {
+          ativo: boolean | null
+          cidade: string | null
+          codigo_inep: string | null
+          created_at: string | null
+          d_oficial: boolean | null
+          estado: string | null
+          id: string
+          nome: string
+          rec_firma: boolean | null
+          responsavel: string | null
+          telefone: string | null
+          visto_confere: boolean | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cidade?: string | null
+          codigo_inep?: string | null
+          created_at?: string | null
+          d_oficial?: boolean | null
+          estado?: string | null
+          id?: string
+          nome: string
+          rec_firma?: boolean | null
+          responsavel?: string | null
+          telefone?: string | null
+          visto_confere?: boolean | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cidade?: string | null
+          codigo_inep?: string | null
+          created_at?: string | null
+          d_oficial?: boolean | null
+          estado?: string | null
+          id?: string
+          nome?: string
+          rec_firma?: boolean | null
+          responsavel?: string | null
+          telefone?: string | null
+          visto_confere?: boolean | null
+        }
+        Relationships: []
       }
       colaborador_permissoes: {
         Row: {
@@ -710,6 +846,77 @@ export type Database = {
         }
         Relationships: []
       }
+      lote_alunos: {
+        Row: {
+          aluno_id: string
+          created_at: string | null
+          id: string
+          lote_id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string | null
+          id?: string
+          lote_id: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string | null
+          id?: string
+          lote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lote_alunos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lote_alunos_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "lotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lotes: {
+        Row: {
+          certificadora_id: string | null
+          created_at: string | null
+          data_envio: string | null
+          enviado: boolean | null
+          id: string
+          mes_ano: string
+        }
+        Insert: {
+          certificadora_id?: string | null
+          created_at?: string | null
+          data_envio?: string | null
+          enviado?: boolean | null
+          id?: string
+          mes_ano: string
+        }
+        Update: {
+          certificadora_id?: string | null
+          created_at?: string | null
+          data_envio?: string | null
+          enviado?: boolean | null
+          id?: string
+          mes_ano?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lotes_certificadora_id_fkey"
+            columns: ["certificadora_id"]
+            isOneToOne: false
+            referencedRelation: "certificadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matricula_cursos: {
         Row: {
           curso_id: string
@@ -916,6 +1123,7 @@ export type Database = {
           status: Database["public"]["Enums"]["payment_status"]
           taxa_cartao: number | null
           tipo: Database["public"]["Enums"]["payment_type"]
+          tipo_pacote: string | null
           valor: number
           valor_bruto: number | null
           valor_liquido: number | null
@@ -942,6 +1150,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["payment_status"]
           taxa_cartao?: number | null
           tipo: Database["public"]["Enums"]["payment_type"]
+          tipo_pacote?: string | null
           valor: number
           valor_bruto?: number | null
           valor_liquido?: number | null
@@ -968,6 +1177,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["payment_status"]
           taxa_cartao?: number | null
           tipo?: Database["public"]["Enums"]["payment_type"]
+          tipo_pacote?: string | null
           valor?: number
           valor_bruto?: number | null
           valor_liquido?: number | null
