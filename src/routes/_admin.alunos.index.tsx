@@ -279,7 +279,7 @@ function AlunosList() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{a.email}</TableCell>
+                  
                   <TableCell>{a.telefone}</TableCell>
                   <TableCell>{a.vendedora}</TableCell>
                   <TableCell><StatusAlunoBadge status={(a as any).status} /></TableCell>
