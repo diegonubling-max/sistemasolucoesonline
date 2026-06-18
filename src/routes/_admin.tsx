@@ -75,11 +75,22 @@ function AdminLayout() {
     if (loadingColab || authLoading || !session) return;
     if (isSuperAdmin) return;
 
+    const isResponsavel = !!colaborador?.responsavel_polo;
+
+    // Minha Equipe: somente responsável de polo
+    if (path === "/minha-equipe" || path.startsWith("/minha-equipe/")) {
+      if (!isResponsavel) navigate({ to: "/" });
+      return;
+    }
+
     const matchedAdminOnly = ADMIN_ONLY_PREFIXES.find(p => path === p || path.startsWith(p + "/"));
     if (matchedAdminOnly) {
       navigate({ to: "/" });
       return;
     }
+
+    // Responsável de polo tem todas permissões
+    if (isResponsavel) return;
 
     const perms = colaborador?.colaborador_permissoes?.[0];
     for (const [prefix, perm] of Object.entries(PERM_PREFIXES)) {

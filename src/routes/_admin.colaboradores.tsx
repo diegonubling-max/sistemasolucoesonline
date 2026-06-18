@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Shield, Trash2, Loader2, Users, MoreHorizontal, UserCheck, UserMinus, Wallet } from "lucide-react";
+import { Plus, Search, Pencil, Shield, Trash2, Loader2, Users, MoreHorizontal, UserCheck, UserMinus, Wallet, Crown } from "lucide-react";
 import { ComissoesColaboradorDialog } from "@/components/admin/colaboradores/ComissoesColaboradorDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,7 @@ function ColaboradoresList() {
   const [editingColab, setEditingColab] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [comissoesVendedora, setComissoesVendedora] = useState<string | null>(null);
+  const [isResponsavel, setIsResponsavel] = useState(false);
   
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
@@ -200,7 +201,7 @@ function ColaboradoresList() {
         polo_id: editingColab.polo_id,
         setor: editingColab.setor,
       });
-      
+      setIsResponsavel(!!editingColab.responsavel_polo);
       const perms = editingColab.colaborador_permissoes?.[0] || {};
       const newPerms: Record<string, boolean> = {};
       PERMISSIONS_LIST.forEach(p => {
@@ -215,6 +216,7 @@ function ColaboradoresList() {
         polo_id: "",
         setor: "",
       });
+      setIsResponsavel(false);
       setFormPerms({
         ver_alunos: false,
         cadastrar_alunos: false,
@@ -230,13 +232,25 @@ function ColaboradoresList() {
     }
   }, [editingColab, form]);
 
+  // Quando ativa "Responsável de Polo", marca todas permissões
+  useEffect(() => {
+    if (isResponsavel) {
+      setFormPerms((prev) => {
+        const all: Record<string, boolean> = {};
+        Object.keys(prev).forEach((k) => { all[k] = true; });
+        return all;
+      });
+    }
+  }, [isResponsavel]);
+
   const manageMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
       const action = editingColab ? "update_colaborador" : "create_colaborador";
       const payload: any = { 
         action, 
         ...values, 
-        permissoes: formPerms 
+        permissoes: formPerms,
+        responsavel_polo: isResponsavel,
       };
       
       if (editingColab) {
@@ -296,7 +310,7 @@ function ColaboradoresList() {
   const filteredColaboradores = colaboradores?.filter(c => 
     c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).slice().sort((a: any, b: any) => Number(!!b.responsavel_polo) - Number(!!a.responsavel_polo));
 
   return (
     <div className="space-y-6">
@@ -406,6 +420,19 @@ function ColaboradoresList() {
                     />
                   </div>
 
+                  {isSuperAdmin && (
+                    <div className="flex items-start justify-between p-4 border-2 border-amber-300 bg-amber-50 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <Crown className="h-5 w-5 text-amber-600 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-amber-900">Responsável pelo Polo</p>
+                          <p className="text-xs text-amber-700">Este colaborador pode gerenciar a equipe do polo</p>
+                        </div>
+                      </div>
+                      <Switch checked={isResponsavel} onCheckedChange={setIsResponsavel} />
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                     <h3 className="text-sm font-semibold flex items-center gap-2">
                       <Shield className="h-4 w-4" /> Permissões
@@ -471,7 +498,16 @@ function ColaboradoresList() {
                 <TableRow><TableCell colSpan={6} className="text-center py-8">Nenhum colaborador encontrado.</TableCell></TableRow>
               ) : filteredColaboradores?.map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.nome}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <span>{c.nome}</span>
+                      {(c as any).responsavel_polo && (
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-100 gap-1">
+                          <Crown className="h-3 w-3" /> Responsável
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{c.polos?.nome}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{c.setor}</Badge>

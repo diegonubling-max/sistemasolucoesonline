@@ -55,6 +55,17 @@ function AdminSettings() {
 
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
 
+  const { data: meColab } = useQuery({
+    queryKey: ["me-colab-config", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('colaboradores').select('responsavel_polo, polo_id').eq('user_id', session.user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
+  const isResponsavel = !!(meColab as any)?.responsavel_polo;
+
   useEffect(() => {
     async function fetchPolos() {
       const { data } = await supabase.from("polos").select("*").eq("ativo", true).order("nome");
@@ -288,7 +299,7 @@ function AdminSettings() {
     );
   }
 
-  const tabs = [
+  const allTabs = [
     { id: "geral", label: "Geral", icon: School },
     { id: "asaas", label: "Integração Asaas", icon: Link2 },
     { id: "contrato", label: "Modelo de Contrato", icon: FileText },
@@ -297,6 +308,11 @@ function AdminSettings() {
     ...(isSuperAdmin ? [{ id: "notificacoes", label: "Notificações", icon: Bell }] : []),
     ...(isSuperAdmin ? [{ id: "admins", label: "Administradores", icon: ShieldPlus }] : []),
   ];
+
+  // Responsável de polo (não super admin) só vê: Banners, Asaas, Webhook
+  const tabs = (isResponsavel && !isSuperAdmin)
+    ? allTabs.filter(t => ["banners", "asaas", "webhook"].includes(t.id))
+    : allTabs;
 
   const pushStatusLabel =
     pushPermission === "granted" ? "Ativada"

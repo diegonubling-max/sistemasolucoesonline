@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, Tags, Settings, ChevronDown, Check, KeyRound, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, Tags, Settings, ChevronDown, Check, KeyRound, ClipboardCheck, Crown, UsersRound } from "lucide-react";
 import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ type SidebarItem = {
   perm?: string;
   anyPerm?: string[];
   adminOnly?: boolean;
+  responsavelOnly?: boolean;
 };
 
 const items: SidebarItem[] = [
@@ -33,6 +34,7 @@ const items: SidebarItem[] = [
   { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true, adminOnly: true },
   { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true, adminOnly: true },
   { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
+  { title: "Minha Equipe", url: "/minha-equipe", icon: UsersRound, enabled: true, responsavelOnly: true },
   { title: "Setor de Provas", url: "/setor-provas", icon: ClipboardCheck, enabled: true, anyPerm: ['ver_setor_provas', 'gerenciar_prova_final'] },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' },
 ];
@@ -93,6 +95,8 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
 
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
   const isAdminPolo = colaborador?.setor === 'Admin Polo' || (colaborador?.colaborador_permissoes?.[0]?.ver_configuracoes);
+  const isResponsavel = !!colaborador?.responsavel_polo;
+  const responsavelPoloNome = polos?.find(p => p.id === colaborador?.polo_id)?.nome;
 
   useEffect(() => {
     if (!isSuperAdmin && colaborador?.polo_id) {
@@ -157,6 +161,13 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
         <p className="text-xs text-sidebar-foreground/60 mt-1 uppercase tracking-wider font-semibold">Painel Administrativo</p>
       </div>
 
+      {isResponsavel && responsavelPoloNome && (
+        <div className="px-6 py-2 border-b border-sidebar-border bg-amber-500/10 flex items-center gap-2">
+          <Crown className="h-4 w-4 text-amber-400" />
+          <p className="text-xs font-semibold text-amber-400">Responsável — {responsavelPoloNome}</p>
+        </div>
+      )}
+
       {isSuperAdmin && (
         <div className="px-3 py-4 border-b border-sidebar-border">
           <p className="text-[10px] text-sidebar-foreground/50 font-bold uppercase mb-2 px-3 tracking-widest">Seletor de Polo</p>
@@ -189,8 +200,9 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
           const isAdmin = session?.user?.email === 'admin@admin.com' || isSuperAdmin;
           
           if (item.adminOnly && !isAdmin) return null;
+          if (item.responsavelOnly && !isResponsavel) return null;
           
-          if (colaborador && (item.perm || item.anyPerm)) {
+          if (colaborador && !isResponsavel && (item.perm || item.anyPerm)) {
             const perms = colaborador.colaborador_permissoes?.[0];
             if (item.perm && !perms?.[item.perm]) return null;
             if (item.anyPerm && !item.anyPerm.some((p) => perms?.[p])) return null;

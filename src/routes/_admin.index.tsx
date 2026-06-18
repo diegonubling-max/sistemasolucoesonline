@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Users, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin, Loader2 } from "lucide-react";
+import { Users, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin, Loader2, Crown } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,13 +52,14 @@ function Dashboard() {
     queryKey: ["colaborador-polo", session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
-      const { data } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
+      const { data } = await supabase.from('colaboradores').select('polo_id, responsavel_polo').eq('user_id', session.user.id).maybeSingle();
       return data;
     },
     enabled: !!session?.user?.id
   });
 
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+  const isResponsavel = !!(colabData as any)?.responsavel_polo;
 
   const filterByPolo = (q: any) => {
     const colabPoloId = colabData?.polo_id;
@@ -89,7 +90,7 @@ function Dashboard() {
       const lastDay = endOfMonth(today);
 
 
-      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData] = await Promise.all([
+      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData, colabAtivos] = await Promise.all([
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         filterByPolo(supabase.from("matriculas").select("*", { count: "exact", head: true })),
@@ -99,6 +100,7 @@ function Dashboard() {
         filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd"))),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
         filterByPolo(supabase.from("alunos").select("origem")),
+        filterByPolo(supabase.from("colaboradores").select("*", { count: "exact", head: true }).eq("ativo", true)),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
@@ -147,6 +149,7 @@ function Dashboard() {
         cursos: c.count ?? 0,
         matriculas: m.count ?? 0,
         ativos: aa.count ?? 0,
+        colaboradoresAtivos: colabAtivos.count ?? 0,
         origens,
         faturamento: {
           recebido: receivedSum(pagoMes.data),
@@ -204,6 +207,38 @@ function Dashboard() {
         title="Dashboard" 
         description={selectedPoloId === 'all' ? "Visão geral de todos os polos" : `Visão geral: ${polos?.find(p => p.id === selectedPoloId)?.nome || 'Polo selecionado'}`} 
       />
+
+      {isResponsavel && !isSuperAdmin && (
+        <Card className="mb-6 border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-amber-100 rounded-xl">
+                <Crown className="h-6 w-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-amber-900">
+                  Você é o Responsável pelo {polos?.find(p => p.id === colabData?.polo_id)?.nome || 'seu polo'}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+                  <div>
+                    <p className="text-xs text-amber-700 uppercase font-semibold">Colaboradores Ativos</p>
+                    <p className="text-2xl font-bold text-amber-900">{stats?.colaboradoresAtivos ?? 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-amber-700 uppercase font-semibold">Total de Alunos</p>
+                    <p className="text-2xl font-bold text-amber-900">{stats?.alunos ?? 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-amber-700 uppercase font-semibold">Faturamento do Mês</p>
+                    <p className="text-2xl font-bold text-amber-900">{formatCurrency(stats?.faturamento?.recebido ?? 0)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <VitrineInteresse selectedPoloId={selectedPoloId} colabPoloId={colabData?.polo_id} isSuperAdmin={isSuperAdmin} />
 
       {selectedPoloId === 'all' && stats?.statsByPolo && stats.statsByPolo.length > 0 && (

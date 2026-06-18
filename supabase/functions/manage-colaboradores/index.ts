@@ -24,10 +24,9 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    const { action, email, password, nome, polo_id, setor, id, ativo, permissoes } = body;
+    const { action, email, password, nome, polo_id, setor, id, ativo, permissoes, responsavel_polo } = body;
 
     if (action === "create_colaborador") {
-      // 1. Criar no Auth
       const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
@@ -40,7 +39,6 @@ serve(async (req) => {
 
       if (authError) throw authError;
 
-      // 2. Salvar na tabela colaboradores
       const { data: colaborador, error: colabError } = await supabaseAdmin
         .from("colaboradores")
         .insert({
@@ -49,19 +47,23 @@ serve(async (req) => {
           email,
           polo_id,
           setor,
-          ativo: true
+          ativo: true,
+          responsavel_polo: !!responsavel_polo,
         })
         .select()
         .single();
 
       if (colabError) throw colabError;
 
-      // 3. Criar permissões
+      const permsToInsert = responsavel_polo
+        ? Object.fromEntries(Object.keys(permissoes || {}).map((k) => [k, true]))
+        : (permissoes || {});
+
       const { error: permError } = await supabaseAdmin
         .from("colaborador_permissoes")
         .insert({
           colaborador_id: colaborador.id,
-          ...permissoes
+          ...permsToInsert
         });
 
       if (permError) throw permError;
@@ -104,6 +106,7 @@ serve(async (req) => {
       if (polo_id) colabUpdates.polo_id = polo_id;
       if (setor) colabUpdates.setor = setor;
       if (ativo !== undefined) colabUpdates.ativo = ativo;
+      if (responsavel_polo !== undefined) colabUpdates.responsavel_polo = !!responsavel_polo;
 
       const { error: colabError } = await supabaseAdmin
         .from("colaboradores")
@@ -112,14 +115,17 @@ serve(async (req) => {
 
       if (colabError) throw colabError;
 
-      // 4. Atualizar permissões se enviadas
-      if (permissoes) {
-        const { error: permError } = await supabaseAdmin
-          .from("colaborador_permissoes")
-          .update(permissoes)
-          .eq("colaborador_id", id);
-        
-        if (permError) throw permError;
+      if (permissoes || responsavel_polo) {
+        const permsToUpdate = responsavel_polo
+          ? Object.fromEntries(Object.keys(permissoes || {}).map((k) => [k, true]))
+          : permissoes;
+        if (permsToUpdate) {
+          const { error: permError } = await supabaseAdmin
+            .from("colaborador_permissoes")
+            .update(permsToUpdate)
+            .eq("colaborador_id", id);
+          if (permError) throw permError;
+        }
       }
 
       return new Response(JSON.stringify({ success: true }), {
