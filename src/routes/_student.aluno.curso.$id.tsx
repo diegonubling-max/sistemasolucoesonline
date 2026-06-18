@@ -138,6 +138,15 @@ function StudentCourse() {
   const nextAula = curso?.aulas?.[activeAulaIndex + 1];
   const prevAula = curso?.aulas?.[activeAulaIndex - 1];
 
+  // Video progress tracking (per active aula)
+  const { iframeRef, percent: livePercent, currentTime, duration } = useVideoProgress({
+    alunoId,
+    aulaId: activeAula?.id ?? null,
+    cursoId: id,
+    url: activeAula?.url_video ?? "",
+    initialPosition: aulaProgresso?.ultima_posicao ?? 0,
+  });
+
   if (loadingCurso) {
     return (
       <div className="space-y-8 animate-pulse">
