@@ -59,6 +59,8 @@ const formSchema = z.object({
   senha: z.string().min(6, "Mínimo 6 caracteres").optional().or(z.literal("")),
   polo_id: z.string().uuid("Selecione um polo"),
   setor: z.string().min(1, "Selecione um setor"),
+  comissao_avista: z.coerce.number().min(0).optional(),
+  comissao_parcelado: z.coerce.number().min(0).optional(),
 });
 
 const SETORES = ["Vendedor", "Setor de Provas", "Cobrança", "Administrativo", "Admin Polo", "Outros"];
