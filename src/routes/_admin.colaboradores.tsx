@@ -197,8 +197,12 @@ function ColaboradoresList() {
       senha: "",
       polo_id: "",
       setor: "",
+      comissao_avista: 120,
+      comissao_parcelado: 50,
     },
   });
+
+  const setorWatch = form.watch("setor");
 
   useEffect(() => {
     if (editingColab) {
@@ -208,6 +212,8 @@ function ColaboradoresList() {
         senha: "",
         polo_id: editingColab.polo_id,
         setor: editingColab.setor,
+        comissao_avista: Number(editingColab.comissao_avista ?? 120),
+        comissao_parcelado: Number(editingColab.comissao_parcelado ?? 50),
       });
       setIsResponsavel(!!editingColab.responsavel_polo);
       const perms = editingColab.colaborador_permissoes?.[0] || {};
@@ -223,6 +229,8 @@ function ColaboradoresList() {
         senha: "",
         polo_id: "",
         setor: "",
+        comissao_avista: 120,
+        comissao_parcelado: 50,
       });
       setIsResponsavel(false);
       setFormPerms({
