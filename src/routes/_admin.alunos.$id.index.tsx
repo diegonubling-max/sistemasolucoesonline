@@ -520,9 +520,9 @@ function AlunoDetalhes() {
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
               </Link>
             </Button>
-            <Button variant="outline" className="border-blue-500 text-blue-600" onClick={handleCopyAccessData}>
-              {copied ? <CheckCircle2 className="h-4 w-4 mr-2" /> : <Key className="h-4 w-4 mr-2" />}
-              {copied ? "Copiado!" : "Copiar acesso"}
+            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleResendAccess} disabled={sendingAccess}>
+              {sendingAccess ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageSquare className="h-4 w-4 mr-2" />}
+              {sendingAccess ? "Enviando..." : "Reenviar acesso"}
             </Button>
             <Button variant="outline" onClick={() => setShowResetDefaultModal(true)}>
               <Key className="h-4 w-4 mr-2" /> Senha Padrão
