@@ -274,6 +274,9 @@ function AdminSettings() {
     },
   });
 
+  const { permission: pushPermission, isWorking: pushWorking, requestAndRegister: enablePush } =
+    usePushNotifications(isSuperAdmin, session?.user?.id);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -295,8 +298,6 @@ function AdminSettings() {
     ...(isSuperAdmin ? [{ id: "admins", label: "Administradores", icon: ShieldPlus }] : []),
   ];
 
-  const { permission: pushPermission, isWorking: pushWorking, requestAndRegister: enablePush } =
-    usePushNotifications(isSuperAdmin, session?.user?.id);
   const pushStatusLabel =
     pushPermission === "granted" ? "Ativada"
     : pushPermission === "denied" ? "Desativada"
