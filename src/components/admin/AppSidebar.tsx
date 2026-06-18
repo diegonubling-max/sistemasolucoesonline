@@ -161,6 +161,13 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
         <p className="text-xs text-sidebar-foreground/60 mt-1 uppercase tracking-wider font-semibold">Painel Administrativo</p>
       </div>
 
+      {isResponsavel && responsavelPoloNome && (
+        <div className="px-6 py-2 border-b border-sidebar-border bg-amber-500/10 flex items-center gap-2">
+          <Crown className="h-4 w-4 text-amber-400" />
+          <p className="text-xs font-semibold text-amber-400">Responsável — {responsavelPoloNome}</p>
+        </div>
+      )}
+
       {isSuperAdmin && (
         <div className="px-3 py-4 border-b border-sidebar-border">
           <p className="text-[10px] text-sidebar-foreground/50 font-bold uppercase mb-2 px-3 tracking-widest">Seletor de Polo</p>
