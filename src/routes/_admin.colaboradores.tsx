@@ -249,7 +249,8 @@ function ColaboradoresList() {
       const payload: any = { 
         action, 
         ...values, 
-        permissoes: formPerms 
+        permissoes: formPerms,
+        responsavel_polo: isResponsavel,
       };
       
       if (editingColab) {
