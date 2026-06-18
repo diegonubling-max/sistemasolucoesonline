@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, Tags, Settings, ChevronDown, Check, KeyRound } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, Tags, Settings, ChevronDown, Check, KeyRound, ClipboardCheck } from "lucide-react";
 import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +16,25 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 
-const items = [
+type SidebarItem = {
+  title: string;
+  url: string;
+  icon: any;
+  enabled: boolean;
+  perm?: string;
+  anyPerm?: string[];
+  adminOnly?: boolean;
+};
+
+const items: SidebarItem[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, enabled: true },
-  { title: "Alunos", url: "/alunos", icon: Users, enabled: true, perm: 'ver_alunos' as const },
+  { title: "Alunos", url: "/alunos", icon: Users, enabled: true, perm: 'ver_alunos' },
   { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true, adminOnly: true },
   { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true, adminOnly: true },
   { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true, adminOnly: true },
   { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' as const },
+  { title: "Setor de Provas", url: "/setor-provas", icon: ClipboardCheck, enabled: true, anyPerm: ['ver_setor_provas', 'gerenciar_prova_final'] },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' },
 ];
 
 export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colaborador?: any; mobileOpen?: boolean; onClose?: () => void }) {
