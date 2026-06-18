@@ -101,6 +101,8 @@ serve(async (req) => {
       if (setor) colabUpdates.setor = setor;
       if (ativo !== undefined) colabUpdates.ativo = ativo;
       if (responsavel_polo !== undefined) colabUpdates.responsavel_polo = !!responsavel_polo;
+      if (comissao_avista !== undefined) colabUpdates.comissao_avista = comissao_avista;
+      if (comissao_parcelado !== undefined) colabUpdates.comissao_parcelado = comissao_parcelado;
 
       const { error: colabError } = await supabaseAdmin.from("colaboradores").update(colabUpdates).eq("id", id);
 
