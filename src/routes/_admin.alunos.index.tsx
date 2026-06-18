@@ -246,7 +246,7 @@ function AlunosList() {
               <TableRow>
                 <TableHead className="w-[80px]">CTR</TableHead>
                 <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
+                
                 <TableHead>Telefone</TableHead>
                 <TableHead>Vendedora</TableHead>
                 <TableHead>Status</TableHead>
