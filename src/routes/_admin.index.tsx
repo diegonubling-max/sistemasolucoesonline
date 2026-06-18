@@ -149,6 +149,7 @@ function Dashboard() {
         cursos: c.count ?? 0,
         matriculas: m.count ?? 0,
         ativos: aa.count ?? 0,
+        colaboradoresAtivos: colabAtivos.count ?? 0,
         origens,
         faturamento: {
           recebido: receivedSum(pagoMes.data),
