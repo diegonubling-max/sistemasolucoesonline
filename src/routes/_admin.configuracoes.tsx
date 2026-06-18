@@ -556,6 +556,8 @@ function AdminSettings() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {isSuperAdmin && <GerarBoletosMigradosCard />}
               </div>
             )}
 
