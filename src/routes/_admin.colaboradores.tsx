@@ -298,7 +298,7 @@ function ColaboradoresList() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("delete_colaborador_completo", { p_id: id });
+      const { error } = await (supabase.rpc as any)("delete_colaborador_completo", { p_id: id });
       if (error) throw error;
     },
     onSuccess: () => {
