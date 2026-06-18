@@ -442,7 +442,7 @@ export function MatriculaFlow({
       "[CPF_ALUNO]": aluno.cpf,
       "[EMAIL_ALUNO]": aluno.email || "N/A",
       "[TELEFONE_ALUNO]": aluno.telefone || "N/A",
-      "[DATA_NASCIMENTO]": format(new Date(aluno.data_nascimento), "dd/MM/yyyy"),
+      "[DATA_NASCIMENTO]": aluno.data_nascimento ? format(new Date(aluno.data_nascimento), "dd/MM/yyyy") : "",
       "[PACOTE_NOME]": isNegociacaoPersonalizada ? "Negociação Personalizada" : (currentPacote?.nome || ""),
       "[FORMA_PAGAMENTO]": isNegociacaoPersonalizada ? negociacao.formaPagamento : (currentPacote?.tipo || ""),
       "[VALOR_ENTRADA]": isNegociacaoPersonalizada 
