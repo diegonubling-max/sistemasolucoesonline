@@ -246,7 +246,7 @@ function AlunosList() {
               <TableRow>
                 <TableHead className="w-[80px]">CTR</TableHead>
                 <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
+                
                 <TableHead>Telefone</TableHead>
                 <TableHead>Vendedora</TableHead>
                 <TableHead>Status</TableHead>
@@ -257,7 +257,7 @@ function AlunosList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
@@ -279,7 +279,7 @@ function AlunosList() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{a.email}</TableCell>
+                  
                   <TableCell>{a.telefone}</TableCell>
                   <TableCell>{a.vendedora}</TableCell>
                   <TableCell><StatusAlunoBadge status={(a as any).status} /></TableCell>
