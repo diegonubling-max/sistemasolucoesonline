@@ -16,8 +16,10 @@ import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
+import { Route as AdminMinhaEquipeRouteImport } from './routes/_admin.minha-equipe'
 import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
 import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
+import { Route as AdminMinhaEquipeRouteImport } from './routes/_admin.minha-equipe'
 import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
 import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
 import { Route as AdminColaboradoresRouteImport } from './routes/_admin.colaboradores'
@@ -79,6 +81,11 @@ const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
 const AdminPacotesRoute = AdminPacotesRouteImport.update({
   id: '/pacotes',
   path: '/pacotes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMinhaEquipeRoute = AdminMinhaEquipeRouteImport.update({
+  id: '/minha-equipe',
+  path: '/minha-equipe',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
+  '/minha-equipe': typeof AdminMinhaEquipeRoute
   '/pacotes': typeof AdminPacotesRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
@@ -214,6 +222,7 @@ export interface FileRoutesByTo {
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
+  '/minha-equipe': typeof AdminMinhaEquipeRoute
   '/pacotes': typeof AdminPacotesRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
@@ -244,6 +253,7 @@ export interface FileRoutesById {
   '/_admin/colaboradores': typeof AdminColaboradoresRoute
   '/_admin/configuracoes': typeof AdminConfiguracoesRoute
   '/_admin/financeiro': typeof AdminFinanceiroRoute
+  '/_admin/minha-equipe': typeof AdminMinhaEquipeRoute
   '/_admin/pacotes': typeof AdminPacotesRoute
   '/_admin/segmentos': typeof AdminSegmentosRoute
   '/_admin/setor-provas': typeof AdminSetorProvasRoute
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/colaboradores'
     | '/configuracoes'
     | '/financeiro'
+    | '/minha-equipe'
     | '/pacotes'
     | '/segmentos'
     | '/setor-provas'
@@ -303,6 +314,7 @@ export interface FileRouteTypes {
     | '/colaboradores'
     | '/configuracoes'
     | '/financeiro'
+    | '/minha-equipe'
     | '/pacotes'
     | '/segmentos'
     | '/setor-provas'
@@ -332,6 +344,7 @@ export interface FileRouteTypes {
     | '/_admin/colaboradores'
     | '/_admin/configuracoes'
     | '/_admin/financeiro'
+    | '/_admin/minha-equipe'
     | '/_admin/pacotes'
     | '/_admin/segmentos'
     | '/_admin/setor-provas'
@@ -428,6 +441,13 @@ declare module '@tanstack/react-router' {
       path: '/pacotes'
       fullPath: '/pacotes'
       preLoaderRoute: typeof AdminPacotesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/minha-equipe': {
+      id: '/_admin/minha-equipe'
+      path: '/minha-equipe'
+      fullPath: '/minha-equipe'
+      preLoaderRoute: typeof AdminMinhaEquipeRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/financeiro': {
@@ -570,6 +590,7 @@ interface AdminRouteChildren {
   AdminColaboradoresRoute: typeof AdminColaboradoresRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
+  AdminMinhaEquipeRoute: typeof AdminMinhaEquipeRoute
   AdminPacotesRoute: typeof AdminPacotesRoute
   AdminSegmentosRoute: typeof AdminSegmentosRoute
   AdminSetorProvasRoute: typeof AdminSetorProvasRoute
@@ -588,6 +609,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminColaboradoresRoute: AdminColaboradoresRoute,
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,
+  AdminMinhaEquipeRoute: AdminMinhaEquipeRoute,
   AdminPacotesRoute: AdminPacotesRoute,
   AdminSegmentosRoute: AdminSegmentosRoute,
   AdminSetorProvasRoute: AdminSetorProvasRoute,
