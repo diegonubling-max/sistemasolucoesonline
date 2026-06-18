@@ -55,6 +55,17 @@ function AdminSettings() {
 
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
 
+  const { data: meColab } = useQuery({
+    queryKey: ["me-colab-config", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data } = await supabase.from('colaboradores').select('responsavel_polo, polo_id').eq('user_id', session.user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
+  const isResponsavel = !!(meColab as any)?.responsavel_polo;
+
   useEffect(() => {
     async function fetchPolos() {
       const { data } = await supabase.from("polos").select("*").eq("ativo", true).order("nome");
