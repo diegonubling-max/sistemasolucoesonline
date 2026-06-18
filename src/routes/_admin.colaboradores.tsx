@@ -420,6 +420,19 @@ function ColaboradoresList() {
                     />
                   </div>
 
+                  {isSuperAdmin && (
+                    <div className="flex items-start justify-between p-4 border-2 border-amber-300 bg-amber-50 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <Crown className="h-5 w-5 text-amber-600 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-amber-900">Responsável pelo Polo</p>
+                          <p className="text-xs text-amber-700">Este colaborador pode gerenciar a equipe do polo</p>
+                        </div>
+                      </div>
+                      <Switch checked={isResponsavel} onCheckedChange={setIsResponsavel} />
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                     <h3 className="text-sm font-semibold flex items-center gap-2">
                       <Shield className="h-4 w-4" /> Permissões
