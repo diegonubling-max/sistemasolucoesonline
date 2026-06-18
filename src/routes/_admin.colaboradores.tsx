@@ -498,7 +498,16 @@ function ColaboradoresList() {
                 <TableRow><TableCell colSpan={6} className="text-center py-8">Nenhum colaborador encontrado.</TableCell></TableRow>
               ) : filteredColaboradores?.map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.nome}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <span>{c.nome}</span>
+                      {(c as any).responsavel_polo && (
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-100 gap-1">
+                          <Crown className="h-3 w-3" /> Responsável
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{c.polos?.nome}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{c.setor}</Badge>
