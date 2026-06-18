@@ -223,6 +223,7 @@ function ColaboradoresList() {
         dar_baixa_pagamentos: false,
         agendar_provas: false,
         gerenciar_prova_final: false,
+        ver_setor_provas: false,
         ver_relatorios: false,
         ver_configuracoes: false,
       });
