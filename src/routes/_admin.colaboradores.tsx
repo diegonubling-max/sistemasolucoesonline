@@ -201,7 +201,7 @@ function ColaboradoresList() {
         polo_id: editingColab.polo_id,
         setor: editingColab.setor,
       });
-      
+      setIsResponsavel(!!editingColab.responsavel_polo);
       const perms = editingColab.colaborador_permissoes?.[0] || {};
       const newPerms: Record<string, boolean> = {};
       PERMISSIONS_LIST.forEach(p => {
@@ -216,6 +216,7 @@ function ColaboradoresList() {
         polo_id: "",
         setor: "",
       });
+      setIsResponsavel(false);
       setFormPerms({
         ver_alunos: false,
         cadastrar_alunos: false,
@@ -230,6 +231,17 @@ function ColaboradoresList() {
       });
     }
   }, [editingColab, form]);
+
+  // Quando ativa "Responsável de Polo", marca todas permissões
+  useEffect(() => {
+    if (isResponsavel) {
+      setFormPerms((prev) => {
+        const all: Record<string, boolean> = {};
+        Object.keys(prev).forEach((k) => { all[k] = true; });
+        return all;
+      });
+    }
+  }, [isResponsavel]);
 
   const manageMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
