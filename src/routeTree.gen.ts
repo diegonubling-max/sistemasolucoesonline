@@ -16,7 +16,6 @@ import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
-import { Route as AdminMinhaEquipeRouteImport } from './routes/_admin.minha-equipe'
 import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
 import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminMinhaEquipeRouteImport } from './routes/_admin.minha-equipe'
@@ -71,6 +70,11 @@ const AlunoLoginRoute = AlunoLoginRouteImport.update({
 const AdminSetorProvasRoute = AdminSetorProvasRouteImport.update({
   id: '/setor-provas',
   path: '/setor-provas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMinhaEquipeRoute = AdminMinhaEquipeRouteImport.update({
+  id: '/minha-equipe',
+  path: '/minha-equipe',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
