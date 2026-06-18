@@ -178,26 +178,30 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
         </CardContent>
       </Card>
 
-      {/* Lista de Cursos */}
-      <div className="space-y-4">
+      {/* Lista de Cursos (Accordion - múltiplos abertos) */}
+      <Accordion type="multiple" className="space-y-3">
         {progresso.map((curso) => (
-          <Card key={curso.id}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-md flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2">
+          <AccordionItem
+            key={curso.id}
+            value={curso.id}
+            className="border rounded-lg bg-card px-4"
+          >
+            <AccordionTrigger className="hover:no-underline py-4">
+              <div className="flex items-center justify-between gap-2 w-full pr-2">
+                <span className="flex items-center gap-2 font-medium">
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                   {curso.nome}
                 </span>
                 <span className="text-sm font-normal text-muted-foreground">
                   {curso.aulasConcluidas}/{curso.totalAulas} concluídas · engajamento {curso.mediaProgresso}%
                 </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
               {curso.aulas.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhuma aula cadastrada.</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 pb-2">
                   {curso.aulas.map((aula) => (
                     <div key={aula.id} className="space-y-1">
                       <div className="flex items-center justify-between gap-2 text-sm">
@@ -217,10 +221,11 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </AccordionContent>
+          </AccordionItem>
         ))}
-      </div>
+      </Accordion>
+
     </div>
   );
 }
