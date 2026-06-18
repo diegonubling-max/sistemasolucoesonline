@@ -1,0 +1,1155 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
+import {
+  Plus, Search, Pencil, Trash2, Loader2, Send, FileText, Upload, Download,
+  Building2, CheckCircle2, AlertCircle, Eye,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { PageHeader } from "@/components/admin/PageHeader";
+import {
+  Tabs, TabsContent, TabsList, TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import declaracaoConclusaoTpl from "@/templates/declaracao-conclusao.html?raw";
+
+export const Route = createFileRoute("/_admin/setor-provas")({
+  component: SetorProvasPage,
+});
+
+const sb = supabase as any;
+
+function SetorProvasPage() {
+  const { session } = useAuth();
+  const [tab, setTab] = useState("documentacao");
+  const [certOpen, setCertOpen] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Setor de Provas"
+        description="Documentação, envios para certificadoras e controle de certificados"
+        actions={
+          <Button variant="outline" onClick={() => setCertOpen(true)}>
+            <Building2 className="h-4 w-4 mr-2" /> Certificadoras
+          </Button>
+        }
+      />
+
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="documentacao">Documentação</TabsTrigger>
+          <TabsTrigger value="envios">Envios para Certificadora</TabsTrigger>
+          <TabsTrigger value="certificados">Certificados</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="documentacao"><DocumentacaoTab /></TabsContent>
+        <TabsContent value="envios"><EnviosTab /></TabsContent>
+        <TabsContent value="certificados"><CertificadosTab /></TabsContent>
+      </Tabs>
+
+      <CertificadorasModal open={certOpen} onOpenChange={setCertOpen} />
+    </div>
+  );
+}
+
+/* ============================== ABA 1: DOCUMENTAÇÃO ============================== */
+
+function usePoloFilter() {
+  const [selectedPoloId, setSelectedPoloId] = useState<string>(
+    () => sessionStorage.getItem("selected_polo_id") || "all",
+  );
+  useEffect(() => {
+    const h = () => setSelectedPoloId(sessionStorage.getItem("selected_polo_id") || "all");
+    window.addEventListener("polo-changed", h);
+    return () => window.removeEventListener("polo-changed", h);
+  }, []);
+  return selectedPoloId;
+}
+
+function DocumentacaoTab() {
+  const qc = useQueryClient();
+  const selectedPoloId = usePoloFilter();
+  const [search, setSearch] = useState("");
+  const [statusDoc, setStatusDoc] = useState<string>("all");
+  const [loteFilter, setLoteFilter] = useState<string>("all");
+  const [editAlunoId, setEditAlunoId] = useState<string | null>(null);
+  const [encAlunoId, setEncAlunoId] = useState<string | null>(null);
+  const [novoOpen, setNovoOpen] = useState(false);
+
+  const { data: rows, isLoading } = useQuery({
+    queryKey: ["sp-doc-rows", selectedPoloId],
+    queryFn: async () => {
+      // alunos com prova_resultados aprovado=true OU presentes em aluno_documentos
+      const { data: aprovados } = await sb
+        .from("prova_resultados")
+        .select("aluno_id")
+        .eq("aprovado", true);
+      const { data: comDocs } = await sb
+        .from("aluno_documentos")
+        .select("aluno_id");
+      const ids = Array.from(new Set([
+        ...(aprovados ?? []).map((r: any) => r.aluno_id).filter(Boolean),
+        ...(comDocs ?? []).map((r: any) => r.aluno_id).filter(Boolean),
+      ]));
+      if (ids.length === 0) return [];
+
+      let q = sb
+        .from("alunos")
+        .select(`
+          id, nome, telefone, cpf, vendedora, polo_id,
+          polos(nome),
+          aluno_documentos(*),
+          declaracoes_matricula(id),
+          lote_alunos(
+            lote_id,
+            lotes(id, mes_ano, data_envio, enviado, certificadoras(nome))
+          )
+        `)
+        .in("id", ids);
+      if (selectedPoloId !== "all") q = q.eq("polo_id", selectedPoloId);
+
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: lotes } = useQuery({
+    queryKey: ["sp-lotes-filter"],
+    queryFn: async () => {
+      const { data } = await sb.from("lotes").select("id, mes_ano").order("mes_ano", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const getStatusDoc = (al: any) => {
+    const d = al.aluno_documentos?.[0];
+    if (!d) return "incompleta";
+    const ok = d.rg_cpf && d.historico_fundamental && d.historico_fund_medio && d.comprovante_residencia;
+    return ok ? "completa" : "incompleta";
+  };
+
+  const filtered = useMemo(() => {
+    if (!rows) return [];
+    const s = search.trim().toLowerCase();
+    return rows.filter((r: any) => {
+      if (s && !r.nome?.toLowerCase().includes(s) && !r.telefone?.includes(s)) return false;
+      if (statusDoc !== "all" && getStatusDoc(r) !== statusDoc) return false;
+      if (loteFilter !== "all") {
+        const has = r.lote_alunos?.some((la: any) => la.lote_id === loteFilter);
+        if (!has) return false;
+      }
+      return true;
+    });
+  }, [rows, search, statusDoc, loteFilter]);
+
+  const deleteMut = useMutation({
+    mutationFn: async (alunoId: string) => {
+      const { data: la } = await sb.from("lote_alunos").select("id").eq("aluno_id", alunoId);
+      if (la?.length) await sb.from("lote_alunos").delete().eq("aluno_id", alunoId);
+      await sb.from("aluno_documentos").delete().eq("aluno_id", alunoId);
+      await sb.from("aluno_documentos_arquivos").delete().eq("aluno_id", alunoId);
+    },
+    onSuccess: () => {
+      toast.success("Registro removido do setor de provas");
+      qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="relative md:col-span-2">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar por nome ou telefone..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <Select value={statusDoc} onValueChange={setStatusDoc}>
+          <SelectTrigger><SelectValue placeholder="Status documentação" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="completa">Completa</SelectItem>
+            <SelectItem value="incompleta">Incompleta</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={loteFilter} onValueChange={setLoteFilter}>
+          <SelectTrigger><SelectValue placeholder="Lote" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os lotes</SelectItem>
+            {lotes?.map((l: any) => (
+              <SelectItem key={l.id} value={l.id}>{l.mes_ano}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex justify-end">
+        <Button onClick={() => setNovoOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" /> Novo Registro
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6 overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Aluno</TableHead>
+                <TableHead>Polo</TableHead>
+                <TableHead>Vendedora</TableHead>
+                <TableHead>Documentação</TableHead>
+                <TableHead>Certificadora</TableHead>
+                <TableHead>Lote</TableHead>
+                <TableHead>Data Envio</TableHead>
+                <TableHead>Declaração</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow><TableCell colSpan={9} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum aluno encontrado.</TableCell></TableRow>
+              ) : filtered.map((r: any) => {
+                const status = getStatusDoc(r);
+                const la = r.lote_alunos?.[0];
+                const lote = la?.lotes;
+                return (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-medium">{r.nome}</TableCell>
+                    <TableCell>{r.polos?.nome ?? "-"}</TableCell>
+                    <TableCell>{r.vendedora ?? "-"}</TableCell>
+                    <TableCell>
+                      <Badge variant={status === "completa" ? "default" : "secondary"}>
+                        {status === "completa" ? "Completa" : "Incompleta"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{lote?.certificadoras?.nome ?? "-"}</TableCell>
+                    <TableCell>{lote?.mes_ano ?? "-"}</TableCell>
+                    <TableCell>{lote?.data_envio ? new Date(lote.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
+                    <TableCell>
+                      {r.declaracoes_matricula?.length > 0 ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700">Gerada</Badge>
+                      ) : (
+                        <GerarDeclaracaoButton aluno={r} />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button size="sm" variant="ghost" onClick={() => setEncAlunoId(r.id)} title="Encaminhar para certificadora">
+                        <Send className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditAlunoId(r.id)} title="Editar">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => {
+                        if (confirm(`Remover ${r.nome} do setor de provas?`)) deleteMut.mutate(r.id);
+                      }} title="Excluir">
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {editAlunoId && <EditarRegistroModal alunoId={editAlunoId} onClose={() => setEditAlunoId(null)} />}
+      {encAlunoId && <EncaminharModal alunoId={encAlunoId} onClose={() => setEncAlunoId(null)} />}
+      <NovoRegistroModal open={novoOpen} onClose={() => setNovoOpen(false)} />
+    </div>
+  );
+}
+
+/* ============================== GERAR DECLARAÇÃO ============================== */
+
+function GerarDeclaracaoButton({ aluno }: { aluno: any }) {
+  const qc = useQueryClient();
+  const mut = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: colab } = await sb.from("colaboradores").select("id").eq("user_id", user?.id).maybeSingle();
+      const { data: polo } = await sb.from("polos").select("cidade").eq("id", aluno.polo_id).maybeSingle();
+
+      await sb.from("declaracoes_matricula").insert({ aluno_id: aluno.id, gerado_por: colab?.id });
+
+      const hoje = new Date();
+      const cidade = polo?.cidade || "";
+      const dataExtenso = `${hoje.getDate().toString().padStart(2, "0")} de ${hoje.toLocaleString("pt-BR", { month: "long" })} de ${hoje.getFullYear()}`;
+      const html = declaracaoConclusaoTpl
+        .replace(/\{\{NOME_ALUNO\}\}/g, aluno.nome ?? "")
+        .replace(/\{\{CPF_ALUNO\}\}/g, aluno.cpf ?? "")
+        .replace(/\{\{NIVEL\}\}/g, "Médio")
+        .replace(/\{\{CIDADE\}\}/g, cidade)
+        .replace(/\{\{DATA_EXTENSO\}\}/g, dataExtenso)
+        .replace(/<\/body>/i, `<script>window.addEventListener('load',function(){setTimeout(()=>window.print(),600);});</script></body>`);
+      const w = window.open("", "_blank");
+      if (!w) throw new Error("Bloqueador de popup ativo");
+      w.document.write(html);
+      w.document.close();
+    },
+    onSuccess: () => {
+      toast.success("Declaração gerada");
+      qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  return (
+    <Button size="sm" variant="outline" onClick={() => mut.mutate()} disabled={mut.isPending}>
+      <FileText className="h-3 w-3 mr-1" /> Gerar Declaração
+    </Button>
+  );
+}
+
+/* ============================== MODAL EDITAR REGISTRO ============================== */
+
+const DOC_FIELDS = [
+  { id: "rg_cpf", label: "RG e CPF" },
+  { id: "historico_fundamental", label: "Histórico Ensino Fundamental" },
+  { id: "historico_fund_medio", label: "Histórico Ensino Fund. e Médio" },
+  { id: "comprovante_residencia", label: "Comprovante de Residência" },
+];
+const VALID_FIELDS = [
+  { id: "rec_firma", label: "Rec. Firma" },
+  { id: "d_oficial", label: "D. Oficial" },
+  { id: "visto_confere", label: "Visto Confere" },
+];
+
+function EditarRegistroModal({ alunoId, onClose }: { alunoId: string; onClose: () => void }) {
+  const qc = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [form, setForm] = useState<any>({
+    rg_cpf: false, historico_fundamental: false, historico_fund_medio: false,
+    comprovante_residencia: false, outros: false, outros_descricao: "",
+    rec_firma: false, d_oficial: false, visto_confere: false,
+  });
+  const [uploading, setUploading] = useState(false);
+
+  const { data: aluno } = useQuery({
+    queryKey: ["sp-aluno-edit", alunoId],
+    queryFn: async () => {
+      const { data } = await sb.from("alunos").select("id, nome, telefone, vendedora, polos(nome)").eq("id", alunoId).maybeSingle();
+      return data;
+    },
+  });
+  const { data: doc } = useQuery({
+    queryKey: ["sp-aluno-doc", alunoId],
+    queryFn: async () => {
+      const { data } = await sb.from("aluno_documentos").select("*").eq("aluno_id", alunoId).maybeSingle();
+      return data;
+    },
+  });
+  const { data: arquivos, refetch: refetchArquivos } = useQuery({
+    queryKey: ["sp-aluno-arquivos", alunoId],
+    queryFn: async () => {
+      const { data } = await sb.from("aluno_documentos_arquivos").select("*").eq("aluno_id", alunoId).order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  useEffect(() => {
+    if (doc) {
+      setForm({
+        rg_cpf: !!doc.rg_cpf, historico_fundamental: !!doc.historico_fundamental,
+        historico_fund_medio: !!doc.historico_fund_medio,
+        comprovante_residencia: !!doc.comprovante_residencia,
+        outros: !!doc.outros, outros_descricao: doc.outros_descricao ?? "",
+        rec_firma: !!doc.rec_firma, d_oficial: !!doc.d_oficial, visto_confere: !!doc.visto_confere,
+      });
+    }
+  }, [doc]);
+
+  const saveMut = useMutation({
+    mutationFn: async () => {
+      if (doc) {
+        const { error } = await sb.from("aluno_documentos").update(form).eq("aluno_id", alunoId);
+        if (error) throw error;
+      } else {
+        const { error } = await sb.from("aluno_documentos").insert({ aluno_id: alunoId, ...form });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Documentos atualizados");
+      qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
+      qc.invalidateQueries({ queryKey: ["sp-aluno-doc", alunoId] });
+      onClose();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handleUpload = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const path = `${alunoId}/${Date.now()}-${file.name}`;
+        const { error: upErr } = await supabase.storage.from("documentos-alunos").upload(path, file);
+        if (upErr) throw upErr;
+        const { error: dbErr } = await sb.from("aluno_documentos_arquivos").insert({
+          aluno_id: alunoId, nome_arquivo: file.name, url: path, tipo: file.type,
+        });
+        if (dbErr) throw dbErr;
+      }
+      toast.success("Arquivos enviados");
+      refetchArquivos();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const downloadFile = async (path: string, nome: string) => {
+    const { data, error } = await supabase.storage.from("documentos-alunos").createSignedUrl(path, 60);
+    if (error) { toast.error(error.message); return; }
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.download = nome;
+    a.target = "_blank";
+    a.click();
+  };
+
+  const deleteFile = async (id: string, path: string) => {
+    if (!confirm("Excluir arquivo?")) return;
+    await supabase.storage.from("documentos-alunos").remove([path]);
+    await sb.from("aluno_documentos_arquivos").delete().eq("id", id);
+    refetchArquivos();
+    toast.success("Arquivo excluído");
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Editar Registro — Setor de Provas</DialogTitle>
+          <DialogDescription>Documentação, arquivos e validações do aluno</DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div><Label>Nome do Aluno</Label><Input value={aluno?.nome ?? ""} readOnly /></div>
+          <div><Label>Polo</Label><Input value={aluno?.polos?.nome ?? ""} readOnly /></div>
+          <div><Label>Quem fez a venda</Label><Input value={aluno?.vendedora ?? ""} readOnly /></div>
+          <div><Label>Telefone</Label><Input value={aluno?.telefone ?? ""} readOnly /></div>
+        </div>
+
+        <div className="space-y-3 border-t pt-4">
+          <h4 className="font-semibold">Documentos Enviados</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {DOC_FIELDS.map((f) => (
+              <label key={f.id} className="flex items-center gap-2 cursor-pointer">
+                <Checkbox checked={form[f.id]} onCheckedChange={(v) => setForm({ ...form, [f.id]: !!v })} />
+                <span className="text-sm">{f.label}</span>
+              </label>
+            ))}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={form.outros} onCheckedChange={(v) => setForm({ ...form, outros: !!v })} />
+              <span className="text-sm">Outros</span>
+            </label>
+          </div>
+          {form.outros && (
+            <Textarea
+              placeholder="Descreva os outros documentos..."
+              value={form.outros_descricao}
+              onChange={(e) => setForm({ ...form, outros_descricao: e.target.value })}
+            />
+          )}
+        </div>
+
+        <div className="space-y-3 border-t pt-4">
+          <h4 className="font-semibold">Anexar Arquivos dos Documentos</h4>
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50"
+          >
+            <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              {uploading ? "Enviando..." : "Arraste arquivos aqui ou clique para selecionar (PDF, JPG, PNG)"}
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="application/pdf,image/jpeg,image/png"
+              className="hidden"
+              onChange={(e) => handleUpload(e.target.files)}
+            />
+          </div>
+          {arquivos && arquivos.length > 0 && (
+            <div className="space-y-2">
+              {arquivos.map((a: any) => (
+                <div key={a.id} className="flex items-center justify-between border rounded p-2">
+                  <span className="text-sm truncate flex-1">{a.nome_arquivo}</span>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => downloadFile(a.url, a.nome_arquivo)}>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => deleteFile(a.id, a.url)}>
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3 border-t pt-4">
+          <h4 className="font-semibold">Validações</h4>
+          <div className="grid grid-cols-3 gap-3">
+            {VALID_FIELDS.map((f) => (
+              <label key={f.id} className="flex items-center gap-2 cursor-pointer">
+                <Checkbox checked={form[f.id]} onCheckedChange={(v) => setForm({ ...form, [f.id]: !!v })} />
+                <span className="text-sm">{f.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
+            {saveMut.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ============================== MODAL ENCAMINHAR ============================== */
+
+function EncaminharModal({ alunoId, onClose }: { alunoId: string; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [certId, setCertId] = useState<string>("");
+  const [dataEnvio, setDataEnvio] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [loteId, setLoteId] = useState<string>("");
+  const [novoLote, setNovoLote] = useState<string>("");
+
+  const { data: certs } = useQuery({
+    queryKey: ["sp-certs-active"],
+    queryFn: async () => {
+      const { data } = await sb.from("certificadoras").select("id, nome").eq("ativo", true).order("nome");
+      return data ?? [];
+    },
+  });
+  const { data: lotesDisponiveis } = useQuery({
+    queryKey: ["sp-lotes-by-cert", certId],
+    queryFn: async () => {
+      if (!certId) return [];
+      const { data } = await sb.from("lotes").select("id, mes_ano").eq("certificadora_id", certId).eq("enviado", false).order("mes_ano", { ascending: false });
+      return data ?? [];
+    },
+    enabled: !!certId,
+  });
+
+  const mut = useMutation({
+    mutationFn: async () => {
+      if (!certId) throw new Error("Selecione uma certificadora");
+      let usedLoteId = loteId;
+      if (!usedLoteId) {
+        if (!novoLote.match(/^\d{2}\/\d{4}$/)) throw new Error("Lote inválido (use MM/AAAA)");
+        const { data, error } = await sb.from("lotes").insert({
+          mes_ano: novoLote, certificadora_id: certId, data_envio: dataEnvio, enviado: false,
+        }).select("id").single();
+        if (error) throw error;
+        usedLoteId = data.id;
+      } else {
+        await sb.from("lotes").update({ data_envio: dataEnvio }).eq("id", usedLoteId);
+      }
+      // Remove vínculos antigos (apenas em lotes não enviados)
+      const { data: oldLinks } = await sb
+        .from("lote_alunos")
+        .select("id, lotes(enviado)")
+        .eq("aluno_id", alunoId);
+      const removeIds = (oldLinks ?? []).filter((l: any) => !l.lotes?.enviado).map((l: any) => l.id);
+      if (removeIds.length) await sb.from("lote_alunos").delete().in("id", removeIds);
+
+      const { error } = await sb.from("lote_alunos").insert({ lote_id: usedLoteId, aluno_id: alunoId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Aluno encaminhado para certificadora");
+      qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
+      qc.invalidateQueries({ queryKey: ["sp-lotes"] });
+      onClose();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Encaminhar para Certificadora</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Certificadora</Label>
+            <Select value={certId} onValueChange={setCertId}>
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>
+                {certs?.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Data de Envio</Label>
+            <Input type="date" value={dataEnvio} onChange={(e) => setDataEnvio(e.target.value)} />
+          </div>
+          <div>
+            <Label>Lote existente</Label>
+            <Select value={loteId} onValueChange={setLoteId} disabled={!certId}>
+              <SelectTrigger><SelectValue placeholder="Selecione um lote pendente (ou crie novo abaixo)" /></SelectTrigger>
+              <SelectContent>
+                {lotesDisponiveis?.map((l: any) => <SelectItem key={l.id} value={l.id}>{l.mes_ano}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          {!loteId && (
+            <div>
+              <Label>Ou criar novo lote (MM/AAAA)</Label>
+              <Input placeholder="06/2026" value={novoLote} onChange={(e) => setNovoLote(e.target.value)} />
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
+            {mut.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Encaminhar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ============================== MODAL NOVO REGISTRO ============================== */
+
+function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [alunoSel, setAlunoSel] = useState<any>(null);
+
+  const { data: alunos } = useQuery({
+    queryKey: ["sp-search-alunos", search],
+    queryFn: async () => {
+      if (search.length < 2) return [];
+      const t = `%${search}%`;
+      const ctrNum = parseInt(search, 10);
+      const filterParts = [`nome.ilike.${t}`, `cpf.ilike.${t}`];
+      if (!isNaN(ctrNum)) filterParts.push(`ctr.eq.${ctrNum}`);
+      const { data } = await sb.from("alunos").select("id, nome, cpf, ctr, polo_id, vendedora, polos(nome)").or(filterParts.join(",")).limit(10);
+      return data ?? [];
+    },
+    enabled: search.length >= 2,
+  });
+
+  const mut = useMutation({
+    mutationFn: async () => {
+      if (!alunoSel) throw new Error("Selecione um aluno");
+      const { data: existing } = await sb.from("aluno_documentos").select("id").eq("aluno_id", alunoSel.id).maybeSingle();
+      if (existing) throw new Error("Aluno já cadastrado no setor de provas");
+      const { error } = await sb.from("aluno_documentos").insert({ aluno_id: alunoSel.id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Aluno adicionado ao setor de provas");
+      qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
+      setAlunoSel(null);
+      setSearch("");
+      onClose();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Novo Registro — Setor de Provas</DialogTitle>
+          <DialogDescription>Adicione um aluno do sistema antigo</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Buscar aluno (nome, CPF ou CTR)</Label>
+            <Input value={search} onChange={(e) => { setSearch(e.target.value); setAlunoSel(null); }} placeholder="Digite ao menos 2 caracteres" />
+          </div>
+          {!alunoSel && alunos && alunos.length > 0 && (
+            <div className="border rounded max-h-60 overflow-y-auto">
+              {alunos.map((a: any) => (
+                <button key={a.id} type="button" onClick={() => setAlunoSel(a)} className="w-full text-left p-2 hover:bg-muted text-sm border-b last:border-0">
+                  <div className="font-medium">{a.nome}</div>
+                  <div className="text-xs text-muted-foreground">CPF: {a.cpf} · CTR: {a.ctr ?? "-"} · {a.polos?.nome ?? "—"}</div>
+                </button>
+              ))}
+            </div>
+          )}
+          {alunoSel && (
+            <div className="border rounded p-3 bg-muted/30 space-y-1">
+              <div className="font-medium">{alunoSel.nome}</div>
+              <div className="text-xs">Polo: {alunoSel.polos?.nome ?? "—"}</div>
+              <div className="text-xs">Vendedora: {alunoSel.vendedora ?? "—"}</div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => mut.mutate()} disabled={!alunoSel || mut.isPending}>Adicionar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ============================== ABA 2: ENVIOS ============================== */
+
+function EnviosTab() {
+  const qc = useQueryClient();
+  const [novoOpen, setNovoOpen] = useState(false);
+  const [verLote, setVerLote] = useState<any>(null);
+
+  const { data: lotes, isLoading } = useQuery({
+    queryKey: ["sp-lotes"],
+    queryFn: async () => {
+      const { data } = await sb
+        .from("lotes")
+        .select("id, mes_ano, data_envio, enviado, certificadoras(nome), lote_alunos(id)")
+        .order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const marcarEnviado = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await sb.from("lotes").update({ enviado: true, data_envio: new Date().toISOString().slice(0, 10) }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Lote marcado como enviado");
+      qc.invalidateQueries({ queryKey: ["sp-lotes"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  const deleteLote = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await sb.from("lotes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Lote excluído");
+      qc.invalidateQueries({ queryKey: ["sp-lotes"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button onClick={() => setNovoOpen(true)}><Plus className="h-4 w-4 mr-2" /> Novo Lote</Button>
+      </div>
+      <Card>
+        <CardContent className="pt-6 overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Lote</TableHead>
+                <TableHead>Certificadora</TableHead>
+                <TableHead>Total Alunos</TableHead>
+                <TableHead>Data Envio</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+              ) : lotes?.length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum lote cadastrado.</TableCell></TableRow>
+              ) : lotes?.map((l: any) => (
+                <TableRow key={l.id}>
+                  <TableCell className="font-medium">{l.mes_ano}</TableCell>
+                  <TableCell>{l.certificadoras?.nome ?? "-"}</TableCell>
+                  <TableCell>{l.lote_alunos?.length ?? 0}</TableCell>
+                  <TableCell>{l.data_envio ? new Date(l.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
+                  <TableCell>
+                    <Badge variant={l.enviado ? "default" : "secondary"}>{l.enviado ? "Enviado" : "Pendente"}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <Button size="sm" variant="ghost" onClick={() => setVerLote(l)} title="Ver alunos">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    {!l.enviado && (
+                      <Button size="sm" variant="ghost" onClick={() => marcarEnviado.mutate(l.id)} title="Marcar como enviado">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      </Button>
+                    )}
+                    <Button size="sm" variant="ghost" onClick={() => { if (confirm("Excluir lote?")) deleteLote.mutate(l.id); }} title="Excluir">
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <NovoLoteModal open={novoOpen} onClose={() => setNovoOpen(false)} />
+      {verLote && <AlunosLoteModal lote={verLote} onClose={() => setVerLote(null)} />}
+    </div>
+  );
+}
+
+function NovoLoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [mesAno, setMesAno] = useState("");
+  const [certId, setCertId] = useState("");
+  const { data: certs } = useQuery({
+    queryKey: ["sp-certs-active"],
+    queryFn: async () => {
+      const { data } = await sb.from("certificadoras").select("id, nome").eq("ativo", true).order("nome");
+      return data ?? [];
+    },
+  });
+  const mut = useMutation({
+    mutationFn: async () => {
+      if (!mesAno.match(/^\d{2}\/\d{4}$/)) throw new Error("Use o formato MM/AAAA");
+      if (!certId) throw new Error("Selecione uma certificadora");
+      const { error } = await sb.from("lotes").insert({ mes_ano: mesAno, certificadora_id: certId, enviado: false });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Lote criado");
+      qc.invalidateQueries({ queryKey: ["sp-lotes"] });
+      setMesAno(""); setCertId("");
+      onClose();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Novo Lote</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Mês/Ano (MM/AAAA)</Label>
+            <Input placeholder="06/2026" value={mesAno} onChange={(e) => setMesAno(e.target.value)} />
+          </div>
+          <div>
+            <Label>Certificadora</Label>
+            <Select value={certId} onValueChange={setCertId}>
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>
+                {certs?.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>Criar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AlunosLoteModal({ lote, onClose }: { lote: any; onClose: () => void }) {
+  const { data: alunos } = useQuery({
+    queryKey: ["sp-alunos-lote", lote.id],
+    queryFn: async () => {
+      const { data } = await sb.from("lote_alunos").select("id, alunos(id, nome, cpf, polos(nome))").eq("lote_id", lote.id);
+      return data ?? [];
+    },
+  });
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Alunos do Lote {lote.mes_ano}</DialogTitle>
+          <DialogDescription>{lote.certificadoras?.nome}</DialogDescription>
+        </DialogHeader>
+        <div className="max-h-96 overflow-y-auto">
+          {alunos?.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhum aluno no lote.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>CPF</TableHead>
+                  <TableHead>Polo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {alunos?.map((la: any) => (
+                  <TableRow key={la.id}>
+                    <TableCell>{la.alunos?.nome}</TableCell>
+                    <TableCell>{la.alunos?.cpf}</TableCell>
+                    <TableCell>{la.alunos?.polos?.nome ?? "-"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ============================== ABA 3: CERTIFICADOS ============================== */
+
+function CertificadosTab() {
+  const selectedPoloId = usePoloFilter();
+  const { data: rows, isLoading } = useQuery({
+    queryKey: ["sp-certificados", selectedPoloId],
+    queryFn: async () => {
+      const { data } = await sb
+        .from("lote_alunos")
+        .select(`
+          id,
+          alunos(id, nome, polo_id, polos(nome)),
+          lotes!inner(mes_ano, data_envio, enviado, certificadoras(nome))
+        `)
+        .eq("lotes.enviado", true);
+      const filtered = (data ?? []).filter((r: any) =>
+        selectedPoloId === "all" || r.alunos?.polo_id === selectedPoloId
+      );
+      return filtered;
+    },
+  });
+  return (
+    <Card>
+      <CardContent className="pt-6 overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Aluno</TableHead>
+              <TableHead>Polo</TableHead>
+              <TableHead>Lote</TableHead>
+              <TableHead>Certificadora</TableHead>
+              <TableHead>Data Envio</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow><TableCell colSpan={6} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+            ) : rows?.length === 0 ? (
+              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum certificado.</TableCell></TableRow>
+            ) : rows?.map((r: any) => (
+              <TableRow key={r.id}>
+                <TableCell>{r.alunos?.nome}</TableCell>
+                <TableCell>{r.alunos?.polos?.nome ?? "-"}</TableCell>
+                <TableCell>{r.lotes?.mes_ano}</TableCell>
+                <TableCell>{r.lotes?.certificadoras?.nome ?? "-"}</TableCell>
+                <TableCell>{r.lotes?.data_envio ? new Date(r.lotes.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
+                <TableCell><Badge variant="outline">Aguardando</Badge></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ============================== MODAL CERTIFICADORAS ============================== */
+
+function CertificadorasModal({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState<any>(null);
+  const [formOpen, setFormOpen] = useState(false);
+
+  const { data: certs, isLoading } = useQuery({
+    queryKey: ["sp-certs-all"],
+    queryFn: async () => {
+      const { data } = await sb.from("certificadoras").select("*").order("nome");
+      return data ?? [];
+    },
+    enabled: open,
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await sb.from("certificadoras").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Certificadora excluída");
+      qc.invalidateQueries({ queryKey: ["sp-certs-all"] });
+      qc.invalidateQueries({ queryKey: ["sp-certs-active"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Certificadoras</DialogTitle>
+            <DialogDescription>Cadastro de certificadoras que validam os certificados</DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={() => { setEditing(null); setFormOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" /> Nova Certificadora
+            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Cidade/UF</TableHead>
+                  <TableHead>INEP</TableHead>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Validações</TableHead>
+                  <TableHead>Ativo</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={8} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+                ) : certs?.length === 0 ? (
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma certificadora cadastrada.</TableCell></TableRow>
+                ) : certs?.map((c: any) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.nome}</TableCell>
+                    <TableCell>{[c.cidade, c.estado].filter(Boolean).join("/")}</TableCell>
+                    <TableCell>{c.codigo_inep ?? "-"}</TableCell>
+                    <TableCell>{c.responsavel ?? "-"}</TableCell>
+                    <TableCell>{c.telefone ?? "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 text-xs">
+                        {c.rec_firma && <Badge variant="outline">RF</Badge>}
+                        {c.d_oficial && <Badge variant="outline">DO</Badge>}
+                        {c.visto_confere && <Badge variant="outline">VC</Badge>}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={c.ativo ? "default" : "secondary"}>{c.ativo ? "Ativo" : "Inativo"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button size="sm" variant="ghost" onClick={() => { setEditing(c); setFormOpen(true); }}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => { if (confirm("Excluir certificadora?")) deleteMut.mutate(c.id); }}>
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {formOpen && (
+        <CertificadoraFormModal
+          editing={editing}
+          onClose={() => { setFormOpen(false); setEditing(null); }}
+        />
+      )}
+    </>
+  );
+}
+
+function CertificadoraFormModal({ editing, onClose }: { editing: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState({
+    nome: editing?.nome ?? "",
+    cidade: editing?.cidade ?? "",
+    estado: editing?.estado ?? "",
+    codigo_inep: editing?.codigo_inep ?? "",
+    responsavel: editing?.responsavel ?? "",
+    telefone: editing?.telefone ?? "",
+    rec_firma: editing?.rec_firma ?? false,
+    d_oficial: editing?.d_oficial ?? false,
+    visto_confere: editing?.visto_confere ?? false,
+    ativo: editing?.ativo ?? true,
+  });
+  const mut = useMutation({
+    mutationFn: async () => {
+      if (!form.nome.trim()) throw new Error("Nome obrigatório");
+      if (editing) {
+        const { error } = await sb.from("certificadoras").update(form).eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await sb.from("certificadoras").insert(form);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editing ? "Certificadora atualizada" : "Certificadora criada");
+      qc.invalidateQueries({ queryKey: ["sp-certs-all"] });
+      qc.invalidateQueries({ queryKey: ["sp-certs-active"] });
+      onClose();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{editing ? "Editar" : "Nova"} Certificadora</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2"><Label>Nome *</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
+          <div><Label>Cidade</Label><Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} /></div>
+          <div><Label>Estado (UF)</Label><Input maxLength={2} value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value.toUpperCase() })} /></div>
+          <div><Label>Código INEP</Label><Input value={form.codigo_inep} onChange={(e) => setForm({ ...form, codigo_inep: e.target.value })} /></div>
+          <div><Label>Responsável</Label><Input value={form.responsavel} onChange={(e) => setForm({ ...form, responsavel: e.target.value })} /></div>
+          <div className="col-span-2"><Label>Telefone do Responsável</Label><Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} /></div>
+        </div>
+        <div className="grid grid-cols-3 gap-3 border-t pt-3">
+          {VALID_FIELDS.map((f) => (
+            <label key={f.id} className="flex items-center gap-2 cursor-pointer">
+              <Checkbox checked={(form as any)[f.id]} onCheckedChange={(v) => setForm({ ...form, [f.id]: !!v })} />
+              <span className="text-sm">{f.label}</span>
+            </label>
+          ))}
+        </div>
+        <div className="flex items-center justify-between border-t pt-3">
+          <Label>Ativo</Label>
+          <Switch checked={form.ativo} onCheckedChange={(v) => setForm({ ...form, ativo: v })} />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
+            {mut.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
