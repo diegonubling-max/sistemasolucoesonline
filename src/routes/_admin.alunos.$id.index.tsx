@@ -411,17 +411,35 @@ function AlunoDetalhes() {
   const totalAberto = parcelas?.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
   const totalGeral = parcelas?.filter(p => p.status !== 'isento').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
 
-  const [copied, setCopied] = useState(false);
+  const [sendingAccess, setSendingAccess] = useState(false);
 
-  const handleCopyAccessData = () => {
+  const handleResendAccess = async () => {
     if (!aluno) return;
-    const primeiroNome = aluno.nome.split(" ")[0];
-    const senhaGerada = '1234' + primeiroNome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(' ')[0];
-    const text = `*SEJA BEM VINDO*\n\nLogin: ${aluno.ctr}\nSenha: ${senhaGerada}\n\nhttps://sistemasolucoesonline.lovable.app/aluno/login`;
-    navigator.clipboard.writeText(text);
-    toast.success("Dados copiados!");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (!aluno.telefone) {
+      toast.error("Aluno sem telefone cadastrado.");
+      return;
+    }
+    try {
+      setSendingAccess(true);
+      const primeiroNomeRaw = aluno.nome.split(" ")[0] ?? "";
+      const primeiroNomeLower = primeiroNomeRaw.toLowerCase();
+      const primeiroNomeCap = primeiroNomeRaw.charAt(0).toUpperCase() + primeiroNomeRaw.slice(1).toLowerCase();
+      const senha = `1234${primeiroNomeLower}`;
+      const mensagem =
+        `*🔐 Soluções Online — Seus dados de acesso:*\n\n` +
+        `Olá, *${primeiroNomeCap}*! Segue seus dados de acesso à área de estudos:\n\n` +
+        `📋 *Login:* ${aluno.ctr}\n` +
+        `🔑 *Senha:* ${senha}\n\n` +
+        `👉 Acesse em: https://sistemasolucoesonline.lovable.app/aluno/login\n\n` +
+        `Qualquer dúvida estamos à disposição! 😊`;
+      const { sendWhatsApp } = await import("@/services/zApiService");
+      await sendWhatsApp(aluno.telefone, mensagem);
+      toast.success("Acesso reenviado via WhatsApp!");
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao reenviar acesso.");
+    } finally {
+      setSendingAccess(false);
+    }
   };
 
   const updateStatus = useMutation({
@@ -502,9 +520,9 @@ function AlunoDetalhes() {
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
               </Link>
             </Button>
-            <Button variant="outline" className="border-blue-500 text-blue-600" onClick={handleCopyAccessData}>
-              {copied ? <CheckCircle2 className="h-4 w-4 mr-2" /> : <Key className="h-4 w-4 mr-2" />}
-              {copied ? "Copiado!" : "Copiar acesso"}
+            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleResendAccess} disabled={sendingAccess}>
+              {sendingAccess ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageSquare className="h-4 w-4 mr-2" />}
+              {sendingAccess ? "Enviando..." : "Reenviar acesso"}
             </Button>
             <Button variant="outline" onClick={() => setShowResetDefaultModal(true)}>
               <Key className="h-4 w-4 mr-2" /> Senha Padrão
