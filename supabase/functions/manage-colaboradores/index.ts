@@ -49,6 +49,8 @@ serve(async (req) => {
           setor,
           ativo: true,
           responsavel_polo: !!responsavel_polo,
+          ...(comissao_avista !== undefined ? { comissao_avista } : {}),
+          ...(comissao_parcelado !== undefined ? { comissao_parcelado } : {}),
         })
         .select()
         .single();
