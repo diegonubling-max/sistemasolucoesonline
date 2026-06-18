@@ -181,14 +181,18 @@ function StudentCourse() {
 
   const renderVideoPlayer = (url: string) => {
     if (!url) return <div className="aspect-video bg-black flex items-center justify-center text-white">URL de vídeo não fornecida</div>;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
 
     // YouTube
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      const id = url.includes('v=') ? url.split('v=')[1]?.split('&')[0] : url.split('/').pop();
+      const vid = url.includes('v=') ? url.split('v=')[1]?.split('&')[0] : url.split('/').pop();
+      const src = `https://www.youtube.com/embed/${vid}?enablejsapi=1&origin=${encodeURIComponent(origin)}`;
       return (
         <iframe
+          ref={iframeRef}
           className="w-full h-full"
-          src={`https://www.youtube.com/embed/${id}`}
+          src={src}
+          allow="autoplay; encrypted-media"
           allowFullScreen
         ></iframe>
       );
@@ -196,20 +200,22 @@ function StudentCourse() {
 
     // Vimeo
     if (url.includes('vimeo.com')) {
-      const id = url.split('/').pop();
+      const vid = url.split('/').pop();
       return (
         <iframe
+          ref={iframeRef}
           className="w-full h-full"
-          src={`https://player.vimeo.com/video/${id}`}
+          src={`https://player.vimeo.com/video/${vid}?api=1`}
           allowFullScreen
         ></iframe>
       );
     }
 
-    // Pandavideo (example pattern)
+    // Pandavideo
     if (url.includes('pandavideo.com.br')) {
       return (
         <iframe
+          ref={iframeRef}
           className="w-full h-full"
           src={url}
           allowFullScreen
