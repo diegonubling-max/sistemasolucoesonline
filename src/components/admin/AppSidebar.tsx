@@ -95,6 +95,8 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
 
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
   const isAdminPolo = colaborador?.setor === 'Admin Polo' || (colaborador?.colaborador_permissoes?.[0]?.ver_configuracoes);
+  const isResponsavel = !!colaborador?.responsavel_polo;
+  const responsavelPoloNome = polos?.find(p => p.id === colaborador?.polo_id)?.nome;
 
   useEffect(() => {
     if (!isSuperAdmin && colaborador?.polo_id) {
