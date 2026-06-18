@@ -85,6 +85,7 @@ function ColaboradoresList() {
   const [editingColab, setEditingColab] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [comissoesVendedora, setComissoesVendedora] = useState<string | null>(null);
+  const [isResponsavel, setIsResponsavel] = useState(false);
   
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
