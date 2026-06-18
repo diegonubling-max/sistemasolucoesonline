@@ -540,8 +540,8 @@ function AlunoDetalhes() {
               {sendingAccess ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageSquare className="h-4 w-4 mr-2" />}
               {sendingAccess ? "Enviando..." : "Reenviar acesso"}
             </Button>
-            <Button variant="outline" onClick={() => setShowResetDefaultModal(true)}>
-              <Key className="h-4 w-4 mr-2" /> Senha Padrão
+            <Button variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50" onClick={() => setShowResetDefaultModal(true)}>
+              <Lock className="h-4 w-4 mr-2" /> Redefinir Senha
             </Button>
             <Button asChild>
               <Link to="/alunos/$id/editar" params={{ id }}>
