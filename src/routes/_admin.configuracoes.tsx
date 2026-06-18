@@ -299,7 +299,7 @@ function AdminSettings() {
     );
   }
 
-  const tabs = [
+  const allTabs = [
     { id: "geral", label: "Geral", icon: School },
     { id: "asaas", label: "Integração Asaas", icon: Link2 },
     { id: "contrato", label: "Modelo de Contrato", icon: FileText },
@@ -308,6 +308,11 @@ function AdminSettings() {
     ...(isSuperAdmin ? [{ id: "notificacoes", label: "Notificações", icon: Bell }] : []),
     ...(isSuperAdmin ? [{ id: "admins", label: "Administradores", icon: ShieldPlus }] : []),
   ];
+
+  // Responsável de polo (não super admin) só vê: Banners, Asaas, Webhook
+  const tabs = (isResponsavel && !isSuperAdmin)
+    ? allTabs.filter(t => ["banners", "asaas", "webhook"].includes(t.id))
+    : allTabs;
 
   const pushStatusLabel =
     pushPermission === "granted" ? "Ativada"
