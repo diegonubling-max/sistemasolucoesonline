@@ -851,20 +851,43 @@ function AdminSettings() {
 
 function GerarBoletosMigradosCard() {
   const [loading, setLoading] = useState(false);
+  const [progresso, setProgresso] = useState<string | null>(null);
   const [resultado, setResultado] = useState<any>(null);
 
   const handleGerar = async () => {
     if (!confirm("Deseja gerar boletos no Asaas para todos os alunos migrados com parcelas em aberto?")) return;
     setLoading(true);
     setResultado(null);
+    setProgresso(null);
+
+    let offset = 0;
+    let totalClientes = 0;
+    let totalBoletos = 0;
+    const todosErros: any[] = [];
+
     try {
-      const { data, error } = await supabase.functions.invoke("gerar-boletos-migrados", { body: {} });
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Falha ao gerar boletos");
-      setResultado(data);
-      toast.success(`${data.boletos_gerados} boletos gerados para ${data.clientes_criados} novos clientes`);
+      while (true) {
+        setProgresso(`Processando alunos ${offset + 1}-${offset + 10}...`);
+        const { data, error } = await supabase.functions.invoke("gerar-boletos-migrados", {
+          body: { offset },
+        });
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.error || "Falha ao gerar boletos");
+
+        totalClientes += data.clientes_criados || 0;
+        totalBoletos += data.boletos_gerados || 0;
+        if (data.erros?.length) todosErros.push(...data.erros);
+
+        if (data.proximo_offset == null) break;
+        offset = data.proximo_offset;
+      }
+
+      setResultado({ clientes_criados: totalClientes, boletos_gerados: totalBoletos, erros: todosErros });
+      setProgresso(null);
+      toast.success(`${totalBoletos} boletos gerados para ${totalClientes} novos clientes`);
     } catch (e: any) {
       toast.error(e.message || "Erro ao gerar boletos");
+      setProgresso(null);
     } finally {
       setLoading(false);
     }
@@ -875,7 +898,7 @@ function GerarBoletosMigradosCard() {
       <CardHeader>
         <CardTitle className="text-lg">Gerar Boletos Alunos Migrados</CardTitle>
         <CardDescription>
-          Cria clientes no Asaas e gera boletos para todas as parcelas em aberto de alunos migrados que ainda não possuem cobrança.
+          Cria clientes no Asaas e gera boletos para todas as parcelas em aberto de alunos migrados que ainda não possuem cobrança. Processa em lotes de 10.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -883,6 +906,7 @@ function GerarBoletosMigradosCard() {
           {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
           Gerar Boletos Alunos Migrados
         </Button>
+        {progresso && <p className="text-sm text-muted-foreground">{progresso}</p>}
         {resultado && (
           <div className="text-sm space-y-1 rounded-md border bg-white p-3">
             <p><strong>Clientes criados:</strong> {resultado.clientes_criados}</p>
@@ -903,3 +927,4 @@ function GerarBoletosMigradosCard() {
     </Card>
   );
 }
+
