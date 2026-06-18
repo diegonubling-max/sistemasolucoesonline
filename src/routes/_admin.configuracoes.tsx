@@ -575,6 +575,7 @@ function AdminSettings() {
                 </Card>
 
                 {isSuperAdmin && <GerarBoletosMigradosCard />}
+                {isSuperAdmin && <CancelarBoletosMigradosCard />}
               </div>
             )}
 
