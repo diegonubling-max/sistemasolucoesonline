@@ -1574,6 +1574,10 @@ export type Database = {
         Args: { p_aluno_id: string }
         Returns: undefined
       }
+      delete_colaborador_completo: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
       delete_pacote: { Args: { p_pacote_id: string }; Returns: undefined }
       delete_user_auth: { Args: { user_email: string }; Returns: undefined }
       get_contrato_publico: { Args: { p_token: string }; Returns: Json }
