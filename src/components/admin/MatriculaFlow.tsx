@@ -166,14 +166,42 @@ export function MatriculaFlow({
     },
   });
 
+  const resolveColaboradorId = async (): Promise<string | null> => {
+    // 1. Usuário logado colaborador?
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session?.user.id) {
+      const { data: colab } = await supabase
+        .from('colaboradores')
+        .select('id')
+        .eq('user_id', sessionData.session.user.id)
+        .maybeSingle();
+      if (colab?.id) return colab.id;
+    }
+    // 2. Fallback: vendedora selecionada no cadastro do aluno (admin)
+    const vendedoraNome = (aluno as any)?.vendedora;
+    if (vendedoraNome) {
+      const { data: colab } = await supabase
+        .from('colaboradores')
+        .select('id')
+        .eq('nome', vendedoraNome)
+        .eq('setor', 'Vendedor')
+        .eq('ativo', true)
+        .maybeSingle();
+      if (colab?.id) return colab.id;
+    }
+    return null;
+  };
+
   const saveStep2 = useMutation({
     mutationFn: async () => {
       if (!alunoId) throw new Error("Aluno não identificado");
-      
+
+      const colaboradorId = await resolveColaboradorId();
+
       // 1. Create matricula
       const { data: m, error: me } = await supabase
         .from("matriculas")
-        .insert({ aluno_id: alunoId, polo_id: aluno?.polo_id })
+        .insert({ aluno_id: alunoId, polo_id: aluno?.polo_id, colaborador_id: colaboradorId })
         .select("id")
         .single();
       if (me) throw me;
