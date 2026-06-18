@@ -190,9 +190,10 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
           
           if (item.adminOnly && !isAdmin) return null;
           
-          if (colaborador && item.perm) {
+          if (colaborador && (item.perm || item.anyPerm)) {
             const perms = colaborador.colaborador_permissoes?.[0];
-            if (perms && !perms[item.perm]) return null;
+            if (item.perm && !perms?.[item.perm]) return null;
+            if (item.anyPerm && !item.anyPerm.some((p) => perms?.[p])) return null;
           }
 
           const Icon = item.icon;
