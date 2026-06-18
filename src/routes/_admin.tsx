@@ -18,6 +18,9 @@ const PERM_PREFIXES: Record<string, string> = {
   "/financeiro": "ver_financeiro",
   "/configuracoes": "ver_configuracoes",
 };
+const ANY_PERM_PREFIXES: Record<string, string[]> = {
+  "/setor-provas": ["ver_setor_provas", "gerenciar_prova_final"],
+};
 
 function AdminLayout() {
   const { session, loading: authLoading } = useAuth();
@@ -82,6 +85,12 @@ function AdminLayout() {
     for (const [prefix, perm] of Object.entries(PERM_PREFIXES)) {
       if (path === prefix || path.startsWith(prefix + "/")) {
         if (!perms?.[perm]) navigate({ to: "/" });
+        return;
+      }
+    }
+    for (const [prefix, anyPerm] of Object.entries(ANY_PERM_PREFIXES)) {
+      if (path === prefix || path.startsWith(prefix + "/")) {
+        if (!anyPerm.some(p => perms?.[p])) navigate({ to: "/" });
         return;
       }
     }

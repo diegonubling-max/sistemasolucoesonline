@@ -72,6 +72,7 @@ const PERMISSIONS_LIST = [
   { id: 'dar_baixa_pagamentos', label: 'Baixa em Pagamentos' },
   { id: 'agendar_provas', label: 'Agendar Provas' },
   { id: 'gerenciar_prova_final', label: 'Gerenciar Prova Final' },
+  { id: 'ver_setor_provas', label: 'Ver Setor de Provas' },
   { id: 'ver_relatorios', label: 'Ver Relatórios' },
   { id: 'ver_configuracoes', label: 'Ver Configurações' },
 ];
@@ -114,6 +115,7 @@ function ColaboradoresList() {
     dar_baixa_pagamentos: false,
     agendar_provas: false,
     gerenciar_prova_final: false,
+    ver_setor_provas: false,
     ver_relatorios: false,
     ver_configuracoes: false,
   });
@@ -221,6 +223,7 @@ function ColaboradoresList() {
         dar_baixa_pagamentos: false,
         agendar_provas: false,
         gerenciar_prova_final: false,
+        ver_setor_provas: false,
         ver_relatorios: false,
         ver_configuracoes: false,
       });

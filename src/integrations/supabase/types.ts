@@ -460,6 +460,7 @@ export type Database = {
           ver_configuracoes: boolean | null
           ver_financeiro: boolean | null
           ver_relatorios: boolean | null
+          ver_setor_provas: boolean | null
         }
         Insert: {
           agendar_provas?: boolean | null
@@ -475,6 +476,7 @@ export type Database = {
           ver_configuracoes?: boolean | null
           ver_financeiro?: boolean | null
           ver_relatorios?: boolean | null
+          ver_setor_provas?: boolean | null
         }
         Update: {
           agendar_provas?: boolean | null
@@ -490,6 +492,7 @@ export type Database = {
           ver_configuracoes?: boolean | null
           ver_financeiro?: boolean | null
           ver_relatorios?: boolean | null
+          ver_setor_provas?: boolean | null
         }
         Relationships: [
           {

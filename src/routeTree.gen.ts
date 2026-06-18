@@ -15,6 +15,7 @@ import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
+import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
 import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
 import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
@@ -64,6 +65,11 @@ const AlunoLoginRoute = AlunoLoginRouteImport.update({
   id: '/aluno/login',
   path: '/aluno/login',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSetorProvasRoute = AdminSetorProvasRouteImport.update({
+  id: '/setor-provas',
+  path: '/setor-provas',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
   id: '/segmentos',
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
   '/segmentos': typeof AdminSegmentosRoute
+  '/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/financeiro': typeof AdminFinanceiroRoute
   '/pacotes': typeof AdminPacotesRoute
   '/segmentos': typeof AdminSegmentosRoute
+  '/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/_admin/financeiro': typeof AdminFinanceiroRoute
   '/_admin/pacotes': typeof AdminPacotesRoute
   '/_admin/segmentos': typeof AdminSegmentosRoute
+  '/_admin/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/_admin/': typeof AdminIndexRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/pacotes'
     | '/segmentos'
+    | '/setor-provas'
     | '/aluno/login'
     | '/contrato/$token'
     | '/alunos/novo'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/pacotes'
     | '/segmentos'
+    | '/setor-provas'
     | '/aluno/login'
     | '/contrato/$token'
     | '/alunos/novo'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/_admin/financeiro'
     | '/_admin/pacotes'
     | '/_admin/segmentos'
+    | '/_admin/setor-provas'
     | '/aluno/login'
     | '/contrato/$token'
     | '/_admin/'
@@ -396,6 +408,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/aluno/login'
       preLoaderRoute: typeof AlunoLoginRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_admin/setor-provas': {
+      id: '/_admin/setor-provas'
+      path: '/setor-provas'
+      fullPath: '/setor-provas'
+      preLoaderRoute: typeof AdminSetorProvasRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_admin/segmentos': {
       id: '/_admin/segmentos'
@@ -553,6 +572,7 @@ interface AdminRouteChildren {
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminPacotesRoute: typeof AdminPacotesRoute
   AdminSegmentosRoute: typeof AdminSegmentosRoute
+  AdminSetorProvasRoute: typeof AdminSetorProvasRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
   AdminCursosNovoRoute: typeof AdminCursosNovoRoute
@@ -570,6 +590,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminPacotesRoute: AdminPacotesRoute,
   AdminSegmentosRoute: AdminSegmentosRoute,
+  AdminSetorProvasRoute: AdminSetorProvasRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminAlunosNovoRoute: AdminAlunosNovoRoute,
   AdminCursosNovoRoute: AdminCursosNovoRoute,
