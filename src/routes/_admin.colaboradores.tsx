@@ -451,6 +451,38 @@ function ColaboradoresList() {
                     />
                   </div>
 
+                  {setorWatch === "Vendedor" && (
+                    <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/30">
+                      <FormField
+                        control={form.control}
+                        name="comissao_avista"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Comissão à vista / PIX / Cartão (R$)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" min="0" {...field} value={field.value ?? ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="comissao_parcelado"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Comissão boleto parcelado (R$)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" min="0" {...field} value={field.value ?? ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
+
                   {isSuperAdmin && (
                     <div className="flex items-start justify-between p-4 border-2 border-amber-300 bg-amber-50 rounded-lg">
                       <div className="flex items-start gap-3">
