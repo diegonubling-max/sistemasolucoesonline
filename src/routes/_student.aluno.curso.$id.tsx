@@ -24,31 +24,53 @@ function StudentCourse() {
   const [activeAulaId, setActiveAulaId] = useState<string | null>(null);
   const [lastTrackedAulaId, setLastTrackedAulaId] = useState<string | null>(null);
 
-  // Track lesson view
-  useEffect(() => {
-    const trackView = async () => {
-      if (!activeAulaId || !session?.user.email || activeAulaId === lastTrackedAulaId) return;
-
-      const { data: aluno } = await supabase
+  // Get aluno id once
+  const { data: alunoRow } = useQuery({
+    queryKey: ["aluno-id-by-email", session?.user.email],
+    queryFn: async () => {
+      if (!session?.user.email) return null;
+      const { data } = await supabase
         .from("alunos")
         .select("id")
         .eq("email", session.user.email)
-        .single();
-      
-      if (!aluno) return;
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!session?.user.email,
+  });
+  const alunoId = alunoRow?.id ?? null;
 
-      // Usar a RPC de rastreamento para garantir consistência
+  // Track lesson view (legacy RPC for backwards compat)
+  useEffect(() => {
+    const trackView = async () => {
+      if (!activeAulaId || !alunoId || activeAulaId === lastTrackedAulaId) return;
       await supabase.rpc('registrar_aula_assistida', {
-        p_aluno_id: aluno.id,
+        p_aluno_id: alunoId,
         p_aula_id: activeAulaId,
         p_curso_id: id
       });
-      
       setLastTrackedAulaId(activeAulaId);
     };
-
     trackView();
-  }, [activeAulaId, session, id, lastTrackedAulaId]);
+  }, [activeAulaId, alunoId, id, lastTrackedAulaId]);
+
+  // Load saved progress for active aula (to resume)
+  const { data: aulaProgresso } = useQuery({
+    queryKey: ["aula-progresso", alunoId, activeAulaId],
+    queryFn: async () => {
+      if (!alunoId || !activeAulaId) return null;
+      const { data } = await supabase
+        .from("aluno_aulas_assistidas")
+        .select("ultima_posicao, percentual_assistido, duracao_total")
+        .eq("aluno_id", alunoId)
+        .eq("aula_id", activeAulaId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!alunoId && !!activeAulaId,
+  });
 
   const { data: curso, isLoading: loadingCurso, error: cursoError } = useQuery({
     queryKey: ["student-course", id, session?.user.email],
