@@ -507,6 +507,8 @@ export type Database = {
       colaboradores: {
         Row: {
           ativo: boolean | null
+          comissao_avista: number | null
+          comissao_parcelado: number | null
           created_at: string | null
           email: string
           id: string
@@ -519,6 +521,8 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean | null
+          comissao_avista?: number | null
+          comissao_parcelado?: number | null
           created_at?: string | null
           email: string
           id?: string
@@ -531,6 +535,8 @@ export type Database = {
         }
         Update: {
           ativo?: boolean | null
+          comissao_avista?: number | null
+          comissao_parcelado?: number | null
           created_at?: string | null
           email?: string
           id?: string

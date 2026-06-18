@@ -59,6 +59,8 @@ const formSchema = z.object({
   senha: z.string().min(6, "Mínimo 6 caracteres").optional().or(z.literal("")),
   polo_id: z.string().uuid("Selecione um polo"),
   setor: z.string().min(1, "Selecione um setor"),
+  comissao_avista: z.coerce.number().min(0).optional(),
+  comissao_parcelado: z.coerce.number().min(0).optional(),
 });
 
 const SETORES = ["Vendedor", "Setor de Provas", "Cobrança", "Administrativo", "Admin Polo", "Outros"];
@@ -195,8 +197,12 @@ function ColaboradoresList() {
       senha: "",
       polo_id: "",
       setor: "",
+      comissao_avista: 120,
+      comissao_parcelado: 50,
     },
   });
+
+  const setorWatch = form.watch("setor");
 
   useEffect(() => {
     if (editingColab) {
@@ -206,6 +212,8 @@ function ColaboradoresList() {
         senha: "",
         polo_id: editingColab.polo_id,
         setor: editingColab.setor,
+        comissao_avista: Number(editingColab.comissao_avista ?? 120),
+        comissao_parcelado: Number(editingColab.comissao_parcelado ?? 50),
       });
       setIsResponsavel(!!editingColab.responsavel_polo);
       const perms = editingColab.colaborador_permissoes?.[0] || {};
@@ -221,6 +229,8 @@ function ColaboradoresList() {
         senha: "",
         polo_id: "",
         setor: "",
+        comissao_avista: 120,
+        comissao_parcelado: 50,
       });
       setIsResponsavel(false);
       setFormPerms({
@@ -440,6 +450,38 @@ function ColaboradoresList() {
                       )}
                     />
                   </div>
+
+                  {setorWatch === "Vendedor" && (
+                    <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/30">
+                      <FormField
+                        control={form.control}
+                        name="comissao_avista"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Comissão à vista / PIX / Cartão (R$)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" min="0" {...field} value={field.value ?? ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="comissao_parcelado"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Comissão boleto parcelado (R$)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" min="0" {...field} value={field.value ?? ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
 
                   {isSuperAdmin && (
                     <div className="flex items-start justify-between p-4 border-2 border-amber-300 bg-amber-50 rounded-lg">

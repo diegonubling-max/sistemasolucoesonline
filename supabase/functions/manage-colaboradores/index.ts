@@ -24,7 +24,7 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    const { action, email, password, nome, polo_id, setor, id, ativo, permissoes, responsavel_polo } = body;
+    const { action, email, password, nome, polo_id, setor, id, ativo, permissoes, responsavel_polo, comissao_avista, comissao_parcelado } = body;
 
     if (action === "create_colaborador") {
       const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -49,6 +49,8 @@ serve(async (req) => {
           setor,
           ativo: true,
           responsavel_polo: !!responsavel_polo,
+          ...(comissao_avista !== undefined ? { comissao_avista } : {}),
+          ...(comissao_parcelado !== undefined ? { comissao_parcelado } : {}),
         })
         .select()
         .single();
@@ -99,6 +101,8 @@ serve(async (req) => {
       if (setor) colabUpdates.setor = setor;
       if (ativo !== undefined) colabUpdates.ativo = ativo;
       if (responsavel_polo !== undefined) colabUpdates.responsavel_polo = !!responsavel_polo;
+      if (comissao_avista !== undefined) colabUpdates.comissao_avista = comissao_avista;
+      if (comissao_parcelado !== undefined) colabUpdates.comissao_parcelado = comissao_parcelado;
 
       const { error: colabError } = await supabaseAdmin.from("colaboradores").update(colabUpdates).eq("id", id);
 
