@@ -295,18 +295,34 @@ function AlunoDetalhes() {
   const resetToDefaultPassword = useMutation({
     mutationFn: async () => {
       if (!aluno?.email || !aluno?.nome) return;
-      const primeiroNome = aluno.nome.split(' ')[0];
-      const senhaPadrao = '1234' + primeiroNome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const primeiroNomeRaw = aluno.nome.split(' ')[0] ?? '';
+      const primeiroNomeLower = primeiroNomeRaw.toLowerCase();
+      const primeiroNomeCap = primeiroNomeRaw.charAt(0).toUpperCase() + primeiroNomeRaw.slice(1).toLowerCase();
+      const senhaPadrao = `1234${primeiroNomeLower}`;
       const { error } = await supabase.rpc('redefinir_senha_aluno', {
         p_email: aluno.email,
-        p_nova_senha: senhaPadrao
+        p_nova_senha: senhaPadrao,
       });
       if (error) throw error;
+      if (aluno.telefone) {
+        try {
+          const mensagem =
+            `*🔐 Soluções Online — Senha redefinida!*\n\n` +
+            `Olá, *${primeiroNomeCap}*! Sua senha foi redefinida com sucesso.\n\n` +
+            `📋 *Login:* ${aluno.ctr}\n` +
+            `🔑 *Nova senha:* ${senhaPadrao}\n\n` +
+            `👉 Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+          const { sendWhatsApp } = await import("@/services/zApiService");
+          await sendWhatsApp(aluno.telefone, mensagem);
+        } catch (err) {
+          console.error("Falha ao notificar aluno via WhatsApp:", err);
+        }
+      }
       return senhaPadrao;
     },
     onSuccess: (senhaGerada) => {
       if (!senhaGerada) return;
-      toast.success("Senha redefinida com sucesso");
+      toast.success("Senha redefinida e aluno notificado via WhatsApp!");
       setPasswordToDisplay(senhaGerada);
       setShowResetDefaultModal(false);
       setShowPasswordResult(true);
@@ -524,8 +540,8 @@ function AlunoDetalhes() {
               {sendingAccess ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageSquare className="h-4 w-4 mr-2" />}
               {sendingAccess ? "Enviando..." : "Reenviar acesso"}
             </Button>
-            <Button variant="outline" onClick={() => setShowResetDefaultModal(true)}>
-              <Key className="h-4 w-4 mr-2" /> Senha Padrão
+            <Button variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50" onClick={() => setShowResetDefaultModal(true)}>
+              <Lock className="h-4 w-4 mr-2" /> Redefinir Senha
             </Button>
             <Button asChild>
               <Link to="/alunos/$id/editar" params={{ id }}>
@@ -741,9 +757,11 @@ function AlunoDetalhes() {
       <ResumoBaixaModal open={!!resumoBaixa} onOpenChange={() => setResumoBaixa(null)} data={resumoBaixa} />
       <Dialog open={showResetDefaultModal} onOpenChange={setShowResetDefaultModal}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Confirmar</DialogTitle></DialogHeader>
-          <div className="py-4 text-sm">Deseja redefinir a senha de <strong>{aluno.nome}</strong>?</div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowResetDefaultModal(false)}>Não</Button><Button onClick={() => resetToDefaultPassword.mutate()}>Sim, redefinir</Button></DialogFooter>
+          <DialogHeader><DialogTitle>Confirmar redefinição</DialogTitle></DialogHeader>
+          <div className="py-4 text-sm">
+            Redefinir senha para <strong>1234{(aluno.nome?.split(' ')[0] ?? '').toLowerCase()}</strong>? O aluno será notificado.
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setShowResetDefaultModal(false)}>Não</Button><Button onClick={() => resetToDefaultPassword.mutate()} disabled={resetToDefaultPassword.isPending}>{resetToDefaultPassword.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}Sim, redefinir</Button></DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={showPasswordResult} onOpenChange={setShowPasswordResult}>
