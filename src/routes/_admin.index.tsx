@@ -205,6 +205,38 @@ function Dashboard() {
         title="Dashboard" 
         description={selectedPoloId === 'all' ? "Visão geral de todos os polos" : `Visão geral: ${polos?.find(p => p.id === selectedPoloId)?.nome || 'Polo selecionado'}`} 
       />
+
+      {isResponsavel && !isSuperAdmin && (
+        <Card className="mb-6 border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-amber-100 rounded-xl">
+                <Crown className="h-6 w-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-amber-900">
+                  Você é o Responsável pelo {polos?.find(p => p.id === colabData?.polo_id)?.nome || 'seu polo'}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+                  <div>
+                    <p className="text-xs text-amber-700 uppercase font-semibold">Colaboradores Ativos</p>
+                    <p className="text-2xl font-bold text-amber-900">{stats?.colaboradoresAtivos ?? 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-amber-700 uppercase font-semibold">Total de Alunos</p>
+                    <p className="text-2xl font-bold text-amber-900">{stats?.alunos ?? 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-amber-700 uppercase font-semibold">Faturamento do Mês</p>
+                    <p className="text-2xl font-bold text-amber-900">{formatCurrency(stats?.faturamento?.recebido ?? 0)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <VitrineInteresse selectedPoloId={selectedPoloId} colabPoloId={colabData?.polo_id} isSuperAdmin={isSuperAdmin} />
 
       {selectedPoloId === 'all' && stats?.statsByPolo && stats.statsByPolo.length > 0 && (
