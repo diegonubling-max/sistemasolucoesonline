@@ -310,7 +310,7 @@ function ColaboradoresList() {
   const filteredColaboradores = colaboradores?.filter(c => 
     c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).slice().sort((a: any, b: any) => Number(!!b.responsavel_polo) - Number(!!a.responsavel_polo));
 
   return (
     <div className="space-y-6">
