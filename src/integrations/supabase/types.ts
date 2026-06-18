@@ -21,7 +21,11 @@ export type Database = {
           aula_id: string
           created_at: string
           curso_id: string
+          duracao_total: number | null
           id: string
+          percentual_assistido: number | null
+          tempo_assistido: number | null
+          ultima_posicao: number | null
         }
         Insert: {
           aluno_id: string
@@ -29,7 +33,11 @@ export type Database = {
           aula_id: string
           created_at?: string
           curso_id: string
+          duracao_total?: number | null
           id?: string
+          percentual_assistido?: number | null
+          tempo_assistido?: number | null
+          ultima_posicao?: number | null
         }
         Update: {
           aluno_id?: string
@@ -37,7 +45,11 @@ export type Database = {
           aula_id?: string
           created_at?: string
           curso_id?: string
+          duracao_total?: number | null
           id?: string
+          percentual_assistido?: number | null
+          tempo_assistido?: number | null
+          ultima_posicao?: number | null
         }
         Relationships: [
           {
