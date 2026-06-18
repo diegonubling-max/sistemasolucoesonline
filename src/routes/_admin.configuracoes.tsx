@@ -556,6 +556,8 @@ function AdminSettings() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {isSuperAdmin && <GerarBoletosMigradosCard />}
               </div>
             )}
 
@@ -843,5 +845,60 @@ function AdminSettings() {
         </div>
       </div>
     </div>
+  );
+}
+
+function GerarBoletosMigradosCard() {
+  const [loading, setLoading] = useState(false);
+  const [resultado, setResultado] = useState<any>(null);
+
+  const handleGerar = async () => {
+    if (!confirm("Deseja gerar boletos no Asaas para todos os alunos migrados com parcelas em aberto?")) return;
+    setLoading(true);
+    setResultado(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("gerar-boletos-migrados", { body: {} });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Falha ao gerar boletos");
+      setResultado(data);
+      toast.success(`${data.boletos_gerados} boletos gerados para ${data.clientes_criados} novos clientes`);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar boletos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="border-amber-200 bg-amber-50/50">
+      <CardHeader>
+        <CardTitle className="text-lg">Gerar Boletos Alunos Migrados</CardTitle>
+        <CardDescription>
+          Cria clientes no Asaas e gera boletos para todas as parcelas em aberto de alunos migrados que ainda não possuem cobrança.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Button onClick={handleGerar} disabled={loading}>
+          {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+          Gerar Boletos Alunos Migrados
+        </Button>
+        {resultado && (
+          <div className="text-sm space-y-1 rounded-md border bg-white p-3">
+            <p><strong>Clientes criados:</strong> {resultado.clientes_criados}</p>
+            <p><strong>Boletos gerados:</strong> {resultado.boletos_gerados}</p>
+            {resultado.erros?.length > 0 && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-red-600">{resultado.erros.length} erro(s)</summary>
+                <ul className="mt-2 list-disc pl-5 text-xs text-red-700">
+                  {resultado.erros.map((e: any, i: number) => (
+                    <li key={i}><strong>{e.aluno}:</strong> {e.erro}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

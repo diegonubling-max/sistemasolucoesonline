@@ -201,14 +201,14 @@ export type Database = {
           created_at: string
           ctr: number
           data_liberacao_prova: string | null
-          data_nascimento: string
+          data_nascimento: string | null
           dias_prova_final: number | null
           email: string | null
           formado_em: string | null
           foto_perfil: string | null
           id: string
           materias_prova: string[] | null
-          menor_de_idade: boolean
+          menor_de_idade: boolean | null
           nome: string
           observacao: string | null
           origem: Database["public"]["Enums"]["origem_aluno"]
@@ -237,14 +237,14 @@ export type Database = {
           created_at?: string
           ctr?: number
           data_liberacao_prova?: string | null
-          data_nascimento: string
+          data_nascimento?: string | null
           dias_prova_final?: number | null
           email?: string | null
           formado_em?: string | null
           foto_perfil?: string | null
           id?: string
           materias_prova?: string[] | null
-          menor_de_idade?: boolean
+          menor_de_idade?: boolean | null
           nome: string
           observacao?: string | null
           origem: Database["public"]["Enums"]["origem_aluno"]
@@ -273,14 +273,14 @@ export type Database = {
           created_at?: string
           ctr?: number
           data_liberacao_prova?: string | null
-          data_nascimento?: string
+          data_nascimento?: string | null
           dias_prova_final?: number | null
           email?: string | null
           formado_em?: string | null
           foto_perfil?: string | null
           id?: string
           materias_prova?: string[] | null
-          menor_de_idade?: boolean
+          menor_de_idade?: boolean | null
           nome?: string
           observacao?: string | null
           origem?: Database["public"]["Enums"]["origem_aluno"]
