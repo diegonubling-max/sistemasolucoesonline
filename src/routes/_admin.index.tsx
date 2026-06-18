@@ -52,13 +52,14 @@ function Dashboard() {
     queryKey: ["colaborador-polo", session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
-      const { data } = await supabase.from('colaboradores').select('polo_id').eq('user_id', session.user.id).maybeSingle();
+      const { data } = await supabase.from('colaboradores').select('polo_id, responsavel_polo').eq('user_id', session.user.id).maybeSingle();
       return data;
     },
     enabled: !!session?.user?.id
   });
 
   const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+  const isResponsavel = !!(colabData as any)?.responsavel_polo;
 
   const filterByPolo = (q: any) => {
     const colabPoloId = colabData?.polo_id;
