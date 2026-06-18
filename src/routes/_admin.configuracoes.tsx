@@ -575,6 +575,7 @@ function AdminSettings() {
                 </Card>
 
                 {isSuperAdmin && <GerarBoletosMigradosCard />}
+                {isSuperAdmin && <CancelarBoletosMigradosCard />}
               </div>
             )}
 
@@ -943,4 +944,81 @@ function GerarBoletosMigradosCard() {
     </Card>
   );
 }
+
+function CancelarBoletosMigradosCard() {
+  const [loading, setLoading] = useState(false);
+  const [progresso, setProgresso] = useState<string | null>(null);
+  const [resultado, setResultado] = useState<any>(null);
+
+  const handleCancelar = async () => {
+    if (!confirm("Cancelar TODOS os boletos do Asaas dos alunos migrados? Esta ação não pode ser desfeita.")) return;
+    setLoading(true);
+    setResultado(null);
+    setProgresso(null);
+
+    let offset = 0;
+    let totalCancelados = 0;
+    const todosErros: any[] = [];
+
+    try {
+      while (true) {
+        setProgresso(`Processando parcelas ${offset + 1}-${offset + 10}...`);
+        const { data, error } = await supabase.functions.invoke("cancelar-boletos-migrados", {
+          body: { offset },
+        });
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.error || "Falha ao cancelar boletos");
+
+        totalCancelados += data.boletos_cancelados || 0;
+        if (data.erros?.length) todosErros.push(...data.erros);
+
+        if (data.proximo_offset == null) break;
+        offset = data.proximo_offset;
+      }
+
+      setResultado({ boletos_cancelados: totalCancelados, erros: todosErros });
+      setProgresso(null);
+      toast.success(`${totalCancelados} boletos cancelados`);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao cancelar boletos");
+      setProgresso(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="border-red-200 bg-red-50/50">
+      <CardHeader>
+        <CardTitle className="text-lg">Cancelar Boletos Migrados</CardTitle>
+        <CardDescription>
+          Cancela no Asaas todos os boletos das parcelas dos alunos migrados e limpa o asaas_id. Processa em lotes de 10.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Button variant="destructive" onClick={handleCancelar} disabled={loading}>
+          {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+          Cancelar Boletos Migrados
+        </Button>
+        {progresso && <p className="text-sm text-muted-foreground">{progresso}</p>}
+        {resultado && (
+          <div className="text-sm space-y-1 rounded-md border bg-white p-3">
+            <p><strong>Boletos cancelados:</strong> {resultado.boletos_cancelados}</p>
+            {resultado.erros?.length > 0 && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-red-600">{resultado.erros.length} erro(s)</summary>
+                <ul className="mt-2 list-disc pl-5 text-xs text-red-700">
+                  {resultado.erros.map((e: any, i: number) => (
+                    <li key={i}><strong>Parcela {e.parcela}:</strong> {e.erro}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
