@@ -24,7 +24,7 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    const { action, email, password, nome, polo_id, setor, id, ativo, permissoes, responsavel_polo } = body;
+    const { action, email, password, nome, polo_id, setor, id, ativo, permissoes, responsavel_polo, comissao_avista, comissao_parcelado } = body;
 
     if (action === "create_colaborador") {
       const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
