@@ -20,7 +20,7 @@ serve(async (req) => {
           autoRefreshToken: false,
           persistSession: false,
         },
-      }
+      },
     );
 
     const body = await req.json();
@@ -31,10 +31,10 @@ serve(async (req) => {
         email,
         password,
         email_confirm: true,
-        user_metadata: { 
-          nome, 
-          role: setor === 'Admin Polo' ? 'admin_polo' : 'colaborador' 
-        }
+        user_metadata: {
+          nome,
+          role: setor === "Admin Polo" ? "admin_polo" : "colaborador",
+        },
       });
 
       if (authError) throw authError;
@@ -57,14 +57,12 @@ serve(async (req) => {
 
       const permsToInsert = responsavel_polo
         ? Object.fromEntries(Object.keys(permissoes || {}).map((k) => [k, true]))
-        : (permissoes || {});
+        : permissoes || {};
 
-      const { error: permError } = await supabaseAdmin
-        .from("colaborador_permissoes")
-        .insert({
-          colaborador_id: colaborador.id,
-          ...permsToInsert
-        });
+      const { error: permError } = await supabaseAdmin.from("colaborador_permissoes").insert({
+        colaborador_id: colaborador.id,
+        ...permsToInsert,
+      });
 
       if (permError) throw permError;
 
@@ -76,30 +74,24 @@ serve(async (req) => {
     if (action === "update_colaborador") {
       if (!id) throw new Error("ID do colaborador não informado");
 
-      // 1. Buscar colaborador para pegar o user_id
       const { data: colab, error: findError } = await supabaseAdmin
         .from("colaboradores")
         .select("user_id")
         .eq("id", id)
         .single();
-      
+
       if (findError) throw findError;
 
-      // 2. Atualizar Auth se necessário
       const authUpdates: any = {};
       if (email) authUpdates.email = email;
       if (password) authUpdates.password = password;
       if (nome) authUpdates.user_metadata = { nome };
 
       if (Object.keys(authUpdates).length > 0) {
-        const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
-          colab.user_id,
-          authUpdates
-        );
-        if (authError) throw authError;
+        const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(colab.user_id, authUpdates);
+        if (authError) throw new Error(`Auth update error: ${authError.message}`);
       }
 
-      // 3. Atualizar tabela colaboradores
       const colabUpdates: any = {};
       if (nome) colabUpdates.nome = nome;
       if (email) colabUpdates.email = email;
@@ -108,12 +100,9 @@ serve(async (req) => {
       if (ativo !== undefined) colabUpdates.ativo = ativo;
       if (responsavel_polo !== undefined) colabUpdates.responsavel_polo = !!responsavel_polo;
 
-      const { error: colabError } = await supabaseAdmin
-        .from("colaboradores")
-        .update(colabUpdates)
-        .eq("id", id);
+      const { error: colabError } = await supabaseAdmin.from("colaboradores").update(colabUpdates).eq("id", id);
 
-      if (colabError) throw colabError;
+      if (colabError) throw new Error(`Colab update error: ${colabError.message}`);
 
       if (permissoes || responsavel_polo) {
         const permsToUpdate = responsavel_polo
@@ -124,7 +113,7 @@ serve(async (req) => {
             .from("colaborador_permissoes")
             .update(permsToUpdate)
             .eq("colaborador_id", id);
-          if (permError) throw permError;
+          if (permError) throw new Error(`Perm update error: ${permError.message}`);
         }
       }
 
@@ -136,26 +125,27 @@ serve(async (req) => {
     if (action === "delete_colaborador") {
       if (!id) throw new Error("ID do colaborador não informado");
 
-      // 1. Buscar para pegar user_id
       const { data: colab, error: findError } = await supabaseAdmin
         .from("colaboradores")
         .select("user_id")
         .eq("id", id)
         .single();
-      
-      if (findError) throw findError;
 
-      // 2. Deletar do Auth
-      const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(colab.user_id);
-      if (authError) throw authError;
+      if (findError) throw new Error(`Colaborador não encontrado: ${findError.message}`);
 
-      // 3. Deletar da tabela colaboradores (permissões deletam em cascata)
-      const { error: colabError } = await supabaseAdmin
-        .from("colaboradores")
-        .delete()
-        .eq("id", id);
+      // Deletar do Auth (só se tiver user_id)
+      if (colab.user_id) {
+        const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(colab.user_id);
+        if (authError) throw new Error(`Auth delete error: ${authError.message}`);
+      }
 
-      if (colabError) throw colabError;
+      // Deletar permissões manualmente
+      await supabaseAdmin.from("colaborador_permissoes").delete().eq("colaborador_id", id);
+
+      // Deletar colaborador
+      const { error: colabError } = await supabaseAdmin.from("colaboradores").delete().eq("id", id);
+
+      if (colabError) throw new Error(`Colab delete error: ${colabError.message}`);
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -166,9 +156,9 @@ serve(async (req) => {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error?.message || JSON.stringify(error) || "Erro desconhecido";
+    return new Response(JSON.stringify({ error: message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
