@@ -259,15 +259,8 @@ export function MatriculaFlow({
     mutationFn: async () => {
       if (!matriculaId || !aluno || !contractContent) throw new Error("Dados incompletos");
 
-      // Buscar ID do colaborador logado
-      const { data: sessionData } = await supabase.auth.getSession();
-      let colaboradorId = null;
-      if (sessionData.session?.user.id) {
-        const { data: colab } = await supabase.from('colaboradores').select('id').eq('user_id', sessionData.session.user.id).maybeSingle();
-        colaboradorId = colab?.id;
-      }
-
-      // Atualizar matrícula com colaborador_id
+      // Garantir colaborador_id (logado ou vendedora do aluno)
+      const colaboradorId = await resolveColaboradorId();
       if (colaboradorId) {
         await supabase.from('matriculas').update({ colaborador_id: colaboradorId }).eq('id', matriculaId);
       }
