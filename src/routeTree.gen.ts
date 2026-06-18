@@ -72,11 +72,6 @@ const AdminSetorProvasRoute = AdminSetorProvasRouteImport.update({
   path: '/setor-provas',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminMinhaEquipeRoute = AdminMinhaEquipeRouteImport.update({
-  id: '/minha-equipe',
-  path: '/minha-equipe',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
   id: '/segmentos',
   path: '/segmentos',
@@ -201,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/pacotes': typeof AdminPacotesRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
+  '/minha-equipe': typeof AdminMinhaEquipeRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
