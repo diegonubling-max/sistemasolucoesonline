@@ -52,7 +52,7 @@ export async function sendWhatsApp(telefone: string, mensagem: string): Promise<
   }
 }
 
-const SITE_URL = "https://sistemasolucoesonline.lovable.app";
+const SITE_URL = "https://sistemasolucoesonline.lovable.app/aluno/login";
 
 export async function sendBoasVindasMatricula(params: {
   telefone: string;
