@@ -757,9 +757,11 @@ function AlunoDetalhes() {
       <ResumoBaixaModal open={!!resumoBaixa} onOpenChange={() => setResumoBaixa(null)} data={resumoBaixa} />
       <Dialog open={showResetDefaultModal} onOpenChange={setShowResetDefaultModal}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Confirmar</DialogTitle></DialogHeader>
-          <div className="py-4 text-sm">Deseja redefinir a senha de <strong>{aluno.nome}</strong>?</div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowResetDefaultModal(false)}>Não</Button><Button onClick={() => resetToDefaultPassword.mutate()}>Sim, redefinir</Button></DialogFooter>
+          <DialogHeader><DialogTitle>Confirmar redefinição</DialogTitle></DialogHeader>
+          <div className="py-4 text-sm">
+            Redefinir senha para <strong>1234{(aluno.nome?.split(' ')[0] ?? '').toLowerCase()}</strong>? O aluno será notificado.
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setShowResetDefaultModal(false)}>Não</Button><Button onClick={() => resetToDefaultPassword.mutate()} disabled={resetToDefaultPassword.isPending}>{resetToDefaultPassword.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}Sim, redefinir</Button></DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={showPasswordResult} onOpenChange={setShowPasswordResult}>
