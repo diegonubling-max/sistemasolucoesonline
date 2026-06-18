@@ -44,15 +44,11 @@ function AdminLayout() {
 
       const [{ data: colab }, { data: roleRow }] = await Promise.all([
         supabase
-          .from('colaboradores')
-          .select('*, colaborador_permissoes(*)')
-          .eq('user_id', session.user.id)
+          .from("colaboradores")
+          .select("*, colaborador_permissoes(*)")
+          .eq("user_id", session.user.id)
           .maybeSingle(),
-        supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", session.user.id).maybeSingle(),
       ]);
 
       if (colab) setColaborador(colab);
@@ -67,7 +63,7 @@ function AdminLayout() {
     if (!authLoading && !session) navigate({ to: "/login" });
   }, [authLoading, session, navigate]);
 
-  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+  const isSuperAdmin = session?.user?.email === "diegonubling@gmail.com" || userRole === "admin";
 
   usePushNotifications(isSuperAdmin, session?.user?.id);
 
@@ -83,7 +79,7 @@ function AdminLayout() {
       return;
     }
 
-    const matchedAdminOnly = ADMIN_ONLY_PREFIXES.find(p => path === p || path.startsWith(p + "/"));
+    const matchedAdminOnly = ADMIN_ONLY_PREFIXES.find((p) => path === p || path.startsWith(p + "/"));
     if (matchedAdminOnly) {
       navigate({ to: "/" });
       return;
@@ -101,7 +97,7 @@ function AdminLayout() {
     }
     for (const [prefix, anyPerm] of Object.entries(ANY_PERM_PREFIXES)) {
       if (path === prefix || path.startsWith(prefix + "/")) {
-        if (!anyPerm.some(p => perms?.[p])) navigate({ to: "/" });
+        if (!anyPerm.some((p) => perms?.[p])) navigate({ to: "/" });
         return;
       }
     }
@@ -117,7 +113,7 @@ function AdminLayout() {
 
   if (!session) return null;
 
-  const mustChangePassword = !!colaborador && !isSuperAdmin && colaborador.primeiro_acesso === true;
+  const mustChangePassword = false;
 
   return (
     <div className="min-h-screen flex bg-background">
