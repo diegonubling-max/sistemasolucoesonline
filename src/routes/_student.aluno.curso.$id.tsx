@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStudentTheme } from "./_student";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useVideoProgress, detectProvider } from "@/hooks/use-video-progress";
 
 export const Route = createFileRoute("/_student/aluno/curso/$id")({
   head: () => ({ meta: [{ title: "Curso — EduManager" }] }),
