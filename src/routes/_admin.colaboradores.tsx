@@ -72,6 +72,7 @@ const PERMISSIONS_LIST = [
   { id: 'dar_baixa_pagamentos', label: 'Baixa em Pagamentos' },
   { id: 'agendar_provas', label: 'Agendar Provas' },
   { id: 'gerenciar_prova_final', label: 'Gerenciar Prova Final' },
+  { id: 'ver_setor_provas', label: 'Ver Setor de Provas' },
   { id: 'ver_relatorios', label: 'Ver Relatórios' },
   { id: 'ver_configuracoes', label: 'Ver Configurações' },
 ];
