@@ -698,23 +698,31 @@ function AlunoDetalhes() {
                     <div><p className="font-bold">Contrato Assinado</p><p className="text-xs text-muted-foreground">{format(new Date(contratoAssinado.data_assinatura!), "dd/MM/yyyy HH:mm")}</p></div>
                   </div>
                 )}
-                {sessoes?.map((s) => (
-                  <div key={s.id} className="relative flex items-center gap-6 pl-10">
-                    <div className="absolute left-0 flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white"><LogIn className="h-5 w-5" /></div>
-                    <div>
-                      <p className="font-bold">Sessão Iniciada</p>
-                      <p className="text-xs text-muted-foreground">{format(new Date(s.login_em), "dd/MM/yyyy HH:mm")} • {s.duracao_minutos || "?"} min</p>
-                      {aulasAssistidas?.filter(a => {
-                        const da = new Date(a.assistida_em);
-                        const dl = new Date(s.login_em);
-                        const lo = s.logout_em ? new Date(s.logout_em) : new Date();
-                        return da >= dl && da <= lo;
-                      }).map(a => (
-                        <div key={a.id} className="flex items-center gap-2 text-[10px] mt-1 text-blue-600"><PlayCircle className="h-3 w-3" /> {(a.aulas as any)?.titulo}</div>
-                      ))}
+                {sessoes?.map((s, idx) => {
+                  // sessoes ordered DESC by login_em — próxima sessão (mais recente) está em idx-1
+                  const inicio = new Date(s.login_em);
+                  const proxima = idx > 0 ? new Date(sessoes[idx - 1].login_em) : new Date();
+                  const aulasDaSessao = aulasAssistidas?.filter(a => {
+                    const da = new Date(a.assistida_em);
+                    return da >= inicio && da < proxima;
+                  }) ?? [];
+                  return (
+                    <div key={s.id} className="relative flex items-center gap-6 pl-10">
+                      <div className="absolute left-0 flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white"><LogIn className="h-5 w-5" /></div>
+                      <div>
+                        <p className="font-bold">Sessão Iniciada</p>
+                        <p className="text-xs text-muted-foreground">{format(inicio, "dd/MM/yyyy HH:mm")} • {s.duracao_minutos || "?"} min</p>
+                        {aulasDaSessao.length === 0 ? (
+                          <p className="text-[10px] mt-1 text-muted-foreground italic">Nenhuma aula assistida nesta sessão</p>
+                        ) : (
+                          aulasDaSessao.map(a => (
+                            <div key={a.id} className="flex items-center gap-2 text-[10px] mt-1 text-blue-600"><PlayCircle className="h-3 w-3" /> {(a.aulas as any)?.titulo}</div>
+                          ))
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </CardContent>
           </Card>
 
