@@ -3,9 +3,9 @@
   "short_name": "EJA EAD",
   "icons": [
     {
-      "src": "/favicon.ico",
+      "src": "/icon-app.jpeg",
       "sizes": "256x256",
-      "type": "image/x-icon"
+      "type": "image/jpeg"
     }
   ],
   "start_url": "/",
