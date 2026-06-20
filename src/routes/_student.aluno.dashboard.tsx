@@ -356,7 +356,7 @@ function StudentDashboard() {
                             onClick={() => {
                               navigate({ to: "/aluno/prova-final" });
                             }}
-                            className="group block w-full"
+                            className="group block w-[140px] shrink-0 snap-start sm:w-full"
                           >
                             {cardContent}
                           </div>
@@ -365,7 +365,7 @@ function StudentDashboard() {
 
                       if (!isReleased) {
                         return (
-                          <div key={i} className="group block w-full cursor-not-allowed">
+                          <div key={i} className="group block w-[140px] shrink-0 snap-start sm:w-full cursor-not-allowed">
                             {cardContent}
                           </div>
                         );
@@ -376,7 +376,7 @@ function StudentDashboard() {
                           key={i} 
                           to="/aluno/curso/$id" 
                           params={{ id: curso.id }} 
-                          className="group block w-full"
+                          className="group block w-[140px] shrink-0 snap-start sm:w-full"
                         >
                           {cardContent}
                         </Link>
