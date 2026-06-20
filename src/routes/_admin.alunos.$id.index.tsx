@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText, MoreHorizontal, Sparkles } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +27,7 @@ import { generateAsaasCobrar } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
+import { PerfilVocacionalTab } from "@/components/admin/alunos/PerfilVocacionalTab";
 import { StatusAlunoBadge, type AlunoStatus } from "@/lib/aluno-status";
 import { notifyPagamentoRecebido } from "@/lib/notify";
 
@@ -589,6 +590,9 @@ function AlunoDetalhes() {
       <Tabs defaultValue="geral" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="geral">Dados Gerais</TabsTrigger>
+          <TabsTrigger value="perfil" className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4" /> Perfil
+          </TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
           <TabsTrigger value="vitrine">Vitrine</TabsTrigger>
           <TabsTrigger value="progresso">Progresso</TabsTrigger>
@@ -644,6 +648,10 @@ function AlunoDetalhes() {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="perfil">
+          <PerfilVocacionalTab alunoId={id} />
         </TabsContent>
 
         <TabsContent value="financeiro" className="space-y-6">

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { InadimplenciaAlerts } from "@/components/student/InadimplenciaAlerts";
+import { PerfilVocacionalModal } from "@/components/student/PerfilVocacionalModal";
 import { verificarInadimplenciaAuto } from "@/lib/aluno-status";
 
 const StudentThemeContext = createContext<{ isDark: boolean }>({ isDark: true });
@@ -36,6 +37,7 @@ function StudentLayout() {
   const [acessoBloqueado, setAcessoBloqueado] = useState(false);
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
   const [sessaoId, setSessaoId] = useState<string | null>(null);
+  const [showPerfilModal, setShowPerfilModal] = useState(false);
 
   const toggleTema = async () => {
     const novoTema = tema === "escuro" ? "claro" : "escuro";
@@ -153,6 +155,14 @@ function StudentLayout() {
         }
         // Verifica inadimplência automática
         verificarInadimplenciaAuto(aluno.id, (aluno as any).status).catch(() => {});
+
+        // Checa se já preencheu o questionário vocacional
+        const { data: perfilVoc } = await supabase
+          .from('aluno_perfil_vocacional')
+          .select('id')
+          .eq('aluno_id', aluno.id)
+          .maybeSingle();
+        if (!perfilVoc) setShowPerfilModal(true);
       }
       // Get Polo Data (School Name and Logo)
       const { data: alunoPolo } = await supabase
@@ -346,6 +356,13 @@ function StudentLayout() {
         </div>
       </main>
       <WhatsAppButton />
+      {alunoId && (
+        <PerfilVocacionalModal
+          alunoId={alunoId}
+          open={showPerfilModal}
+          onClose={() => setShowPerfilModal(false)}
+        />
+      )}
     </div>
   );
 }

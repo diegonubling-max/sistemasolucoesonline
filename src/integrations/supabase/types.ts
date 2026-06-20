@@ -166,6 +166,44 @@ export type Database = {
           },
         ]
       }
+      aluno_perfil_vocacional: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          perfil_identificado: string | null
+          respostas: Json
+          segmentos_recomendados: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          perfil_identificado?: string | null
+          respostas: Json
+          segmentos_recomendados?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          perfil_identificado?: string | null
+          respostas?: Json
+          segmentos_recomendados?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aluno_perfil_vocacional_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: true
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aluno_sessoes: {
         Row: {
           aluno_id: string
