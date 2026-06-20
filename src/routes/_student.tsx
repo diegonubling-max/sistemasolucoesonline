@@ -155,6 +155,14 @@ function StudentLayout() {
         }
         // Verifica inadimplência automática
         verificarInadimplenciaAuto(aluno.id, (aluno as any).status).catch(() => {});
+
+        // Checa se já preencheu o questionário vocacional
+        const { data: perfilVoc } = await supabase
+          .from('aluno_perfil_vocacional')
+          .select('id')
+          .eq('aluno_id', aluno.id)
+          .maybeSingle();
+        if (!perfilVoc) setShowPerfilModal(true);
       }
       // Get Polo Data (School Name and Logo)
       const { data: alunoPolo } = await supabase
