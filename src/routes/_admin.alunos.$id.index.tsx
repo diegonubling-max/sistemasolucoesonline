@@ -541,38 +541,47 @@ function AlunoDetalhes() {
               {sendingAccess ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageSquare className="h-4 w-4 mr-2" />}
               {sendingAccess ? "Enviando..." : "Reenviar acesso"}
             </Button>
-            <Button variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50" onClick={() => setShowResetDefaultModal(true)}>
-              <Lock className="h-4 w-4 mr-2" /> Redefinir Senha
-            </Button>
-            <Button asChild>
-              <Link to="/alunos/$id/editar" params={{ id }}>
-                <Pencil className="h-4 w-4 mr-2" /> Editar
-              </Link>
-            </Button>
-            <Button variant="outline" className="text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => gerarDeclaracao.mutate()} disabled={gerarDeclaracao.isPending}>
-              {gerarDeclaracao.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
-              Gerar Declaração
-            </Button>
-            {statusAtual !== "trancado" && statusAtual !== "formado" && statusAtual !== "inativo" && (
-              <Button variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50" onClick={() => updateStatus.mutate("trancado")} disabled={updateStatus.isPending}>
-                <Lock className="h-4 w-4 mr-2" /> Trancar Matrícula
-              </Button>
-            )}
-            {statusAtual !== "ativo" && (
-              <Button variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" onClick={() => updateStatus.mutate("ativo")} disabled={updateStatus.isPending}>
-                <CheckCircle2 className="h-4 w-4 mr-2" /> Reativar
-              </Button>
-            )}
-            {statusAtual !== "formado" && (
-              <Button variant="outline" className="text-blue-700 border-blue-300 hover:bg-blue-50" onClick={() => updateStatus.mutate("formado")} disabled={updateStatus.isPending}>
-                <GraduationCap className="h-4 w-4 mr-2" /> Marcar como Formado
-              </Button>
-            )}
-            {statusAtual !== "inativo" && (
-              <Button variant="outline" className="text-gray-700 border-gray-300 hover:bg-gray-50" onClick={() => updateStatus.mutate("inativo")} disabled={updateStatus.isPending}>
-                <AlertCircle className="h-4 w-4 mr-2" /> Inativar
-              </Button>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <MoreHorizontal className="h-4 w-4 mr-2" /> Ações
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setShowResetDefaultModal(true)}>
+                  <Key className="h-4 w-4 mr-2" /> Redefinir Senha
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/alunos/$id/editar" params={{ id }}>
+                    <Pencil className="h-4 w-4 mr-2" /> Editar
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => gerarDeclaracao.mutate()} disabled={gerarDeclaracao.isPending}>
+                  <FileText className="h-4 w-4 mr-2" /> Gerar Declaração
+                </DropdownMenuItem>
+                {statusAtual !== "trancado" && statusAtual !== "formado" && statusAtual !== "inativo" && (
+                  <DropdownMenuItem onClick={() => updateStatus.mutate("trancado")} disabled={updateStatus.isPending}>
+                    <Lock className="h-4 w-4 mr-2" /> Trancar Matrícula
+                  </DropdownMenuItem>
+                )}
+                {(statusAtual !== "ativo" || statusAtual !== "formado" || statusAtual !== "inativo") && <DropdownMenuSeparator />}
+                {statusAtual !== "ativo" && (
+                  <DropdownMenuItem onClick={() => updateStatus.mutate("ativo")} disabled={updateStatus.isPending}>
+                    <CheckCircle2 className="h-4 w-4 mr-2" /> Reativar
+                  </DropdownMenuItem>
+                )}
+                {statusAtual !== "formado" && (
+                  <DropdownMenuItem onClick={() => updateStatus.mutate("formado")} disabled={updateStatus.isPending}>
+                    <GraduationCap className="h-4 w-4 mr-2" /> Marcar como Formado
+                  </DropdownMenuItem>
+                )}
+                {statusAtual !== "inativo" && (
+                  <DropdownMenuItem onClick={() => updateStatus.mutate("inativo")} disabled={updateStatus.isPending}>
+                    <AlertCircle className="h-4 w-4 mr-2" /> Inativar
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         }
       />
