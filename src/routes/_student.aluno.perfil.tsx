@@ -173,9 +173,6 @@ function StudentProfile() {
         <div className="text-center md:text-left space-y-2">
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{alunoData?.nome || "Meu Perfil"}</h1>
           <div className="flex flex-wrap justify-center md:justify-start gap-4">
-              <span className="bg-gray-100 text-gray-500 border-gray-100 px-3 py-1 rounded-full text-xs border transition-colors flex items-center gap-1">
-                E-mail: {session?.user.email}
-              </span>
               <span className="bg-blue-50 text-blue-700 border-blue-100 px-3 py-1 rounded-full text-xs border font-bold transition-colors flex items-center gap-1">
                 <ShieldCheck className="h-3 w-3" />
                 Aluno Verificado
