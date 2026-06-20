@@ -196,10 +196,6 @@ function StudentProfile() {
                     <p className="text-gray-900 font-medium">{alunoData?.nome || "---"}</p>
                 </div>
                 <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">E-mail</p>
-                    <p className="text-gray-900 font-medium">{session?.user.email}</p>
-                </div>
-                <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
                     <p className="text-xs text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1">
                       <Phone className="h-3 w-3" /> Telefone
                     </p>
