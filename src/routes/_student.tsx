@@ -356,6 +356,13 @@ function StudentLayout() {
         </div>
       </main>
       <WhatsAppButton />
+      {alunoId && (
+        <PerfilVocacionalModal
+          alunoId={alunoId}
+          open={showPerfilModal}
+          onClose={() => setShowPerfilModal(false)}
+        />
+      )}
     </div>
   );
 }
