@@ -71,15 +71,15 @@ export function BannerCarousel({ poloId: poloIdProp }: BannerCarouselProps) {
   const safeIndex = Math.min(index, banners.length - 1);
 
   return (
-    <div className="relative h-40 md:h-80 rounded-2xl overflow-hidden shadow-2xl bg-gray-200">
+    <div className="relative w-full md:h-80 rounded-2xl overflow-hidden shadow-lg bg-gray-100">
       {banners.map((b, i) => (
         <img
           key={b.id}
           src={b.imagem_url}
           alt={b.titulo || `Banner ${i + 1}`}
           className={cn(
-            "absolute inset-0 w-full h-full object-cover transition-opacity duration-700",
-            i === safeIndex ? "opacity-100" : "opacity-0"
+            "w-full h-auto md:absolute md:inset-0 md:h-full md:object-cover transition-opacity duration-700",
+            i === safeIndex ? "opacity-100 relative" : "opacity-0 absolute inset-0"
           )}
         />
       ))}
