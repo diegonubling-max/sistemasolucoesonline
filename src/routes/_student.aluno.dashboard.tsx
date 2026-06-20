@@ -205,11 +205,11 @@ function StudentDashboard() {
                 groups[segId].items.push(c);
               });
 
-              // Order items within each group: is_prova_final at the top
+              // Order items within each group: is_prova_final at the END
               Object.values(groups).forEach((group: any) => {
                 group.items.sort((a: any, b: any) => {
-                  if (a.cursos?.is_prova_final && !b.cursos?.is_prova_final) return -1;
-                  if (!a.cursos?.is_prova_final && b.cursos?.is_prova_final) return 1;
+                  if (a.cursos?.is_prova_final && !b.cursos?.is_prova_final) return 1;
+                  if (!a.cursos?.is_prova_final && b.cursos?.is_prova_final) return -1;
                   return 0;
                 });
               });
@@ -227,7 +227,8 @@ function StudentDashboard() {
                       </h3>
                     </div>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                  <div className="flex gap-3 overflow-x-auto overflow-y-hidden snap-x pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-6">
+
                     {group.items.map((c: any, i: number) => {
                       const curso = c.cursos;
                       const aulasCount = Array.isArray(curso.aulas) ? (curso.aulas[0]?.count ?? 0) : 0;
@@ -355,7 +356,7 @@ function StudentDashboard() {
                             onClick={() => {
                               navigate({ to: "/aluno/prova-final" });
                             }}
-                            className="group block w-full"
+                            className="group block w-[140px] shrink-0 snap-start sm:w-full"
                           >
                             {cardContent}
                           </div>
@@ -364,7 +365,7 @@ function StudentDashboard() {
 
                       if (!isReleased) {
                         return (
-                          <div key={i} className="group block w-full cursor-not-allowed">
+                          <div key={i} className="group block w-[140px] shrink-0 snap-start sm:w-full cursor-not-allowed">
                             {cardContent}
                           </div>
                         );
@@ -375,7 +376,7 @@ function StudentDashboard() {
                           key={i} 
                           to="/aluno/curso/$id" 
                           params={{ id: curso.id }} 
-                          className="group block w-full"
+                          className="group block w-[140px] shrink-0 snap-start sm:w-full"
                         >
                           {cardContent}
                         </Link>
@@ -391,7 +392,7 @@ function StudentDashboard() {
 
       {vitrine && vitrine.length > 0 && (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900">Cursos Disponíveis para Você 🔒</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Ou cursos inteiros</h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
             {vitrine.map((item: any) => {
