@@ -70,7 +70,7 @@ export function PerfilVocacionalTab({ alunoId }: Props) {
         .in("segmento_id", segIds);
       const list = (cursos ?? []).map((c) => ({
         ...c,
-        prioritario: idsPrim.has(c.segmento_id),
+        prioritario: c.segmento_id ? idsPrim.has(c.segmento_id) : false,
       }));
       // ordenar prioritários primeiro
       list.sort((a, b) => Number(b.prioritario) - Number(a.prioritario));
