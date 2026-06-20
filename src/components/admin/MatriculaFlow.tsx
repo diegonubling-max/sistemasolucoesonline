@@ -631,7 +631,8 @@ export function MatriculaFlow({
       {step === 1 && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <AlunoForm
-            submitLabel="Salvar e continuar"
+            submitLabel={alunoId ? "Salvar e continuar" : "Salvar e continuar"}
+            initialValues={aluno as any}
             onSubmit={async (v) => {
               const primeiroNome = v.nome.split(' ')[0];
               const senhaGerada = '1234' + primeiroNome
@@ -639,6 +640,30 @@ export function MatriculaFlow({
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
                 .split(' ')[0];
+
+              const { email, ...rest } = v;
+
+              // Se o aluno JÁ existe (usuário voltou à etapa 1), apenas atualiza e avança preservando o restante do estado.
+              if (alunoId) {
+                const { error: updErr } = await supabase
+                  .from("alunos")
+                  .update({
+                    ...rest,
+                    responsavel_email: v.responsavel_email || null,
+                    menor_de_idade: calcAge(v.data_nascimento) < 18,
+                    email: email || null,
+                  })
+                  .eq("id", alunoId);
+                if (updErr) {
+                  toast.error(`Erro ao atualizar: ${updErr.message}`);
+                  return;
+                }
+                toast.success("Dados do aluno atualizados!");
+                qc.invalidateQueries({ queryKey: ["aluno-matricula", alunoId] });
+                setUnlockedSteps(prev => prev.includes(2) ? prev : [...prev, 2]);
+                setStep(2);
+                return;
+              }
 
               // Identifica quem está cadastrando
               const { data: { user: currentUser } } = await supabase.auth.getUser();
@@ -657,7 +682,6 @@ export function MatriculaFlow({
                 }
               }
 
-              const { email, ...rest } = v;
               const studentToInsert = {
                 ...rest,
                 responsavel_email: v.responsavel_email || null,
@@ -722,6 +746,7 @@ export function MatriculaFlow({
           />
         </div>
       )}
+
 
       {step === 2 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
