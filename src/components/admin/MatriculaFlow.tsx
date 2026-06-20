@@ -596,13 +596,19 @@ export function MatriculaFlow({
     <div className="space-y-8">
       {/* Progress Indicator */}
       <div className="flex items-center justify-center max-w-2xl mx-auto mb-10">
-        {[1, 2, 3, 4, 5].map((s, i) => (
+        {[1, 2, 3, 4, 5].map((s, i) => {
+          const isUnlocked = unlockedSteps.includes(s as Step);
+          const isClickable = isUnlocked && step !== s;
+          return (
           <div key={s} className="flex items-center flex-1 last:flex-none">
-            <div 
+            <button
+              type="button"
+              disabled={!isClickable}
+              onClick={() => isClickable && setStep(s as Step)}
               className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
-                step === s ? "border-primary bg-primary text-primary-foreground" : 
-                unlockedSteps.includes(s as Step) ? "border-green-500 bg-white text-green-500" : 
-                "border-gray-300 bg-gray-50 text-gray-400"
+                step === s ? "border-primary bg-primary text-primary-foreground" :
+                isUnlocked ? "border-green-500 bg-white text-green-500 hover:bg-green-50 cursor-pointer" :
+                "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
               }`}
             >
               {unlockedSteps.includes((s + 1) as Step) && s < 5 ? (
@@ -613,12 +619,13 @@ export function MatriculaFlow({
               <span className="absolute -bottom-7 w-32 text-center text-xs font-medium text-muted-foreground">
                 {s === 1 ? "Dados do Aluno" : s === 2 ? "Cursos" : s === 3 ? "Pacote" : s === 4 ? "Pagamentos" : "Contrato"}
               </span>
-            </div>
+            </button>
             {i < 4 && (
               <div className={`flex-1 h-0.5 mx-2 ${unlockedSteps.includes((s + 1) as Step) ? "bg-green-500" : "bg-gray-200"}`} />
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {step === 1 && (
