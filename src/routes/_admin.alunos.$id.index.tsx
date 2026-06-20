@@ -564,7 +564,7 @@ function AlunoDetalhes() {
                     <Lock className="h-4 w-4 mr-2" /> Trancar Matrícula
                   </DropdownMenuItem>
                 )}
-                {(statusAtual !== "ativo" || statusAtual !== "formado" || statusAtual !== "inativo") && <DropdownMenuSeparator />}
+                <DropdownMenuSeparator />
                 {statusAtual !== "ativo" && (
                   <DropdownMenuItem onClick={() => updateStatus.mutate("ativo")} disabled={updateStatus.isPending}>
                     <CheckCircle2 className="h-4 w-4 mr-2" /> Reativar
