@@ -53,7 +53,7 @@ export function PerfilVocacionalTab({ alunoId }: Props) {
       if (segIds.length === 0) return [];
       const { data: cursos } = await supabase
         .from("cursos")
-        .select("id, nome, segmento_id, preco")
+        .select("id, nome, segmento_id")
         .in("segmento_id", segIds);
       return cursos ?? [];
     },
