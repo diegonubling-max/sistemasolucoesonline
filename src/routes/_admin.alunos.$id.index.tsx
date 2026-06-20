@@ -650,6 +650,10 @@ function AlunoDetalhes() {
           </div>
         </TabsContent>
 
+        <TabsContent value="perfil">
+          <PerfilVocacionalTab alunoId={id} />
+        </TabsContent>
+
         <TabsContent value="financeiro" className="space-y-6">
           <div className="grid grid-cols-3 gap-4">
             <Card className="bg-green-50"><CardContent className="pt-6"><p className="text-xs text-green-700">Pago</p><p className="text-xl font-bold">R$ {totalPago.toLocaleString("pt-BR")}</p></CardContent></Card>
