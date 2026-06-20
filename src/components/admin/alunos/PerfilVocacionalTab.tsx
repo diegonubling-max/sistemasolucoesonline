@@ -76,8 +76,6 @@ export function PerfilVocacionalTab({ alunoId }: Props) {
         aluno_id: alunoId,
         curso_id: c.id,
         ativo: true,
-        preco_pix: (c as any).preco ?? null,
-        preco_cartao: (c as any).preco ?? null,
         max_parcelas: 12,
       }));
       const { error } = await supabase.from("cursos_vitrine").insert(payload);
