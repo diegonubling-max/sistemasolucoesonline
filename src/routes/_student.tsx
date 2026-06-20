@@ -37,6 +37,7 @@ function StudentLayout() {
   const [acessoBloqueado, setAcessoBloqueado] = useState(false);
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
   const [sessaoId, setSessaoId] = useState<string | null>(null);
+  const [showPerfilModal, setShowPerfilModal] = useState(false);
 
   const toggleTema = async () => {
     const novoTema = tema === "escuro" ? "claro" : "escuro";
