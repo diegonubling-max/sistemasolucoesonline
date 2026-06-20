@@ -205,11 +205,11 @@ function StudentDashboard() {
                 groups[segId].items.push(c);
               });
 
-              // Order items within each group: is_prova_final at the top
+              // Order items within each group: is_prova_final at the END
               Object.values(groups).forEach((group: any) => {
                 group.items.sort((a: any, b: any) => {
-                  if (a.cursos?.is_prova_final && !b.cursos?.is_prova_final) return -1;
-                  if (!a.cursos?.is_prova_final && b.cursos?.is_prova_final) return 1;
+                  if (a.cursos?.is_prova_final && !b.cursos?.is_prova_final) return 1;
+                  if (!a.cursos?.is_prova_final && b.cursos?.is_prova_final) return -1;
                   return 0;
                 });
               });
