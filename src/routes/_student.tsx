@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { InadimplenciaAlerts } from "@/components/student/InadimplenciaAlerts";
+import { PerfilVocacionalModal } from "@/components/student/PerfilVocacionalModal";
 import { verificarInadimplenciaAuto } from "@/lib/aluno-status";
 
 const StudentThemeContext = createContext<{ isDark: boolean }>({ isDark: true });
