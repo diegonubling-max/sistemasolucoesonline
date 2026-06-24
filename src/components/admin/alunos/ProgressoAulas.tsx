@@ -99,7 +99,7 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
         const mediaProgresso = aulasIniciadas.length > 0
           ? Math.round(aulasIniciadas.reduce((s, a) => s + a.percentual, 0) / aulasIniciadas.length)
           : 0;
-        const aulasConcluidas = aulas.filter(a => a.percentual >= 90).length;
+        const aulasConcluidas = aulas.filter(a => a.percentual >= 70).length;
 
         return {
           ...curso,
