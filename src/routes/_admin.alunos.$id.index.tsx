@@ -746,7 +746,7 @@ function AlunoDetalhes() {
                             const aulaTit = a.aulas?.titulo ?? "Aula";
                             let Icon = Eye;
                             let cor = "text-muted-foreground";
-                            if (pct >= 90) { Icon = CheckCircle2; cor = "text-green-600"; }
+                            if (pct >= 70) { Icon = CheckCircle2; cor = "text-green-600"; }
                             else if (pct >= 1) { Icon = Clock; cor = "text-amber-600"; }
                             const detalhe = tempo === 0
                               ? "Abriu mas não assistiu"
