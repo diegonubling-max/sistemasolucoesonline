@@ -429,12 +429,12 @@ function Dashboard() {
               </TableHeader>
               <TableBody>
                 {ultimosAcessos.map((s: any) => (
-                  <TableRow key={s.aluno_id} className="group transition-colors">
-                    <TableCell className="font-medium pl-6">
-                      <Link to="/alunos/$id" params={{ id: s.alunos.id }} className="hover:text-primary">
-                        {s.alunos.nome}
-                      </Link>
-                    </TableCell>
+                  <TableRow
+                    key={s.aluno_id}
+                    className="group transition-colors cursor-pointer hover:bg-muted/60"
+                    onClick={() => navigate({ to: "/alunos/$id", params: { id: s.alunos.id } })}
+                  >
+                    <TableCell className="font-medium pl-6 text-primary">{s.alunos.nome}</TableCell>
                     <TableCell className="text-muted-foreground">{s.alunos.ctr ?? '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{format(new Date(s.login_em), "dd/MM 'às' HH:mm")}</TableCell>
                     <TableCell className="text-muted-foreground pr-6">{s.alunos.polos?.nome ?? '-'}</TableCell>
