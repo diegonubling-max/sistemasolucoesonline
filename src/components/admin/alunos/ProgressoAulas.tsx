@@ -99,7 +99,7 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
         const mediaProgresso = aulasIniciadas.length > 0
           ? Math.round(aulasIniciadas.reduce((s, a) => s + a.percentual, 0) / aulasIniciadas.length)
           : 0;
-        const aulasConcluidas = aulas.filter(a => a.percentual >= 90).length;
+        const aulasConcluidas = aulas.filter(a => a.percentual >= 70).length;
 
         return {
           ...curso,
@@ -141,7 +141,7 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
     : 0;
 
   const statusIcon = (pct: number) => {
-    if (pct >= 90) return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+    if (pct >= 70) return <CheckCircle2 className="h-4 w-4 text-green-600" />;
     if (pct >= 1) return <PlayCircle className="h-4 w-4 text-yellow-500" />;
     return <Circle className="h-4 w-4 text-gray-300" />;
   };
