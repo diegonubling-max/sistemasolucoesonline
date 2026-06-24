@@ -59,39 +59,30 @@ export function useVideoProgress({
       const dur = Math.floor(duration);
       const pct = dur > 0 ? Math.min(100, +(ct / dur * 100).toFixed(2)) : 0;
 
-      // Find existing row
+      // Read existing to preserve max tempo_assistido
       const { data: existing } = await supabase
         .from("aluno_aulas_assistidas")
-        .select("id, tempo_assistido, percentual_assistido")
+        .select("tempo_assistido")
         .eq("aluno_id", alunoId)
         .eq("aula_id", aulaId)
-        .order("created_at", { ascending: false })
-        .limit(1)
         .maybeSingle();
 
       const newTempo = Math.max(existing?.tempo_assistido ?? 0, ct);
 
-      if (existing) {
-        await supabase
-          .from("aluno_aulas_assistidas")
-          .update({
+      await supabase
+        .from("aluno_aulas_assistidas")
+        .upsert(
+          {
+            aluno_id: alunoId,
+            aula_id: aulaId,
+            curso_id: cursoId,
             duracao_total: dur,
             tempo_assistido: newTempo,
             ultima_posicao: ct,
             percentual_assistido: pct,
-          })
-          .eq("id", existing.id);
-      } else {
-        await supabase.from("aluno_aulas_assistidas").insert({
-          aluno_id: alunoId,
-          aula_id: aulaId,
-          curso_id: cursoId,
-          duracao_total: dur,
-          tempo_assistido: newTempo,
-          ultima_posicao: ct,
-          percentual_assistido: pct,
-        });
-      }
+          },
+          { onConflict: "aluno_id,aula_id" },
+        );
 
       if (pct >= 90 && !completedRef.current) {
         completedRef.current = true;
