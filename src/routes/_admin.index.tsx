@@ -406,7 +406,46 @@ function Dashboard() {
         </div>
       </div>
 
-      
+
+      <Card className="mb-8 border-none shadow-lg">
+        <CardHeader className="bg-gray-50/50 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <LogIn className="h-5 w-5 text-primary" />
+            Últimos Acessos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {(!ultimosAcessos || ultimosAcessos.length === 0) ? (
+            <p className="text-center text-muted-foreground py-8 italic">Nenhum acesso recente</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="pl-6">Nome</TableHead>
+                  <TableHead>CTR</TableHead>
+                  <TableHead>Último acesso</TableHead>
+                  <TableHead className="pr-6">Polo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ultimosAcessos.map((s: any) => (
+                  <TableRow key={s.aluno_id} className="group transition-colors">
+                    <TableCell className="font-medium pl-6">
+                      <Link to="/alunos/$id" params={{ id: s.alunos.id }} className="hover:text-primary">
+                        {s.alunos.nome}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{s.alunos.ctr ?? '-'}</TableCell>
+                    <TableCell className="text-muted-foreground">{format(new Date(s.login_em), "dd/MM 'às' HH:mm")}</TableCell>
+                    <TableCell className="text-muted-foreground pr-6">{s.alunos.polos?.nome ?? '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
 
       <Card className="border-none shadow-lg">
 
