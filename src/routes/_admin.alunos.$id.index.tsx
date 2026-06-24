@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText, MoreHorizontal, Sparkles } from "lucide-react";
+import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText, MoreHorizontal, Sparkles, Eye } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -733,9 +733,33 @@ function AlunoDetalhes() {
                         {aulasDaSessao.length === 0 ? (
                           <p className="text-[10px] mt-1 text-muted-foreground italic">Nenhuma aula assistida nesta sessão</p>
                         ) : (
-                          aulasDaSessao.map(a => (
-                            <div key={a.id} className="flex items-center gap-2 text-[10px] mt-1 text-blue-600"><PlayCircle className="h-3 w-3" /> {(a.aulas as any)?.titulo}</div>
-                          ))
+                          aulasDaSessao.map((a: any) => {
+                            const pct = Number(a.percentual_assistido ?? 0);
+                            const tempo = Number(a.tempo_assistido ?? 0);
+                            const total = Number(a.duracao_total ?? 0);
+                            const fmt = (sec: number) => {
+                              const m = Math.floor(sec / 60);
+                              const s = Math.floor(sec % 60);
+                              return `${m}min${s.toString().padStart(2, "0")}seg`;
+                            };
+                            const materia = a.cursos?.nome ?? "—";
+                            const aulaTit = a.aulas?.titulo ?? "Aula";
+                            let Icon = Eye;
+                            let cor = "text-muted-foreground";
+                            if (pct >= 90) { Icon = CheckCircle2; cor = "text-green-600"; }
+                            else if (pct >= 1) { Icon = Clock; cor = "text-amber-600"; }
+                            const detalhe = tempo === 0
+                              ? "Abriu mas não assistiu"
+                              : total > 0
+                                ? `${fmt(tempo)} de ${fmt(total)} (${Math.round(pct)}%)`
+                                : `${Math.round(pct)}% assistido`;
+                            return (
+                              <div key={a.id} className={`flex items-center gap-2 text-[11px] mt-1 ${cor}`}>
+                                <Icon className="h-3.5 w-3.5 shrink-0" />
+                                <span><span className="font-semibold">{materia}</span> — {aulaTit} • {detalhe}</span>
+                              </div>
+                            );
+                          })
                         )}
                       </div>
                     </div>
