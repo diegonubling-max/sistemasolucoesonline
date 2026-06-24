@@ -27,6 +27,7 @@ interface Origin {
 
 function Dashboard() {
   const { session } = useAuth();
+  const navigate = useNavigate();
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
   useEffect(() => {
