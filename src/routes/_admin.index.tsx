@@ -181,6 +181,43 @@ function Dashboard() {
     },
   });
 
+  const { data: ultimosAcessos } = useQuery({
+    queryKey: ["ultimos-acessos", selectedPoloId, colabData?.polo_id, isSuperAdmin],
+    queryFn: async () => {
+      const desde = subDays(new Date(), 5).toISOString();
+      let q = supabase
+        .from("aluno_sessoes")
+        .select("aluno_id, login_em, alunos!inner(id, nome, ctr, polo_id, polos(nome))")
+        .gte("login_em", desde)
+        .order("login_em", { ascending: false })
+        .limit(200);
+
+      const colabPoloId = colabData?.polo_id;
+      if (isSuperAdmin) {
+        if (selectedPoloId && selectedPoloId !== 'all') {
+          q = q.eq('alunos.polo_id', selectedPoloId);
+        }
+      } else if (colabPoloId) {
+        q = q.eq('alunos.polo_id', colabPoloId);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+
+      const seen = new Set<string>();
+      const unique: any[] = [];
+      for (const row of data ?? []) {
+        if (seen.has(row.aluno_id)) continue;
+        seen.add(row.aluno_id);
+        unique.push(row);
+        if (unique.length >= 10) break;
+      }
+      return unique;
+    },
+  });
+
+
+
   const cards = [
     { label: "Total de Alunos", value: stats?.alunos ?? 0, icon: Users, color: "text-primary" },
     { label: "Total de Matrículas", value: stats?.matriculas ?? 0, icon: GraduationCap, color: "text-primary" },
