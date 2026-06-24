@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Users, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin, Loader2, Crown } from "lucide-react";
+import { Users, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin, Loader2, Crown, LogIn } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import { startOfMonth, endOfMonth, format, subDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -180,6 +180,43 @@ function Dashboard() {
       return data;
     },
   });
+
+  const { data: ultimosAcessos } = useQuery({
+    queryKey: ["ultimos-acessos", selectedPoloId, colabData?.polo_id, isSuperAdmin],
+    queryFn: async () => {
+      const desde = subDays(new Date(), 5).toISOString();
+      let q = supabase
+        .from("aluno_sessoes")
+        .select("aluno_id, login_em, alunos!inner(id, nome, ctr, polo_id, polos(nome))")
+        .gte("login_em", desde)
+        .order("login_em", { ascending: false })
+        .limit(200);
+
+      const colabPoloId = colabData?.polo_id;
+      if (isSuperAdmin) {
+        if (selectedPoloId && selectedPoloId !== 'all') {
+          q = q.eq('alunos.polo_id', selectedPoloId);
+        }
+      } else if (colabPoloId) {
+        q = q.eq('alunos.polo_id', colabPoloId);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+
+      const seen = new Set<string>();
+      const unique: any[] = [];
+      for (const row of data ?? []) {
+        if (seen.has(row.aluno_id)) continue;
+        seen.add(row.aluno_id);
+        unique.push(row);
+        if (unique.length >= 10) break;
+      }
+      return unique;
+    },
+  });
+
+
 
   const cards = [
     { label: "Total de Alunos", value: stats?.alunos ?? 0, icon: Users, color: "text-primary" },
@@ -369,7 +406,46 @@ function Dashboard() {
         </div>
       </div>
 
-      
+
+      <Card className="mb-8 border-none shadow-lg">
+        <CardHeader className="bg-gray-50/50 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <LogIn className="h-5 w-5 text-primary" />
+            Últimos Acessos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {(!ultimosAcessos || ultimosAcessos.length === 0) ? (
+            <p className="text-center text-muted-foreground py-8 italic">Nenhum acesso recente</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="pl-6">Nome</TableHead>
+                  <TableHead>CTR</TableHead>
+                  <TableHead>Último acesso</TableHead>
+                  <TableHead className="pr-6">Polo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ultimosAcessos.map((s: any) => (
+                  <TableRow key={s.aluno_id} className="group transition-colors">
+                    <TableCell className="font-medium pl-6">
+                      <Link to="/alunos/$id" params={{ id: s.alunos.id }} className="hover:text-primary">
+                        {s.alunos.nome}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{s.alunos.ctr ?? '-'}</TableCell>
+                    <TableCell className="text-muted-foreground">{format(new Date(s.login_em), "dd/MM 'às' HH:mm")}</TableCell>
+                    <TableCell className="text-muted-foreground pr-6">{s.alunos.polos?.nome ?? '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
 
       <Card className="border-none shadow-lg">
 
