@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Users, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin, Loader2, Crown, LogIn } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
@@ -27,6 +27,7 @@ interface Origin {
 
 function Dashboard() {
   const { session } = useAuth();
+  const navigate = useNavigate();
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
   useEffect(() => {
@@ -429,12 +430,12 @@ function Dashboard() {
               </TableHeader>
               <TableBody>
                 {ultimosAcessos.map((s: any) => (
-                  <TableRow key={s.aluno_id} className="group transition-colors">
-                    <TableCell className="font-medium pl-6">
-                      <Link to="/alunos/$id" params={{ id: s.alunos.id }} className="hover:text-primary">
-                        {s.alunos.nome}
-                      </Link>
-                    </TableCell>
+                  <TableRow
+                    key={s.aluno_id}
+                    className="group transition-colors cursor-pointer hover:bg-muted/60"
+                    onClick={() => navigate({ to: "/alunos/$id", params: { id: s.alunos.id } })}
+                  >
+                    <TableCell className="font-medium pl-6 text-primary">{s.alunos.nome}</TableCell>
                     <TableCell className="text-muted-foreground">{s.alunos.ctr ?? '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{format(new Date(s.login_em), "dd/MM 'às' HH:mm")}</TableCell>
                     <TableCell className="text-muted-foreground pr-6">{s.alunos.polos?.nome ?? '-'}</TableCell>
