@@ -164,7 +164,9 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                     dias: diasCorridos,
                     ultimaAula: aula,
                     materia,
+                    alunoId: aluno.id,
                   });
+
                   await marcar(aluno.id, "4_dias_uteis");
                   result.quatro_dias++;
                   continue;
