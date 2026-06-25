@@ -672,7 +672,7 @@ function Financeiro() {
                 Primeiras Parcelas
               </h3>
               <div className="flex flex-wrap items-center gap-2">
-                <Input type="month" className="w-40" value={primeirasMonth} onChange={(e) => setPrimeirasMonth(e.target.value)} />
+                <Input type="month" className="w-48 pr-10" value={primeirasMonth} onChange={(e) => setPrimeirasMonth(e.target.value)} />
                 <Select value={primeirasStatus} onValueChange={(v) => setPrimeirasStatus(v as any)}>
                   <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -736,7 +736,7 @@ function Financeiro() {
                 Últimas Parcelas
               </h3>
               <div className="flex flex-wrap items-center gap-2">
-                <Input type="month" className="w-40" value={ultimasMonth} onChange={(e) => setUltimasMonth(e.target.value)} />
+                <Input type="month" className="w-48 pr-10" value={ultimasMonth} onChange={(e) => setUltimasMonth(e.target.value)} />
                 <Button size="sm" onClick={() => refetchUltimas()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
               </div>
             </div>
