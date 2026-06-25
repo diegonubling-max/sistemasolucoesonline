@@ -297,6 +297,9 @@ function Financeiro() {
             nome,
             vendedora
           ),
+          matricula_cursos (
+            cursos ( nome )
+          ),
           matricula_pacotes (
             pacotes (
               nome,
@@ -316,21 +319,34 @@ function Financeiro() {
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data ?? []).map(m => {
+      // Agrupa por matricula_id — uma linha por matrícula, cursos concatenados
+      const byMatricula = new Map<string, any>();
+      for (const m of (data ?? [])) {
+        if (byMatricula.has(m.id)) continue;
         const aluno = m.alunos as any;
-        const pacotes = (m.matricula_pacotes as any[]).map(mp => mp.pacotes);
-        const valorTotal = pacotes.reduce((acc, p) => acc + Number(p.valor_total), 0);
-        const cursos = pacotes.map(p => p.nome).join(", ");
-        
-        return {
+        const pacotes = ((m.matricula_pacotes as any[]) ?? [])
+          .map(mp => mp.pacotes)
+          .filter(Boolean);
+        const valorTotal = pacotes.reduce((acc, p) => acc + Number(p.valor_total || 0), 0);
+
+        const cursosNomes = Array.from(new Set(
+          ((m.matricula_cursos as any[]) ?? [])
+            .map(mc => mc.cursos?.nome)
+            .filter(Boolean)
+        ));
+        const pacoteNomes = Array.from(new Set(pacotes.map((p: any) => p.nome).filter(Boolean)));
+        const cursos = (cursosNomes.length ? cursosNomes : pacoteNomes).join(", ");
+
+        byMatricula.set(m.id, {
           id: m.id,
           alunoNome: aluno?.nome,
           vendedora: aluno?.vendedora || "Não informada",
           dataMatricula: m.created_at,
           cursos,
-          valorTotal
-        };
-      });
+          valorTotal,
+        });
+      }
+      return Array.from(byMatricula.values());
     },
     enabled: activeFilter === "vendedora"
   });
