@@ -699,7 +699,21 @@ function AlunoDetalhes() {
                           {p.status === 'aberto' && (
                             <Button size="sm" variant="ghost" className="text-green-600" onClick={() => { setSelectedParcelaId(p.id); setSelectedParcelaValor(Number(p.valor)); setShowBaixaModal(true); }}>Baixa</Button>
                           )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            disabled={excluirParcela.isPending}
+                            onClick={() => {
+                              if (window.confirm("Tem certeza que deseja excluir esta parcela? Esta ação não pode ser desfeita.")) {
+                                excluirParcela.mutate(p);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </td>
+
                       </tr>
                     ))}
                   </tbody>
