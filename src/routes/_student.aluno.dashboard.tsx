@@ -765,6 +765,54 @@ function StudentDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!confirmResgate} onOpenChange={(o) => !o && setConfirmResgate(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar resgate</DialogTitle>
+          </DialogHeader>
+          {confirmResgate && (
+            <div className="space-y-3 text-sm">
+              <p>
+                Deseja usar <b>{confirmResgate.pontos_necessarios} pts</b> para adquirir{" "}
+                <b>{confirmResgate.cursos?.nome}</b> por{" "}
+                <b>{formatCurrency(confirmResgate.preco_com_pontos)}</b>?
+              </p>
+              <div className="bg-gray-50 rounded-lg p-3 border text-xs space-y-1">
+                <div>Saldo atual: <b>{milhasSaldo ?? 0} pts</b></div>
+                <div>Saldo após resgate: <b>{(milhasSaldo ?? 0) - confirmResgate.pontos_necessarios} pts</b></div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmResgate(null)}>Cancelar</Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              disabled={resgatarCurso.isPending}
+              onClick={() => confirmResgate && resgatarCurso.mutate(confirmResgate.id)}
+            >
+              {resgatarCurso.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar resgate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showResgateSucesso} onOpenChange={setShowResgateSucesso}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Sucesso</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            <Sparkles className="h-12 w-12 text-yellow-500 mx-auto" />
+            <h3 className="text-xl font-bold">🎉 Curso desbloqueado!</h3>
+            <p className="text-sm text-gray-600">Acesse agora na sua área de estudos.</p>
+            <Button className="w-full" onClick={() => setShowResgateSucesso(false)}>
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
