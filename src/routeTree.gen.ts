@@ -31,6 +31,7 @@ import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.alu
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
+import { Route as ApiPublicHooksZapiJobsDiariosRouteImport } from './routes/api/public/hooks/zapi-jobs-diarios'
 import { Route as ApiPublicHooksWhatsappCobrancaRouteImport } from './routes/api/public/hooks/whatsapp-cobranca'
 import { Route as StudentAlunoProvaFinalRealizarRouteImport } from './routes/_student.aluno.prova-final.realizar'
 import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_student.aluno.prova-final.execucao'
@@ -147,6 +148,12 @@ const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
   path: '/alunos/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksZapiJobsDiariosRoute =
+  ApiPublicHooksZapiJobsDiariosRouteImport.update({
+    id: '/api/public/hooks/zapi-jobs-diarios',
+    path: '/api/public/hooks/zapi-jobs-diarios',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksWhatsappCobrancaRoute =
   ApiPublicHooksWhatsappCobrancaRouteImport.update({
     id: '/api/public/hooks/whatsapp-cobranca',
@@ -213,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
+  '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -242,6 +250,7 @@ export interface FileRoutesByTo {
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
+  '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesById {
@@ -274,6 +283,7 @@ export interface FileRoutesById {
   '/_student/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/_student/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
+  '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/aluno/prova-final/execucao'
     | '/aluno/prova-final/realizar'
     | '/api/public/hooks/whatsapp-cobranca'
+    | '/api/public/hooks/zapi-jobs-diarios'
     | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/aluno/prova-final/execucao'
     | '/aluno/prova-final/realizar'
     | '/api/public/hooks/whatsapp-cobranca'
+    | '/api/public/hooks/zapi-jobs-diarios'
     | '/alunos/$id'
   id:
     | '__root__'
@@ -365,6 +377,7 @@ export interface FileRouteTypes {
     | '/_student/aluno/prova-final/execucao'
     | '/_student/aluno/prova-final/realizar'
     | '/api/public/hooks/whatsapp-cobranca'
+    | '/api/public/hooks/zapi-jobs-diarios'
     | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -375,6 +388,7 @@ export interface RootRouteChildren {
   AlunoLoginRoute: typeof AlunoLoginRoute
   ContratoTokenRoute: typeof ContratoTokenRoute
   ApiPublicHooksWhatsappCobrancaRoute: typeof ApiPublicHooksWhatsappCobrancaRoute
+  ApiPublicHooksZapiJobsDiariosRoute: typeof ApiPublicHooksZapiJobsDiariosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -533,6 +547,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/zapi-jobs-diarios': {
+      id: '/api/public/hooks/zapi-jobs-diarios'
+      path: '/api/public/hooks/zapi-jobs-diarios'
+      fullPath: '/api/public/hooks/zapi-jobs-diarios'
+      preLoaderRoute: typeof ApiPublicHooksZapiJobsDiariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/whatsapp-cobranca': {
       id: '/api/public/hooks/whatsapp-cobranca'
       path: '/api/public/hooks/whatsapp-cobranca'
@@ -667,6 +688,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlunoLoginRoute: AlunoLoginRoute,
   ContratoTokenRoute: ContratoTokenRoute,
   ApiPublicHooksWhatsappCobrancaRoute: ApiPublicHooksWhatsappCobrancaRoute,
+  ApiPublicHooksZapiJobsDiariosRoute: ApiPublicHooksZapiJobsDiariosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

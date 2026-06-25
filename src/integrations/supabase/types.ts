@@ -1612,6 +1612,35 @@ export type Database = {
           },
         ]
       }
+      zapi_disparos_controle: {
+        Row: {
+          aluno_id: string
+          enviado_em: string
+          id: string
+          tipo_disparo: string
+        }
+        Insert: {
+          aluno_id: string
+          enviado_em?: string
+          id?: string
+          tipo_disparo: string
+        }
+        Update: {
+          aluno_id?: string
+          enviado_em?: string
+          id?: string
+          tipo_disparo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapi_disparos_controle_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
