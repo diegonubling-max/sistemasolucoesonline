@@ -34,6 +34,16 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
     ? (selectedPoloId !== "all" ? selectedPoloId : null)
     : (colabPoloId ?? null);
 
+export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: Props) {
+  const [expanded, setExpanded] = useState(false);
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const canDelete = isSuperAdmin || user?.email === "diegonubling@gmail.com";
+
+  const effectivePolo = isSuperAdmin
+    ? (selectedPoloId !== "all" ? selectedPoloId : null)
+    : (colabPoloId ?? null);
+
   const { data: cliques } = useQuery({
     queryKey: ["vitrine-cliques", effectivePolo, expanded],
     queryFn: async () => {
@@ -47,6 +57,18 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
       if (error) throw error;
       return data ?? [];
     },
+  });
+
+  const excluirAluno = useMutation({
+    mutationFn: async (alunoId: string) => {
+      const { error } = await supabase.rpc("delete_aluno_completo", { p_aluno_id: alunoId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Aluno excluído com sucesso!");
+      qc.invalidateQueries({ queryKey: ["vitrine-cliques"] });
+    },
+    onError: (e: any) => toast.error("Erro ao excluir aluno", { description: e.message }),
   });
 
   return (
