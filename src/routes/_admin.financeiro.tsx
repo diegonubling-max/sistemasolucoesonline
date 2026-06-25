@@ -301,11 +301,9 @@ function Financeiro() {
             cursos ( nome )
           ),
           matricula_pacotes (
-            pacotes (
-              nome,
-              valor_total
-            )
-          )
+            pacotes ( nome )
+          ),
+          parcelas ( valor, tipo )
         `)
         .gte("created_at", `${vendedoraPeriod.start}T00:00:00`)
         .lte("created_at", `${vendedoraPeriod.end}T23:59:59`);
@@ -319,22 +317,28 @@ function Financeiro() {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Agrupa por matricula_id — uma linha por matrícula, cursos concatenados
+      // Agrupa por matricula_id — uma linha por matrícula
       const byMatricula = new Map<string, any>();
       for (const m of (data ?? [])) {
         if (byMatricula.has(m.id)) continue;
         const aluno = m.alunos as any;
-        const pacotes = ((m.matricula_pacotes as any[]) ?? [])
-          .map(mp => mp.pacotes)
-          .filter(Boolean);
-        const valorTotal = pacotes.reduce((acc, p) => acc + Number(p.valor_total || 0), 0);
+
+        // Valor total = SOMA das parcelas (independente de forma_pagamento)
+        const parcelas = (m.parcelas as any[]) ?? [];
+        const valorTotal = parcelas
+          .filter((p: any) => !p.tipo || p.tipo === 'parcela')
+          .reduce((acc: number, p: any) => acc + Number(p.valor || 0), 0);
 
         const cursosNomes = Array.from(new Set(
           ((m.matricula_cursos as any[]) ?? [])
             .map(mc => mc.cursos?.nome)
             .filter(Boolean)
         ));
-        const pacoteNomes = Array.from(new Set(pacotes.map((p: any) => p.nome).filter(Boolean)));
+        const pacoteNomes = Array.from(new Set(
+          ((m.matricula_pacotes as any[]) ?? [])
+            .map((mp: any) => mp.pacotes?.nome)
+            .filter(Boolean)
+        ));
         const cursos = (cursosNomes.length ? cursosNomes : pacoteNomes).join(", ");
 
         byMatricula.set(m.id, {
