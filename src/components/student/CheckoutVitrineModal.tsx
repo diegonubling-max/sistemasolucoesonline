@@ -37,7 +37,7 @@ export function CheckoutVitrineModal({
   const [pix, setPix] = useState<{ payload: string; encodedImage: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [seconds, setSeconds] = useState(30 * 60);
-  const [parcelas, setParcelas] = useState(1);
+  const parcelas = 12;
   const [cartao, setCartao] = useState({ holderName: "", number: "", expiry: "", ccv: "" });
 
   useEffect(() => {
