@@ -672,7 +672,7 @@ function Financeiro() {
                 Primeiras Parcelas
               </h3>
               <div className="flex flex-wrap items-center gap-2">
-                <Input type="month" className="w-40" value={primeirasMonth} onChange={(e) => setPrimeirasMonth(e.target.value)} />
+                <Input type="month" className="w-48 pr-10" value={primeirasMonth} onChange={(e) => setPrimeirasMonth(e.target.value)} />
                 <Select value={primeirasStatus} onValueChange={(v) => setPrimeirasStatus(v as any)}>
                   <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
                   <SelectContent>
