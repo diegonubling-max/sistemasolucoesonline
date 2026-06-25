@@ -14,18 +14,22 @@ function alunoNoGrupo(alunoId: string, grupo: number): boolean {
   return acc % 3 === grupo;
 }
 
-function diasUteisEntre(desde: Date, ate: Date): number {
-  let count = 0;
-  const d = new Date(desde);
-  d.setHours(0, 0, 0, 0);
-  const fim = new Date(ate);
-  fim.setHours(0, 0, 0, 0);
-  while (d < fim) {
-    d.setDate(d.getDate() + 1);
-    const dow = d.getDay();
-    if (dow !== 0 && dow !== 6) count++;
+function calcularDiaDisparo(dataUltimoAcesso: Date): Date {
+  const data = new Date(dataUltimoAcesso);
+  data.setHours(0, 0, 0, 0);
+  data.setDate(data.getDate() + 4);
+  while (data.getDay() === 0 || data.getDay() === 6) {
+    data.setDate(data.getDate() + 1);
   }
-  return count;
+  return data;
+}
+
+function mesmaData(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 // Brasília = UTC-3 (sem horário de verão atual)
