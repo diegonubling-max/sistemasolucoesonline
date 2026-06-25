@@ -502,12 +502,26 @@ function StudentDashboard() {
                         {curso.nome}
                       </h3>
                       <div className="mt-2 space-y-0.5">
-                        <p className="text-white font-bold text-sm">
-                          PIX: {formatCurrency(item.preco_pix)}
-                        </p>
-                        <p className="text-white/80 text-[10px] font-medium">
-                          Cartão: até {item.max_parcelas}x de {formatCurrency(item.preco_cartao / item.max_parcelas)}
-                        </p>
+                        {item.preco_com_pontos && item.pontos_necessarios ? (
+                          <>
+                            <p className="text-white/70 text-[11px] line-through">
+                              {formatCurrency(item.preco_normal ?? item.preco_pix)}
+                            </p>
+                            <p className="text-yellow-300 font-bold text-sm flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-yellow-300" />
+                              {item.pontos_necessarios} pts: {formatCurrency(item.preco_com_pontos)}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-white font-bold text-sm">
+                              PIX: {formatCurrency(item.preco_pix)}
+                            </p>
+                            <p className="text-white/80 text-[10px] font-medium">
+                              Cartão: até {item.max_parcelas}x de {formatCurrency(item.preco_cartao / item.max_parcelas)}
+                            </p>
+                          </>
+                        )}
                       </div>
                     </div>
 
