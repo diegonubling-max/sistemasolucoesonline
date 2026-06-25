@@ -737,28 +737,16 @@ function StudentDashboard() {
 
               <div className="space-y-3">
                 <Button
-                  className="w-full bg-[#1E3A5F] hover:bg-[#162a45] text-white gap-2"
+                  className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white gap-2 text-base font-bold py-6 animate-vitrine-pulse"
                   onClick={() => {
                     setCheckoutVitrine(selectedVitrine);
                     setSelectedVitrine(null);
                   }}
                 >
-                  <Lock className="h-4 w-4" /> Comprar agora (PIX ou Cartão)
+                  <Zap className="h-5 w-5" /> Comprar agora (PIX ou Cartão)
                 </Button>
-                {whatsappSuporte && (
-                  <Button variant="outline" className="w-full gap-2" asChild>
-                    <a
-                      href={`https://wa.me/${whatsappSuporte}?text=${encodeURIComponent(
-                        `Olá! Sou o aluno ${studentData?.nome || ""} (CTR: ${studentData?.ctr || ""}) e gostaria de saber mais sobre o curso ${selectedVitrine?.cursos?.nome}`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Smartphone className="h-4 w-4" /> 💬 Falar no WhatsApp
-                    </a>
-                  </Button>
-                )}
               </div>
+
             </div>
           )}
 
