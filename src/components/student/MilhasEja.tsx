@@ -41,7 +41,7 @@ const COMO_GANHAR = [
   { icon: "📅", desc: "7 dias seguidos de login", pts: "+150 pts" },
   { icon: "👥", desc: "Indicar 1-2 amigos matriculados", pts: "+150 pts" },
   { icon: "👥", desc: "Indicar 3-4 amigos", pts: "+250 pts" },
-  { icon: "👥", desc: "Indicar 5+ amigos", pts: "+300 pts" },
+  { icon: "👥", desc: "Indicar 5+ amigos", pts: "+550 pts" },
 ];
 
 const MENSAGENS_POPUP: Record<string, string> = {
