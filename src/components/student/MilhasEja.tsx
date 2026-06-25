@@ -37,11 +37,11 @@ const COMO_GANHAR = [
   { icon: "✅", desc: "Primeiro login", pts: "+50 pts" },
   { icon: "📺", desc: "Assistir 1 aula (70%+)", pts: "+30 pts" },
   { icon: "🔥", desc: "3 aulas no mesmo dia", pts: "+100 pts" },
-  { icon: "🎓", desc: "Completar todas as aulas de uma matéria", pts: "+450 pts" },
+  { icon: "🎓", desc: "Completar todas as aulas de uma matéria", pts: "+250 pts" },
   { icon: "📅", desc: "7 dias seguidos de login", pts: "+150 pts" },
   { icon: "👥", desc: "Indicar 1-2 amigos matriculados", pts: "+150 pts" },
   { icon: "👥", desc: "Indicar 3-4 amigos", pts: "+250 pts" },
-  { icon: "👥", desc: "Indicar 5+ amigos", pts: "+300 pts" },
+  { icon: "👥", desc: "Indicar 5+ amigos", pts: "+550 pts" },
 ];
 
 const MENSAGENS_POPUP: Record<string, string> = {
