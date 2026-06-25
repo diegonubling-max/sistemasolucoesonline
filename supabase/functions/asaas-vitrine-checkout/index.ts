@@ -36,7 +36,7 @@ serve(async (req) => {
     const { data: vit, error: vitErr } = await supa
       .from("cursos_vitrine")
       .select(`
-        id, curso_id, preco_pix, preco_cartao, preco_com_pontos, max_parcelas,
+        id, curso_id, preco_pix, preco_normal, preco_com_pontos,
         resgatado_com_pontos,
         alunos:aluno_id ( id, nome, cpf, email, telefone, asaas_customer_id ),
         cursos:curso_id ( id, nome )
