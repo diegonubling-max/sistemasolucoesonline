@@ -1735,6 +1735,91 @@ export type Database = {
           },
         ]
       }
+      vitrine_compras: {
+        Row: {
+          aluno_id: string
+          asaas_invoice_url: string | null
+          asaas_payment_id: string | null
+          asaas_pix_payload: string | null
+          asaas_pix_qrcode: string | null
+          created_at: string
+          curso_id: string
+          forma_pagamento: string
+          id: string
+          paid_at: string | null
+          parcelas: number | null
+          pontos_usados: number | null
+          status: string
+          updated_at: string
+          usou_pontos: boolean | null
+          valor_parcela: number | null
+          valor_total: number
+          vitrine_id: string | null
+        }
+        Insert: {
+          aluno_id: string
+          asaas_invoice_url?: string | null
+          asaas_payment_id?: string | null
+          asaas_pix_payload?: string | null
+          asaas_pix_qrcode?: string | null
+          created_at?: string
+          curso_id: string
+          forma_pagamento: string
+          id?: string
+          paid_at?: string | null
+          parcelas?: number | null
+          pontos_usados?: number | null
+          status?: string
+          updated_at?: string
+          usou_pontos?: boolean | null
+          valor_parcela?: number | null
+          valor_total: number
+          vitrine_id?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          asaas_invoice_url?: string | null
+          asaas_payment_id?: string | null
+          asaas_pix_payload?: string | null
+          asaas_pix_qrcode?: string | null
+          created_at?: string
+          curso_id?: string
+          forma_pagamento?: string
+          id?: string
+          paid_at?: string | null
+          parcelas?: number | null
+          pontos_usados?: number | null
+          status?: string
+          updated_at?: string
+          usou_pontos?: boolean | null
+          valor_parcela?: number | null
+          valor_total?: number
+          vitrine_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vitrine_compras_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vitrine_compras_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "cursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vitrine_compras_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "cursos_vitrine"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zapi_disparos_controle: {
         Row: {
           aluno_id: string
@@ -1848,6 +1933,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      liberar_curso_vitrine_pago: {
+        Args: { p_compra_id: string }
+        Returns: Json
       }
       redefinir_senha_aluno: {
         Args: { p_email: string; p_nova_senha: string }
