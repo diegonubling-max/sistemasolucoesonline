@@ -367,6 +367,9 @@ function AlunoDetalhes() {
         preco_pix: Number(vitrinePrecoPix),
         preco_cartao: Number(vitrinePrecoCartao),
         max_parcelas: Number(vitrineMaxParcelas),
+        preco_normal: vitrinePrecoNormal ? Number(vitrinePrecoNormal) : null,
+        preco_com_pontos: vitrinePrecoComPontos ? Number(vitrinePrecoComPontos) : null,
+        pontos_necessarios: vitrinePontosNecessarios ? Number(vitrinePontosNecessarios) : 300,
       });
       if (error) throw error;
     },
@@ -377,6 +380,9 @@ function AlunoDetalhes() {
       setVitrinePrecoPix("");
       setVitrinePrecoCartao("");
       setVitrineMaxParcelas("12");
+      setVitrinePrecoNormal("");
+      setVitrinePrecoComPontos("");
+      setVitrinePontosNecessarios("300");
       qc.invalidateQueries({ queryKey: ["aluno-vitrine", id] });
     },
     onError: (e: Error) => toast.error(e.message),
