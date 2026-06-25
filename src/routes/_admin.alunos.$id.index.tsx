@@ -473,7 +473,8 @@ function AlunoDetalhes() {
         `👉 Acesse em: https://sistemasolucoesonline.lovable.app/aluno/login\n\n` +
         `Qualquer dúvida estamos à disposição! 😊`;
       const { sendWhatsApp } = await import("@/services/zApiService");
-      await sendWhatsApp(aluno.telefone, mensagem);
+      await sendWhatsApp(aluno.telefone, mensagem, { alunoId: aluno.id, tipo: "reenvio_acesso" });
+
       toast.success("Acesso reenviado via WhatsApp!");
     } catch (e: any) {
       toast.error(e?.message || "Falha ao reenviar acesso.");
