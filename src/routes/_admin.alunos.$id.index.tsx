@@ -622,6 +622,11 @@ function AlunoDetalhes() {
           <TabsTrigger value="historico" className="flex items-center gap-2">
             <History className="h-4 w-4" /> Histórico
           </TabsTrigger>
+          <TabsTrigger value="mensagens" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" /> Mensagens
+          </TabsTrigger>
+
+
 
         </TabsList>
 
