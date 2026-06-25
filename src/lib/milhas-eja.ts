@@ -120,7 +120,7 @@ export async function checarCursoCompleto(alunoId: string, cursoId: string) {
     .gte("percentual_assistido", 70);
 
   if ((feitas ?? 0) >= total) {
-    return addPontos(alunoId, 450, "completou_materia", "Concluiu todas as aulas da matéria", cursoId);
+    return addPontos(alunoId, 250, "completou_materia", "Concluiu todas as aulas da matéria", cursoId);
   }
   return false;
 }
