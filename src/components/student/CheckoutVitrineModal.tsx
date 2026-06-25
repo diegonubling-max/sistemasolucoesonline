@@ -58,8 +58,11 @@ export function CheckoutVitrineModal({
   }, [pix]);
 
   if (!vitrine) return null;
-  const total = tab === "pix" ? Number(vitrine.preco_pix) : Number(vitrine.preco_cartao || vitrine.preco_pix);
-  const maxParc = vitrine.max_parcelas || 1;
+  const baseCartao = Number(vitrine.preco_com_pontos ?? vitrine.preco_normal ?? vitrine.preco_pix);
+  const valorParcelaCartao = baseCartao / 10;
+  const totalCartao = valorParcelaCartao * 12;
+  const total = tab === "pix" ? Number(vitrine.preco_pix) : totalCartao;
+  const maxParc = 12;
 
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
