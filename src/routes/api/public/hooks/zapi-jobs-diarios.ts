@@ -93,9 +93,9 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
         async function ultimaAula(alunoId: string): Promise<{ aula: string | null; materia: string | null }> {
           const { data } = await supabaseAdmin
             .from("aluno_aulas_assistidas")
-            .select("assistida_em, aulas:aula_id(titulo, cursos:curso_id(nome))")
+            .select("created_at, aulas:aula_id(titulo, cursos:curso_id(nome))")
             .eq("aluno_id", alunoId)
-            .order("assistida_em", { ascending: false })
+            .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
           const aula = (data as any)?.aulas?.titulo ?? null;
