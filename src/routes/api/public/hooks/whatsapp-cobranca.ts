@@ -77,7 +77,7 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-cobranca")({
           const { data: vencendo, error } = await supabaseAdmin
             .from("parcelas")
             .select(
-              "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(nome, telefone))",
+              "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(id, nome, telefone))",
             )
             .eq("data_vencimento", em3Dias)
             .neq("status", "pago");
@@ -90,7 +90,8 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-cobranca")({
 Olá, *${aluno.nome}*! Sua parcela de *R$ ${formatBRL(Number(p.valor))}* vence em *3 dias* (${formatDateBR(p.data_vencimento as string)}).
 
 Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
-            await sendWhatsApp(aluno.telefone, msg);
+            await sendWhatsApp(aluno.telefone, msg, { alunoId: aluno.id, tipo: "lembrete_vencimento" });
+
             result.lembretes++;
           }
         } catch (e: any) {
