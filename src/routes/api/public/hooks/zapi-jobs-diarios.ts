@@ -126,7 +126,9 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                     telefone: aluno.telefone,
                     nome: aluno.nome,
                     ctr: aluno.ctr,
+                    alunoId: aluno.id,
                   });
+
                   await marcar(aluno.id, "nunca_acessou");
                   result.nunca_acessou++;
                   continue; // não enviar 2 mensagens no mesmo job
