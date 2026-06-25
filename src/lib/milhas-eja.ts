@@ -6,6 +6,22 @@ import { supabase } from "@/integrations/supabase/client";
  * já registrados em milhas_eja_controle.
  */
 
+export function calcNivel(pontos: number): string {
+  if (pontos >= 1201) return "🏆 Destaque";
+  if (pontos >= 701) return "⭐ Dedicado";
+  if (pontos >= 451) return "📚 Estudante";
+  return "🌱 Iniciante";
+}
+
+export interface MilhasGanhouEvent {
+  pontos: number;
+  tipo: string;
+  novoTotal: number;
+  novoNivel: string;
+  subiuNivel: boolean;
+  nivelAnterior: string;
+}
+
 async function addPontos(
   alunoId: string,
   pontos: number,
@@ -24,6 +40,29 @@ async function addPontos(
     if (error) {
       console.warn("[milhas] add_milhas_eja error:", error.message);
       return false;
+    }
+    if (data && typeof window !== "undefined") {
+      try {
+        const { data: saldo } = await supabase
+          .from("milhas_eja")
+          .select("pontos_total, nivel")
+          .eq("aluno_id", alunoId)
+          .maybeSingle();
+        const novoTotal = saldo?.pontos_total ?? pontos;
+        const novoNivel = saldo?.nivel ?? calcNivel(novoTotal);
+        const nivelAnterior = calcNivel(Math.max(0, novoTotal - pontos));
+        const detail: MilhasGanhouEvent = {
+          pontos,
+          tipo,
+          novoTotal,
+          novoNivel,
+          nivelAnterior,
+          subiuNivel: nivelAnterior !== novoNivel,
+        };
+        window.dispatchEvent(new CustomEvent("milhas:ganhou", { detail }));
+      } catch {
+        /* noop */
+      }
     }
     return Boolean(data);
   } catch (e) {

@@ -17,6 +17,7 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { InadimplenciaAlerts } from "@/components/student/InadimplenciaAlerts";
 import { PerfilVocacionalModal } from "@/components/student/PerfilVocacionalModal";
 import { verificarInadimplenciaAuto } from "@/lib/aluno-status";
+import { MilhasEjaBadge, MilhasEjaListener } from "@/components/student/MilhasEja";
 
 const StudentThemeContext = createContext<{ isDark: boolean }>({ isDark: true });
 export const useStudentTheme = () => useContext(StudentThemeContext);
@@ -266,6 +267,7 @@ function StudentLayout() {
 
           <div className="flex items-center gap-2 md:gap-4">
             <div className="flex items-center gap-2">
+              {alunoId && <MilhasEjaBadge alunoId={alunoId} />}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div className="h-9 w-9 rounded-full bg-[#2D6ADF] flex items-center justify-center font-bold text-white cursor-pointer hover:scale-105 transition-transform">
@@ -363,6 +365,7 @@ function StudentLayout() {
           onClose={() => setShowPerfilModal(false)}
         />
       )}
+      <MilhasEjaListener />
     </div>
   );
 }
