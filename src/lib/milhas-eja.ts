@@ -104,7 +104,7 @@ export async function checarBonus3AulasNoDia(alunoId: string) {
   return false;
 }
 
-/** D) +450 ao completar todas as aulas de um curso (>=70% em cada) */
+/** D) +250 ao completar todas as aulas de um curso (>=70% em cada) */
 export async function checarCursoCompleto(alunoId: string, cursoId: string) {
   const { count: total } = await supabase
     .from("aulas")
