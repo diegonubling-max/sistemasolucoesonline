@@ -206,6 +206,14 @@ export function CheckoutVitrineModal({
           </TabsContent>
 
           <TabsContent value="cartao" className="space-y-3 pt-4">
+            <div className="rounded-xl border-2 border-[#1E3A5F]/20 bg-gradient-to-br from-blue-50 to-white p-4 text-center">
+              <p className="text-xs text-gray-500 font-medium">{parcelas}x</p>
+              <p className="text-3xl font-extrabold text-[#1E3A5F] leading-tight">
+                {formatCurrency(total / parcelas)}
+              </p>
+              <p className="text-xs text-gray-500 font-medium">no cartão</p>
+              <p className="text-xs text-gray-500 mt-1">Total: {formatCurrency(total)}</p>
+            </div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <ShieldCheck className="h-4 w-4 text-green-600" /> Pagamento seguro via Asaas
             </div>
