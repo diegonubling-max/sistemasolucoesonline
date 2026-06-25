@@ -294,6 +294,27 @@ function AlunoDetalhes() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const excluirParcela = useMutation({
+    mutationFn: async (parcela: any) => {
+      if (parcela.asaas_id) {
+        try {
+          await asaasRequest(`/payments/${parcela.asaas_id}`, { method: 'DELETE' });
+        } catch (err) {
+          console.error("Falha ao cancelar cobrança no Asaas:", err);
+        }
+      }
+      const { error } = await supabase.from("parcelas").delete().eq("id", parcela.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Parcela excluída com sucesso!");
+      qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
+
   const resetToDefaultPassword = useMutation({
     mutationFn: async () => {
       if (!aluno?.email || !aluno?.nome) return;
