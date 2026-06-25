@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  creditarAulaAssistida,
+  checarBonus3AulasNoDia,
+  checarCursoCompleto,
+} from "@/lib/milhas-eja";
 
 type Provider = "youtube" | "vimeo" | "pandavideo" | "unknown";
 
