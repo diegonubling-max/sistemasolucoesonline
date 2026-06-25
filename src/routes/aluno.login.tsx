@@ -132,7 +132,9 @@ function AlunoLogin() {
                 await sendBoasVindasPrimeiroAcesso({
                   telefone: aluno.telefone ?? '',
                   nome: aluno.nome ?? '',
+                  alunoId: aluno.id,
                 });
+
               } catch (e) {
                 console.error('[primeiro_acesso] erro ao enviar WhatsApp:', e);
               }
