@@ -258,23 +258,6 @@ export function CheckoutVitrineModal({
                 />
               </div>
             </div>
-            <div>
-              <Label>Parcelas</Label>
-              <select
-                className="w-full h-10 rounded-md border bg-white px-3 text-sm"
-                value={parcelas}
-                onChange={(e) => setParcelas(Number(e.target.value))}
-              >
-                {Array.from({ length: maxParc }).map((_, i) => {
-                  const n = i + 1;
-                  return (
-                    <option key={n} value={n}>
-                      {n}x de {formatCurrency(total / n)} {n === 1 ? "à vista" : ""}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
             <Button className="w-full bg-[#1E3A5F]" disabled={loading} onClick={pagarCartao}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Lock className="h-4 w-4 mr-2" />}
               Pagar {formatCurrency(total)}
