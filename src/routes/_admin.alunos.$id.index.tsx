@@ -72,6 +72,9 @@ function AlunoDetalhes() {
   const [vitrinePrecoPix, setVitrinePrecoPix] = useState("");
   const [vitrinePrecoCartao, setVitrinePrecoCartao] = useState("");
   const [vitrineMaxParcelas, setVitrineMaxParcelas] = useState("12");
+  const [vitrinePrecoNormal, setVitrinePrecoNormal] = useState("");
+  const [vitrinePrecoComPontos, setVitrinePrecoComPontos] = useState("");
+  const [vitrinePontosNecessarios, setVitrinePontosNecessarios] = useState("300");
   const [editVitrinePrecoPix, setEditVitrinePrecoPix] = useState("");
   const [editVitrinePrecoCartao, setEditVitrinePrecoCartao] = useState("");
   const [editVitrineMaxParcelas, setEditVitrineMaxParcelas] = useState("12");
@@ -364,6 +367,9 @@ function AlunoDetalhes() {
         preco_pix: Number(vitrinePrecoPix),
         preco_cartao: Number(vitrinePrecoCartao),
         max_parcelas: Number(vitrineMaxParcelas),
+        preco_normal: vitrinePrecoNormal ? Number(vitrinePrecoNormal) : null,
+        preco_com_pontos: vitrinePrecoComPontos ? Number(vitrinePrecoComPontos) : null,
+        pontos_necessarios: vitrinePontosNecessarios ? Number(vitrinePontosNecessarios) : 300,
       });
       if (error) throw error;
     },
@@ -374,6 +380,9 @@ function AlunoDetalhes() {
       setVitrinePrecoPix("");
       setVitrinePrecoCartao("");
       setVitrineMaxParcelas("12");
+      setVitrinePrecoNormal("");
+      setVitrinePrecoComPontos("");
+      setVitrinePontosNecessarios("300");
       qc.invalidateQueries({ queryKey: ["aluno-vitrine", id] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -735,12 +744,28 @@ function AlunoDetalhes() {
         <TabsContent value="vitrine" className="space-y-6">
           <div className="flex justify-end"><Button onClick={() => setShowVitrineModal(true)}><Plus className="h-4 w-4 mr-2" /> Adicionar</Button></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {vitrine?.map((item) => (
-              <Card key={item.id}><CardContent className="pt-6 flex justify-between items-start">
-                <div><p className="font-bold">{(item.cursos as any)?.nome}</p><p className="text-xs text-muted-foreground">{formatCurrency(item.preco_pix)}</p></div>
-                <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeFromVitrine.mutate(item.id)}><Trash2 className="h-4 w-4" /></Button>
-              </CardContent></Card>
-            ))}
+            {vitrine?.map((item) => {
+              const v = item as any;
+              return (
+                <Card key={item.id}><CardContent className="pt-6 flex justify-between items-start">
+                  <div className="space-y-1">
+                    <p className="font-bold">{(item.cursos as any)?.nome}</p>
+                    <p className="text-xs text-muted-foreground">{formatCurrency(item.preco_pix)}</p>
+                    {v.resgatado_com_pontos && (
+                      <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-semibold px-2 py-0.5">
+                        ⭐ Resgatado com Milhas
+                      </div>
+                    )}
+                    {v.resgatado_com_pontos && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {v.pontos_usados} pts · {v.data_resgate ? formatDate(v.data_resgate) : "—"}
+                      </p>
+                    )}
+                  </div>
+                  <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeFromVitrine.mutate(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                </CardContent></Card>
+              );
+            })}
           </div>
         </TabsContent>
 
@@ -876,6 +901,12 @@ function AlunoDetalhes() {
             </select>
             <Input placeholder="Preço PIX" type="number" value={vitrinePrecoPix} onChange={(e) => setVitrinePrecoPix(e.target.value)} />
             <Input placeholder="Preço Cartão" type="number" value={vitrinePrecoCartao} onChange={(e) => setVitrinePrecoCartao(e.target.value)} />
+            <div className="border-t pt-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">Preço com Milhas EJA (opcional)</p>
+              <Input placeholder="Preço normal (R$)" type="number" value={vitrinePrecoNormal} onChange={(e) => setVitrinePrecoNormal(e.target.value)} />
+              <Input placeholder="Preço com pontos (R$)" type="number" value={vitrinePrecoComPontos} onChange={(e) => setVitrinePrecoComPontos(e.target.value)} />
+              <Input placeholder="Pontos necessários" type="number" value={vitrinePontosNecessarios} onChange={(e) => setVitrinePontosNecessarios(e.target.value)} />
+            </div>
           </div>
           <Button onClick={() => addToVitrine.mutate()}>Adicionar</Button>
         </DialogContent>

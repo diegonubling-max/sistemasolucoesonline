@@ -797,10 +797,16 @@ export type Database = {
           ativo: boolean | null
           created_at: string
           curso_id: string
+          data_resgate: string | null
           id: string
           max_parcelas: number | null
+          pontos_necessarios: number | null
+          pontos_usados: number | null
           preco_cartao: number | null
+          preco_com_pontos: number | null
+          preco_normal: number | null
           preco_pix: number | null
+          resgatado_com_pontos: boolean
           updated_at: string
         }
         Insert: {
@@ -808,10 +814,16 @@ export type Database = {
           ativo?: boolean | null
           created_at?: string
           curso_id: string
+          data_resgate?: string | null
           id?: string
           max_parcelas?: number | null
+          pontos_necessarios?: number | null
+          pontos_usados?: number | null
           preco_cartao?: number | null
+          preco_com_pontos?: number | null
+          preco_normal?: number | null
           preco_pix?: number | null
+          resgatado_com_pontos?: boolean
           updated_at?: string
         }
         Update: {
@@ -819,10 +831,16 @@ export type Database = {
           ativo?: boolean | null
           created_at?: string
           curso_id?: string
+          data_resgate?: string | null
           id?: string
           max_parcelas?: number | null
+          pontos_necessarios?: number | null
+          pontos_usados?: number | null
           preco_cartao?: number | null
+          preco_com_pontos?: number | null
+          preco_normal?: number | null
           preco_pix?: number | null
+          resgatado_com_pontos?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -1839,6 +1857,7 @@ export type Database = {
         Args: { p_aluno_id: string; p_aula_id: string; p_curso_id: string }
         Returns: undefined
       }
+      resgatar_curso_vitrine: { Args: { p_vitrine_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "aluno"

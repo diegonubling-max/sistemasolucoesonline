@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { BookOpen, PlayCircle, Loader2, Lock, Smartphone, CheckCircle2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { BookOpen, PlayCircle, Loader2, Lock, Smartphone, CheckCircle2, Star, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/format";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useStudentTheme } from "./_student";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,11 +22,14 @@ export const Route = createFileRoute("/_student/aluno/dashboard")({
 function StudentDashboard() {
   const { session } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { isDark } = useStudentTheme();
   const [selectedVitrine, setSelectedVitrine] = useState<any>(null);
   const [showProvaFinalDialog, setShowProvaFinalDialog] = useState(false);
   const [showLockedProvaDialog, setShowLockedProvaDialog] = useState(false);
   const [showAgendadoDialog, setShowAgendadoDialog] = useState(false);
+  const [showResgateSucesso, setShowResgateSucesso] = useState(false);
+  const [confirmResgate, setConfirmResgate] = useState<any>(null);
 
 
   const { data: cursos, isLoading } = useQuery({
@@ -143,6 +147,36 @@ function StudentDashboard() {
       return data ?? [];
     },
     enabled: !!studentData?.id,
+  });
+
+  const { data: milhasSaldo } = useQuery({
+    queryKey: ["milhas-saldo", studentData?.id],
+    queryFn: async () => {
+      if (!studentData?.id) return 0;
+      const { data } = await supabase
+        .from("milhas_eja")
+        .select("pontos_disponiveis")
+        .eq("aluno_id", studentData.id)
+        .maybeSingle();
+      return (data?.pontos_disponiveis as number) ?? 0;
+    },
+    enabled: !!studentData?.id,
+  });
+
+  const resgatarCurso = useMutation({
+    mutationFn: async (vitrineId: string) => {
+      const { error } = await supabase.rpc("resgatar_curso_vitrine", { p_vitrine_id: vitrineId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setConfirmResgate(null);
+      setSelectedVitrine(null);
+      setShowResgateSucesso(true);
+      qc.invalidateQueries({ queryKey: ["student-vitrine"] });
+      qc.invalidateQueries({ queryKey: ["student-courses"] });
+      qc.invalidateQueries({ queryKey: ["milhas-saldo"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   if (isLoading) {
@@ -468,12 +502,26 @@ function StudentDashboard() {
                         {curso.nome}
                       </h3>
                       <div className="mt-2 space-y-0.5">
-                        <p className="text-white font-bold text-sm">
-                          PIX: {formatCurrency(item.preco_pix)}
-                        </p>
-                        <p className="text-white/80 text-[10px] font-medium">
-                          Cartão: até {item.max_parcelas}x de {formatCurrency(item.preco_cartao / item.max_parcelas)}
-                        </p>
+                        {item.preco_com_pontos && item.pontos_necessarios ? (
+                          <>
+                            <p className="text-white/70 text-[11px] line-through">
+                              {formatCurrency(item.preco_normal ?? item.preco_pix)}
+                            </p>
+                            <p className="text-yellow-300 font-bold text-sm flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-yellow-300" />
+                              {item.pontos_necessarios} pts: {formatCurrency(item.preco_com_pontos)}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-white font-bold text-sm">
+                              PIX: {formatCurrency(item.preco_pix)}
+                            </p>
+                            <p className="text-white/80 text-[10px] font-medium">
+                              Cartão: até {item.max_parcelas}x de {formatCurrency(item.preco_cartao / item.max_parcelas)}
+                            </p>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -658,6 +706,33 @@ function StudentDashboard() {
                 </div>
               </div>
 
+              {selectedVitrine.preco_com_pontos && selectedVitrine.pontos_necessarios && (
+                <div className="rounded-xl border-2 border-yellow-300 bg-yellow-50 p-4 space-y-2">
+                  <p className="flex items-center gap-2 font-bold text-yellow-800">
+                    <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                    Preço com Milhas EJA
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    Use <b>{selectedVitrine.pontos_necessarios} pts</b> e pague apenas{" "}
+                    <b>{formatCurrency(selectedVitrine.preco_com_pontos)}</b>
+                  </p>
+                  {(milhasSaldo ?? 0) >= selectedVitrine.pontos_necessarios ? (
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => setConfirmResgate(selectedVitrine)}
+                    >
+                      🔥 Comprar com pontos
+                    </Button>
+                  ) : (
+                    <p className="text-xs text-red-600 font-medium">
+                      Faltam {selectedVitrine.pontos_necessarios - (milhasSaldo ?? 0)} pts para
+                      desbloquear este preço
+                    </p>
+                  )}
+                </div>
+              )}
+
+
               <div className="space-y-4 text-center">
                 {!whatsappSuporte ? (
                   <p className="text-sm text-red-500 font-medium">Suporte temporariamente indisponível</p>
@@ -688,6 +763,54 @@ function StudentDashboard() {
               Fechar
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!confirmResgate} onOpenChange={(o) => !o && setConfirmResgate(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar resgate</DialogTitle>
+          </DialogHeader>
+          {confirmResgate && (
+            <div className="space-y-3 text-sm">
+              <p>
+                Deseja usar <b>{confirmResgate.pontos_necessarios} pts</b> para adquirir{" "}
+                <b>{confirmResgate.cursos?.nome}</b> por{" "}
+                <b>{formatCurrency(confirmResgate.preco_com_pontos)}</b>?
+              </p>
+              <div className="bg-gray-50 rounded-lg p-3 border text-xs space-y-1">
+                <div>Saldo atual: <b>{milhasSaldo ?? 0} pts</b></div>
+                <div>Saldo após resgate: <b>{(milhasSaldo ?? 0) - confirmResgate.pontos_necessarios} pts</b></div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmResgate(null)}>Cancelar</Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              disabled={resgatarCurso.isPending}
+              onClick={() => confirmResgate && resgatarCurso.mutate(confirmResgate.id)}
+            >
+              {resgatarCurso.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar resgate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showResgateSucesso} onOpenChange={setShowResgateSucesso}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Sucesso</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            <Sparkles className="h-12 w-12 text-yellow-500 mx-auto" />
+            <h3 className="text-xl font-bold">🎉 Curso desbloqueado!</h3>
+            <p className="text-sm text-gray-600">Acesse agora na sua área de estudos.</p>
+            <Button className="w-full" onClick={() => setShowResgateSucesso(false)}>
+              Continuar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
