@@ -817,6 +817,17 @@ function StudentDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <CheckoutVitrineModal
+        vitrine={checkoutVitrine}
+        open={!!checkoutVitrine}
+        onClose={() => setCheckoutVitrine(null)}
+        onSuccess={() => {
+          qc.invalidateQueries({ queryKey: ["student-courses"] });
+          qc.invalidateQueries({ queryKey: ["vitrine-cursos"] });
+          setShowResgateSucesso(true);
+        }}
+      />
     </div>
   );
 }
