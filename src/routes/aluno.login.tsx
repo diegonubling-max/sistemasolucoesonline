@@ -121,6 +121,10 @@ function AlunoLogin() {
               }
             }
 
+            // Milhas EJA: primeiro login (idempotente) + checar streak de 7 dias
+            void creditarPrimeiroLogin(aluno.id);
+            void checar7DiasLogin(aluno.id);
+
             // Primeiro acesso: enviar WhatsApp de boas-vindas
             console.log('[primeiro_acesso] Verificando primeiro acesso do aluno...', {
               aluno_id: aluno.id,
