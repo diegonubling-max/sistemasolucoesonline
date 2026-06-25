@@ -1100,6 +1100,111 @@ export type Database = {
           },
         ]
       }
+      milhas_eja: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          nivel: string
+          pontos_disponiveis: number
+          pontos_total: number
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          nivel?: string
+          pontos_disponiveis?: number
+          pontos_total?: number
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          nivel?: string
+          pontos_disponiveis?: number
+          pontos_total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milhas_eja_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: true
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milhas_eja_controle: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          referencia_id: string | null
+          tipo: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          referencia_id?: string | null
+          tipo: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          referencia_id?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milhas_eja_controle_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milhas_eja_historico: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          pontos: number
+          tipo: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          pontos: number
+          tipo: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          pontos?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milhas_eja_historico_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modelos_contrato: {
         Row: {
           ativo: boolean | null
@@ -1684,11 +1789,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_milhas_eja: {
+        Args: {
+          p_aluno_id: string
+          p_descricao?: string
+          p_pontos: number
+          p_referencia_id?: string
+          p_tipo: string
+        }
+        Returns: boolean
+      }
       assinar_contrato_publico: {
         Args: { p_ip: string; p_nome: string; p_token: string }
         Returns: undefined
       }
       buscar_email_por_ctr: { Args: { p_ctr: number }; Returns: string }
+      calc_nivel_milhas: { Args: { p_pontos: number }; Returns: string }
+      check_7_dias_login_milhas: {
+        Args: { p_aluno_id: string }
+        Returns: boolean
+      }
       criar_acesso_aluno: {
         Args: { p_ctr: number; p_email: string; p_senha: string }
         Returns: undefined
