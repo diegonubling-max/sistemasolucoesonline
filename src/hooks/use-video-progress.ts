@@ -59,23 +59,11 @@ export function useVideoProgress({
       // Nunca salvar com duracao_total = 0
       if (dur <= 0) return;
 
+      // tempo_assistido = currentTime do player (não acumulado), limitado à duração
       let ct = Math.floor(currentTime);
-      // Cap tempo_assistido ao máximo da duração
       if (ct > dur) ct = dur;
-      const pct = +(ct / dur * 100).toFixed(2);
-      const pctFinal = pct >= 100 ? 100 : pct;
-
-      // Read existing to preserve max tempo_assistido
-      const { data: existing } = await supabase
-        .from("aluno_aulas_assistidas")
-        .select("tempo_assistido")
-        .eq("aluno_id", alunoId)
-        .eq("aula_id", aulaId)
-        .maybeSingle();
-
-      let newTempo = Math.max(existing?.tempo_assistido ?? 0, ct);
-      if (newTempo > dur) newTempo = dur;
-      const newPct = +(newTempo / dur * 100).toFixed(2);
+      if (ct < 0) ct = 0;
+      const pct = ct >= dur ? 100 : +(ct / dur * 100).toFixed(2);
 
       await supabase
         .from("aluno_aulas_assistidas")
@@ -85,14 +73,14 @@ export function useVideoProgress({
             aula_id: aulaId,
             curso_id: cursoId,
             duracao_total: dur,
-            tempo_assistido: newTempo,
+            tempo_assistido: ct,
             ultima_posicao: ct,
-            percentual_assistido: newPct >= 100 ? 100 : newPct,
+            percentual_assistido: pct,
           },
           { onConflict: "aluno_id,aula_id" },
         );
 
-      if ((newPct >= 90 || pctFinal >= 90) && !completedRef.current) {
+      if (pct >= 90 && !completedRef.current) {
         completedRef.current = true;
         onCompleted?.();
       }
