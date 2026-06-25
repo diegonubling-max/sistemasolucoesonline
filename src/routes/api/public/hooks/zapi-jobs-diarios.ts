@@ -126,7 +126,9 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                     telefone: aluno.telefone,
                     nome: aluno.nome,
                     ctr: aluno.ctr,
+                    alunoId: aluno.id,
                   });
+
                   await marcar(aluno.id, "nunca_acessou");
                   result.nunca_acessou++;
                   continue; // não enviar 2 mensagens no mesmo job
@@ -162,7 +164,9 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                     dias: diasCorridos,
                     ultimaAula: aula,
                     materia,
+                    alunoId: aluno.id,
                   });
+
                   await marcar(aluno.id, "4_dias_uteis");
                   result.quatro_dias++;
                   continue;
@@ -191,7 +195,9 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                   nome: aluno.nome,
                   ultimaAula: aula,
                   materia,
+                  alunoId: aluno.id,
                 });
+
                 result.sabado++;
               }
             } catch (e: any) {
@@ -216,7 +222,9 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                   nome: aluno.nome,
                   ultimaAula: aula,
                   materia,
+                  alunoId: aluno.id,
                 });
+
                 result.domingo++;
               }
             } catch (e: any) {

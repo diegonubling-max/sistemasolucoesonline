@@ -28,6 +28,8 @@ import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
 import { PerfilVocacionalTab } from "@/components/admin/alunos/PerfilVocacionalTab";
+import { MensagensTab } from "@/components/admin/alunos/MensagensTab";
+
 import { StatusAlunoBadge, type AlunoStatus } from "@/lib/aluno-status";
 import { notifyPagamentoRecebido } from "@/lib/notify";
 
@@ -336,7 +338,8 @@ function AlunoDetalhes() {
             `🔑 *Nova senha:* ${senhaPadrao}\n\n` +
             `👉 Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
           const { sendWhatsApp } = await import("@/services/zApiService");
-          await sendWhatsApp(aluno.telefone, mensagem);
+          await sendWhatsApp(aluno.telefone, mensagem, { alunoId: aluno.id, tipo: "redefinicao_senha" });
+
         } catch (err) {
           console.error("Falha ao notificar aluno via WhatsApp:", err);
         }
@@ -472,7 +475,8 @@ function AlunoDetalhes() {
         `👉 Acesse em: https://sistemasolucoesonline.lovable.app/aluno/login\n\n` +
         `Qualquer dúvida estamos à disposição! 😊`;
       const { sendWhatsApp } = await import("@/services/zApiService");
-      await sendWhatsApp(aluno.telefone, mensagem);
+      await sendWhatsApp(aluno.telefone, mensagem, { alunoId: aluno.id, tipo: "reenvio_acesso" });
+
       toast.success("Acesso reenviado via WhatsApp!");
     } catch (e: any) {
       toast.error(e?.message || "Falha ao reenviar acesso.");
@@ -620,6 +624,11 @@ function AlunoDetalhes() {
           <TabsTrigger value="historico" className="flex items-center gap-2">
             <History className="h-4 w-4" /> Histórico
           </TabsTrigger>
+          <TabsTrigger value="mensagens" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" /> Mensagens
+          </TabsTrigger>
+
+
 
         </TabsList>
 
@@ -834,7 +843,12 @@ function AlunoDetalhes() {
         <TabsContent value="progresso" className="space-y-6">
           <ProgressoAulas alunoId={id} />
         </TabsContent>
+
+        <TabsContent value="mensagens" className="space-y-6">
+          <MensagensTab alunoId={id} />
+        </TabsContent>
       </Tabs>
+
 
 
 

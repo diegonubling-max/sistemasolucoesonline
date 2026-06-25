@@ -18,19 +18,40 @@ function formatDateBR(iso: string) {
   return `${d}/${m}/${y}`;
 }
 
-async function sendWhatsApp(telefone: string, mensagem: string) {
+async function sendWhatsApp(
+  telefone: string,
+  mensagem: string,
+  log?: { alunoId?: string | null; tipo: string },
+) {
   if (!telefone) return;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const tipo = log?.tipo ?? "outro";
+  const alunoId = log?.alunoId ?? null;
   try {
     const res = await fetch(`${Z_API_BASE}/send-text`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Client-Token": Z_API_CLIENT_TOKEN },
       body: JSON.stringify({ phone: formatPhone(telefone), message: mensagem }),
     });
-    console.log("[zApi cron]", res.status, await res.text().catch(() => ""));
-  } catch (e) {
+    const body = await res.text().catch(() => "");
+    console.log("[zApi cron]", res.status, body);
+    if (!res.ok) {
+      await supabaseAdmin
+        .from("zapi_mensagens_log")
+        .insert({ aluno_id: alunoId, tipo, mensagem, status: "erro", erro_detalhe: `HTTP ${res.status}: ${body}` });
+    } else {
+      await supabaseAdmin
+        .from("zapi_mensagens_log")
+        .insert({ aluno_id: alunoId, tipo, mensagem, status: "enviado" });
+    }
+  } catch (e: any) {
     console.error("[zApi cron] erro envio:", e);
+    await supabaseAdmin
+      .from("zapi_mensagens_log")
+      .insert({ aluno_id: alunoId, tipo, mensagem, status: "erro", erro_detalhe: e?.message || String(e) });
   }
 }
+
 
 function addDays(date: Date, days: number) {
   const d = new Date(date);
@@ -56,7 +77,7 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-cobranca")({
           const { data: vencendo, error } = await supabaseAdmin
             .from("parcelas")
             .select(
-              "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(nome, telefone))",
+              "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(id, nome, telefone))",
             )
             .eq("data_vencimento", em3Dias)
             .neq("status", "pago");
@@ -69,7 +90,8 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-cobranca")({
 Olá, *${aluno.nome}*! Sua parcela de *R$ ${formatBRL(Number(p.valor))}* vence em *3 dias* (${formatDateBR(p.data_vencimento as string)}).
 
 Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
-            await sendWhatsApp(aluno.telefone, msg);
+            await sendWhatsApp(aluno.telefone, msg, { alunoId: aluno.id, tipo: "lembrete_vencimento" });
+
             result.lembretes++;
           }
         } catch (e: any) {
@@ -81,7 +103,7 @@ Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
           const { data: atrasadas, error } = await supabaseAdmin
             .from("parcelas")
             .select(
-              "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(nome, telefone))",
+              "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(id, nome, telefone))",
             )
             .lt("data_vencimento", ontem)
             .neq("status", "pago");
@@ -94,7 +116,8 @@ Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
 Olá, *${aluno.nome}*! Identificamos que sua parcela de *R$ ${formatBRL(Number(p.valor))}* está em atraso desde ${formatDateBR(p.data_vencimento as string)}.
 
 Regularize agora para manter seu acesso! Entre em contato conosco.`;
-            await sendWhatsApp(aluno.telefone, msg);
+            await sendWhatsApp(aluno.telefone, msg, { alunoId: aluno.id, tipo: "aviso_atraso" });
+
             result.atrasos++;
           }
         } catch (e: any) {

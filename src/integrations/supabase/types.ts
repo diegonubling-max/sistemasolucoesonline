@@ -1641,6 +1641,44 @@ export type Database = {
           },
         ]
       }
+      zapi_mensagens_log: {
+        Row: {
+          aluno_id: string | null
+          enviado_em: string
+          erro_detalhe: string | null
+          id: string
+          mensagem: string
+          status: string
+          tipo: string
+        }
+        Insert: {
+          aluno_id?: string | null
+          enviado_em?: string
+          erro_detalhe?: string | null
+          id?: string
+          mensagem: string
+          status?: string
+          tipo: string
+        }
+        Update: {
+          aluno_id?: string | null
+          enviado_em?: string
+          erro_detalhe?: string | null
+          id?: string
+          mensagem?: string
+          status?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zapi_mensagens_log_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
