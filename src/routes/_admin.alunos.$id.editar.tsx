@@ -113,6 +113,7 @@ function EditarAluno() {
       if (error) throw error;
 
       // Reatribuir comissões quando o vendedor é alterado
+      let vendedoraFoiAlterada = false;
       if (vendedoraNova !== vendedoraAnterior) {
         const { data: matriculasAluno } = await supabase
           .from("matriculas")
@@ -137,38 +138,35 @@ function EditarAluno() {
             .from("matriculas")
             .update({ colaborador_id: novoColaborador?.id ?? null })
             .in("id", matriculaIds);
-        }
 
-        // Estornar comissões antigas (não estornadas) deste aluno
-        const { data: comissoesAntigas } = await supabase
-          .from("comissoes")
-          .select("id, matricula_id, tipo_pagamento")
-          .eq("aluno_id", id)
-          .eq("estornado", false);
-
-        if (comissoesAntigas && comissoesAntigas.length > 0) {
-          await supabase
+          // Atualizar comissões existentes IN-PLACE (transferir para nova vendedora)
+          const { data: comissoesExistentes } = await supabase
             .from("comissoes")
-            .update({ estornado: true, estornado_em: new Date().toISOString() })
-            .in("id", comissoesAntigas.map((c: any) => c.id));
+            .select("id, tipo_pagamento")
+            .in("matricula_id", matriculaIds)
+            .eq("estornado", false);
 
-          // Recriar comissões para o novo vendedor (se houver), preservando tipo_pagamento
-          if (novoColaborador && vendedoraNova) {
-            const novas = comissoesAntigas.map((c: any) => ({
-              vendedora: vendedoraNova,
-              aluno_id: id,
-              matricula_id: c.matricula_id,
-              tipo_pagamento: c.tipo_pagamento,
-              valor: c.tipo_pagamento === "avista"
-                ? Number(novoColaborador!.comissao_avista ?? 120)
-                : Number(novoColaborador!.comissao_parcelado ?? 50),
-              competencia: format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"),
-              status: "pendente",
-            }));
-            await supabase.from("comissoes").insert(novas as any);
+          if (comissoesExistentes && comissoesExistentes.length > 0) {
+            for (const c of comissoesExistentes as any[]) {
+              const novoValor = novoColaborador
+                ? (c.tipo_pagamento === "avista"
+                    ? Number(novoColaborador.comissao_avista ?? 120)
+                    : Number(novoColaborador.comissao_parcelado ?? 50))
+                : 0;
+              await supabase
+                .from("comissoes")
+                .update({
+                  vendedora: vendedoraNova ?? "",
+                  valor: novoValor,
+                })
+                .eq("id", c.id);
+            }
           }
+          vendedoraFoiAlterada = true;
         }
       }
+      (rest as any).__vendedoraAlterada = vendedoraFoiAlterada;
+
 
       // Parte 4 — Estorno de comissões ao inativar
       const virouInativo = rest.status === "inativo" && aluno?.status !== "inativo";
