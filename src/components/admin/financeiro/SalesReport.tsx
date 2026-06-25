@@ -139,15 +139,23 @@ export function SalesReport() {
         const parcelas = (m.parcelas as any[] || []);
         
         let pacoteNome = "";
-        let valorTotal = 0;
+        // Valor Total = SUM das parcelas da matrícula (uma linha por matrícula)
+        const valorTotal = parcelas.reduce((acc, p) => acc + Number(p.valor), 0);
 
         if (isPersonalizado) {
           pacoteNome = "Negociação Personalizada";
-          valorTotal = parcelas.reduce((acc, p) => acc + Number(p.valor), 0);
         } else if (matriculaPacotes.length > 0) {
-          const pacs = matriculaPacotes.map(mp => mp.pacotes).filter(Boolean);
-          pacoteNome = pacs.map(p => p.nome).join(", ");
-          valorTotal = pacs.reduce((acc, p) => acc + Number(p.valor_total), 0);
+          // Dedupe pacotes por id para evitar "Cartão 12x, Cartão 12x, ..."
+          const seen = new Set<string>();
+          const pacs = matriculaPacotes
+            .map(mp => mp.pacotes)
+            .filter(Boolean)
+            .filter((p: any) => {
+              if (seen.has(p.id)) return false;
+              seen.add(p.id);
+              return true;
+            });
+          pacoteNome = pacs.map((p: any) => p.nome).join(", ");
         }
 
         const valorRecebido = parcelas.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0);
