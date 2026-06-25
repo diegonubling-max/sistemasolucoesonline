@@ -23,7 +23,7 @@ import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
-import { generateAsaasCobrar } from "@/services/asaas";
+import { generateAsaasCobrar, asaasRequest } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
@@ -293,6 +293,27 @@ function AlunoDetalhes() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const excluirParcela = useMutation({
+    mutationFn: async (parcela: any) => {
+      if (parcela.asaas_id) {
+        try {
+          await asaasRequest(`/payments/${parcela.asaas_id}`, { method: 'DELETE' });
+        } catch (err) {
+          console.error("Falha ao cancelar cobrança no Asaas:", err);
+        }
+      }
+      const { error } = await supabase.from("parcelas").delete().eq("id", parcela.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Parcela excluída com sucesso!");
+      qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
 
   const resetToDefaultPassword = useMutation({
     mutationFn: async () => {
@@ -678,7 +699,21 @@ function AlunoDetalhes() {
                           {p.status === 'aberto' && (
                             <Button size="sm" variant="ghost" className="text-green-600" onClick={() => { setSelectedParcelaId(p.id); setSelectedParcelaValor(Number(p.valor)); setShowBaixaModal(true); }}>Baixa</Button>
                           )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            disabled={excluirParcela.isPending}
+                            onClick={() => {
+                              if (window.confirm("Tem certeza que deseja excluir esta parcela? Esta ação não pode ser desfeita.")) {
+                                excluirParcela.mutate(p);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </td>
+
                       </tr>
                     ))}
                   </tbody>
