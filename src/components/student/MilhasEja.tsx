@@ -68,11 +68,16 @@ export function MilhasEjaBadge({ alunoId }: { alunoId: string }) {
   const [open, setOpen] = useState(false);
 
   const carregar = useCallback(async () => {
-    const { data } = await supabase
+    if (!alunoId) return;
+    const { data, error } = await supabase
       .from("milhas_eja")
       .select("pontos_total, pontos_disponiveis, nivel")
       .eq("aluno_id", alunoId)
       .maybeSingle();
+    if (error) {
+      console.warn("[milhas] carregar saldo:", error.message, "aluno_id=", alunoId);
+      return;
+    }
     if (data) setSaldo(data as SaldoMilhas);
     else setSaldo({ pontos_total: 0, pontos_disponiveis: 0, nivel: calcNivel(0) });
   }, [alunoId]);
@@ -80,9 +85,26 @@ export function MilhasEjaBadge({ alunoId }: { alunoId: string }) {
   useEffect(() => {
     void carregar();
     const onGanhou = () => void carregar();
+    const onVis = () => { if (document.visibilityState === "visible") void carregar(); };
     window.addEventListener("milhas:ganhou", onGanhou);
-    return () => window.removeEventListener("milhas:ganhou", onGanhou);
-  }, [carregar]);
+    document.addEventListener("visibilitychange", onVis);
+
+    // Realtime: atualiza quando a linha do aluno mudar
+    const channel = supabase
+      .channel(`milhas-${alunoId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "milhas_eja", filter: `aluno_id=eq.${alunoId}` },
+        () => void carregar(),
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("milhas:ganhou", onGanhou);
+      document.removeEventListener("visibilitychange", onVis);
+      supabase.removeChannel(channel);
+    };
+  }, [carregar, alunoId]);
 
   if (!saldo) return null;
 
