@@ -52,9 +52,11 @@ serve(async (req) => {
     if (!aluno) throw new Error("Aluno não encontrado");
     if (!aluno.cpf || !aluno.email) throw new Error("Aluno sem CPF/e-mail cadastrado");
 
-    const valorTotal = forma_pagamento === "pix"
-      ? Number(vit.preco_pix)
-      : Number(vit.preco_cartao || vit.preco_pix);
+    const baseCartao = Number(vit.preco_com_pontos ?? vit.preco_normal ?? vit.preco_pix);
+    const valorParcelaCartao = Number((baseCartao / 10).toFixed(2));
+    const totalCartao = Number((valorParcelaCartao * 12).toFixed(2));
+    const parcelasCartao = 12;
+    const valorTotal = forma_pagamento === "pix" ? Number(vit.preco_pix) : totalCartao;
 
     // 1. Garantir customer
     let customerId = aluno.asaas_customer_id;
