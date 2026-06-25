@@ -58,6 +58,8 @@ function Financeiro() {
     end: format(endOfMonth(today), "yyyy-MM-dd") 
   });
   const [primeirasMonth, setPrimeirasMonth] = useState(format(today, "yyyy-MM"));
+  const [primeirasStatus, setPrimeirasStatus] = useState<"todas" | "pago" | "aberto">("todas");
+
   const [ultimasMonth, setUltimasMonth] = useState(format(today, "yyyy-MM"));
   const [atrasoPeriod, setAtrasoPeriod] = useState({
     start: format(startOfMonth(today), "yyyy-MM-dd"),
