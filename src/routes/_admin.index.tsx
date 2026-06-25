@@ -279,8 +279,8 @@ function Dashboard() {
 
       <VitrineInteresse selectedPoloId={selectedPoloId} colabPoloId={colabData?.polo_id} isSuperAdmin={isSuperAdmin} />
 
-      {/* Cards por Polo - ocultos temporariamente */}
-      {false && selectedPoloId === 'all' && stats?.statsByPolo && stats.statsByPolo.length > 0 && (
+      {/* Cards por Polo - ocultos temporariamente
+      {selectedPoloId === 'all' && stats?.statsByPolo && stats.statsByPolo.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <div className="w-1 h-6 bg-primary rounded-full" />
@@ -314,6 +314,8 @@ function Dashboard() {
           </div>
         </div>
       )}
+      */}
+
 
 
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
