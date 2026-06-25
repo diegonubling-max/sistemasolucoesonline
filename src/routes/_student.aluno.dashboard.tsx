@@ -149,6 +149,36 @@ function StudentDashboard() {
     enabled: !!studentData?.id,
   });
 
+  const { data: milhasSaldo } = useQuery({
+    queryKey: ["milhas-saldo", studentData?.id],
+    queryFn: async () => {
+      if (!studentData?.id) return 0;
+      const { data } = await supabase
+        .from("milhas_eja")
+        .select("pontos_disponiveis")
+        .eq("aluno_id", studentData.id)
+        .maybeSingle();
+      return (data?.pontos_disponiveis as number) ?? 0;
+    },
+    enabled: !!studentData?.id,
+  });
+
+  const resgatarCurso = useMutation({
+    mutationFn: async (vitrineId: string) => {
+      const { error } = await supabase.rpc("resgatar_curso_vitrine", { p_vitrine_id: vitrineId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setConfirmResgate(null);
+      setSelectedVitrine(null);
+      setShowResgateSucesso(true);
+      qc.invalidateQueries({ queryKey: ["student-vitrine"] });
+      qc.invalidateQueries({ queryKey: ["student-courses"] });
+      qc.invalidateQueries({ queryKey: ["milhas-saldo"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-12">
