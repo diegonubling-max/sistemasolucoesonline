@@ -384,7 +384,9 @@ export function MatriculaFlow({
             telefone: aluno.telefone,
             nome: aluno.nome,
             ctr: aluno.ctr,
+            alunoId: aluno.id,
           });
+
         }
       } catch (e) {
         console.error("Erro WhatsApp boas-vindas:", e);
