@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, PlayCircle, Loader2, Lock, Smartphone, CheckCircle2, Star, Sparkles } from "lucide-react";
+import { BookOpen, PlayCircle, Loader2, Lock, Smartphone, CheckCircle2, Star, Sparkles, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
