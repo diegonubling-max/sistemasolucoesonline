@@ -99,6 +99,9 @@ function EditarAluno() {
         finalEmail = `ctr${aluno.ctr}@solucoesonline.com.br`;
       }
 
+      const vendedoraAnterior = aluno?.vendedora ?? null;
+      const vendedoraNova = rest.vendedora ?? null;
+
       const { error } = await supabase
         .from("alunos")
         .update({
@@ -108,6 +111,64 @@ function EditarAluno() {
         })
         .eq("id", id);
       if (error) throw error;
+
+      // Reatribuir comissões quando o vendedor é alterado
+      if (vendedoraNova !== vendedoraAnterior) {
+        const { data: matriculasAluno } = await supabase
+          .from("matriculas")
+          .select("id")
+          .eq("aluno_id", id);
+        const matriculaIds = (matriculasAluno ?? []).map((m: any) => m.id);
+
+        // Resolver novo colaborador pelo nome (Agente IA / Admin / vazio = sem colaborador)
+        let novoColaborador: { id: string; comissao_avista: number | null; comissao_parcelado: number | null } | null = null;
+        if (vendedoraNova && !["🤖 Agente IA", "👤 Admin"].includes(vendedoraNova)) {
+          const { data: colab } = await supabase
+            .from("colaboradores")
+            .select("id, comissao_avista, comissao_parcelado")
+            .eq("nome", vendedoraNova)
+            .maybeSingle();
+          novoColaborador = colab as any;
+        }
+
+        // Atualizar colaborador_id em todas as matrículas do aluno
+        if (matriculaIds.length > 0) {
+          await supabase
+            .from("matriculas")
+            .update({ colaborador_id: novoColaborador?.id ?? null })
+            .in("id", matriculaIds);
+        }
+
+        // Estornar comissões antigas (não estornadas) deste aluno
+        const { data: comissoesAntigas } = await supabase
+          .from("comissoes")
+          .select("id, matricula_id, tipo_pagamento")
+          .eq("aluno_id", id)
+          .eq("estornado", false);
+
+        if (comissoesAntigas && comissoesAntigas.length > 0) {
+          await supabase
+            .from("comissoes")
+            .update({ estornado: true, estornado_em: new Date().toISOString() })
+            .in("id", comissoesAntigas.map((c: any) => c.id));
+
+          // Recriar comissões para o novo vendedor (se houver), preservando tipo_pagamento
+          if (novoColaborador && vendedoraNova) {
+            const novas = comissoesAntigas.map((c: any) => ({
+              vendedora: vendedoraNova,
+              aluno_id: id,
+              matricula_id: c.matricula_id,
+              tipo_pagamento: c.tipo_pagamento,
+              valor: c.tipo_pagamento === "avista"
+                ? Number(novoColaborador!.comissao_avista ?? 120)
+                : Number(novoColaborador!.comissao_parcelado ?? 50),
+              competencia: format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"),
+              status: "pendente",
+            }));
+            await supabase.from("comissoes").insert(novas as any);
+          }
+        }
+      }
 
       // Parte 4 — Estorno de comissões ao inativar
       const virouInativo = rest.status === "inativo" && aluno?.status !== "inativo";
@@ -126,6 +187,7 @@ function EditarAluno() {
         }
       }
     },
+
     onSuccess: () => {
       toast.success("Dados do aluno atualizados!");
       qc.invalidateQueries({ queryKey: ["alunos"] });
