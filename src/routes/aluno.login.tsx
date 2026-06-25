@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "sonner";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { sendBoasVindasPrimeiroAcesso } from "@/services/zApiService";
+import { creditarPrimeiroLogin, checar7DiasLogin } from "@/lib/milhas-eja";
 
 export const Route = createFileRoute("/aluno/login")({
   component: AlunoLogin,
@@ -119,6 +120,10 @@ function AlunoLogin() {
                 sessionStorage.setItem('aluno_sessao_id', sessao.id);
               }
             }
+
+            // Milhas EJA: primeiro login (idempotente) + checar streak de 7 dias
+            void creditarPrimeiroLogin(aluno.id);
+            void checar7DiasLogin(aluno.id);
 
             // Primeiro acesso: enviar WhatsApp de boas-vindas
             console.log('[primeiro_acesso] Verificando primeiro acesso do aluno...', {

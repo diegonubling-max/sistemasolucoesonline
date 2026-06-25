@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  creditarAulaAssistida,
+  checarBonus3AulasNoDia,
+  checarCursoCompleto,
+} from "@/lib/milhas-eja";
 
 type Provider = "youtube" | "vimeo" | "pandavideo" | "unknown";
 
@@ -79,6 +84,15 @@ export function useVideoProgress({
           },
           { onConflict: "aluno_id,aula_id" },
         );
+
+      // Milhas EJA: ao atingir 70% pela 1ª vez nesta aula
+      if (pct >= 70 && alunoId && aulaId && cursoId) {
+        const creditou = await creditarAulaAssistida(alunoId, aulaId);
+        if (creditou) {
+          void checarBonus3AulasNoDia(alunoId);
+          void checarCursoCompleto(alunoId, cursoId);
+        }
+      }
 
       if (pct >= 90 && !completedRef.current) {
         completedRef.current = true;
