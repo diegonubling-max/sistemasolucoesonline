@@ -23,7 +23,7 @@ import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
-import { generateAsaasCobrar } from "@/services/asaas";
+import { generateAsaasCobrar, asaasRequest } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
