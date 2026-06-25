@@ -744,12 +744,28 @@ function AlunoDetalhes() {
         <TabsContent value="vitrine" className="space-y-6">
           <div className="flex justify-end"><Button onClick={() => setShowVitrineModal(true)}><Plus className="h-4 w-4 mr-2" /> Adicionar</Button></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {vitrine?.map((item) => (
-              <Card key={item.id}><CardContent className="pt-6 flex justify-between items-start">
-                <div><p className="font-bold">{(item.cursos as any)?.nome}</p><p className="text-xs text-muted-foreground">{formatCurrency(item.preco_pix)}</p></div>
-                <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeFromVitrine.mutate(item.id)}><Trash2 className="h-4 w-4" /></Button>
-              </CardContent></Card>
-            ))}
+            {vitrine?.map((item) => {
+              const v = item as any;
+              return (
+                <Card key={item.id}><CardContent className="pt-6 flex justify-between items-start">
+                  <div className="space-y-1">
+                    <p className="font-bold">{(item.cursos as any)?.nome}</p>
+                    <p className="text-xs text-muted-foreground">{formatCurrency(item.preco_pix)}</p>
+                    {v.resgatado_com_pontos && (
+                      <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-semibold px-2 py-0.5">
+                        ⭐ Resgatado com Milhas
+                      </div>
+                    )}
+                    {v.resgatado_com_pontos && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {v.pontos_usados} pts · {v.data_resgate ? formatDate(v.data_resgate) : "—"}
+                      </p>
+                    )}
+                  </div>
+                  <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeFromVitrine.mutate(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                </CardContent></Card>
+              );
+            })}
           </div>
         </TabsContent>
 
