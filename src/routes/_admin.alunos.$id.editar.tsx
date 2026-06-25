@@ -245,7 +245,7 @@ function EditarAluno() {
             isEdit={true}
             submitting={updateAluno.isPending}
             submitLabel="Salvar alterações"
-            onSubmit={(v) => updateAluno.mutate(v)}
+            onSubmit={handleSubmitAluno}
           />
         </TabsContent>
 
