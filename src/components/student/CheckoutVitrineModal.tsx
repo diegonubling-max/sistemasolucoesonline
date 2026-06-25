@@ -46,7 +46,7 @@ export function CheckoutVitrineModal({
       setCompraId(null);
       setSeconds(30 * 60);
       setTab("pix");
-      setParcelas(1);
+      
       setCartao({ holderName: "", number: "", expiry: "", ccv: "" });
     }
   }, [open]);
