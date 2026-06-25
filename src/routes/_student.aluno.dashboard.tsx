@@ -706,6 +706,33 @@ function StudentDashboard() {
                 </div>
               </div>
 
+              {selectedVitrine.preco_com_pontos && selectedVitrine.pontos_necessarios && (
+                <div className="rounded-xl border-2 border-yellow-300 bg-yellow-50 p-4 space-y-2">
+                  <p className="flex items-center gap-2 font-bold text-yellow-800">
+                    <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                    Preço com Milhas EJA
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    Use <b>{selectedVitrine.pontos_necessarios} pts</b> e pague apenas{" "}
+                    <b>{formatCurrency(selectedVitrine.preco_com_pontos)}</b>
+                  </p>
+                  {(milhasSaldo ?? 0) >= selectedVitrine.pontos_necessarios ? (
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => setConfirmResgate(selectedVitrine)}
+                    >
+                      🔥 Comprar com pontos
+                    </Button>
+                  ) : (
+                    <p className="text-xs text-red-600 font-medium">
+                      Faltam {selectedVitrine.pontos_necessarios - (milhasSaldo ?? 0)} pts para
+                      desbloquear este preço
+                    </p>
+                  )}
+                </div>
+              )}
+
+
               <div className="space-y-4 text-center">
                 {!whatsappSuporte ? (
                   <p className="text-sm text-red-500 font-medium">Suporte temporariamente indisponível</p>
