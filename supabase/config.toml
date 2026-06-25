@@ -1,1 +1,4 @@
 project_id = "qdrjzyidtqgnwiecnmrc"
+
+[functions.asaas-vitrine-webhook]
+verify_jwt = false

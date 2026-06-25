@@ -13,6 +13,7 @@ import { useStudentTheme } from "./_student";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { BannerCarousel } from "@/components/student/BannerCarousel";
+import { CheckoutVitrineModal } from "@/components/student/CheckoutVitrineModal";
 
 export const Route = createFileRoute("/_student/aluno/dashboard")({
   head: () => ({ meta: [{ title: "Meus Cursos — Soluções Online" }] }),
@@ -30,6 +31,7 @@ function StudentDashboard() {
   const [showAgendadoDialog, setShowAgendadoDialog] = useState(false);
   const [showResgateSucesso, setShowResgateSucesso] = useState(false);
   const [confirmResgate, setConfirmResgate] = useState<any>(null);
+  const [checkoutVitrine, setCheckoutVitrine] = useState<any>(null);
 
 
   const { data: cursos, isLoading } = useQuery({
@@ -733,26 +735,28 @@ function StudentDashboard() {
               )}
 
 
-              <div className="space-y-4 text-center">
-                {!whatsappSuporte ? (
-                  <p className="text-sm text-red-500 font-medium">Suporte temporariamente indisponível</p>
-                ) : (
-                  <>
-                    <p className="text-sm text-gray-600">Para adquirir este curso entre em contato conosco!</p>
-                    <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white border-none gap-2" asChild>
-                      <a 
-                        href={`https://wa.me/${whatsappSuporte}?text=${encodeURIComponent(
-                          `Olá! Sou o aluno ${studentData?.nome || ""} (CTR: ${studentData?.ctr || ""}) e gostaria de saber mais sobre o curso ${selectedVitrine?.cursos?.nome}`
-                        )}`} 
-
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        <Smartphone className="h-4 w-4" />
-                        💬 Falar no WhatsApp
-                      </a>
-                    </Button>
-                  </>
+              <div className="space-y-3">
+                <Button
+                  className="w-full bg-[#1E3A5F] hover:bg-[#162a45] text-white gap-2"
+                  onClick={() => {
+                    setCheckoutVitrine(selectedVitrine);
+                    setSelectedVitrine(null);
+                  }}
+                >
+                  <Lock className="h-4 w-4" /> Comprar agora (PIX ou Cartão)
+                </Button>
+                {whatsappSuporte && (
+                  <Button variant="outline" className="w-full gap-2" asChild>
+                    <a
+                      href={`https://wa.me/${whatsappSuporte}?text=${encodeURIComponent(
+                        `Olá! Sou o aluno ${studentData?.nome || ""} (CTR: ${studentData?.ctr || ""}) e gostaria de saber mais sobre o curso ${selectedVitrine?.cursos?.nome}`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Smartphone className="h-4 w-4" /> 💬 Falar no WhatsApp
+                    </a>
+                  </Button>
                 )}
               </div>
             </div>
@@ -813,6 +817,17 @@ function StudentDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <CheckoutVitrineModal
+        vitrine={checkoutVitrine}
+        open={!!checkoutVitrine}
+        onClose={() => setCheckoutVitrine(null)}
+        onSuccess={() => {
+          qc.invalidateQueries({ queryKey: ["student-courses"] });
+          qc.invalidateQueries({ queryKey: ["vitrine-cursos"] });
+          setShowResgateSucesso(true);
+        }}
+      />
     </div>
   );
 }
