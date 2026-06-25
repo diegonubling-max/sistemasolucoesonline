@@ -349,6 +349,8 @@ export function AlunoForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_placeholder" disabled>selecione...</SelectItem>
+                <SelectItem value="Agente IA">🤖 Agente IA</SelectItem>
+                <SelectItem value="Admin">👤 Admin</SelectItem>
                 {vendedoras.map((v: string) => (
                   <SelectItem key={v} value={v}>
                     {v}
