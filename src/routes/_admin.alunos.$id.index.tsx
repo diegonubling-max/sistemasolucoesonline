@@ -841,7 +841,12 @@ function AlunoDetalhes() {
         <TabsContent value="progresso" className="space-y-6">
           <ProgressoAulas alunoId={id} />
         </TabsContent>
+
+        <TabsContent value="mensagens" className="space-y-6">
+          <MensagensTab alunoId={id} />
+        </TabsContent>
       </Tabs>
+
 
 
 
