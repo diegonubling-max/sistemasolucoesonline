@@ -11,6 +11,8 @@ import { Loader2, Calendar as CalendarIcon, CheckCircle2, History, ChevronDown, 
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
+import { sendAgendamentoProva } from "@/services/zApiService";
+import { supabase as sb } from "@/integrations/supabase/client";
 
 
 
