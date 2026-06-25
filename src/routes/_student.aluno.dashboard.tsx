@@ -701,12 +701,12 @@ function StudentDashboard() {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Preço Cartão</p>
-                      <p className="text-lg font-bold text-gray-900">
-                        {formatCurrency(selectedVitrine.preco_cartao)}
+                      <p className="text-xs text-gray-500 font-medium leading-none mt-1">{selectedVitrine.max_parcelas}x</p>
+                      <p className="text-2xl font-extrabold text-gray-900 leading-tight">
+                        {formatCurrency(selectedVitrine.preco_cartao / selectedVitrine.max_parcelas)}
                       </p>
-                      <p className="text-sm text-purple-600 font-medium">
-                        em até {selectedVitrine.max_parcelas}x de {formatCurrency(selectedVitrine.preco_cartao / selectedVitrine.max_parcelas)}
-                      </p>
+                      <p className="text-xs text-gray-500 font-medium">no cartão</p>
+                      <p className="text-xs text-gray-500 mt-1">Total: {formatCurrency(selectedVitrine.preco_cartao)}</p>
                     </div>
                   </div>
                 </div>
