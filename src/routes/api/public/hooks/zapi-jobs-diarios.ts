@@ -137,42 +137,42 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
             result.erros.push(`nunca_acessou ${aluno.id}: ${e.message}`);
           }
 
-          // 2) Sem acesso há 4 dias úteis (só seg-sex)
-          if (dow >= 1 && dow <= 5) {
-            try {
-              const key = `${aluno.id}:4_dias_uteis`;
-              if (!jaEnviado.has(key)) {
-                const { data: ultSess } = await supabaseAdmin
-                  .from("aluno_sessoes")
-                  .select("login_em")
-                  .eq("aluno_id", aluno.id)
-                  .order("login_em", { ascending: false })
-                  .limit(1)
-                  .maybeSingle();
-                if (ultSess?.login_em) {
-                  const diasUteis = diasUteisEntre(new Date(ultSess.login_em), hojeBR);
-                  if (diasUteis >= 4) {
-                    const { aula, materia } = await ultimaAula(aluno.id);
-                    const diasCorridos = Math.floor(
-                      (hojeBR.getTime() - new Date(ultSess.login_em).getTime()) / 86400000,
-                    );
-                    await sendSemAcesso4Dias({
-                      telefone: aluno.telefone,
-                      nome: aluno.nome,
-                      dias: diasCorridos,
-                      ultimaAula: aula,
-                      materia,
-                    });
-                    await marcar(aluno.id, "4_dias_uteis");
-                    result.quatro_dias++;
-                    continue;
-                  }
+          // 2) Sem acesso: dispara no dia calculado (4 dias corridos, adiando fim de semana p/ segunda)
+          try {
+            const key = `${aluno.id}:4_dias_uteis`;
+            if (!jaEnviado.has(key)) {
+              const { data: ultSess } = await supabaseAdmin
+                .from("aluno_sessoes")
+                .select("login_em")
+                .eq("aluno_id", aluno.id)
+                .order("login_em", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              if (ultSess?.login_em) {
+                const ultimoAcesso = new Date(ultSess.login_em);
+                const diaDisparo = calcularDiaDisparo(ultimoAcesso);
+                if (mesmaData(diaDisparo, hojeBR)) {
+                  const { aula, materia } = await ultimaAula(aluno.id);
+                  const diasCorridos = Math.floor(
+                    (hojeBR.getTime() - ultimoAcesso.getTime()) / 86400000,
+                  );
+                  await sendSemAcesso4Dias({
+                    telefone: aluno.telefone,
+                    nome: aluno.nome,
+                    dias: diasCorridos,
+                    ultimaAula: aula,
+                    materia,
+                  });
+                  await marcar(aluno.id, "4_dias_uteis");
+                  result.quatro_dias++;
+                  continue;
                 }
               }
-            } catch (e: any) {
-              result.erros.push(`4_dias ${aluno.id}: ${e.message}`);
             }
+          } catch (e: any) {
+            result.erros.push(`4_dias ${aluno.id}: ${e.message}`);
           }
+
 
           // 3) Sábado — enviar sempre que for sábado e aluno não acessou hoje
           if (dow === 6) {
