@@ -18,19 +18,40 @@ function formatDateBR(iso: string) {
   return `${d}/${m}/${y}`;
 }
 
-async function sendWhatsApp(telefone: string, mensagem: string) {
+async function sendWhatsApp(
+  telefone: string,
+  mensagem: string,
+  log?: { alunoId?: string | null; tipo: string },
+) {
   if (!telefone) return;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const tipo = log?.tipo ?? "outro";
+  const alunoId = log?.alunoId ?? null;
   try {
     const res = await fetch(`${Z_API_BASE}/send-text`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Client-Token": Z_API_CLIENT_TOKEN },
       body: JSON.stringify({ phone: formatPhone(telefone), message: mensagem }),
     });
-    console.log("[zApi cron]", res.status, await res.text().catch(() => ""));
-  } catch (e) {
+    const body = await res.text().catch(() => "");
+    console.log("[zApi cron]", res.status, body);
+    if (!res.ok) {
+      await supabaseAdmin
+        .from("zapi_mensagens_log")
+        .insert({ aluno_id: alunoId, tipo, mensagem, status: "erro", erro_detalhe: `HTTP ${res.status}: ${body}` });
+    } else {
+      await supabaseAdmin
+        .from("zapi_mensagens_log")
+        .insert({ aluno_id: alunoId, tipo, mensagem, status: "enviado" });
+    }
+  } catch (e: any) {
     console.error("[zApi cron] erro envio:", e);
+    await supabaseAdmin
+      .from("zapi_mensagens_log")
+      .insert({ aluno_id: alunoId, tipo, mensagem, status: "erro", erro_detalhe: e?.message || String(e) });
   }
 }
+
 
 function addDays(date: Date, days: number) {
   const d = new Date(date);
