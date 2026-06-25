@@ -74,11 +74,13 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
         .from("polos")
         .select("id, nome")
         .eq("ativo", true)
+        .ilike("nome", "%florian%")
         .order("nome");
       if (error) throw error;
       return data;
     },
   });
+
 
   const { data: config } = useQuery({
     queryKey: ["admin-sidebar-config"],
