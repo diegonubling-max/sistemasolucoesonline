@@ -103,7 +103,7 @@ Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
           const { data: atrasadas, error } = await supabaseAdmin
             .from("parcelas")
             .select(
-              "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(nome, telefone))",
+              "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(id, nome, telefone))",
             )
             .lt("data_vencimento", ontem)
             .neq("status", "pago");
@@ -116,7 +116,8 @@ Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
 Olá, *${aluno.nome}*! Identificamos que sua parcela de *R$ ${formatBRL(Number(p.valor))}* está em atraso desde ${formatDateBR(p.data_vencimento as string)}.
 
 Regularize agora para manter seu acesso! Entre em contato conosco.`;
-            await sendWhatsApp(aluno.telefone, msg);
+            await sendWhatsApp(aluno.telefone, msg, { alunoId: aluno.id, tipo: "aviso_atraso" });
+
             result.atrasos++;
           }
         } catch (e: any) {
