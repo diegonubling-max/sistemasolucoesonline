@@ -210,7 +210,47 @@ function EditarAluno() {
       );
       if (!ok) return;
     }
-    updateAluno.mutate(v);
+
+    // Verifica mudança de primeiro nome → oferecer redefinição de senha
+    const primeiroNomeAntigo = String(aluno?.nome ?? "").trim().split(/\s+/)[0] ?? "";
+    const primeiroNomeNovo = String(v?.nome ?? "").trim().split(/\s+/)[0] ?? "";
+    const mudouPrimeiroNome =
+      !!primeiroNomeNovo &&
+      !!primeiroNomeAntigo &&
+      primeiroNomeNovo.toLowerCase() !== primeiroNomeAntigo.toLowerCase();
+
+    let resetSenha = false;
+    if (mudouPrimeiroNome) {
+      const novaSenha = "1234" + primeiroNomeNovo.toLowerCase();
+      resetSenha = window.confirm(
+        `O primeiro nome foi alterado de "${primeiroNomeAntigo}" para "${primeiroNomeNovo}". Deseja redefinir a senha para ${novaSenha}?`
+      );
+    }
+
+    updateAluno.mutate(v, {
+      onSuccess: async () => {
+        if (!mudouPrimeiroNome) return;
+        if (!resetSenha) {
+          toast.info("Nome atualizado. Senha mantida.");
+          return;
+        }
+        const novaSenha = "1234" + primeiroNomeNovo.toLowerCase();
+        const emailAlvo = aluno?.email || (aluno?.ctr ? `ctr${aluno.ctr}@solucoesonline.com.br` : null);
+        if (!emailAlvo) {
+          toast.error("E-mail do aluno não encontrado para redefinir senha.");
+          return;
+        }
+        const { error } = await supabase.rpc("redefinir_senha_aluno", {
+          p_email: emailAlvo,
+          p_nova_senha: novaSenha,
+        });
+        if (error) {
+          toast.error("Erro ao redefinir senha", { description: error.message });
+        } else {
+          toast.success("Nome e senha atualizados com sucesso!");
+        }
+      },
+    });
   };
 
 
