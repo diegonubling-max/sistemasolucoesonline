@@ -201,7 +201,7 @@ function Financeiro() {
   });
 
   const { data: primeiras, refetch: refetchPrimeiras } = useQuery({
-    queryKey: ["financeiro-primeiras", primeirasMonth, selectedPoloId, userRole, colabData],
+    queryKey: ["financeiro-primeiras", primeirasMonth, primeirasStatus, selectedPoloId, userRole, colabData],
     queryFn: async () => {
       const [year, month] = primeirasMonth.split("-");
       const start = format(new Date(Number(year), Number(month) - 1, 1), "yyyy-MM-dd");
@@ -214,13 +214,16 @@ function Financeiro() {
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
         .order("data_vencimento", { ascending: true });
-      
+
+      if (primeirasStatus !== "todas") q = q.eq("status", primeirasStatus);
+
       const { data, error } = await filterByPolo(q);
       if (error) throw error;
       return data;
     },
     enabled: activeFilter === "primeiras"
   });
+
 
   const { data: ultimas, refetch: refetchUltimas } = useQuery({
     queryKey: ["financeiro-ultimas", ultimasMonth, selectedPoloId, userRole, colabData],
