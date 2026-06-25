@@ -17,6 +17,7 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { InadimplenciaAlerts } from "@/components/student/InadimplenciaAlerts";
 import { PerfilVocacionalModal } from "@/components/student/PerfilVocacionalModal";
 import { verificarInadimplenciaAuto } from "@/lib/aluno-status";
+import { MilhasEjaBadge, MilhasEjaListener } from "@/components/student/MilhasEja";
 
 const StudentThemeContext = createContext<{ isDark: boolean }>({ isDark: true });
 export const useStudentTheme = () => useContext(StudentThemeContext);
