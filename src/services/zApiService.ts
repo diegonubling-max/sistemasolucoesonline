@@ -16,7 +16,36 @@ export type ZapiTipoDisparo =
   | "4_dias_sem_acessar"
   | "sabado"
   | "domingo"
+  | "agendamento_prova"
   | "outro";
+
+export async function sendAgendamentoProva(params: {
+  telefone: string;
+  nome: string;
+  dataProva: string; // YYYY-MM-DD
+  horaProva: string; // HH:mm[:ss]
+  alunoId?: string | null;
+}) {
+  const nomeExibicao = (params.nome || "").trim().split(/\s+/)[0] || "";
+  const nomeFmt = nomeExibicao
+    ? nomeExibicao.charAt(0).toUpperCase() + nomeExibicao.slice(1).toLowerCase()
+    : "";
+  const [y, m, d] = params.dataProva.split("-");
+  const dataFmt = `${d}/${m}/${y}`;
+  const horaFmt = (params.horaProva || "").substring(0, 5);
+  const msg = `*📝 Prova Agendada!*
+
+Olá, *${nomeFmt}*! Sua prova final foi agendada com sucesso! ✅
+
+📅 *Data:* ${dataFmt}
+🕐 *Horário:* ${horaFmt}
+
+Acesse a plataforma no dia e horário agendado para realizar sua prova.
+👉 https://sistemasolucoesonline.lovable.app/aluno/login
+
+Qualquer dúvida estamos à disposição! 😊`;
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "agendamento_prova" });
+}
 
 export type LogCtx = { alunoId?: string | null; tipo: ZapiTipoDisparo };
 

@@ -11,6 +11,7 @@ import { Loader2, Calendar as CalendarIcon, CheckCircle2, History, ChevronDown, 
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
+import { sendAgendamentoProva } from "@/services/zApiService";
 
 
 
@@ -41,6 +42,21 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
         status: "agendado",
       });
       if (error) throw error;
+
+      const { data: aluno } = await supabase
+        .from("alunos")
+        .select("nome, telefone")
+        .eq("id", alunoId)
+        .maybeSingle();
+      if (aluno?.telefone) {
+        await sendAgendamentoProva({
+          telefone: aluno.telefone,
+          nome: aluno.nome ?? "",
+          dataProva,
+          horaProva,
+          alunoId,
+        });
+      }
     },
     onSuccess: () => {
       toast.success("Prova agendada com sucesso!");
