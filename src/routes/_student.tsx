@@ -365,6 +365,7 @@ function StudentLayout() {
           onClose={() => setShowPerfilModal(false)}
         />
       )}
+      <MilhasEjaListener />
     </div>
   );
 }
