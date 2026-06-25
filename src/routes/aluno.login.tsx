@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "sonner";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { sendBoasVindasPrimeiroAcesso } from "@/services/zApiService";
+import { creditarPrimeiroLogin, checar7DiasLogin } from "@/lib/milhas-eja";
 
 export const Route = createFileRoute("/aluno/login")({
   component: AlunoLogin,
