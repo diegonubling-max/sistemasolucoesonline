@@ -336,7 +336,8 @@ function AlunoDetalhes() {
             `🔑 *Nova senha:* ${senhaPadrao}\n\n` +
             `👉 Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
           const { sendWhatsApp } = await import("@/services/zApiService");
-          await sendWhatsApp(aluno.telefone, mensagem);
+          await sendWhatsApp(aluno.telefone, mensagem, { alunoId: aluno.id, tipo: "redefinicao_senha" });
+
         } catch (err) {
           console.error("Falha ao notificar aluno via WhatsApp:", err);
         }
