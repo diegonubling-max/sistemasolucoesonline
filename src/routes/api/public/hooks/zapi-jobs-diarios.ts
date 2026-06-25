@@ -195,7 +195,9 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                   nome: aluno.nome,
                   ultimaAula: aula,
                   materia,
+                  alunoId: aluno.id,
                 });
+
                 result.sabado++;
               }
             } catch (e: any) {
