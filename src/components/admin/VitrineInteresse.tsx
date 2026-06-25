@@ -27,12 +27,6 @@ interface Props {
   isSuperAdmin: boolean;
 }
 
-export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: Props) {
-  const [expanded, setExpanded] = useState(false);
-
-  const effectivePolo = isSuperAdmin
-    ? (selectedPoloId !== "all" ? selectedPoloId : null)
-    : (colabPoloId ?? null);
 
 export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: Props) {
   const [expanded, setExpanded] = useState(false);
