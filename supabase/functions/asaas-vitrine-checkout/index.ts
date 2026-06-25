@@ -95,9 +95,7 @@ serve(async (req) => {
     const dueDate = due.toISOString().split("T")[0];
 
     // 2. Criar registro de compra (pendente)
-    const valorParcela = forma_pagamento === "cartao" && parcelas > 1
-      ? Number((valorTotal / parcelas).toFixed(2))
-      : valorTotal;
+    const valorParcela = forma_pagamento === "cartao" ? valorParcelaCartao : valorTotal;
 
     const { data: compra, error: compraErr } = await supa
       .from("vitrine_compras")
@@ -106,7 +104,7 @@ serve(async (req) => {
         curso_id: vit.curso_id,
         vitrine_id: vit.id,
         forma_pagamento,
-        parcelas: forma_pagamento === "cartao" ? parcelas : 1,
+        parcelas: forma_pagamento === "cartao" ? parcelasCartao : 1,
         valor_total: valorTotal,
         valor_parcela: valorParcela,
         status: "pendente",
@@ -126,11 +124,9 @@ serve(async (req) => {
     };
 
     if (forma_pagamento === "cartao") {
-      if (parcelas > 1) {
-        basePayload.installmentCount = parcelas;
-        basePayload.installmentValue = valorParcela;
-        delete basePayload.value;
-      }
+      basePayload.installmentCount = parcelasCartao;
+      basePayload.installmentValue = valorParcelaCartao;
+      delete basePayload.value;
       if (!cartao) throw new Error("Dados do cartão são obrigatórios");
       basePayload.creditCard = {
         holderName: cartao.holderName,
