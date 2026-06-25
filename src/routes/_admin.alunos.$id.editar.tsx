@@ -165,7 +165,6 @@ function EditarAluno() {
           vendedoraFoiAlterada = true;
         }
       }
-      (rest as any).__vendedoraAlterada = vendedoraFoiAlterada;
 
 
       // Parte 4 — Estorno de comissões ao inativar
@@ -184,16 +183,36 @@ function EditarAluno() {
           if (estErr) throw estErr;
         }
       }
+
+      return { vendedoraAlterada: vendedoraFoiAlterada, vendedoraNova };
     },
 
-    onSuccess: () => {
-      toast.success("Dados do aluno atualizados!");
+    onSuccess: (result) => {
+      if (result?.vendedoraAlterada) {
+        toast.success("Vendedora e comissões atualizadas com sucesso!");
+      } else {
+        toast.success("Dados do aluno atualizados!");
+      }
       qc.invalidateQueries({ queryKey: ["alunos"] });
       qc.invalidateQueries({ queryKey: ["aluno", id] });
       qc.invalidateQueries({ queryKey: ["comissoes"] });
     },
     onError: (e: Error) => toast.error("Erro ao salvar dados", { description: e.message }),
   });
+
+  const handleSubmitAluno = (v: any) => {
+    const vendedoraAnterior = aluno?.vendedora ?? null;
+    const vendedoraNova = v.vendedora ?? null;
+    if (vendedoraNova !== vendedoraAnterior) {
+      const nomeExibicao = vendedoraNova || "(sem vendedora)";
+      const ok = window.confirm(
+        `A vendedora foi alterada. As comissões desta matrícula serão transferidas para ${nomeExibicao}. Confirmar?`
+      );
+      if (!ok) return;
+    }
+    updateAluno.mutate(v);
+  };
+
 
   if (loadingAluno) return <div className="p-8 text-center">Carregando aluno...</div>;
   if (!aluno) return <div className="p-8 text-center">Aluno não encontrado.</div>;
