@@ -1,6 +1,24 @@
+import { supabase } from "@/integrations/supabase/client";
+
 const Z_API_BASE =
   "https://api.z-api.io/instances/3F4CC1DC22AB31BDE17ECE717FF40C71/token/E55BC981D8AA6846EAFEAEE4";
 const Z_API_CLIENT_TOKEN = "F2ffd89a74df2440aad10b65315696d0eS";
+
+export type ZapiTipoDisparo =
+  | "boas_vindas"
+  | "confirmacao_pagamento"
+  | "lembrete_vencimento"
+  | "aviso_atraso"
+  | "motivacional_primeiro_login"
+  | "reenvio_acesso"
+  | "redefinicao_senha"
+  | "nunca_acessou"
+  | "4_dias_sem_acessar"
+  | "sabado"
+  | "domingo"
+  | "outro";
+
+export type LogCtx = { alunoId?: string | null; tipo: ZapiTipoDisparo };
 
 function formatPhone(telefone: string): string {
   const numero = (telefone || "").replace(/\D/g, "");
@@ -16,18 +34,40 @@ function getNomeExibicao(nome: string): string {
   return primeiro ? primeiro.charAt(0).toUpperCase() + primeiro.slice(1) : "";
 }
 
-export async function sendWhatsApp(telefone: string, mensagem: string): Promise<void> {
+async function registrarLog(
+  log: LogCtx,
+  mensagem: string,
+  status: "enviado" | "erro",
+  erroDetalhe?: string,
+) {
+  try {
+    await supabase.from("zapi_mensagens_log").insert({
+      aluno_id: log.alunoId ?? null,
+      tipo: log.tipo,
+      mensagem,
+      status,
+      erro_detalhe: erroDetalhe ?? null,
+    });
+  } catch (e) {
+    console.warn("[zApi] Falha ao registrar log:", e);
+  }
+}
+
+export async function sendWhatsApp(
+  telefone: string,
+  mensagem: string,
+  log?: LogCtx,
+): Promise<void> {
   console.log("[zApi] sendWhatsApp chamado | telefone bruto:", telefone);
+  const ctx: LogCtx = log ?? { tipo: "outro" };
   if (!telefone) {
     console.warn("[zApi] Telefone vazio, pulando envio");
+    await registrarLog(ctx, mensagem, "erro", "telefone vazio");
     return;
   }
   const phone = formatPhone(telefone);
   const url = `${Z_API_BASE}/send-text`;
   const payload = { phone, message: mensagem };
-  console.log("[zApi] Enviando para:", phone);
-  console.log("[zApi] URL:", url);
-  console.log("[zApi] Payload:", JSON.stringify(payload));
   try {
     const res = await fetch(url, {
       method: "POST",
@@ -38,17 +78,15 @@ export async function sendWhatsApp(telefone: string, mensagem: string): Promise<
       body: JSON.stringify(payload),
     });
     const text = await res.text();
-    console.log("[zApi] Status HTTP:", res.status);
-    console.log("[zApi] Resposta bruta:", text);
-    let json: unknown = null;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      console.warn("[zApi] Resposta não é JSON válido");
+    console.log("[zApi] Status HTTP:", res.status, "| Resposta:", text);
+    if (!res.ok) {
+      await registrarLog(ctx, mensagem, "erro", `HTTP ${res.status}: ${text}`);
+      return;
     }
-    console.log("[zApi] Resposta JSON:", JSON.stringify(json));
-  } catch (e) {
+    await registrarLog(ctx, mensagem, "enviado");
+  } catch (e: any) {
     console.error("[zApi] Erro ao enviar WhatsApp:", e);
+    await registrarLog(ctx, mensagem, "erro", e?.message || String(e));
   }
 }
 
@@ -58,6 +96,7 @@ export async function sendBoasVindasMatricula(params: {
   telefone: string;
   nome: string;
   ctr: number | string;
+  alunoId?: string | null;
 }) {
   const primeiroNome = getPrimeiroNome(params.nome);
   const nomeExibicao = getNomeExibicao(params.nome);
@@ -73,7 +112,7 @@ Acesse sua área de estudos em:
 👉 ${SITE_URL}
 
 Qualquer dúvida estamos à disposição! 😊`;
-  await sendWhatsApp(params.telefone, msg);
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "boas_vindas" });
 }
 
 function formatBRL(valor: number) {
@@ -89,7 +128,8 @@ export async function sendLembreteVencimento(params: {
   telefone: string;
   nome: string;
   valor: number;
-  dataVencimento: string; // YYYY-MM-DD
+  dataVencimento: string;
+  alunoId?: string | null;
 }) {
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*⚠️ Soluções Online — Lembrete de Pagamento*
@@ -99,7 +139,7 @@ Olá, *${nomeExibicao}*! Sua parcela de *R$ ${formatBRL(params.valor)}* vence em
   )}).
 
 Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
-  await sendWhatsApp(params.telefone, msg);
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "lembrete_vencimento" });
 }
 
 export async function sendAvisoAtraso(params: {
@@ -107,6 +147,7 @@ export async function sendAvisoAtraso(params: {
   nome: string;
   valor: number;
   dataVencimento: string;
+  alunoId?: string | null;
 }) {
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🔴 Soluções Online — Parcela em Atraso*
@@ -116,13 +157,14 @@ Olá, *${nomeExibicao}*! Identificamos que sua parcela de *R$ ${formatBRL(params
   )}.
 
 Regularize agora para manter seu acesso! Entre em contato conosco.`;
-  await sendWhatsApp(params.telefone, msg);
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "aviso_atraso" });
 }
 
 export async function sendConfirmacaoPagamento(params: {
   telefone: string;
   nome: string;
   valor: number;
+  alunoId?: string | null;
 }) {
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*✅ Soluções Online — Pagamento Confirmado!*
@@ -131,12 +173,13 @@ Olá, *${nomeExibicao}*! Recebemos seu pagamento de *R$ ${formatBRL(params.valor
 
 Continue seus estudos acessando:
 👉 ${SITE_URL} 📚`;
-  await sendWhatsApp(params.telefone, msg);
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "confirmacao_pagamento" });
 }
 
 export async function sendBoasVindasPrimeiroAcesso(params: {
   telefone: string;
   nome: string;
+  alunoId?: string | null;
 }) {
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🎓 Soluções Online*
@@ -149,13 +192,14 @@ Saiba que você não está sozinho nessa jornada. Nossa equipe acredita no seu p
 
 Bons estudos e conte sempre conosco!
 _Equipe Soluções Online_ 📚`;
-  await sendWhatsApp(params.telefone, msg);
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "motivacional_primeiro_login" });
 }
 
 export async function sendNuncaAcessou(params: {
   telefone: string;
   nome: string;
   ctr: number | string;
+  alunoId?: string | null;
 }) {
   const nomeExibicao = getNomeExibicao(params.nome);
   const primeiroNome = getPrimeiroNome(params.nome);
@@ -165,7 +209,7 @@ Sabemos que dar o primeiro passo pode parecer difícil, mas o mais importante é
 Seu diploma está esperando por você.
 👉 Acesse agora: ${SITE_URL}
 📋 Login: ${params.ctr} | 🔑 Senha: 1234${primeiroNome}`;
-  await sendWhatsApp(params.telefone, msg);
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "nunca_acessou" });
 }
 
 export async function sendSemAcesso4Dias(params: {
@@ -174,6 +218,7 @@ export async function sendSemAcesso4Dias(params: {
   dias: number;
   ultimaAula: string | null;
   materia: string | null;
+  alunoId?: string | null;
 }) {
   const nomeExibicao = getNomeExibicao(params.nome);
   const aula = params.ultimaAula || "suas aulas";
@@ -186,7 +231,7 @@ Cada dia de estudo te aproxima do seu diploma.
 Não deixa o caminho esfriar! 🎓
 
 👉 Continue de onde parou: ${SITE_URL}`;
-  await sendWhatsApp(params.telefone, msg);
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "4_dias_sem_acessar" });
 }
 
 export async function sendMensagemSabado(params: {
@@ -194,6 +239,7 @@ export async function sendMensagemSabado(params: {
   nome: string;
   ultimaAula: string | null;
   materia: string | null;
+  alunoId?: string | null;
 }) {
   const nomeExibicao = getNomeExibicao(params.nome);
   const aula = params.ultimaAula || "suas aulas";
@@ -204,7 +250,7 @@ Você sabia que está na aula *${aula}* de *${materia}*? Que tal avançar hoje?
 Família por perto, celular na mão... é o momento perfeito para estudar com calma e sem pressa. 📚
 Seu diploma agradece cada minuto dedicado hoje!
 👉 ${SITE_URL}`;
-  await sendWhatsApp(params.telefone, msg);
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "sabado" });
 }
 
 export async function sendMensagemDomingo(params: {
@@ -212,6 +258,7 @@ export async function sendMensagemDomingo(params: {
   nome: string;
   ultimaAula: string | null;
   materia: string | null;
+  alunoId?: string | null;
 }) {
   const nomeExibicao = getNomeExibicao(params.nome);
   const aula = params.ultimaAula || "suas aulas";
@@ -222,5 +269,5 @@ Enquanto a semana ainda não chegou, que tal dedicar uns minutinhos aos seus est
 Você estava na aula *${aula}* de *${materia}* — cada aula assistida é um passo real rumo ao seu diploma. 🎓
 Invista em você hoje. Seu futuro agradece!
 👉 ${SITE_URL}`;
-  await sendWhatsApp(params.telefone, msg);
+  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "domingo" });
 }
