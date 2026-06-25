@@ -22,11 +22,14 @@ export const Route = createFileRoute("/_student/aluno/dashboard")({
 function StudentDashboard() {
   const { session } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { isDark } = useStudentTheme();
   const [selectedVitrine, setSelectedVitrine] = useState<any>(null);
   const [showProvaFinalDialog, setShowProvaFinalDialog] = useState(false);
   const [showLockedProvaDialog, setShowLockedProvaDialog] = useState(false);
   const [showAgendadoDialog, setShowAgendadoDialog] = useState(false);
+  const [showResgateSucesso, setShowResgateSucesso] = useState(false);
+  const [confirmResgate, setConfirmResgate] = useState<any>(null);
 
 
   const { data: cursos, isLoading } = useQuery({
