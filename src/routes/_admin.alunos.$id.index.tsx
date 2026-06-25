@@ -885,6 +885,12 @@ function AlunoDetalhes() {
             </select>
             <Input placeholder="Preço PIX" type="number" value={vitrinePrecoPix} onChange={(e) => setVitrinePrecoPix(e.target.value)} />
             <Input placeholder="Preço Cartão" type="number" value={vitrinePrecoCartao} onChange={(e) => setVitrinePrecoCartao(e.target.value)} />
+            <div className="border-t pt-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">Preço com Milhas EJA (opcional)</p>
+              <Input placeholder="Preço normal (R$)" type="number" value={vitrinePrecoNormal} onChange={(e) => setVitrinePrecoNormal(e.target.value)} />
+              <Input placeholder="Preço com pontos (R$)" type="number" value={vitrinePrecoComPontos} onChange={(e) => setVitrinePrecoComPontos(e.target.value)} />
+              <Input placeholder="Pontos necessários" type="number" value={vitrinePontosNecessarios} onChange={(e) => setVitrinePontosNecessarios(e.target.value)} />
+            </div>
           </div>
           <Button onClick={() => addToVitrine.mutate()}>Adicionar</Button>
         </DialogContent>
