@@ -1,12 +1,25 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, MessageCircle, User } from "lucide-react";
+import { Eye, MessageCircle, User, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Props {
   selectedPoloId: string;
@@ -14,8 +27,12 @@ interface Props {
   isSuperAdmin: boolean;
 }
 
+
 export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const canDelete = isSuperAdmin || user?.email === "diegonubling@gmail.com";
 
   const effectivePolo = isSuperAdmin
     ? (selectedPoloId !== "all" ? selectedPoloId : null)
@@ -34,6 +51,18 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
       if (error) throw error;
       return data ?? [];
     },
+  });
+
+  const excluirAluno = useMutation({
+    mutationFn: async (alunoId: string) => {
+      const { error } = await supabase.rpc("delete_aluno_completo", { p_aluno_id: alunoId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Aluno excluído com sucesso!");
+      qc.invalidateQueries({ queryKey: ["vitrine-cliques"] });
+    },
+    onError: (e: any) => toast.error("Erro ao excluir aluno", { description: e.message }),
   });
 
   return (
@@ -93,6 +122,32 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
                           WhatsApp
                         </Button>
                       </a>
+                    )}
+                    {canDelete && alunoId && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="destructive" className="h-8 w-8 p-0">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir aluno?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir este aluno da vitrine? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => excluirAluno.mutate(alunoId)}
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </div>
                 </li>
