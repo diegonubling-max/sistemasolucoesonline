@@ -37,7 +37,7 @@ export function CheckoutVitrineModal({
   const [pix, setPix] = useState<{ payload: string; encodedImage: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [seconds, setSeconds] = useState(30 * 60);
-  const [parcelas, setParcelas] = useState(1);
+  const parcelas = 12;
   const [cartao, setCartao] = useState({ holderName: "", number: "", expiry: "", ccv: "" });
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export function CheckoutVitrineModal({
       setCompraId(null);
       setSeconds(30 * 60);
       setTab("pix");
-      setParcelas(1);
+      
       setCartao({ holderName: "", number: "", expiry: "", ccv: "" });
     }
   }, [open]);
@@ -58,8 +58,11 @@ export function CheckoutVitrineModal({
   }, [pix]);
 
   if (!vitrine) return null;
-  const total = tab === "pix" ? Number(vitrine.preco_pix) : Number(vitrine.preco_cartao || vitrine.preco_pix);
-  const maxParc = vitrine.max_parcelas || 1;
+  const baseCartao = Number(vitrine.preco_com_pontos ?? vitrine.preco_normal ?? vitrine.preco_pix);
+  const valorParcelaCartao = baseCartao / 10;
+  const totalCartao = valorParcelaCartao * 12;
+  const total = tab === "pix" ? Number(vitrine.preco_pix) : totalCartao;
+  const maxParc = 12;
 
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
@@ -254,23 +257,6 @@ export function CheckoutVitrineModal({
                   onChange={(e) => setCartao({ ...cartao, ccv: e.target.value.replace(/\D/g, "") })}
                 />
               </div>
-            </div>
-            <div>
-              <Label>Parcelas</Label>
-              <select
-                className="w-full h-10 rounded-md border bg-white px-3 text-sm"
-                value={parcelas}
-                onChange={(e) => setParcelas(Number(e.target.value))}
-              >
-                {Array.from({ length: maxParc }).map((_, i) => {
-                  const n = i + 1;
-                  return (
-                    <option key={n} value={n}>
-                      {n}x de {formatCurrency(total / n)} {n === 1 ? "à vista" : ""}
-                    </option>
-                  );
-                })}
-              </select>
             </div>
             <Button className="w-full bg-[#1E3A5F]" disabled={loading} onClick={pagarCartao}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Lock className="h-4 w-4 mr-2" />}

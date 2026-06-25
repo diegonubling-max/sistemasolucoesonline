@@ -36,7 +36,7 @@ serve(async (req) => {
     const { data: vit, error: vitErr } = await supa
       .from("cursos_vitrine")
       .select(`
-        id, curso_id, preco_pix, preco_cartao, preco_com_pontos, max_parcelas,
+        id, curso_id, preco_pix, preco_normal, preco_com_pontos,
         resgatado_com_pontos,
         alunos:aluno_id ( id, nome, cpf, email, telefone, asaas_customer_id ),
         cursos:curso_id ( id, nome )
@@ -52,9 +52,11 @@ serve(async (req) => {
     if (!aluno) throw new Error("Aluno não encontrado");
     if (!aluno.cpf || !aluno.email) throw new Error("Aluno sem CPF/e-mail cadastrado");
 
-    const valorTotal = forma_pagamento === "pix"
-      ? Number(vit.preco_pix)
-      : Number(vit.preco_cartao || vit.preco_pix);
+    const baseCartao = Number(vit.preco_com_pontos ?? vit.preco_normal ?? vit.preco_pix);
+    const valorParcelaCartao = Number((baseCartao / 10).toFixed(2));
+    const totalCartao = Number((valorParcelaCartao * 12).toFixed(2));
+    const parcelasCartao = 12;
+    const valorTotal = forma_pagamento === "pix" ? Number(vit.preco_pix) : totalCartao;
 
     // 1. Garantir customer
     let customerId = aluno.asaas_customer_id;
@@ -93,9 +95,7 @@ serve(async (req) => {
     const dueDate = due.toISOString().split("T")[0];
 
     // 2. Criar registro de compra (pendente)
-    const valorParcela = forma_pagamento === "cartao" && parcelas > 1
-      ? Number((valorTotal / parcelas).toFixed(2))
-      : valorTotal;
+    const valorParcela = forma_pagamento === "cartao" ? valorParcelaCartao : valorTotal;
 
     const { data: compra, error: compraErr } = await supa
       .from("vitrine_compras")
@@ -104,7 +104,7 @@ serve(async (req) => {
         curso_id: vit.curso_id,
         vitrine_id: vit.id,
         forma_pagamento,
-        parcelas: forma_pagamento === "cartao" ? parcelas : 1,
+        parcelas: forma_pagamento === "cartao" ? parcelasCartao : 1,
         valor_total: valorTotal,
         valor_parcela: valorParcela,
         status: "pendente",
@@ -124,11 +124,9 @@ serve(async (req) => {
     };
 
     if (forma_pagamento === "cartao") {
-      if (parcelas > 1) {
-        basePayload.installmentCount = parcelas;
-        basePayload.installmentValue = valorParcela;
-        delete basePayload.value;
-      }
+      basePayload.installmentCount = parcelasCartao;
+      basePayload.installmentValue = valorParcelaCartao;
+      delete basePayload.value;
       if (!cartao) throw new Error("Dados do cartão são obrigatórios");
       basePayload.creditCard = {
         holderName: cartao.holderName,
