@@ -72,6 +72,9 @@ function AlunoDetalhes() {
   const [vitrinePrecoPix, setVitrinePrecoPix] = useState("");
   const [vitrinePrecoCartao, setVitrinePrecoCartao] = useState("");
   const [vitrineMaxParcelas, setVitrineMaxParcelas] = useState("12");
+  const [vitrinePrecoNormal, setVitrinePrecoNormal] = useState("");
+  const [vitrinePrecoComPontos, setVitrinePrecoComPontos] = useState("");
+  const [vitrinePontosNecessarios, setVitrinePontosNecessarios] = useState("300");
   const [editVitrinePrecoPix, setEditVitrinePrecoPix] = useState("");
   const [editVitrinePrecoCartao, setEditVitrinePrecoCartao] = useState("");
   const [editVitrineMaxParcelas, setEditVitrineMaxParcelas] = useState("12");
