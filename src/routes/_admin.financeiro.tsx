@@ -58,6 +58,8 @@ function Financeiro() {
     end: format(endOfMonth(today), "yyyy-MM-dd") 
   });
   const [primeirasMonth, setPrimeirasMonth] = useState(format(today, "yyyy-MM"));
+  const [primeirasStatus, setPrimeirasStatus] = useState<"todas" | "pago" | "aberto">("todas");
+
   const [ultimasMonth, setUltimasMonth] = useState(format(today, "yyyy-MM"));
   const [atrasoPeriod, setAtrasoPeriod] = useState({
     start: format(startOfMonth(today), "yyyy-MM-dd"),
@@ -199,7 +201,7 @@ function Financeiro() {
   });
 
   const { data: primeiras, refetch: refetchPrimeiras } = useQuery({
-    queryKey: ["financeiro-primeiras", primeirasMonth, selectedPoloId, userRole, colabData],
+    queryKey: ["financeiro-primeiras", primeirasMonth, primeirasStatus, selectedPoloId, userRole, colabData],
     queryFn: async () => {
       const [year, month] = primeirasMonth.split("-");
       const start = format(new Date(Number(year), Number(month) - 1, 1), "yyyy-MM-dd");
@@ -212,13 +214,16 @@ function Financeiro() {
         .gte("data_vencimento", start)
         .lte("data_vencimento", end)
         .order("data_vencimento", { ascending: true });
-      
+
+      if (primeirasStatus !== "todas") q = q.eq("status", primeirasStatus);
+
       const { data, error } = await filterByPolo(q);
       if (error) throw error;
       return data;
     },
     enabled: activeFilter === "primeiras"
   });
+
 
   const { data: ultimas, refetch: refetchUltimas } = useQuery({
     queryKey: ["financeiro-ultimas", ultimasMonth, selectedPoloId, userRole, colabData],
@@ -648,8 +653,17 @@ function Financeiro() {
               </h3>
               <div className="flex flex-wrap items-center gap-2">
                 <Input type="month" className="w-40" value={primeirasMonth} onChange={(e) => setPrimeirasMonth(e.target.value)} />
+                <Select value={primeirasStatus} onValueChange={(v) => setPrimeirasStatus(v as any)}>
+                  <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    <SelectItem value="pago">Somente pagas</SelectItem>
+                    <SelectItem value="aberto">Somente em aberto</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button size="sm" onClick={() => refetchPrimeiras()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
               </div>
+
             </div>
             <p className="text-sm text-muted-foreground mb-4">{primeiras?.length || 0} primeiras parcelas encontradas</p>
             <Table>
