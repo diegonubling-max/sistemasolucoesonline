@@ -515,14 +515,18 @@ function StudentDashboard() {
                             </p>
                           </>
                         ) : (
-                          <>
-                            <p className="text-white font-bold text-sm">
-                              PIX: {formatCurrency(item.preco_pix)}
-                            </p>
+                          <div className="flex items-end justify-between gap-2">
+                            <div className="leading-tight">
+                              <p className="text-white/80 text-[10px] font-medium">{item.max_parcelas}x</p>
+                              <p className="text-white font-extrabold text-lg leading-none">
+                                {formatCurrency(item.preco_cartao / item.max_parcelas)}
+                              </p>
+                              <p className="text-white/80 text-[10px] font-medium">no cartão</p>
+                            </div>
                             <p className="text-white/80 text-[10px] font-medium">
-                              Cartão: até {item.max_parcelas}x de {formatCurrency(item.preco_cartao / item.max_parcelas)}
+                              Total: {formatCurrency(item.preco_cartao)}
                             </p>
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>
