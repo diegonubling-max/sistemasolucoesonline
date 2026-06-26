@@ -123,6 +123,7 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
                         </Button>
                       </a>
                     )}
+                    {/* Botão de excluir desativado temporariamente
                     {canDelete && alunoId && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -149,6 +150,7 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
+                    */}
                   </div>
                 </li>
               );
