@@ -365,6 +365,33 @@ export type Database = {
           },
         ]
       }
+      alunos_exclusao_log: {
+        Row: {
+          aluno_id: string | null
+          ctr: number | null
+          excluido_em: string | null
+          excluido_por: string | null
+          id: string
+          nome: string | null
+        }
+        Insert: {
+          aluno_id?: string | null
+          ctr?: number | null
+          excluido_em?: string | null
+          excluido_por?: string | null
+          id?: string
+          nome?: string | null
+        }
+        Update: {
+          aluno_id?: string | null
+          ctr?: number | null
+          excluido_em?: string | null
+          excluido_por?: string | null
+          id?: string
+          nome?: string | null
+        }
+        Relationships: []
+      }
       aulas: {
         Row: {
           ativo: boolean
