@@ -7,6 +7,8 @@ import {
   Eye, EyeOff, Upload, Image as ImageIcon
 } from "lucide-react";
 import { BannersPoloManager } from "@/components/admin/BannersPoloManager";
+import { Switch } from "@/components/ui/switch";
+import { MessageCircle } from "lucide-react";
 
 
 import { supabase } from "@/integrations/supabase/client";
