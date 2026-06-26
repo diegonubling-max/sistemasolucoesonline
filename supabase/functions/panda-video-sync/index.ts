@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const PANDA_API_KEY = "panda-7a993d492e405bbf56879fc04322ffda815f60f7c5762f74f2588e3607835cf9";
-const PANDA_BASE = "https://api.pandavideo.com.br";
+const PANDA_BASE = "https://api-v2.pandavideo.com.br";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,7 +29,7 @@ serve(async (req) => {
 
     for (const folder of folders) {
       const videosResp = await fetch(
-        `${PANDA_BASE}/videos?folder_id=${folder.id}&per_page=100`,
+        `${PANDA_BASE}/videos?folder_id=${folder.id}&limit=100`,
         { headers: { Authorization: PANDA_API_KEY } }
       );
       const videosData = await videosResp.json();
