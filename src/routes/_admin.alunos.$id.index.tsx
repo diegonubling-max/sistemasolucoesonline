@@ -675,6 +675,46 @@ function AlunoDetalhes() {
                   <Info label="Data do cadastro" value={formatDate(aluno.created_at)} />
                 </CardContent>
               </Card>
+              {(() => {
+                const total = milhas?.pontos_total ?? 0;
+                const disp = milhas?.pontos_disponiveis ?? 0;
+                const nivel = milhas?.nivel ?? "🌱 Iniciante";
+                const tiers = [
+                  { min: 0, max: 450, label: "🌱 Iniciante", next: 451 },
+                  { min: 451, max: 700, label: "📚 Estudante", next: 701 },
+                  { min: 701, max: 1200, label: "⭐ Dedicado", next: 1201 },
+                  { min: 1201, max: Infinity, label: "🏆 Destaque", next: null as number | null },
+                ];
+                const tier = tiers.find((t) => total >= t.min && total <= t.max)!;
+                const pct = tier.next ? Math.min(100, ((total - tier.min) / (tier.next - tier.min)) * 100) : 100;
+                return (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Star className="h-4 w-4 text-yellow-500" /> Milhas EJA
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {!milhas ? (
+                        <p className="text-sm text-muted-foreground">0 pts — 🌱 Iniciante</p>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold">{nivel}</span>
+                            <Badge variant="secondary">{disp} pts disponíveis</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{total} pts no total</p>
+                          <Progress value={pct} />
+                          <p className="text-[11px] text-muted-foreground">
+                            {tier.next ? `${tier.next - total} pts para o próximo nível` : "Nível máximo atingido"}
+                          </p>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+
               {aluno.observacao && (
                 <Card>
                   <CardHeader><CardTitle className="text-base">Observações</CardTitle></CardHeader>
