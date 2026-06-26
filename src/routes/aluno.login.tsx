@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,17 @@ function AlunoLogin() {
   const [ctr, setCtr] = useState("");
   const [password, setPassword] = useState("");
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const msg = sessionStorage.getItem("session_expired_message");
+    if (msg) {
+      sessionStorage.removeItem("session_expired_message");
+      toast.error(msg);
+    }
+  }, []);
+
+
 
   useQuery({
     queryKey: ["global-configs-login"],

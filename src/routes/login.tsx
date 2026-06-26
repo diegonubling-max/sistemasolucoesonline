@@ -37,6 +37,16 @@ function LoginPage() {
     if (session) navigate({ to: "/" });
   }, [session, navigate]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const msg = sessionStorage.getItem("session_expired_message");
+    if (msg) {
+      sessionStorage.removeItem("session_expired_message");
+      toast.error(msg);
+    }
+  }, []);
+
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
