@@ -334,7 +334,7 @@ function AlunoDetalhes() {
 
 
   const resetToDefaultPassword = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (notify: boolean) => {
       if (!aluno?.email || !aluno?.nome) return;
       const primeiroNomeRaw = aluno.nome.split(' ')[0] ?? '';
       const primeiroNomeLower = primeiroNomeRaw.toLowerCase();
@@ -345,7 +345,7 @@ function AlunoDetalhes() {
         p_nova_senha: senhaPadrao,
       });
       if (error) throw error;
-      if (aluno.telefone) {
+      if (notify && aluno.telefone) {
         try {
           const mensagem =
             `*🔐 Soluções Online — Senha redefinida!*\n\n` +
@@ -360,12 +360,12 @@ function AlunoDetalhes() {
           console.error("Falha ao notificar aluno via WhatsApp:", err);
         }
       }
-      return senhaPadrao;
+      return { senhaPadrao, notified: notify };
     },
-    onSuccess: (senhaGerada) => {
-      if (!senhaGerada) return;
-      toast.success("Senha redefinida e aluno notificado via WhatsApp!");
-      setPasswordToDisplay(senhaGerada);
+    onSuccess: (res) => {
+      if (!res) return;
+      toast.success(res.notified ? "Senha redefinida e aluno notificado via WhatsApp!" : "Senha redefinida!");
+      setPasswordToDisplay(res.senhaPadrao);
       setShowResetDefaultModal(false);
       setShowPasswordResult(true);
     },
