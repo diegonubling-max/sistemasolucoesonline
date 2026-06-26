@@ -21,6 +21,16 @@ function AlunoLogin() {
   const [password, setPassword] = useState("");
   const [nomeEscola, setNomeEscola] = useState("Soluções Online");
 
+  useState(() => {
+    if (typeof window === "undefined") return;
+    const msg = sessionStorage.getItem("session_expired_message");
+    if (msg) {
+      sessionStorage.removeItem("session_expired_message");
+      toast.error(msg);
+    }
+  });
+
+
   useQuery({
     queryKey: ["global-configs-login"],
     queryFn: async () => {
