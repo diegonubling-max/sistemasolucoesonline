@@ -42,6 +42,7 @@ function AlunosList() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [studentToDelete, setStudentToDelete] = useState<{ id: string; nome: string; email: string; hasMatriculas: boolean } | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [studentForContract, setStudentForContract] = useState<any | null>(null);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [globalSearchCpf, setGlobalSearchCpf] = useState("");
