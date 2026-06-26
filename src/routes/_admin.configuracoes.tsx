@@ -308,6 +308,7 @@ function AdminSettings() {
     { id: "webhook", label: "Webhook", icon: Bell },
     { id: "banners", label: "Banners dos Polos", icon: ImageIcon },
     ...(isSuperAdmin ? [{ id: "notificacoes", label: "Notificações", icon: Bell }] : []),
+    ...(isSuperAdmin ? [{ id: "disparos", label: "Disparos WhatsApp", icon: MessageCircle }] : []),
     ...(isSuperAdmin ? [{ id: "admins", label: "Administradores", icon: ShieldPlus }] : []),
   ];
 
