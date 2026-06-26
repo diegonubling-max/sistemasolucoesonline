@@ -170,32 +170,12 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
         </div>
       )}
 
-      {isSuperAdmin && (
+      {false && isSuperAdmin && (
         <div className="px-3 py-4 border-b border-sidebar-border">
-          <p className="text-[10px] text-sidebar-foreground/50 font-bold uppercase mb-2 px-3 tracking-widest">Seletor de Polo</p>
-          <Select value={selectedPoloId} onValueChange={handlePoloChange}>
-            <SelectTrigger className="w-full bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80 transition-all h-10">
-              <SelectValue placeholder="Selecione o polo" />
-            </SelectTrigger>
-            <SelectContent className="bg-sidebar border-sidebar-border text-sidebar-foreground">
-              <SelectItem value="all" className="focus:bg-sidebar-primary focus:text-white cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span>Todos os Polos</span>
-                </div>
-              </SelectItem>
-              {polos?.map(p => (
-                <SelectItem key={p.id} value={p.id} className="focus:bg-sidebar-primary focus:text-white cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#2ECC71]" />
-                    <span>{p.nome}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Seletor de polo oculto temporariamente - lógica preservada */}
         </div>
       )}
+
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {items.map((item) => {
