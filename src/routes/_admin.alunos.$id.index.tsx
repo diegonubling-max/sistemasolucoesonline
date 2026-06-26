@@ -935,10 +935,19 @@ function AlunoDetalhes() {
       <Dialog open={showResetDefaultModal} onOpenChange={setShowResetDefaultModal}>
         <DialogContent>
           <DialogHeader><DialogTitle>Confirmar redefinição</DialogTitle></DialogHeader>
-          <div className="py-4 text-sm">
-            Redefinir senha para <strong>1234{(aluno.nome?.split(' ')[0] ?? '').toLowerCase()}</strong>? O aluno será notificado.
+          <div className="py-4 text-sm space-y-2">
+            <p>Redefinir senha para <strong>1234{(aluno.nome?.split(' ')[0] ?? '').toLowerCase()}</strong>.</p>
+            <p className="font-medium">Deseja notificar o aluno via WhatsApp sobre a nova senha?</p>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowResetDefaultModal(false)}>Não</Button><Button onClick={() => resetToDefaultPassword.mutate()} disabled={resetToDefaultPassword.isPending}>{resetToDefaultPassword.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}Sim, redefinir</Button></DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2 flex-col sm:flex-row">
+            <Button variant="outline" onClick={() => setShowResetDefaultModal(false)} disabled={resetToDefaultPassword.isPending}>Cancelar</Button>
+            <Button variant="secondary" onClick={() => resetToDefaultPassword.mutate(false)} disabled={resetToDefaultPassword.isPending}>
+              {resetToDefaultPassword.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}Não, apenas redefinir
+            </Button>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={() => resetToDefaultPassword.mutate(true)} disabled={resetToDefaultPassword.isPending}>
+              {resetToDefaultPassword.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}Sim, notificar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={showPasswordResult} onOpenChange={setShowPasswordResult}>
