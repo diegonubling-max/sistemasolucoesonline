@@ -328,20 +328,25 @@ function AlunosList() {
                       >
                         <Power className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Excluir"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setStudentToDelete({ 
-                          id: a.id, 
-                          nome: a.nome, 
-                          email: a.email ?? "",
-                          hasMatriculas: Array.isArray(a.matriculas) && a.matriculas.length > 0
-                        })}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {isSuperAdmin && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Excluir"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => {
+                            setDeleteConfirmName("");
+                            setStudentToDelete({
+                              id: a.id,
+                              nome: a.nome,
+                              email: a.email ?? "",
+                              hasMatriculas: Array.isArray(a.matriculas) && a.matriculas.length > 0
+                            });
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
