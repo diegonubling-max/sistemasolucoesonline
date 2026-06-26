@@ -812,6 +812,12 @@ function AdminSettings() {
               </div>
             )}
 
+            {activeTab === 'disparos' && isSuperAdmin && (
+              <div className="animate-in slide-in-from-right-2 duration-300">
+                <DisparosWhatsAppCard />
+              </div>
+            )}
+
             {activeTab === 'admins' && (
               <div className="animate-in slide-in-from-right-2 duration-300">
                 <Card>
