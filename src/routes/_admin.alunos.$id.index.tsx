@@ -105,6 +105,18 @@ function AlunoDetalhes() {
     },
   });
 
+  const { data: milhas } = useQuery({
+    queryKey: ["aluno-milhas", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("milhas_eja")
+        .select("pontos_total, pontos_disponiveis, nivel")
+        .eq("aluno_id", id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   const { data: parcelas } = useQuery({
     queryKey: ["aluno-parcelas", id],
     queryFn: async () => {
