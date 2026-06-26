@@ -19,63 +19,96 @@ serve(async (req) => {
   );
 
   try {
+    let folderName: string | undefined;
+    try {
+      const body = await req.json();
+      folderName = body?.folder_name;
+    } catch {
+      // sem body — ok
+    }
+
     const foldersResp = await fetch(`${PANDA_BASE}/folders`, {
       headers: { Authorization: PANDA_API_KEY },
     });
     const foldersData = await foldersResp.json();
     const folders = foldersData.folders || foldersData || [];
 
-    const resultados: any[] = [];
-
-    for (const folder of folders) {
-      const videosResp = await fetch(
-        `${PANDA_BASE}/videos?folder_id=${folder.id}&limit=100`,
-        { headers: { Authorization: PANDA_API_KEY } }
+    // Sem folder_name → retorna apenas a lista de pastas disponíveis
+    if (!folderName) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          pastas: folders.map((f: any) => ({ id: f.id, name: f.name })),
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-      const videosData = await videosResp.json();
-      const videos = videosData.videos || videosData || [];
+    }
 
-      const { data: curso } = await supabase
-        .from("cursos")
-        .select("id, nome")
-        .ilike("nome", folder.name)
-        .maybeSingle();
+    const folder = folders.find(
+      (f: any) => (f.name || "").toLowerCase() === folderName!.toLowerCase()
+    );
 
-      if (!curso) {
-        resultados.push({ pasta: folder.name, status: "curso não encontrado no banco" });
-        continue;
-      }
+    if (!folder) {
+      return new Response(
+        JSON.stringify({ error: `Pasta "${folderName}" não encontrada no Panda Video` }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-      let inseridos = 0;
-      for (let i = 0; i < videos.length; i++) {
-        const v = videos[i];
-        const playerUrl = `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
+    const videosResp = await fetch(
+      `${PANDA_BASE}/videos?folder_id=${folder.id}&limit=100`,
+      { headers: { Authorization: PANDA_API_KEY } }
+    );
+    const videosData = await videosResp.json();
+    const videos = videosData.videos || videosData || [];
 
-        const { error } = await supabase.from("aulas").upsert(
-          {
-            curso_id: curso.id,
-            titulo: v.title || v.name,
-            url_video: playerUrl,
-            ordem: i + 1,
-            ativo: true,
-          },
-          { onConflict: "curso_id,ordem" }
-        );
+    const { data: curso } = await supabase
+      .from("cursos")
+      .select("id, nome")
+      .ilike("nome", folder.name)
+      .maybeSingle();
 
-        if (!error) inseridos++;
-      }
+    if (!curso) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          pasta: folder.name,
+          status: "curso não encontrado no banco",
+          videos: videos.length,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-      resultados.push({
+    let inseridos = 0;
+    for (let i = 0; i < videos.length; i++) {
+      const v = videos[i];
+      const playerUrl = `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
+
+      const { error } = await supabase.from("aulas").upsert(
+        {
+          curso_id: curso.id,
+          titulo: v.title || v.name,
+          url_video: playerUrl,
+          ordem: i + 1,
+          ativo: true,
+        },
+        { onConflict: "curso_id,ordem" }
+      );
+
+      if (!error) inseridos++;
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
         pasta: folder.name,
         curso: curso.nome,
         videos: videos.length,
         inseridos,
-      });
-    }
-
-    return new Response(JSON.stringify({ success: true, resultados }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 400,
