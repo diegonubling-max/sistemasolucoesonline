@@ -19,6 +19,21 @@ export type ZapiTipoDisparo =
   | "agendamento_prova"
   | "outro";
 
+export async function isDisparoEnabled(nome: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from("configuracoes")
+      .select("valor")
+      .eq("chave", `zapi_disparo_${nome}`)
+      .maybeSingle();
+    if (!data) return true; // default enabled when não existir
+    return data.valor !== "false";
+  } catch (e) {
+    console.warn("[zApi] Falha ao checar toggle:", nome, e);
+    return true;
+  }
+}
+
 export async function sendAgendamentoProva(params: {
   telefone: string;
   nome: string;
