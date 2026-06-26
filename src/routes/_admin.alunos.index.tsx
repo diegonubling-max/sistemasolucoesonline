@@ -71,6 +71,8 @@ function AlunosList() {
     enabled: !!session?.user?.id
   });
 
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
+
   const handleGlobalSearch = async () => {
     if (!globalSearchCpf) return;
     const normalizedCpf = globalSearchCpf.replace(/\D/g, '');
