@@ -190,6 +190,7 @@ function AlunosList() {
       qc.invalidateQueries({ queryKey: ["alunos"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       setStudentToDelete(null);
+      setDeleteConfirmName("");
     },
     onError: (e: Error) => {
       toast.error(e.message);
