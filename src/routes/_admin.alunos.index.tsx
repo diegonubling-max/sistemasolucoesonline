@@ -42,6 +42,7 @@ function AlunosList() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [studentToDelete, setStudentToDelete] = useState<{ id: string; nome: string; email: string; hasMatriculas: boolean } | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [studentForContract, setStudentForContract] = useState<any | null>(null);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [globalSearchCpf, setGlobalSearchCpf] = useState("");
@@ -69,6 +70,8 @@ function AlunosList() {
     },
     enabled: !!session?.user?.id
   });
+
+  const isSuperAdmin = session?.user?.email === 'diegonubling@gmail.com' || userRole === 'admin';
 
   const handleGlobalSearch = async () => {
     if (!globalSearchCpf) return;
@@ -187,6 +190,7 @@ function AlunosList() {
       qc.invalidateQueries({ queryKey: ["alunos"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       setStudentToDelete(null);
+      setDeleteConfirmName("");
     },
     onError: (e: Error) => {
       toast.error(e.message);
@@ -325,20 +329,25 @@ function AlunosList() {
                       >
                         <Power className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Excluir"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setStudentToDelete({ 
-                          id: a.id, 
-                          nome: a.nome, 
-                          email: a.email ?? "",
-                          hasMatriculas: Array.isArray(a.matriculas) && a.matriculas.length > 0
-                        })}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {isSuperAdmin && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Excluir"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => {
+                            setDeleteConfirmName("");
+                            setStudentToDelete({
+                              id: a.id,
+                              nome: a.nome,
+                              email: a.email ?? "",
+                              hasMatriculas: Array.isArray(a.matriculas) && a.matriculas.length > 0
+                            });
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -376,15 +385,15 @@ function AlunosList() {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!studentToDelete} onOpenChange={(open) => !open && setStudentToDelete(null)}>
-        <AlertDialogContent className="max-w-[400px]">
+      <AlertDialog open={!!studentToDelete} onOpenChange={(open) => { if (!open) { setStudentToDelete(null); setDeleteConfirmName(""); } }}>
+        <AlertDialogContent className="max-w-[440px]">
           <AlertDialogHeader className="items-center text-center">
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-2">
               <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
             <AlertDialogTitle className="text-xl font-bold">Excluir aluno?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
-              Você está prestes a excluir o aluno <span className="font-bold text-foreground">[{studentToDelete?.nome}]</span>. 
+              Você está prestes a excluir o aluno <span className="font-bold text-foreground">{studentToDelete?.nome}</span>.
               {studentToDelete?.hasMatriculas && (
                 <div className="bg-red-50 text-red-800 p-2 rounded mt-2 text-xs flex gap-2 items-center text-left">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -394,15 +403,36 @@ function AlunosList() {
               <div className="mt-2">Esta ação não pode ser desfeita e todos os dados relacionados serão removidos permanentemente.</div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="mt-2 text-left">
+            <label className="text-sm font-medium text-foreground block mb-1">
+              Para confirmar, digite o nome do aluno: <span className="font-bold">{studentToDelete?.nome}</span>
+            </label>
+            <Input
+              autoFocus
+              value={deleteConfirmName}
+              onChange={(e) => setDeleteConfirmName(e.target.value)}
+              placeholder="Digite o nome exato do aluno"
+              disabled={deleteMutation.isPending}
+            />
+          </div>
           <AlertDialogFooter className="sm:justify-center gap-2 mt-4">
             <AlertDialogCancel disabled={deleteMutation.isPending} className="mt-0 sm:flex-1">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
-                if (studentToDelete) deleteMutation.mutate(studentToDelete);
+                if (!studentToDelete) return;
+                if (deleteConfirmName.trim() !== studentToDelete.nome.trim()) {
+                  toast.error("O nome digitado não confere com o nome do aluno.");
+                  return;
+                }
+                deleteMutation.mutate(studentToDelete);
               }}
-              className="bg-[#DC2626] hover:bg-red-700 text-white sm:flex-1"
-              disabled={deleteMutation.isPending}
+              className="bg-[#DC2626] hover:bg-red-700 text-white sm:flex-1 disabled:opacity-50"
+              disabled={
+                deleteMutation.isPending ||
+                !studentToDelete ||
+                deleteConfirmName.trim() !== (studentToDelete?.nome ?? "").trim()
+              }
             >
               {deleteMutation.isPending ? (
                 <>
@@ -410,7 +440,7 @@ function AlunosList() {
                   Excluindo...
                 </>
               ) : (
-                "Sim, excluir"
+                "Confirmar exclusão"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
