@@ -19,6 +19,21 @@ export type ZapiTipoDisparo =
   | "agendamento_prova"
   | "outro";
 
+export async function isDisparoEnabled(nome: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from("configuracoes")
+      .select("valor")
+      .eq("chave", `zapi_disparo_${nome}`)
+      .maybeSingle();
+    if (!data) return true; // default enabled when não existir
+    return data.valor !== "false";
+  } catch (e) {
+    console.warn("[zApi] Falha ao checar toggle:", nome, e);
+    return true;
+  }
+}
+
 export async function sendAgendamentoProva(params: {
   telefone: string;
   nome: string;
@@ -26,6 +41,7 @@ export async function sendAgendamentoProva(params: {
   horaProva: string; // HH:mm[:ss]
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('agendamento_prova'))) { console.log('[zApi] disparo desativado:', 'agendamento_prova'); return; }
   const nomeExibicao = (params.nome || "").trim().split(/\s+/)[0] || "";
   const nomeFmt = nomeExibicao
     ? nomeExibicao.charAt(0).toUpperCase() + nomeExibicao.slice(1).toLowerCase()
@@ -127,6 +143,7 @@ export async function sendBoasVindasMatricula(params: {
   ctr: number | string;
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('boas_vindas'))) { console.log('[zApi] disparo desativado:', 'boas_vindas'); return; }
   const primeiroNome = getPrimeiroNome(params.nome);
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🎓 Bem-vindo(a) à Soluções Online!*
@@ -160,6 +177,7 @@ export async function sendLembreteVencimento(params: {
   dataVencimento: string;
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('lembrete_vencimento'))) { console.log('[zApi] disparo desativado:', 'lembrete_vencimento'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*⚠️ Soluções Online — Lembrete de Pagamento*
 
@@ -178,6 +196,7 @@ export async function sendAvisoAtraso(params: {
   dataVencimento: string;
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('aviso_atraso'))) { console.log('[zApi] disparo desativado:', 'aviso_atraso'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🔴 Soluções Online — Parcela em Atraso*
 
@@ -195,6 +214,7 @@ export async function sendConfirmacaoPagamento(params: {
   valor: number;
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('confirmacao_pagamento'))) { console.log('[zApi] disparo desativado:', 'confirmacao_pagamento'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*✅ Soluções Online — Pagamento Confirmado!*
 
@@ -210,6 +230,7 @@ export async function sendBoasVindasPrimeiroAcesso(params: {
   nome: string;
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('motivacional_primeiro_login'))) { console.log('[zApi] disparo desativado:', 'motivacional_primeiro_login'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🎓 Soluções Online*
 
@@ -230,6 +251,7 @@ export async function sendNuncaAcessou(params: {
   ctr: number | string;
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('nunca_acessou'))) { console.log('[zApi] disparo desativado:', 'nunca_acessou'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const primeiroNome = getPrimeiroNome(params.nome);
   const msg = `Olá, *${nomeExibicao}*! 👋
@@ -249,6 +271,7 @@ export async function sendSemAcesso4Dias(params: {
   materia: string | null;
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('4_dias_sem_acessar'))) { console.log('[zApi] disparo desativado:', '4_dias_sem_acessar'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const aula = params.ultimaAula || "suas aulas";
   const materia = params.materia || "seus cursos";
@@ -270,6 +293,7 @@ export async function sendMensagemSabado(params: {
   materia: string | null;
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('sabado'))) { console.log('[zApi] disparo desativado:', 'sabado'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const aula = params.ultimaAula || "suas aulas";
   const materia = params.materia || "seus cursos";
@@ -289,6 +313,7 @@ export async function sendMensagemDomingo(params: {
   materia: string | null;
   alunoId?: string | null;
 }) {
+  if (!(await isDisparoEnabled('domingo'))) { console.log('[zApi] disparo desativado:', 'domingo'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const aula = params.ultimaAula || "suas aulas";
   const materia = params.materia || "seus cursos";

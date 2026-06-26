@@ -7,6 +7,8 @@ import {
   Eye, EyeOff, Upload, Image as ImageIcon
 } from "lucide-react";
 import { BannersPoloManager } from "@/components/admin/BannersPoloManager";
+import { Switch } from "@/components/ui/switch";
+import { MessageCircle } from "lucide-react";
 
 
 import { supabase } from "@/integrations/supabase/client";
@@ -306,6 +308,7 @@ function AdminSettings() {
     { id: "webhook", label: "Webhook", icon: Bell },
     { id: "banners", label: "Banners dos Polos", icon: ImageIcon },
     ...(isSuperAdmin ? [{ id: "notificacoes", label: "Notificações", icon: Bell }] : []),
+    ...(isSuperAdmin ? [{ id: "disparos", label: "Disparos WhatsApp", icon: MessageCircle }] : []),
     ...(isSuperAdmin ? [{ id: "admins", label: "Administradores", icon: ShieldPlus }] : []),
   ];
 
@@ -809,6 +812,12 @@ function AdminSettings() {
               </div>
             )}
 
+            {activeTab === 'disparos' && isSuperAdmin && (
+              <div className="animate-in slide-in-from-right-2 duration-300">
+                <DisparosWhatsAppCard />
+              </div>
+            )}
+
             {activeTab === 'admins' && (
               <div className="animate-in slide-in-from-right-2 duration-300">
                 <Card>
@@ -1020,5 +1029,86 @@ function CancelarBoletosMigradosCard() {
     </Card>
   );
 }
+
+const DISPAROS_LIST: { key: string; label: string }[] = [
+  { key: "boas_vindas", label: "Boas-vindas ao matricular" },
+  { key: "confirmacao_pagamento", label: "Confirmação de pagamento" },
+  { key: "lembrete_vencimento", label: "Lembrete 3 dias antes do vencimento" },
+  { key: "aviso_atraso", label: "Aviso de atraso" },
+  { key: "motivacional_primeiro_login", label: "Mensagem motivacional no primeiro login" },
+  { key: "nunca_acessou", label: "Aluno nunca acessou (24h após matrícula)" },
+  { key: "4_dias_sem_acessar", label: "4 dias sem acessar" },
+  { key: "sabado", label: "Sábado" },
+  { key: "domingo", label: "Domingo" },
+  { key: "agendamento_prova", label: "Agendamento de prova" },
+];
+
+function DisparosWhatsAppCard() {
+  const qc = useQueryClient();
+  const chaves = DISPAROS_LIST.map((d) => `zapi_disparo_${d.key}`);
+
+  const { data: configs, isLoading } = useQuery({
+    queryKey: ["zapi-disparos-configs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .select("chave, valor")
+        .in("chave", chaves);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data || []).forEach((r: any) => { map[r.chave] = r.valor; });
+      return map;
+    },
+  });
+
+  const toggle = useMutation({
+    mutationFn: async ({ chave, valor }: { chave: string; valor: string }) => {
+      const { error } = await supabase
+        .from("configuracoes")
+        .upsert({ chave, valor }, { onConflict: "chave" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["zapi-disparos-configs"] });
+    },
+    onError: (e: any) => toast.error("Erro ao salvar: " + e.message),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <MessageCircle className="h-5 w-5 text-green-600" />
+          Disparos WhatsApp (Z-API)
+        </CardTitle>
+        <CardDescription>
+          Habilite ou desabilite cada tipo de disparo automático. Alterações entram em vigor imediatamente.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Carregando...</div>
+        ) : (
+          DISPAROS_LIST.map((d) => {
+            const chave = `zapi_disparo_${d.key}`;
+            const enabled = (configs?.[chave] ?? "true") !== "false";
+            return (
+              <div key={d.key} className="flex items-center justify-between gap-4 rounded-md border p-3">
+                <span className="text-sm font-medium text-gray-800">{d.label}</span>
+                <Switch
+                  checked={enabled}
+                  onCheckedChange={(checked) =>
+                    toggle.mutate({ chave, valor: checked ? "true" : "false" })
+                  }
+                />
+              </div>
+            );
+          })
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 
