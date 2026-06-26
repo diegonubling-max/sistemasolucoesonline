@@ -29,7 +29,7 @@ serve(async (req) => {
 
     for (const folder of folders) {
       const videosResp = await fetch(
-        `${PANDA_BASE}/videos?folder_id=${folder.id}&per_page=100`,
+        `${PANDA_BASE}/videos?folder_id=${folder.id}&limit=100`,
         { headers: { Authorization: PANDA_API_KEY } }
       );
       const videosData = await videosResp.json();
