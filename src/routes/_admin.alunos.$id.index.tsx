@@ -30,6 +30,7 @@ import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
 import { PerfilVocacionalTab } from "@/components/admin/alunos/PerfilVocacionalTab";
 import { MensagensTab } from "@/components/admin/alunos/MensagensTab";
+import { TrocarPacoteModal } from "@/components/admin/TrocarPacoteModal";
 
 import { StatusAlunoBadge, type AlunoStatus } from "@/lib/aluno-status";
 import { notifyPagamentoRecebido } from "@/lib/notify";
@@ -47,6 +48,7 @@ function AlunoDetalhes() {
   const [showPasswordResult, setShowPasswordResult] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
   const [showVitrineModal, setShowVitrineModal] = useState(false);
+  const [showTrocarPacote, setShowTrocarPacote] = useState(false);
   const [showEditVitrineModal, setShowEditVitrineModal] = useState(false);
   const [editingVitrineItem, setEditingVitrineItem] = useState<any>(null);
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
@@ -747,10 +749,15 @@ function AlunoDetalhes() {
         </TabsContent>
 
         <TabsContent value="financeiro" className="space-y-6">
-          <div className="grid grid-cols-3 gap-4">
-            <Card className="bg-green-50"><CardContent className="pt-6"><p className="text-xs text-green-700">Pago</p><p className="text-xl font-bold">R$ {totalPago.toLocaleString("pt-BR")}</p></CardContent></Card>
-            <Card className="bg-yellow-50"><CardContent className="pt-6"><p className="text-xs text-yellow-700">Aberto</p><p className="text-xl font-bold">R$ {totalAberto.toLocaleString("pt-BR")}</p></CardContent></Card>
-            <Card className="bg-primary/5"><CardContent className="pt-6"><p className="text-xs text-primary">Geral</p><p className="text-xl font-bold">R$ {totalGeral.toLocaleString("pt-BR")}</p></CardContent></Card>
+          <div className="flex items-center justify-between gap-4">
+            <div className="grid grid-cols-3 gap-4 flex-1">
+              <Card className="bg-green-50"><CardContent className="pt-6"><p className="text-xs text-green-700">Pago</p><p className="text-xl font-bold">R$ {totalPago.toLocaleString("pt-BR")}</p></CardContent></Card>
+              <Card className="bg-yellow-50"><CardContent className="pt-6"><p className="text-xs text-yellow-700">Aberto</p><p className="text-xl font-bold">R$ {totalAberto.toLocaleString("pt-BR")}</p></CardContent></Card>
+              <Card className="bg-primary/5"><CardContent className="pt-6"><p className="text-xs text-primary">Geral</p><p className="text-xl font-bold">R$ {totalGeral.toLocaleString("pt-BR")}</p></CardContent></Card>
+            </div>
+            <Button variant="outline" onClick={() => setShowTrocarPacote(true)}>
+              Trocar Pacote
+            </Button>
           </div>
           <Card>
             <CardContent className="pt-6">
@@ -973,6 +980,14 @@ function AlunoDetalhes() {
           <Button onClick={() => addToVitrine.mutate()}>Adicionar</Button>
         </DialogContent>
       </Dialog>
+
+      <TrocarPacoteModal
+        open={showTrocarPacote}
+        onOpenChange={setShowTrocarPacote}
+        alunoId={id}
+        poloId={aluno?.polo_id ?? null}
+        parcelas={parcelas}
+      />
     </div>
   );
 }
