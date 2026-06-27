@@ -84,18 +84,18 @@ serve(async (req) => {
     const erros_insert: any[] = [];
     for (let i = 0; i < videos.length; i++) {
       const v = videos[i];
-      const playerUrl = `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
+      const playerUrl =
+        v.video_player ||
+        `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
 
-      const { error } = await supabase.from("aulas").upsert(
-        {
-          curso_id: curso.id,
-          titulo: v.title || v.name,
-          url_video: playerUrl,
-          ordem: i + 1,
-          ativo: true,
-        },
-        { onConflict: "curso_id,ordem" }
-      );
+      const { error } = await supabase.from("aulas").insert({
+        curso_id: curso.id,
+        titulo: v.title || v.name,
+        url_video: playerUrl,
+        duracao_segundos: v.length ?? null,
+        ordem: i + 1,
+        ativo: true,
+      });
 
       if (!error) {
         inseridos++;
