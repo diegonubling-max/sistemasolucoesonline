@@ -97,6 +97,8 @@ export function SalesReport() {
           created_at,
           observacao,
           polo_id,
+          colaborador_id,
+          colaboradores ( id, nome ),
           alunos!inner (
             nome,
             vendedora,
@@ -134,18 +136,17 @@ export function SalesReport() {
 
       let filtered = (data || []).map(m => {
         const aluno = m.alunos as any;
+        const colaborador = (m as any).colaboradores as { id: string; nome: string } | null;
         const matriculaPacotes = (m.matricula_pacotes as any[]) || [];
         const isPersonalizado = matriculaPacotes.length > 0 && matriculaPacotes.some(mp => mp.pacote_id === null);
         const parcelas = (m.parcelas as any[] || []);
         
         let pacoteNome = "";
-        // Valor Total = SUM das parcelas da matrícula (uma linha por matrícula)
         const valorTotal = parcelas.reduce((acc, p) => acc + Number(p.valor), 0);
 
         if (isPersonalizado) {
           pacoteNome = "Negociação Personalizada";
         } else if (matriculaPacotes.length > 0) {
-          // Dedupe pacotes por id para evitar "Cartão 12x, Cartão 12x, ..."
           const seen = new Set<string>();
           const pacs = matriculaPacotes
             .map(mp => mp.pacotes)
@@ -166,6 +167,8 @@ export function SalesReport() {
           alunoNome: aluno?.nome,
           alunoCtr: aluno?.ctr,
           vendedora: aluno?.vendedora || "Não informada",
+          colaboradorId: (m as any).colaborador_id as string | null,
+          colaboradorNome: colaborador?.nome ?? null,
           origem: aluno?.origem || "Outros",
           dataMatricula: m.created_at,
           pacoteNome,
