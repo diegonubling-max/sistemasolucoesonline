@@ -1074,6 +1074,26 @@ function DisparosWhatsAppCard() {
     onError: (e: any) => toast.error("Erro ao salvar: " + e.message),
   });
 
+  const bulkToggle = useMutation({
+    mutationFn: async (enable: boolean) => {
+      const valor = enable ? "true" : "false";
+      const rows = chaves.map((chave) => ({ chave, valor }));
+      const { error } = await supabase
+        .from("configuracoes")
+        .upsert(rows, { onConflict: "chave" });
+      if (error) throw error;
+    },
+    onSuccess: (_data, enable) => {
+      qc.invalidateQueries({ queryKey: ["zapi-disparos-configs"] });
+      toast.success(enable ? "Todos os disparos habilitados" : "Todos os disparos desabilitados");
+    },
+    onError: (e: any) => toast.error("Erro ao salvar: " + e.message),
+  });
+
+  const estados = DISPAROS_LIST.map((d) => (configs?.[`zapi_disparo_${d.key}`] ?? "true") !== "false");
+  const todosOn = estados.length > 0 && estados.every(Boolean);
+  const todosOff = estados.length > 0 && estados.every((v) => !v);
+
   return (
     <Card>
       <CardHeader>
@@ -1089,22 +1109,44 @@ function DisparosWhatsAppCard() {
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Carregando...</div>
         ) : (
-          DISPAROS_LIST.map((d) => {
-            const chave = `zapi_disparo_${d.key}`;
-            const enabled = (configs?.[chave] ?? "true") !== "false";
-            return (
-              <div key={d.key} className="flex items-center justify-between gap-4 rounded-md border p-3">
-                <span className="text-sm font-medium text-gray-800">{d.label}</span>
-                <Switch
-                  checked={enabled}
-                  onCheckedChange={(checked) =>
-                    toggle.mutate({ chave, valor: checked ? "true" : "false" })
-                  }
-                />
+          <>
+            <div className="flex items-center justify-between gap-4 rounded-md border-2 border-dashed p-3 bg-muted/30">
+              <span className="text-sm font-semibold">
+                {todosOn ? "Todos habilitados" : todosOff ? "Todos desabilitados" : "Estado misto"}
+              </span>
+              <div className="flex gap-2">
+                {!todosOn && (
+                  <Button size="sm" variant="default" disabled={bulkToggle.isPending}
+                    onClick={() => bulkToggle.mutate(true)}>
+                    Habilitar todos
+                  </Button>
+                )}
+                {!todosOff && (
+                  <Button size="sm" variant="outline" disabled={bulkToggle.isPending}
+                    onClick={() => bulkToggle.mutate(false)}>
+                    Desabilitar todos
+                  </Button>
+                )}
               </div>
-            );
-          })
+            </div>
+            {DISPAROS_LIST.map((d) => {
+              const chave = `zapi_disparo_${d.key}`;
+              const enabled = (configs?.[chave] ?? "true") !== "false";
+              return (
+                <div key={d.key} className="flex items-center justify-between gap-4 rounded-md border p-3">
+                  <span className="text-sm font-medium text-gray-800">{d.label}</span>
+                  <Switch
+                    checked={enabled}
+                    onCheckedChange={(checked) =>
+                      toggle.mutate({ chave, valor: checked ? "true" : "false" })
+                    }
+                  />
+                </div>
+              );
+            })}
+          </>
         )}
+
       </CardContent>
     </Card>
   );
