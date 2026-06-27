@@ -428,7 +428,7 @@ export function SalesReport() {
           </CardHeader>
           <CardContent className="space-y-6">
             {vendedorasStats.map((v) => (
-              <div key={v.nome} className="p-4 rounded-xl border border-muted-foreground/10 space-y-3">
+              <div key={v.id} className="p-4 rounded-xl border border-muted-foreground/10 space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="font-black text-base">{v.nome}</p>
