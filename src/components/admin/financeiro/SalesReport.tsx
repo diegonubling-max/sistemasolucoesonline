@@ -199,25 +199,23 @@ export function SalesReport() {
 
   const vendedorasStats = useMemo(() => {
     if (!reportData) return [];
-    const map: Record<string, { total: number, valor: number, valorRecebido: number, valorEmAberto: number }> = {};
-    
-    // Default sellers to show even if they have 0 sales
-    const defaultSellers = ["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"];
-    defaultSellers.forEach(s => map[s] = { total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 });
+    const map: Record<string, { nome: string; total: number; valor: number; valorRecebido: number; valorEmAberto: number }> = {};
 
     reportData.forEach(r => {
-      const v = r.vendedora;
-      if (!map[v]) map[v] = { total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
-      map[v].total += 1;
-      map[v].valor += r.valorTotal;
-      map[v].valorRecebido += r.valorRecebido;
-      map[v].valorEmAberto += r.valorEmAberto;
+      // Agrupar por colaborador_id; ignorar matrículas sem colaborador vinculado
+      if (!r.colaboradorId || !r.colaboradorNome) return;
+      const key = r.colaboradorId;
+      if (!map[key]) map[key] = { nome: r.colaboradorNome, total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
+      map[key].total += 1;
+      map[key].valor += r.valorTotal;
+      map[key].valorRecebido += r.valorRecebido;
+      map[key].valorEmAberto += r.valorEmAberto;
     });
 
     const maxValor = Math.max(...Object.values(map).map(m => m.valor), 1);
 
-    return Object.entries(map).map(([nome, data]) => ({
-      nome,
+    return Object.entries(map).map(([id, data]) => ({
+      id,
       ...data,
       percent: (data.valor / maxValor) * 100
     })).sort((a, b) => b.valor - a.valor);
