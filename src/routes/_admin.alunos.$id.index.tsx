@@ -980,6 +980,14 @@ function AlunoDetalhes() {
           <Button onClick={() => addToVitrine.mutate()}>Adicionar</Button>
         </DialogContent>
       </Dialog>
+
+      <TrocarPacoteModal
+        open={showTrocarPacote}
+        onOpenChange={setShowTrocarPacote}
+        alunoId={id}
+        poloId={aluno?.polo_id ?? null}
+        parcelas={parcelas}
+      />
     </div>
   );
 }
