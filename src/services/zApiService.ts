@@ -295,12 +295,18 @@ export async function sendMensagemSabado(params: {
 }) {
   if (!(await isDisparoEnabled('sabado'))) { console.log('[zApi] disparo desativado:', 'sabado'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
-  const aula = params.ultimaAula || "suas aulas";
-  const materia = params.materia || "seus cursos";
-  const msg = `Feliz sábado, *${nomeExibicao}*! ☀️
-Enquanto o mundo descansa, os que constroem o futuro aproveitam cada momento.
-Você sabia que está na aula *${aula}* de *${materia}*? Que tal avançar hoje?
-Família por perto, celular na mão... é o momento perfeito para estudar com calma e sem pressa. 📚
+  const semAula = !params.ultimaAula || !params.materia;
+  const msg = semAula
+    ? `Feliz sábado, *${nomeExibicao}*! ☀️
+O fim de semana é seu — e uns minutinhos de estudo fazem toda a diferença!
+Você ainda não começou suas aulas, mas hoje é um dia perfeito para dar o primeiro passo! 🚀
+Com calma e sem pressa, acessa a área do aluno e começa sua jornada rumo ao diploma. 📚
+A gente acredita em você!
+👉 ${SITE_URL}`
+    : `Feliz sábado, *${nomeExibicao}*! ☀️
+O fim de semana é seu — e uns minutinhos de estudo fazem toda a diferença!
+Você está na aula *${params.ultimaAula}* de *${params.materia}*. Que tal avançar um pouquinho hoje?
+Com a família por perto e o celular na mão, é o momento perfeito para estudar com calma e sem pressa. 📚
 Seu diploma agradece cada minuto dedicado hoje!
 👉 ${SITE_URL}`;
   await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "sabado" });
@@ -315,13 +321,18 @@ export async function sendMensagemDomingo(params: {
 }) {
   if (!(await isDisparoEnabled('domingo'))) { console.log('[zApi] disparo desativado:', 'domingo'); return; }
   const nomeExibicao = getNomeExibicao(params.nome);
-  const aula = params.ultimaAula || "suas aulas";
-  const materia = params.materia || "seus cursos";
-  const msg = `Bom domingo, *${nomeExibicao}*! 🌟
-Um domingo bem aproveitado é aquele que te deixa mais perto dos seus sonhos.
-Enquanto a semana ainda não chegou, que tal dedicar uns minutinhos aos seus estudos?
-Você estava na aula *${aula}* de *${materia}* — cada aula assistida é um passo real rumo ao seu diploma. 🎓
-Invista em você hoje. Seu futuro agradece!
+  const semAula = !params.ultimaAula || !params.materia;
+  const msg = semAula
+    ? `Bom domingo, *${nomeExibicao}*! 🌟
+Domingo é dia de recarregar as energias — e também de dar o primeiro passo rumo ao seu diploma!
+Você ainda não assistiu nenhuma aula, mas nunca é tarde para começar. 🎓
+Dedica uns minutinhos hoje, acessa a área do aluno e dá início à sua história!
+Seu futuro agradece!
+👉 ${SITE_URL}`
+    : `Bom domingo, *${nomeExibicao}*! 🌟
+Domingo é dia de recarregar as energias — e também de dar um passo rumo ao seu diploma!
+Você estava na aula *${params.ultimaAula}* de *${params.materia}* — cada aula assistida é uma conquista real. 🎓
+Dedica uns minutinhos a você hoje. Seu futuro agradece!
 👉 ${SITE_URL}`;
   await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "domingo" });
 }
