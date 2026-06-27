@@ -97,6 +97,8 @@ export function SalesReport() {
           created_at,
           observacao,
           polo_id,
+          colaborador_id,
+          colaboradores ( id, nome ),
           alunos!inner (
             nome,
             vendedora,
@@ -134,18 +136,17 @@ export function SalesReport() {
 
       let filtered = (data || []).map(m => {
         const aluno = m.alunos as any;
+        const colaborador = (m as any).colaboradores as { id: string; nome: string } | null;
         const matriculaPacotes = (m.matricula_pacotes as any[]) || [];
         const isPersonalizado = matriculaPacotes.length > 0 && matriculaPacotes.some(mp => mp.pacote_id === null);
         const parcelas = (m.parcelas as any[] || []);
         
         let pacoteNome = "";
-        // Valor Total = SUM das parcelas da matrícula (uma linha por matrícula)
         const valorTotal = parcelas.reduce((acc, p) => acc + Number(p.valor), 0);
 
         if (isPersonalizado) {
           pacoteNome = "Negociação Personalizada";
         } else if (matriculaPacotes.length > 0) {
-          // Dedupe pacotes por id para evitar "Cartão 12x, Cartão 12x, ..."
           const seen = new Set<string>();
           const pacs = matriculaPacotes
             .map(mp => mp.pacotes)
@@ -166,6 +167,8 @@ export function SalesReport() {
           alunoNome: aluno?.nome,
           alunoCtr: aluno?.ctr,
           vendedora: aluno?.vendedora || "Não informada",
+          colaboradorId: (m as any).colaborador_id as string | null,
+          colaboradorNome: colaborador?.nome ?? null,
           origem: aluno?.origem || "Outros",
           dataMatricula: m.created_at,
           pacoteNome,
@@ -196,25 +199,23 @@ export function SalesReport() {
 
   const vendedorasStats = useMemo(() => {
     if (!reportData) return [];
-    const map: Record<string, { total: number, valor: number, valorRecebido: number, valorEmAberto: number }> = {};
-    
-    // Default sellers to show even if they have 0 sales
-    const defaultSellers = ["Gislaine", "Vera", "Gabrielly", "Maria Eduarda"];
-    defaultSellers.forEach(s => map[s] = { total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 });
+    const map: Record<string, { nome: string; total: number; valor: number; valorRecebido: number; valorEmAberto: number }> = {};
 
     reportData.forEach(r => {
-      const v = r.vendedora;
-      if (!map[v]) map[v] = { total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
-      map[v].total += 1;
-      map[v].valor += r.valorTotal;
-      map[v].valorRecebido += r.valorRecebido;
-      map[v].valorEmAberto += r.valorEmAberto;
+      // Agrupar por colaborador_id; ignorar matrículas sem colaborador vinculado
+      if (!r.colaboradorId || !r.colaboradorNome) return;
+      const key = r.colaboradorId;
+      if (!map[key]) map[key] = { nome: r.colaboradorNome, total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
+      map[key].total += 1;
+      map[key].valor += r.valorTotal;
+      map[key].valorRecebido += r.valorRecebido;
+      map[key].valorEmAberto += r.valorEmAberto;
     });
 
     const maxValor = Math.max(...Object.values(map).map(m => m.valor), 1);
 
-    return Object.entries(map).map(([nome, data]) => ({
-      nome,
+    return Object.entries(map).map(([id, data]) => ({
+      id,
       ...data,
       percent: (data.valor / maxValor) * 100
     })).sort((a, b) => b.valor - a.valor);
@@ -427,7 +428,7 @@ export function SalesReport() {
           </CardHeader>
           <CardContent className="space-y-6">
             {vendedorasStats.map((v) => (
-              <div key={v.nome} className="p-4 rounded-xl border border-muted-foreground/10 space-y-3">
+              <div key={v.id} className="p-4 rounded-xl border border-muted-foreground/10 space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="font-black text-base">{v.nome}</p>
