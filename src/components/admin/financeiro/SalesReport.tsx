@@ -115,7 +115,12 @@ export function SalesReport() {
           ),
           parcelas (
             valor,
-            status
+            status,
+            tipo,
+            numero,
+            tipo_pacote,
+            cartao_parcelas,
+            forma_pagamento
           )
         `)
         .gte("created_at", `${filters.startDate}T00:00:00`)
