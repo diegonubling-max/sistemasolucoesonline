@@ -10,6 +10,73 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
+async function processFolder(supabase: any, folders: any[], folderName: string) {
+  const folder = folders.find(
+    (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
+  );
+
+  if (!folder) {
+    return { folder_name: folderName, error: `Pasta "${folderName}" não encontrada no Panda Video` };
+  }
+
+  const videosResp = await fetch(
+    `${PANDA_BASE}/videos?folder_id=${folder.id}&limit=100`,
+    { headers: { Authorization: PANDA_API_KEY } }
+  );
+  const videosData = await videosResp.json();
+  const videos = videosData.videos || videosData || [];
+
+  const { data: curso } = await supabase
+    .from("cursos")
+    .select("id, nome")
+    .ilike("nome", folder.name)
+    .maybeSingle();
+
+  if (!curso) {
+    return {
+      success: false,
+      pasta: folder.name,
+      status: "curso não encontrado no banco",
+      videos: videos.length,
+    };
+  }
+
+  let inseridos = 0;
+  const erros_insert: any[] = [];
+  for (let i = 0; i < videos.length; i++) {
+    const v = videos[i];
+    const playerUrl =
+      v.video_player ||
+      `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
+
+    const { error } = await supabase.from("aulas").insert({
+      curso_id: curso.id,
+      titulo: v.title || v.name,
+      url_video: playerUrl,
+      duracao_segundos: Math.round(v.length || 0),
+      ordem: i + 1,
+      ativo: true,
+    });
+
+    if (!error) {
+      inseridos++;
+    } else {
+      erros_insert.push({ ordem: i + 1, titulo: v.title || v.name, error });
+    }
+  }
+
+  return {
+    success: true,
+    pasta: folder.name,
+    curso: curso.nome,
+    videos: videos.length,
+    inseridos,
+    videos_raw: videos.slice(0, 2),
+    erro_insert: erros_insert[0] ?? null,
+    erros_insert,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -20,9 +87,11 @@ serve(async (req) => {
 
   try {
     let folderName: string | undefined;
+    let folderNames: string[] | undefined;
     try {
       const body = await req.json();
       folderName = body?.folder_name;
+      folderNames = body?.folder_names;
     } catch {
       // sem body — ok
     }
@@ -32,6 +101,17 @@ serve(async (req) => {
     });
     const foldersData = await foldersResp.json();
     const folders = foldersData.folders || foldersData || [];
+
+    // Array de pastas → processar em paralelo
+    if (Array.isArray(folderNames) && folderNames.length > 0) {
+      const resultados = await Promise.all(
+        folderNames.map((name) => processFolder(supabase, folders, name))
+      );
+      return new Response(
+        JSON.stringify({ success: true, resultados }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Sem folder_name → retorna apenas a lista de pastas disponíveis
     if (!folderName) {
@@ -44,79 +124,12 @@ serve(async (req) => {
       );
     }
 
-    const folder = folders.find(
-      (f: any) => (f.name || "").toLowerCase() === folderName!.toLowerCase()
-    );
-
-    if (!folder) {
-      return new Response(
-        JSON.stringify({ error: `Pasta "${folderName}" não encontrada no Panda Video` }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const videosResp = await fetch(
-      `${PANDA_BASE}/videos?folder_id=${folder.id}&limit=100`,
-      { headers: { Authorization: PANDA_API_KEY } }
-    );
-    const videosData = await videosResp.json();
-    const videos = videosData.videos || videosData || [];
-
-    const { data: curso } = await supabase
-      .from("cursos")
-      .select("id, nome")
-      .ilike("nome", folder.name)
-      .maybeSingle();
-
-    if (!curso) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          pasta: folder.name,
-          status: "curso não encontrado no banco",
-          videos: videos.length,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    let inseridos = 0;
-    const erros_insert: any[] = [];
-    for (let i = 0; i < videos.length; i++) {
-      const v = videos[i];
-      const playerUrl =
-        v.video_player ||
-        `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
-
-      const { error } = await supabase.from("aulas").insert({
-        curso_id: curso.id,
-        titulo: v.title || v.name,
-        url_video: playerUrl,
-        duracao_segundos: Math.round(v.length || 0),
-        ordem: i + 1,
-        ativo: true,
-      });
-
-      if (!error) {
-        inseridos++;
-      } else {
-        erros_insert.push({ ordem: i + 1, titulo: v.title || v.name, error });
-      }
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        pasta: folder.name,
-        curso: curso.nome,
-        videos: videos.length,
-        inseridos,
-        videos_raw: videos.slice(0, 2),
-        erro_insert: erros_insert[0] ?? null,
-        erros_insert,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const resultado = await processFolder(supabase, folders, folderName);
+    const status = (resultado as any).error ? 404 : 200;
+    return new Response(JSON.stringify(resultado), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 400,
