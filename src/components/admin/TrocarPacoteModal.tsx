@@ -52,7 +52,16 @@ export function TrocarPacoteModal({ open, onOpenChange, alunoId, poloId, parcela
 
   const trocar = useMutation({
     mutationFn: async () => {
-      if (!novoPacote) throw new Error("Selecione um pacote");
+      if (!selectedPacoteId) throw new Error("Selecione um pacote");
+
+      // 0) Re-buscar o NOVO pacote direto do banco (evita cache stale)
+      const { data: pacoteFresh, error: pErr } = await supabase
+        .from("pacotes")
+        .select("*")
+        .eq("id", selectedPacoteId)
+        .single();
+      if (pErr || !pacoteFresh) throw new Error("Pacote selecionado não encontrado");
+      console.log("[TrocarPacote] novo pacote:", pacoteFresh);
 
       // 1) Buscar a matrícula
       const { data: matriculas, error: mErr } = await supabase
@@ -91,10 +100,14 @@ export function TrocarPacoteModal({ open, onOpenChange, alunoId, poloId, parcela
             return d;
           })();
 
-      // 4) Gerar novas parcelas
+      // 4) Gerar novas parcelas — TODOS os campos vêm do novo pacote
+      const isCartao = pacoteFresh.tipo === "cartao";
+      const formaPag = pacoteFresh.tipo; // 'pix' | 'boleto' | 'cartao'
+      const numParcelas = pacoteFresh.numero_parcelas;
+      const valorParcela = Number(pacoteFresh.valor_parcela);
+
       const novas: any[] = [];
-      const isCartao = novoPacote.tipo === "cartao";
-      for (let i = 0; i < novoPacote.numero_parcelas; i++) {
+      for (let i = 0; i < numParcelas; i++) {
         const venc = new Date(base);
         venc.setMonth(base.getMonth() + i);
         novas.push({
@@ -102,15 +115,16 @@ export function TrocarPacoteModal({ open, onOpenChange, alunoId, poloId, parcela
           polo_id: poloId,
           tipo: "parcela",
           numero: i + 1,
-          valor: novoPacote.valor_parcela,
+          valor: valorParcela,
           data_vencimento: venc.toISOString().slice(0, 10),
           status: "aberto",
-          descricao: `Parcela ${i + 1}/${novoPacote.numero_parcelas}`,
-          tipo_pacote: novoPacote.nome,
-          forma_pagamento: isCartao ? "cartao" : "boleto",
-          cartao_parcelas: isCartao ? novoPacote.numero_parcelas : null,
+          descricao: `Parcela ${i + 1}/${numParcelas}`,
+          tipo_pacote: pacoteFresh.nome,
+          forma_pagamento: formaPag,
+          cartao_parcelas: isCartao ? numParcelas : null,
         });
       }
+      console.log("[TrocarPacote] gerando", novas.length, "parcelas de", valorParcela, formaPag);
 
       const { data: inserted, error: iErr } = await supabase
         .from("parcelas")
