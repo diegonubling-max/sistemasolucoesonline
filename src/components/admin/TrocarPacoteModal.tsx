@@ -136,11 +136,11 @@ export function TrocarPacoteModal({ open, onOpenChange, alunoId, poloId, parcela
       await supabase.from("matricula_pacotes").delete().eq("matricula_id", matriculaId);
       await supabase.from("matricula_pacotes").insert({
         matricula_id: matriculaId,
-        pacote_id: novoPacote.id,
+        pacote_id: pacoteFresh.id,
       });
 
       // 6) Gerar cobranças no Asaas
-      const asaasTipo: "PIX" | "BOLETO" = novoPacote.tipo === "pix" ? "PIX" : "BOLETO";
+      const asaasTipo: "PIX" | "BOLETO" = pacoteFresh.tipo === "pix" ? "PIX" : "BOLETO";
       if (inserted && !isCartao) {
         setProgress({ current: 0, total: inserted.length });
         let c = 0;
