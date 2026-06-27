@@ -183,8 +183,8 @@ export function SalesReport() {
           } else if (tipoPac) {
             sufixo = tipoPac;
           }
-          if (sufixo) {
-            pacoteNome = pacoteNome ? `${pacoteNome} — ${sufixo}` : sufixo;
+          if (sufixo && !pacoteNome) {
+            pacoteNome = sufixo;
           }
         }
         if (!pacoteNome) pacoteNome = "—";
