@@ -81,6 +81,7 @@ serve(async (req) => {
     }
 
     let inseridos = 0;
+    const erros_insert: any[] = [];
     for (let i = 0; i < videos.length; i++) {
       const v = videos[i];
       const playerUrl = `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
@@ -96,7 +97,11 @@ serve(async (req) => {
         { onConflict: "curso_id,ordem" }
       );
 
-      if (!error) inseridos++;
+      if (!error) {
+        inseridos++;
+      } else {
+        erros_insert.push({ ordem: i + 1, titulo: v.title || v.name, error });
+      }
     }
 
     return new Response(
@@ -106,6 +111,9 @@ serve(async (req) => {
         curso: curso.nome,
         videos: videos.length,
         inseridos,
+        videos_raw: videos.slice(0, 2),
+        erro_insert: erros_insert[0] ?? null,
+        erros_insert,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
