@@ -92,7 +92,7 @@ serve(async (req) => {
         curso_id: curso.id,
         titulo: v.title || v.name,
         url_video: playerUrl,
-        duracao_segundos: v.length ?? null,
+        duracao_segundos: Math.round(v.length || 0),
         ordem: i + 1,
         ativo: true,
       });
