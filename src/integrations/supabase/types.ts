@@ -398,6 +398,7 @@ export type Database = {
           created_at: string
           curso_id: string
           descricao: string | null
+          duracao_segundos: number | null
           id: string
           ordem: number
           thumbnail_url: string | null
@@ -409,6 +410,7 @@ export type Database = {
           created_at?: string
           curso_id: string
           descricao?: string | null
+          duracao_segundos?: number | null
           id?: string
           ordem?: number
           thumbnail_url?: string | null
@@ -420,6 +422,7 @@ export type Database = {
           created_at?: string
           curso_id?: string
           descricao?: string | null
+          duracao_segundos?: number | null
           id?: string
           ordem?: number
           thumbnail_url?: string | null
