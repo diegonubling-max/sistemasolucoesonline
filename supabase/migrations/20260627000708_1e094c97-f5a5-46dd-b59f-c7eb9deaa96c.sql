@@ -1,0 +1,1 @@
+ALTER TABLE public.aulas ADD COLUMN IF NOT EXISTS duracao_segundos integer;
