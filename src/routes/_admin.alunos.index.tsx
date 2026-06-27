@@ -156,6 +156,7 @@ function AlunosList() {
           q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
         }
       }
+      q = q.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       const { data, error, count } = await q;
       if (error) throw error;
       return { rows: data ?? [], count: count ?? 0 };
