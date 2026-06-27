@@ -10,6 +10,20 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
+const MAPEAMENTO_CURSOS: Record<string, string> = {
+  "Excel": "Excel Básico e Avançado",
+  "Microsoft Word": "Word",
+  "Inteligência Artificial": "Inteligencia Artificial - IA",
+  "PhotoShop CC": "Photoshop",
+  "Power BI": "Power BI",
+  "Power Point": "Power Point",
+  "Programação de sites Wordpress": "Wordpress",
+  "Segurança na Internet": "Segurança na Internet",
+  "SketchUp": "SketchUp",
+  "Canva": "Canva",
+  "Eletricista": "Eletricista",
+};
+
 async function processFolder(supabase: any, folders: any[], folderName: string) {
   const folder = folders.find(
     (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
@@ -26,10 +40,11 @@ async function processFolder(supabase: any, folders: any[], folderName: string) 
   const videosData = await videosResp.json();
   const videos = videosData.videos || videosData || [];
 
+  const nomeCurso = MAPEAMENTO_CURSOS[folder.name] || folder.name;
   const { data: curso } = await supabase
     .from("cursos")
     .select("id, nome")
-    .ilike("nome", folder.name)
+    .ilike("nome", nomeCurso)
     .maybeSingle();
 
   if (!curso) {
