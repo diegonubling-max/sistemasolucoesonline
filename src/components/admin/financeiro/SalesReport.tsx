@@ -164,7 +164,31 @@ export function SalesReport() {
           pacoteNome = pacs.map((p: any) => p.nome).join(", ");
         }
 
-        const valorRecebido = parcelas.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0);
+        // Enriquecer com info de forma de pagamento da 1ª parcela
+        const primeira = parcelas.find(p => p.tipo === 'parcela' && Number(p.numero) === 1);
+        if (primeira) {
+          const tipoPac = (primeira.tipo_pacote || '').toString();
+          const forma = (primeira.forma_pagamento || '').toString();
+          const cartaoParc = Number(primeira.cartao_parcelas || 0);
+          const valorParc = Number(primeira.valor || 0);
+          let sufixo = "";
+          if (tipoPac === 'cartao_acelerado' && cartaoParc > 0) {
+            sufixo = `Cartão Acelerado (Cartão - ${cartaoParc}x de ${formatCurrency(valorParc)})`;
+          } else if (forma === 'cartao' && cartaoParc > 0) {
+            sufixo = `Cartão (${cartaoParc}x de ${formatCurrency(valorParc)})`;
+          } else if (forma === 'pix') {
+            sufixo = 'PIX';
+          } else if (forma === 'avista') {
+            sufixo = 'À Vista';
+          } else if (tipoPac) {
+            sufixo = tipoPac;
+          }
+          if (sufixo) {
+            pacoteNome = pacoteNome ? `${pacoteNome} — ${sufixo}` : sufixo;
+          }
+        }
+        if (!pacoteNome) pacoteNome = "—";
+
         const valorEmAberto = parcelas.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0);
 
         return {
