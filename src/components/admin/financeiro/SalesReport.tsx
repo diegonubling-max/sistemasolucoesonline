@@ -189,6 +189,7 @@ export function SalesReport() {
         }
         if (!pacoteNome) pacoteNome = "—";
 
+        const valorRecebido = parcelas.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0);
         const valorEmAberto = parcelas.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0);
 
         return {
