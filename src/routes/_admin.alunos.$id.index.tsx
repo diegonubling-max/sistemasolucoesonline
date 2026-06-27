@@ -48,6 +48,7 @@ function AlunoDetalhes() {
   const [showPasswordResult, setShowPasswordResult] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
   const [showVitrineModal, setShowVitrineModal] = useState(false);
+  const [showTrocarPacote, setShowTrocarPacote] = useState(false);
   const [showEditVitrineModal, setShowEditVitrineModal] = useState(false);
   const [editingVitrineItem, setEditingVitrineItem] = useState<any>(null);
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
