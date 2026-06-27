@@ -749,10 +749,15 @@ function AlunoDetalhes() {
         </TabsContent>
 
         <TabsContent value="financeiro" className="space-y-6">
-          <div className="grid grid-cols-3 gap-4">
-            <Card className="bg-green-50"><CardContent className="pt-6"><p className="text-xs text-green-700">Pago</p><p className="text-xl font-bold">R$ {totalPago.toLocaleString("pt-BR")}</p></CardContent></Card>
-            <Card className="bg-yellow-50"><CardContent className="pt-6"><p className="text-xs text-yellow-700">Aberto</p><p className="text-xl font-bold">R$ {totalAberto.toLocaleString("pt-BR")}</p></CardContent></Card>
-            <Card className="bg-primary/5"><CardContent className="pt-6"><p className="text-xs text-primary">Geral</p><p className="text-xl font-bold">R$ {totalGeral.toLocaleString("pt-BR")}</p></CardContent></Card>
+          <div className="flex items-center justify-between gap-4">
+            <div className="grid grid-cols-3 gap-4 flex-1">
+              <Card className="bg-green-50"><CardContent className="pt-6"><p className="text-xs text-green-700">Pago</p><p className="text-xl font-bold">R$ {totalPago.toLocaleString("pt-BR")}</p></CardContent></Card>
+              <Card className="bg-yellow-50"><CardContent className="pt-6"><p className="text-xs text-yellow-700">Aberto</p><p className="text-xl font-bold">R$ {totalAberto.toLocaleString("pt-BR")}</p></CardContent></Card>
+              <Card className="bg-primary/5"><CardContent className="pt-6"><p className="text-xs text-primary">Geral</p><p className="text-xl font-bold">R$ {totalGeral.toLocaleString("pt-BR")}</p></CardContent></Card>
+            </div>
+            <Button variant="outline" onClick={() => setShowTrocarPacote(true)}>
+              Trocar Pacote
+            </Button>
           </div>
           <Card>
             <CardContent className="pt-6">
