@@ -40,10 +40,11 @@ async function processFolder(supabase: any, folders: any[], folderName: string) 
   const videosData = await videosResp.json();
   const videos = videosData.videos || videosData || [];
 
+  const nomeCurso = MAPEAMENTO_CURSOS[folder.name] || folder.name;
   const { data: curso } = await supabase
     .from("cursos")
     .select("id, nome")
-    .ilike("nome", folder.name)
+    .ilike("nome", nomeCurso)
     .maybeSingle();
 
   if (!curso) {
