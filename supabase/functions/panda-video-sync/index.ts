@@ -197,7 +197,7 @@ serve(async (req) => {
       );
     }
 
-    const resultado = await processFolder(supabase, folders, folderName);
+    const resultado = await processFolder(supabase, folders, folderName, mode);
     const status = (resultado as any).error ? 404 : 200;
     return new Response(JSON.stringify(resultado), {
       status,
