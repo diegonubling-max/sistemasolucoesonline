@@ -217,6 +217,38 @@ function Dashboard() {
     },
   });
 
+  const { data: alunosOnline } = useQuery({
+    queryKey: ["alunos-online", selectedPoloId, colabData?.polo_id, isSuperAdmin],
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const desde = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      let q = supabase
+        .from("aluno_sessoes")
+        .select("aluno_id, login_em, alunos!inner(id, nome, ctr, foto_url, polo_id)")
+        .gte("login_em", desde)
+        .order("login_em", { ascending: false })
+        .limit(100);
+
+      const colabPoloId = colabData?.polo_id;
+      if (isSuperAdmin) {
+        if (selectedPoloId && selectedPoloId !== 'all') q = q.eq('alunos.polo_id', selectedPoloId);
+      } else if (colabPoloId) {
+        q = q.eq('alunos.polo_id', colabPoloId);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+      const seen = new Set<string>();
+      const unique: any[] = [];
+      for (const r of data ?? []) {
+        if (seen.has(r.aluno_id)) continue;
+        seen.add(r.aluno_id);
+        unique.push(r);
+      }
+      return unique;
+    },
+  });
+
 
 
   const cards = [
