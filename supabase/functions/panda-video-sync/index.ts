@@ -24,7 +24,14 @@ const MAPEAMENTO_CURSOS: Record<string, string> = {
   "Eletricista": "Eletricista",
 };
 
-async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" = "insert") {
+function extrairOrdemDoTitulo(titulo: string, fallback: number): number {
+  const m = (titulo || "").match(/aula\s*0*(\d+)/i);
+  if (m) return parseInt(m[1], 10);
+  const n = (titulo || "").match(/0*(\d+)/);
+  return n ? parseInt(n[1], 10) : fallback;
+}
+
+async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert") {
   const folder = folders.find(
     (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
   );
