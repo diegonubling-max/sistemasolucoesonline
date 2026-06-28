@@ -232,12 +232,14 @@ serve(async (req) => {
   try {
     let folderName: string | undefined;
     let folderNames: string[] | undefined;
-    let mode: "insert" | "update" = "insert";
+    let mode: "insert" | "update" | "update_by_title" = "insert";
     try {
       const body = await req.json();
       folderName = body?.folder_name;
       folderNames = body?.folder_names;
-      if (body?.mode === "update") mode = "update";
+      if (body?.update_mode === true) mode = "update_by_title";
+      else if (body?.mode === "update") mode = "update";
+      else if (body?.mode === "update_by_title") mode = "update_by_title";
     } catch {
       // sem body — ok
     }
