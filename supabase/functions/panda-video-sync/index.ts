@@ -24,7 +24,7 @@ const MAPEAMENTO_CURSOS: Record<string, string> = {
   "Eletricista": "Eletricista",
 };
 
-async function processFolder(supabase: any, folders: any[], folderName: string) {
+async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" = "insert") {
   const folder = folders.find(
     (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
   );
@@ -56,6 +56,60 @@ async function processFolder(supabase: any, folders: any[], folderName: string) 
     };
   }
 
+  if (mode === "update") {
+    // Buscar aulas existentes do curso com url_video do YouTube
+    const { data: aulasExistentes } = await supabase
+      .from("aulas")
+      .select("id, ordem, url_video, titulo")
+      .eq("curso_id", curso.id);
+
+    let atualizados = 0;
+    const detalhes: any[] = [];
+    const naoAtualizados: any[] = [];
+
+    for (let i = 0; i < videos.length; i++) {
+      const v = videos[i];
+      const ordem = i + 1;
+      const playerUrl =
+        v.video_player ||
+        `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
+
+      const aula = (aulasExistentes || []).find((a: any) => a.ordem === ordem);
+      if (!aula) {
+        naoAtualizados.push({ ordem, motivo: "aula não encontrada" });
+        continue;
+      }
+      if (!(aula.url_video || "").includes("youtube.com")) {
+        naoAtualizados.push({ ordem, motivo: "url_video não é youtube" });
+        continue;
+      }
+
+      const { error } = await supabase
+        .from("aulas")
+        .update({ url_video: playerUrl })
+        .eq("id", aula.id);
+
+      if (!error) {
+        atualizados++;
+        detalhes.push({ ordem, titulo: aula.titulo, nova_url: playerUrl });
+      } else {
+        naoAtualizados.push({ ordem, motivo: error.message });
+      }
+    }
+
+    return {
+      success: true,
+      mode: "update",
+      pasta: folder.name,
+      curso: curso.nome,
+      videos: videos.length,
+      atualizados,
+      nao_atualizados: naoAtualizados.length,
+      detalhes: detalhes.slice(0, 5),
+      nao_atualizados_detalhes: naoAtualizados.slice(0, 5),
+    };
+  }
+
   let inseridos = 0;
   const erros_insert: any[] = [];
   for (let i = 0; i < videos.length; i++) {
@@ -82,6 +136,7 @@ async function processFolder(supabase: any, folders: any[], folderName: string) 
 
   return {
     success: true,
+    mode: "insert",
     pasta: folder.name,
     curso: curso.nome,
     videos: videos.length,
@@ -91,6 +146,7 @@ async function processFolder(supabase: any, folders: any[], folderName: string) 
     erros_insert,
   };
 }
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -103,10 +159,12 @@ serve(async (req) => {
   try {
     let folderName: string | undefined;
     let folderNames: string[] | undefined;
+    let mode: "insert" | "update" = "insert";
     try {
       const body = await req.json();
       folderName = body?.folder_name;
       folderNames = body?.folder_names;
+      if (body?.mode === "update") mode = "update";
     } catch {
       // sem body — ok
     }
@@ -120,10 +178,10 @@ serve(async (req) => {
     // Array de pastas → processar em paralelo
     if (Array.isArray(folderNames) && folderNames.length > 0) {
       const resultados = await Promise.all(
-        folderNames.map((name) => processFolder(supabase, folders, name))
+        folderNames.map((name) => processFolder(supabase, folders, name, mode))
       );
       return new Response(
-        JSON.stringify({ success: true, resultados }),
+        JSON.stringify({ success: true, mode, resultados }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -139,7 +197,7 @@ serve(async (req) => {
       );
     }
 
-    const resultado = await processFolder(supabase, folders, folderName);
+    const resultado = await processFolder(supabase, folders, folderName, mode);
     const status = (resultado as any).error ? 404 : 200;
     return new Response(JSON.stringify(resultado), {
       status,
