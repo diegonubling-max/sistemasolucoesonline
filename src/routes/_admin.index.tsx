@@ -224,7 +224,7 @@ function Dashboard() {
       const desde = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       let q = supabase
         .from("aluno_sessoes")
-        .select("aluno_id, login_em, alunos!inner(id, nome, ctr, foto_url, polo_id)")
+        .select("aluno_id, login_em, alunos!inner(id, nome, ctr, foto_perfil, polo_id)")
         .gte("login_em", desde)
         .order("login_em", { ascending: false })
         .limit(100);
