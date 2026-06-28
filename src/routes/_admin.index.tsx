@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Users, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin, Loader2, Crown, LogIn } from "lucide-react";
+import { Users, GraduationCap, UserCheck, Wallet, Landmark, AlertCircle, TrendingUp, Search, Smartphone, Users as UserGroup, Pin, Loader2, Crown, LogIn, Circle } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { startOfMonth, endOfMonth, format, subDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -217,6 +217,38 @@ function Dashboard() {
     },
   });
 
+  const { data: alunosOnline } = useQuery({
+    queryKey: ["alunos-online", selectedPoloId, colabData?.polo_id, isSuperAdmin],
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const desde = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      let q = supabase
+        .from("aluno_sessoes")
+        .select("aluno_id, login_em, alunos!inner(id, nome, ctr, foto_perfil, polo_id)")
+        .gte("login_em", desde)
+        .order("login_em", { ascending: false })
+        .limit(100);
+
+      const colabPoloId = colabData?.polo_id;
+      if (isSuperAdmin) {
+        if (selectedPoloId && selectedPoloId !== 'all') q = q.eq('alunos.polo_id', selectedPoloId);
+      } else if (colabPoloId) {
+        q = q.eq('alunos.polo_id', colabPoloId);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+      const seen = new Set<string>();
+      const unique: any[] = [];
+      for (const r of data ?? []) {
+        if (seen.has(r.aluno_id)) continue;
+        seen.add(r.aluno_id);
+        unique.push(r);
+      }
+      return unique;
+    },
+  });
+
 
 
   const cards = [
@@ -411,6 +443,53 @@ function Dashboard() {
         </div>
       </div>
 
+
+
+      <Card className="mb-8 border-none shadow-lg">
+        <CardHeader className="bg-gray-50/50 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <Circle className="h-3 w-3 fill-green-500 text-green-500 animate-pulse" />
+            Alunos Online Agora
+            {alunosOnline && alunosOnline.length > 0 && (
+              <Badge variant="secondary" className="ml-2">{alunosOnline.length}</Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          {(!alunosOnline || alunosOnline.length === 0) ? (
+            <p className="text-center text-muted-foreground py-6 italic">Nenhum aluno online no momento</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {alunosOnline.map((s: any) => {
+                const mins = Math.max(0, Math.floor((Date.now() - new Date(s.login_em).getTime()) / 60000));
+                const inicial = (s.alunos.nome || '?').charAt(0).toUpperCase();
+                return (
+                  <div
+                    key={s.aluno_id}
+                    onClick={() => navigate({ to: "/alunos/$id", params: { id: s.alunos.id } })}
+                    className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/60 cursor-pointer transition-colors"
+                  >
+                    <div className="relative">
+                      {s.alunos.foto_perfil ? (
+                        <img src={s.alunos.foto_perfil} alt={s.alunos.nome} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                          {inicial}
+                        </div>
+                      )}
+                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-primary truncate">{s.alunos.nome}</p>
+                      <p className="text-xs text-muted-foreground">CTR {s.alunos.ctr ?? '-'} • há {mins === 0 ? 'menos de 1' : mins} min</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="mb-8 border-none shadow-lg">
         <CardHeader className="bg-gray-50/50 border-b border-gray-100">
