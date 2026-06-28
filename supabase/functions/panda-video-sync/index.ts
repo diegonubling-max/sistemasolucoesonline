@@ -159,10 +159,12 @@ serve(async (req) => {
   try {
     let folderName: string | undefined;
     let folderNames: string[] | undefined;
+    let mode: "insert" | "update" = "insert";
     try {
       const body = await req.json();
       folderName = body?.folder_name;
       folderNames = body?.folder_names;
+      if (body?.mode === "update") mode = "update";
     } catch {
       // sem body — ok
     }
@@ -176,10 +178,10 @@ serve(async (req) => {
     // Array de pastas → processar em paralelo
     if (Array.isArray(folderNames) && folderNames.length > 0) {
       const resultados = await Promise.all(
-        folderNames.map((name) => processFolder(supabase, folders, name))
+        folderNames.map((name) => processFolder(supabase, folders, name, mode))
       );
       return new Response(
-        JSON.stringify({ success: true, resultados }),
+        JSON.stringify({ success: true, mode, resultados }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
