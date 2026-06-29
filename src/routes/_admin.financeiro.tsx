@@ -70,6 +70,7 @@ function Financeiro() {
     end: format(endOfMonth(today), "yyyy-MM-dd") 
   });
   const [selectedVendedora, setSelectedVendedora] = useState<string>("todas");
+  const [selectedVendedoraRec, setSelectedVendedoraRec] = useState<string>("todas");
 
   // Lowering status modal state
   const [baixaModal, setBaixaModal] = useState<{ 
