@@ -247,9 +247,51 @@ function AulasManager() {
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
               </Link>
             </Button>
+            <Button variant="outline" onClick={() => setIsPandaOpen(true)}>
+              <Download className="h-4 w-4 mr-2" /> Importar do Panda
+            </Button>
             <Button onClick={handleNew}>
               <Plus className="h-4 w-4 mr-2" /> Nova aula
             </Button>
+
+            <Dialog open={isPandaOpen} onOpenChange={setIsPandaOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Importar aulas do Panda Video</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-1.5">
+                    <Label>Nome da pasta no Panda</Label>
+                    <Input
+                      value={pandaFolder}
+                      onChange={(e) => setPandaFolder(e.target.value)}
+                      placeholder="Ex: Excel"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Iniciar a partir da ordem</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={pandaOrdemMin}
+                      onChange={(e) => setPandaOrdemMin(parseInt(e.target.value) || 0)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Apenas aulas com ordem maior que esse valor serão inseridas.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsPandaOpen(false)} disabled={pandaLoading}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={importarPanda} disabled={pandaLoading}>
+                    {pandaLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    Importar
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             <Dialog open={isModalOpen} onOpenChange={(o) => {
               setIsModalOpen(o);
