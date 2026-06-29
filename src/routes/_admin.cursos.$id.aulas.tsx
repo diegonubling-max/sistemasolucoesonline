@@ -100,6 +100,40 @@ function AulasManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [aulaToDelete, setAulaToDelete] = useState<Aula | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isPandaOpen, setIsPandaOpen] = useState(false);
+  const [pandaFolder, setPandaFolder] = useState("");
+  const [pandaOrdemMin, setPandaOrdemMin] = useState<number>(0);
+  const [pandaLoading, setPandaLoading] = useState(false);
+
+  const importarPanda = async () => {
+    if (!pandaFolder.trim()) {
+      toast.error("Informe o nome da pasta");
+      return;
+    }
+    setPandaLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("panda-video-sync", {
+        body: {
+          folder_name: pandaFolder.trim(),
+          curso_nome: curso?.nome,
+          mode: "insert",
+          ordem_minima: Number(pandaOrdemMin) || 0,
+        },
+      });
+      if (error) throw error;
+      const inseridos = (data as any)?.inseridos ?? 0;
+      const pulados = (data as any)?.pulados ?? 0;
+      toast.success(`Importação concluída: ${inseridos} inseridas, ${pulados} puladas`);
+      setIsPandaOpen(false);
+      setPandaFolder("");
+      setPandaOrdemMin(0);
+      refetch();
+    } catch (e) {
+      toast.error("Erro ao importar", { description: (e as Error).message });
+    } finally {
+      setPandaLoading(false);
+    }
+  };
 
   const reorder = useMutation({
     mutationFn: async (items: Aula[]) => {
