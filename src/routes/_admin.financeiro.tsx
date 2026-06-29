@@ -547,6 +547,15 @@ function Financeiro() {
                 Recebimentos por Período
               </h3>
               <div className="flex flex-wrap items-center gap-2">
+                <Select value={selectedVendedoraRec} onValueChange={setSelectedVendedoraRec}>
+                  <SelectTrigger className="w-52"><SelectValue placeholder="Vendedora" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas as vendedoras</SelectItem>
+                    {(vendedorasList ?? []).map((v) => (
+                      <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Input type="date" className="w-40" value={recPeriod.start} onChange={(e) => setRecPeriod(p => ({ ...p, start: e.target.value }))} />
                 <span className="text-muted-foreground">até</span>
                 <Input type="date" className="w-40" value={recPeriod.end} onChange={(e) => setRecPeriod(p => ({ ...p, end: e.target.value }))} />
@@ -555,21 +564,14 @@ function Financeiro() {
             </div>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Vendedora</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(recebimentos ?? []).map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      {p.matriculas?.alunos?.ctr}
-                      {p.asaas_id ? (
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-1 h-4">Asaas</Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1 h-4">Carnê</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
+                    <TableCell>{p.matriculas?.colaboradores?.nome ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
                     <TableCell>
                       {p.forma_pagamento && (
                         <Badge 
