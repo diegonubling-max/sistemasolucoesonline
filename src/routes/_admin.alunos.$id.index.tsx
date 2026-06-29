@@ -78,8 +78,14 @@ function AlunoDetalhes() {
   const [vitrinePrecoNormal, setVitrinePrecoNormal] = useState("");
   const [vitrinePrecoComPontos, setVitrinePrecoComPontos] = useState("");
   const [vitrinePontosNecessarios, setVitrinePontosNecessarios] = useState("300");
+  const [vitrineValorPixDesconto, setVitrineValorPixDesconto] = useState("");
+  const [vitrineValorCartaoDesconto, setVitrineValorCartaoDesconto] = useState("");
+  const [vitrinePontosDesconto, setVitrinePontosDesconto] = useState("");
   const [editVitrinePrecoPix, setEditVitrinePrecoPix] = useState("");
   const [editVitrinePrecoCartao, setEditVitrinePrecoCartao] = useState("");
+  const [editVitrineValorPixDesconto, setEditVitrineValorPixDesconto] = useState("");
+  const [editVitrineValorCartaoDesconto, setEditVitrineValorCartaoDesconto] = useState("");
+  const [editVitrinePontosDesconto, setEditVitrinePontosDesconto] = useState("");
   const [editVitrineMaxParcelas, setEditVitrineMaxParcelas] = useState("12");
   const [editVitrineAtivo, setEditVitrineAtivo] = useState(true);
 
@@ -381,11 +387,16 @@ function AlunoDetalhes() {
         curso_id: vitrineCursoId,
         preco_pix: Number(vitrinePrecoPix),
         preco_cartao: Number(vitrinePrecoCartao),
+        valor_pix: Number(vitrinePrecoPix),
+        valor_cartao: Number(vitrinePrecoCartao),
+        valor_pix_desconto: vitrineValorPixDesconto ? Number(vitrineValorPixDesconto) : null,
+        valor_cartao_desconto: vitrineValorCartaoDesconto ? Number(vitrineValorCartaoDesconto) : null,
+        pontos_desconto: vitrinePontosDesconto ? Number(vitrinePontosDesconto) : null,
         max_parcelas: Number(vitrineMaxParcelas),
         preco_normal: vitrinePrecoNormal ? Number(vitrinePrecoNormal) : null,
         preco_com_pontos: vitrinePrecoComPontos ? Number(vitrinePrecoComPontos) : null,
         pontos_necessarios: vitrinePontosNecessarios ? Number(vitrinePontosNecessarios) : 300,
-      });
+      } as never);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -398,6 +409,9 @@ function AlunoDetalhes() {
       setVitrinePrecoNormal("");
       setVitrinePrecoComPontos("");
       setVitrinePontosNecessarios("300");
+      setVitrineValorPixDesconto("");
+      setVitrineValorCartaoDesconto("");
+      setVitrinePontosDesconto("");
       qc.invalidateQueries({ queryKey: ["aluno-vitrine", id] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -409,9 +423,14 @@ function AlunoDetalhes() {
       const { error } = await supabase.from("cursos_vitrine").update({
         preco_pix: Number(editVitrinePrecoPix),
         preco_cartao: Number(editVitrinePrecoCartao),
+        valor_pix: Number(editVitrinePrecoPix),
+        valor_cartao: Number(editVitrinePrecoCartao),
+        valor_pix_desconto: editVitrineValorPixDesconto ? Number(editVitrineValorPixDesconto) : null,
+        valor_cartao_desconto: editVitrineValorCartaoDesconto ? Number(editVitrineValorCartaoDesconto) : null,
+        pontos_desconto: editVitrinePontosDesconto ? Number(editVitrinePontosDesconto) : null,
         max_parcelas: Number(editVitrineMaxParcelas),
         ativo: editVitrineAtivo,
-      }).eq("id", editingVitrineItem.id);
+      } as never).eq("id", editingVitrineItem.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -968,13 +987,22 @@ function AlunoDetalhes() {
               <option value="">Selecione...</option>
               {allCourses?.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
             </select>
-            <Input placeholder="Preço PIX" type="number" value={vitrinePrecoPix} onChange={(e) => setVitrinePrecoPix(e.target.value)} />
-            <Input placeholder="Preço Cartão" type="number" value={vitrinePrecoCartao} onChange={(e) => setVitrinePrecoCartao(e.target.value)} />
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">Valores sem desconto</p>
+              <Input placeholder="Valor PIX (R$)" type="number" value={vitrinePrecoPix} onChange={(e) => setVitrinePrecoPix(e.target.value)} />
+              <Input placeholder="Valor Cartão (R$)" type="number" value={vitrinePrecoCartao} onChange={(e) => setVitrinePrecoCartao(e.target.value)} />
+            </div>
             <div className="border-t pt-3 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">Preço com Milhas EJA (opcional)</p>
+              <p className="text-xs font-semibold text-muted-foreground">Preços com desconto por pontos (opcional)</p>
+              <Input placeholder="Preço PIX com desconto (R$)" type="number" value={vitrineValorPixDesconto} onChange={(e) => setVitrineValorPixDesconto(e.target.value)} />
+              <Input placeholder="Preço Cartão com desconto (R$)" type="number" value={vitrineValorCartaoDesconto} onChange={(e) => setVitrineValorCartaoDesconto(e.target.value)} />
+              <Input placeholder="Pontos necessários para o desconto" type="number" value={vitrinePontosDesconto} onChange={(e) => setVitrinePontosDesconto(e.target.value)} />
+            </div>
+            <div className="border-t pt-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">Resgate total com Milhas EJA (opcional)</p>
               <Input placeholder="Preço normal (R$)" type="number" value={vitrinePrecoNormal} onChange={(e) => setVitrinePrecoNormal(e.target.value)} />
               <Input placeholder="Preço com pontos (R$)" type="number" value={vitrinePrecoComPontos} onChange={(e) => setVitrinePrecoComPontos(e.target.value)} />
-              <Input placeholder="Pontos necessários" type="number" value={vitrinePontosNecessarios} onChange={(e) => setVitrinePontosNecessarios(e.target.value)} />
+              <Input placeholder="Pontos necessários (resgate total)" type="number" value={vitrinePontosNecessarios} onChange={(e) => setVitrinePontosNecessarios(e.target.value)} />
             </div>
           </div>
           <Button onClick={() => addToVitrine.mutate()}>Adicionar</Button>

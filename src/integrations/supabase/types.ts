@@ -830,6 +830,7 @@ export type Database = {
           data_resgate: string | null
           id: string
           max_parcelas: number | null
+          pontos_desconto: number | null
           pontos_necessarios: number | null
           pontos_usados: number | null
           preco_cartao: number | null
@@ -838,6 +839,10 @@ export type Database = {
           preco_pix: number | null
           resgatado_com_pontos: boolean
           updated_at: string
+          valor_cartao: number | null
+          valor_cartao_desconto: number | null
+          valor_pix: number | null
+          valor_pix_desconto: number | null
         }
         Insert: {
           aluno_id: string
@@ -847,6 +852,7 @@ export type Database = {
           data_resgate?: string | null
           id?: string
           max_parcelas?: number | null
+          pontos_desconto?: number | null
           pontos_necessarios?: number | null
           pontos_usados?: number | null
           preco_cartao?: number | null
@@ -855,6 +861,10 @@ export type Database = {
           preco_pix?: number | null
           resgatado_com_pontos?: boolean
           updated_at?: string
+          valor_cartao?: number | null
+          valor_cartao_desconto?: number | null
+          valor_pix?: number | null
+          valor_pix_desconto?: number | null
         }
         Update: {
           aluno_id?: string
@@ -864,6 +874,7 @@ export type Database = {
           data_resgate?: string | null
           id?: string
           max_parcelas?: number | null
+          pontos_desconto?: number | null
           pontos_necessarios?: number | null
           pontos_usados?: number | null
           preco_cartao?: number | null
@@ -872,6 +883,10 @@ export type Database = {
           preco_pix?: number | null
           resgatado_com_pontos?: boolean
           updated_at?: string
+          valor_cartao?: number | null
+          valor_cartao_desconto?: number | null
+          valor_pix?: number | null
+          valor_pix_desconto?: number | null
         }
         Relationships: [
           {

@@ -504,32 +504,58 @@ function StudentDashboard() {
                         {curso.nome}
                       </h3>
                       <div className="mt-2 space-y-0.5">
-                        {item.preco_com_pontos && item.pontos_necessarios ? (
-                          <>
-                            <p className="text-white/70 text-[11px] line-through">
-                              {formatCurrency(item.preco_normal ?? item.preco_pix)}
-                            </p>
-                            <p className="text-yellow-300 font-bold text-sm flex items-center gap-1">
-                              <Star className="h-3 w-3 fill-yellow-300" />
-                              {item.pontos_necessarios} pts: {formatCurrency(item.preco_com_pontos)}
-                            </p>
-                          </>
-                        ) : (() => {
-                          const base = Number(item.preco_com_pontos ?? item.preco_normal ?? item.preco_pix);
-                          const parcela = base / 10;
-                          const totalCartao = parcela * 12;
+                        {(() => {
+                          const valorPix = Number(item.valor_pix ?? item.preco_pix ?? 0);
+                          const valorCartao = Number(item.valor_cartao ?? item.preco_cartao ?? 0);
+                          const pixDesc = item.valor_pix_desconto != null ? Number(item.valor_pix_desconto) : null;
+                          const cartaoDesc = item.valor_cartao_desconto != null ? Number(item.valor_cartao_desconto) : null;
+                          const pontosDesc = item.pontos_desconto != null ? Number(item.pontos_desconto) : null;
+                          const temPontos = pontosDesc != null && (milhasSaldo ?? 0) >= pontosDesc;
+                          const temDesconto = temPontos && (pixDesc != null || cartaoDesc != null);
+
+                          if (item.preco_com_pontos && item.pontos_necessarios) {
+                            return (
+                              <>
+                                <p className="text-white/70 text-[11px] line-through">
+                                  {formatCurrency(item.preco_normal ?? valorPix)}
+                                </p>
+                                <p className="text-yellow-300 font-bold text-sm flex items-center gap-1">
+                                  <Star className="h-3 w-3 fill-yellow-300" />
+                                  {item.pontos_necessarios} pts: {formatCurrency(item.preco_com_pontos)}
+                                </p>
+                              </>
+                            );
+                          }
+
+                          const baseCartao = temDesconto && cartaoDesc != null ? cartaoDesc : valorCartao;
+                          const parcela = baseCartao / 12;
                           return (
                             <div className="flex items-end justify-between gap-2">
                               <div className="leading-tight">
+                                {temDesconto && (
+                                  <p className="text-white/60 text-[10px] line-through">
+                                    {formatCurrency(valorCartao / 12)} x 12
+                                  </p>
+                                )}
                                 <p className="text-white/80 text-[10px] font-medium">12x</p>
-                                <p className="text-white font-extrabold text-lg leading-none">
+                                <p className={`font-extrabold text-lg leading-none ${temDesconto ? "text-yellow-300" : "text-white"}`}>
                                   {formatCurrency(parcela)}
                                 </p>
                                 <p className="text-white/80 text-[10px] font-medium">no cartão</p>
                               </div>
-                              <p className="text-white/80 text-[10px] font-medium">
-                                Total: {formatCurrency(totalCartao)}
-                              </p>
+                              <div className="text-right">
+                                {temDesconto && pixDesc != null ? (
+                                  <>
+                                    <p className="text-white/60 text-[10px] line-through">{formatCurrency(valorPix)}</p>
+                                    <p className="text-yellow-300 text-[11px] font-bold">PIX: {formatCurrency(pixDesc)}</p>
+                                  </>
+                                ) : (
+                                  <p className="text-white/80 text-[10px] font-medium">PIX: {formatCurrency(valorPix)}</p>
+                                )}
+                                {pontosDesc != null && !temPontos && (
+                                  <p className="text-white/70 text-[9px] mt-0.5">{pontosDesc} pts p/ desconto</p>
+                                )}
+                              </div>
                             </div>
                           );
                         })()}
