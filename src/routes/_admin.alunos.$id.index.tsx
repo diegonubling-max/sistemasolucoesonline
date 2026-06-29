@@ -811,6 +811,9 @@ function AlunoDetalhes() {
                   <div className="space-y-1">
                     <p className="font-bold">{(item.cursos as any)?.nome}</p>
                     <p className="text-xs text-muted-foreground">{formatCurrency(item.preco_pix)}</p>
+                    <span className="mt-2 inline-flex items-center rounded-full bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5">
+                      ✓ Liberado
+                    </span>
                     {v.resgatado_com_pontos && (
                       <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-semibold px-2 py-0.5">
                         ⭐ Resgatado com Milhas
@@ -827,7 +830,33 @@ function AlunoDetalhes() {
               );
             })}
           </div>
+
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm font-semibold mb-3">Status de todos os cursos</p>
+              <ul className="divide-y">
+                {allCourses?.map((c) => {
+                  const liberado = vitrine?.some((v: any) => v.curso_id === c.id);
+                  return (
+                    <li key={c.id} className="flex items-center justify-between py-2 text-sm">
+                      <span>{c.nome}</span>
+                      {liberado ? (
+                        <span className="inline-flex items-center rounded-full bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5">
+                          ✓ Liberado
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-gray-200 text-gray-700 text-[10px] font-semibold px-2 py-0.5">
+                          Não liberado
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </CardContent>
+          </Card>
         </TabsContent>
+
 
         <TabsContent value="historico" className="space-y-6">
           <div className="grid grid-cols-4 gap-4">
