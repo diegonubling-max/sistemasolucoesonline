@@ -176,7 +176,11 @@ function Financeiro() {
         .lte("data_pagamento", recPeriod.end)
         .order("data_pagamento", { ascending: false });
 
-      if (selectedVendedoraRec !== "todas") {
+      if (selectedVendedoraRec === "__admin__") {
+        q = q.is("matriculas.colaborador_id", null);
+      } else if (selectedVendedoraRec === "__agente_ia__") {
+        q = q.ilike("matriculas.observacao", "%agente ia%");
+      } else if (selectedVendedoraRec !== "todas") {
         q = q.eq("matriculas.colaborador_id", selectedVendedoraRec);
       }
 
