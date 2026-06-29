@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_admin/segmentos")({
-  head: () => ({ meta: [{ title: "Segmentos — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Segmentos — Soluções Online" }] }),
   component: SegmentosList,
 });
 

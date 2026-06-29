@@ -32,7 +32,7 @@ import { useVendedoras } from "@/hooks/use-vendedoras";
 import { notifyPagamentoRecebido } from "@/lib/notify";
 
 export const Route = createFileRoute("/_admin/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Financeiro — Soluções Online" }] }),
   component: Financeiro,
 });
 

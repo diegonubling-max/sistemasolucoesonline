@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { CursoForm, type CursoFormValues } from "@/components/admin/CursoForm";
 
 export const Route = createFileRoute("/_admin/cursos/$id/editar")({
-  head: () => ({ meta: [{ title: "Editar curso — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Editar curso — Soluções Online" }] }),
   component: EditarCurso,
 });
 

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_admin/cursos/")({
-  head: () => ({ meta: [{ title: "Cursos — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Cursos — Soluções Online" }] }),
   component: CursosList,
 });
 

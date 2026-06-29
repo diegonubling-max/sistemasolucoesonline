@@ -15,7 +15,7 @@ import { VitrineInteresse } from "@/components/admin/VitrineInteresse";
 
 
 export const Route = createFileRoute("/_admin/")({
-  head: () => ({ meta: [{ title: "Dashboard — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Soluções Online" }] }),
   component: Dashboard,
 });
 

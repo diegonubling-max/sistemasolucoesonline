@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useStudentTheme } from "./_student";
 
 export const Route = createFileRoute("/_student/aluno/perfil")({
-  head: () => ({ meta: [{ title: "Meu Perfil — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Meu Perfil — Soluções Online" }] }),
   component: StudentProfile,
 });
 
