@@ -232,11 +232,13 @@ serve(async (req) => {
   try {
     let folderName: string | undefined;
     let folderNames: string[] | undefined;
+    let cursoNome: string | undefined;
     let mode: "insert" | "update" | "update_by_title" = "insert";
     try {
       const body = await req.json();
       folderName = body?.folder_name;
       folderNames = body?.folder_names;
+      cursoNome = body?.curso_nome;
       if (body?.update_mode === true) mode = "update_by_title";
       else if (body?.mode === "update") mode = "update";
       else if (body?.mode === "update_by_title") mode = "update_by_title";
@@ -253,21 +255,10 @@ serve(async (req) => {
     // Array de pastas → processar em paralelo
     if (Array.isArray(folderNames) && folderNames.length > 0) {
       const resultados = await Promise.all(
-        folderNames.map((name) => processFolder(supabase, folders, name, mode))
+        folderNames.map((name) => processFolder(supabase, folders, name, mode, cursoNome))
       );
       return new Response(
         JSON.stringify({ success: true, mode, resultados }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Sem folder_name → retorna apenas a lista de pastas disponíveis
-    if (!folderName) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          pastas: folders.map((f: any) => ({ id: f.id, name: f.name })),
-        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
