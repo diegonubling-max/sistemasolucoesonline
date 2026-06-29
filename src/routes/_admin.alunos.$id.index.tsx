@@ -995,7 +995,11 @@ function AlunoDetalhes() {
           <div className="space-y-4 py-4">
             <select className="w-full p-2 border rounded" value={vitrineCursoId} onChange={(e) => setVitrineCursoId(e.target.value)}>
               <option value="">Selecione...</option>
-              {allCourses?.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              {allCourses?.map(c => {
+                const liberado = vitrine?.some((v: any) => v.curso_id === c.id);
+                return <option key={c.id} value={c.id}>{c.nome}{liberado ? " ✓ (já liberado)" : ""}</option>;
+              })}
+
             </select>
             <Input placeholder="Preço PIX" type="number" value={vitrinePrecoPix} onChange={(e) => setVitrinePrecoPix(e.target.value)} />
             <Input placeholder="Preço Cartão" type="number" value={vitrinePrecoCartao} onChange={(e) => setVitrinePrecoCartao(e.target.value)} />
