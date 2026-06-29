@@ -165,23 +165,32 @@ function Financeiro() {
     },
   });
 
+  const { data: vendedorasAlunos } = useQuery({
+    queryKey: ["vendedoras-alunos-distinct", selectedPoloId, userRole, colabData],
+    queryFn: async () => {
+      const q = supabase.from("alunos").select("vendedora").not("vendedora", "is", null).neq("vendedora", "");
+      const { data, error } = await filterByPolo(q);
+      if (error) throw error;
+      const set = new Set<string>();
+      (data ?? []).forEach((r: any) => r.vendedora && set.add(r.vendedora));
+      return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    },
+  });
+
   const { data: recebimentos, refetch: refetchRecebimentos } = useQuery({
     queryKey: ["financeiro-recebimentos", recPeriod, selectedPoloId, selectedVendedoraRec, userRole, colabData],
     queryFn: async () => {
+      const alunosJoin = selectedVendedoraRec !== "todas" ? "alunos!inner" : "alunos";
       let q = supabase
         .from("parcelas")
-        .select("*, matriculas!inner(colaborador_id, colaboradores(nome), alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
+        .select(`*, matriculas!inner(${alunosJoin}(nome, ctr, telefone, vendedora), matricula_pacotes(pacotes(tipo)))`)
         .eq("status", "pago")
         .gte("data_pagamento", recPeriod.start)
         .lte("data_pagamento", recPeriod.end)
         .order("data_pagamento", { ascending: false });
 
-      if (selectedVendedoraRec === "__admin__") {
-        q = q.is("matriculas.colaborador_id", null);
-      } else if (selectedVendedoraRec === "__agente_ia__") {
-        q = q.ilike("matriculas.observacao", "%agente ia%");
-      } else if (selectedVendedoraRec !== "todas") {
-        q = q.eq("matriculas.colaborador_id", selectedVendedoraRec);
+      if (selectedVendedoraRec !== "todas") {
+        q = q.eq("matriculas.alunos.vendedora", selectedVendedoraRec);
       }
 
       const { data, error } = await filterByPolo(q);
@@ -555,10 +564,8 @@ function Financeiro() {
                   <SelectTrigger className="w-52"><SelectValue placeholder="Vendedora" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todas">Todas</SelectItem>
-                    <SelectItem value="__agente_ia__">Agente IA</SelectItem>
-                    <SelectItem value="__admin__">Admin</SelectItem>
-                    {(vendedorasList ?? []).map((v) => (
-                      <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                    {(vendedorasAlunos ?? []).map((nome) => (
+                      <SelectItem key={nome} value={nome}>{nome}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -577,7 +584,7 @@ function Financeiro() {
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
-                    <TableCell>{p.matriculas?.colaboradores?.nome ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
+                    <TableCell>{p.matriculas?.alunos?.vendedora ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
                     <TableCell>
                       {p.forma_pagamento && (
                         <Badge 
