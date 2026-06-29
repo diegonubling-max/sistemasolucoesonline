@@ -176,7 +176,11 @@ function Financeiro() {
         .lte("data_pagamento", recPeriod.end)
         .order("data_pagamento", { ascending: false });
 
-      if (selectedVendedoraRec !== "todas") {
+      if (selectedVendedoraRec === "__admin__") {
+        q = q.is("matriculas.colaborador_id", null);
+      } else if (selectedVendedoraRec === "__agente_ia__") {
+        q = q.ilike("matriculas.observacao", "%agente ia%");
+      } else if (selectedVendedoraRec !== "todas") {
         q = q.eq("matriculas.colaborador_id", selectedVendedoraRec);
       }
 
@@ -550,7 +554,9 @@ function Financeiro() {
                 <Select value={selectedVendedoraRec} onValueChange={setSelectedVendedoraRec}>
                   <SelectTrigger className="w-52"><SelectValue placeholder="Vendedora" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todas">Todas as vendedoras</SelectItem>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    <SelectItem value="__agente_ia__">Agente IA</SelectItem>
+                    <SelectItem value="__admin__">Admin</SelectItem>
                     {(vendedorasList ?? []).map((v) => (
                       <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
                     ))}
