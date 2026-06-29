@@ -198,9 +198,9 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
     const titulo = v.title || v.name || "";
     const ordem = extrairOrdemDoTitulo(titulo, i + 1);
 
-    if (ordem <= ordemMinima) {
+    if (ordem < ordemMinima) {
       pulados++;
-      pulados_detalhes.push({ ordem, titulo: v.title || v.name, motivo: `ordem <= ${ordemMinima}` });
+      pulados_detalhes.push({ ordem, titulo: v.title || v.name, motivo: `ordem < ${ordemMinima}` });
       continue;
     }
 
