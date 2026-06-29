@@ -233,11 +233,14 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
     curso: curso.nome,
     videos: videos.length,
     inseridos,
+    pulados,
+    pulados_detalhes: pulados_detalhes.slice(0, 10),
     videos_raw: videos.slice(0, 2),
     erro_insert: erros_insert[0] ?? null,
     erros_insert,
   };
 }
+
 
 
 serve(async (req) => {
