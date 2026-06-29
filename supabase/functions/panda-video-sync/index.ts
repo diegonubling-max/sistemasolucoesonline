@@ -29,7 +29,7 @@ function extrairOrdemDoTitulo(titulo: string, fallback: number): number {
   return m ? parseInt(m[1], 10) : fallback;
 }
 
-async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string) {
+async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string, ordemMinima: number = 0) {
   const folder = folders.find(
     (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
   );
