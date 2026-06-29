@@ -184,9 +184,26 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
   }
 
   let inseridos = 0;
+  let pulados = 0;
+  const pulados_detalhes: any[] = [];
   const erros_insert: any[] = [];
+
+  const { data: aulasExistentesInsert } = await supabase
+    .from("aulas")
+    .select("ordem")
+    .eq("curso_id", curso.id);
+  const ordensExistentes = new Set<number>((aulasExistentesInsert || []).map((a: any) => a.ordem));
+
   for (let i = 0; i < videos.length; i++) {
     const v = videos[i];
+    const ordem = i + 1;
+
+    if (ordensExistentes.has(ordem)) {
+      pulados++;
+      pulados_detalhes.push({ ordem, titulo: v.title || v.name, motivo: "ordem já existe" });
+      continue;
+    }
+
     const playerUrl =
       v.video_player ||
       `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
@@ -196,16 +213,18 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
       titulo: v.title || v.name,
       url_video: playerUrl,
       duracao_segundos: Math.round(v.length || 0),
-      ordem: i + 1,
+      ordem,
       ativo: true,
     });
 
     if (!error) {
       inseridos++;
+      ordensExistentes.add(ordem);
     } else {
-      erros_insert.push({ ordem: i + 1, titulo: v.title || v.name, error });
+      erros_insert.push({ ordem, titulo: v.title || v.name, error });
     }
   }
+
 
   return {
     success: true,
