@@ -564,10 +564,8 @@ function Financeiro() {
                   <SelectTrigger className="w-52"><SelectValue placeholder="Vendedora" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todas">Todas</SelectItem>
-                    <SelectItem value="__agente_ia__">Agente IA</SelectItem>
-                    <SelectItem value="__admin__">Admin</SelectItem>
-                    {(vendedorasList ?? []).map((v) => (
-                      <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                    {(vendedorasAlunos ?? []).map((nome) => (
+                      <SelectItem key={nome} value={nome}>{nome}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
