@@ -387,11 +387,16 @@ function AlunoDetalhes() {
         curso_id: vitrineCursoId,
         preco_pix: Number(vitrinePrecoPix),
         preco_cartao: Number(vitrinePrecoCartao),
+        valor_pix: Number(vitrinePrecoPix),
+        valor_cartao: Number(vitrinePrecoCartao),
+        valor_pix_desconto: vitrineValorPixDesconto ? Number(vitrineValorPixDesconto) : null,
+        valor_cartao_desconto: vitrineValorCartaoDesconto ? Number(vitrineValorCartaoDesconto) : null,
+        pontos_desconto: vitrinePontosDesconto ? Number(vitrinePontosDesconto) : null,
         max_parcelas: Number(vitrineMaxParcelas),
         preco_normal: vitrinePrecoNormal ? Number(vitrinePrecoNormal) : null,
         preco_com_pontos: vitrinePrecoComPontos ? Number(vitrinePrecoComPontos) : null,
         pontos_necessarios: vitrinePontosNecessarios ? Number(vitrinePontosNecessarios) : 300,
-      });
+      } as never);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -404,6 +409,9 @@ function AlunoDetalhes() {
       setVitrinePrecoNormal("");
       setVitrinePrecoComPontos("");
       setVitrinePontosNecessarios("300");
+      setVitrineValorPixDesconto("");
+      setVitrineValorCartaoDesconto("");
+      setVitrinePontosDesconto("");
       qc.invalidateQueries({ queryKey: ["aluno-vitrine", id] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -415,9 +423,14 @@ function AlunoDetalhes() {
       const { error } = await supabase.from("cursos_vitrine").update({
         preco_pix: Number(editVitrinePrecoPix),
         preco_cartao: Number(editVitrinePrecoCartao),
+        valor_pix: Number(editVitrinePrecoPix),
+        valor_cartao: Number(editVitrinePrecoCartao),
+        valor_pix_desconto: editVitrineValorPixDesconto ? Number(editVitrineValorPixDesconto) : null,
+        valor_cartao_desconto: editVitrineValorCartaoDesconto ? Number(editVitrineValorCartaoDesconto) : null,
+        pontos_desconto: editVitrinePontosDesconto ? Number(editVitrinePontosDesconto) : null,
         max_parcelas: Number(editVitrineMaxParcelas),
         ativo: editVitrineAtivo,
-      }).eq("id", editingVitrineItem.id);
+      } as never).eq("id", editingVitrineItem.id);
       if (error) throw error;
     },
     onSuccess: () => {
