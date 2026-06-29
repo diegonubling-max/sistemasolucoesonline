@@ -475,15 +475,15 @@ function StudentDashboard() {
                         <img 
                           src={curso.thumbnail_url} 
                           alt={curso.nome}
-                          className="w-full h-full object-contain filter grayscale transition-transform duration-500 group-hover:scale-105"
+                          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
-                        <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center filter grayscale`}>
+                        <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center`}>
                           <BookOpen className="h-12 w-12 text-white/40 mb-2" />
                           <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/40" />
+                      <div className="absolute inset-0 bg-black/20" />
                     </div>
 
                     <div className="absolute top-3 left-3">
