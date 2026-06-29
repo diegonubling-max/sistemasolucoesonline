@@ -554,7 +554,9 @@ function Financeiro() {
                 <Select value={selectedVendedoraRec} onValueChange={setSelectedVendedoraRec}>
                   <SelectTrigger className="w-52"><SelectValue placeholder="Vendedora" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todas">Todas as vendedoras</SelectItem>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    <SelectItem value="__agente_ia__">Agente IA</SelectItem>
+                    <SelectItem value="__admin__">Admin</SelectItem>
                     {(vendedorasList ?? []).map((v) => (
                       <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
                     ))}
