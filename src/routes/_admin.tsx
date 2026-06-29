@@ -69,8 +69,8 @@ function AdminLayout() {
     const isAdmin = userRole === "admin";
     const isColaborador = !!colaborador;
     if (!isAdmin && !isColaborador) {
-      console.warn("[admin guard] usuário sem role admin/colaborador — redirecionando para /aluno/login");
-      navigate({ to: "/aluno/login" });
+      console.warn("[admin guard] usuário sem role admin/colaborador — redirecionando para /login");
+      navigate({ to: "/login" });
     }
   }, [authLoading, loadingColab, session, userRole, colaborador, navigate]);
 
