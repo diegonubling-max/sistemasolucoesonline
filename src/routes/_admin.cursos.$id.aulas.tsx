@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2, Trash2, AlertTriangle, Image, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2, Trash2, AlertTriangle, Image, CheckCircle2, Download } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -100,6 +100,40 @@ function AulasManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [aulaToDelete, setAulaToDelete] = useState<Aula | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isPandaOpen, setIsPandaOpen] = useState(false);
+  const [pandaFolder, setPandaFolder] = useState("");
+  const [pandaOrdemMin, setPandaOrdemMin] = useState<number>(0);
+  const [pandaLoading, setPandaLoading] = useState(false);
+
+  const importarPanda = async () => {
+    if (!pandaFolder.trim()) {
+      toast.error("Informe o nome da pasta");
+      return;
+    }
+    setPandaLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("panda-video-sync", {
+        body: {
+          folder_name: pandaFolder.trim(),
+          curso_nome: curso?.nome,
+          mode: "insert",
+          ordem_minima: Number(pandaOrdemMin) || 0,
+        },
+      });
+      if (error) throw error;
+      const inseridos = (data as any)?.inseridos ?? 0;
+      const pulados = (data as any)?.pulados ?? 0;
+      toast.success(`Importação concluída: ${inseridos} inseridas, ${pulados} puladas`);
+      setIsPandaOpen(false);
+      setPandaFolder("");
+      setPandaOrdemMin(0);
+      refetch();
+    } catch (e) {
+      toast.error("Erro ao importar", { description: (e as Error).message });
+    } finally {
+      setPandaLoading(false);
+    }
+  };
 
   const reorder = useMutation({
     mutationFn: async (items: Aula[]) => {
@@ -213,9 +247,51 @@ function AulasManager() {
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
               </Link>
             </Button>
+            <Button variant="outline" onClick={() => setIsPandaOpen(true)}>
+              <Download className="h-4 w-4 mr-2" /> Importar do Panda
+            </Button>
             <Button onClick={handleNew}>
               <Plus className="h-4 w-4 mr-2" /> Nova aula
             </Button>
+
+            <Dialog open={isPandaOpen} onOpenChange={setIsPandaOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Importar aulas do Panda Video</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-1.5">
+                    <Label>Nome da pasta no Panda</Label>
+                    <Input
+                      value={pandaFolder}
+                      onChange={(e) => setPandaFolder(e.target.value)}
+                      placeholder="Ex: Excel"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Iniciar a partir da ordem</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={pandaOrdemMin}
+                      onChange={(e) => setPandaOrdemMin(parseInt(e.target.value) || 0)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Apenas aulas com ordem maior que esse valor serão inseridas.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsPandaOpen(false)} disabled={pandaLoading}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={importarPanda} disabled={pandaLoading}>
+                    {pandaLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    Importar
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             <Dialog open={isModalOpen} onOpenChange={(o) => {
               setIsModalOpen(o);

@@ -29,7 +29,7 @@ function extrairOrdemDoTitulo(titulo: string, fallback: number): number {
   return m ? parseInt(m[1], 10) : fallback;
 }
 
-async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string) {
+async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string, ordemMinima: number = 0) {
   const folder = folders.find(
     (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
   );
@@ -198,6 +198,12 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
     const titulo = v.title || v.name || "";
     const ordem = extrairOrdemDoTitulo(titulo, i + 1);
 
+    if (ordem <= ordemMinima) {
+      pulados++;
+      pulados_detalhes.push({ ordem, titulo: v.title || v.name, motivo: `ordem <= ${ordemMinima}` });
+      continue;
+    }
+
     if (ordensExistentes.has(ordem)) {
       pulados++;
       pulados_detalhes.push({ ordem, titulo: v.title || v.name, motivo: "ordem já existe" });
@@ -255,12 +261,14 @@ serve(async (req) => {
     let folderName: string | undefined;
     let folderNames: string[] | undefined;
     let cursoNome: string | undefined;
+    let ordemMinima = 0;
     let mode: "insert" | "update" | "update_by_title" = "insert";
     try {
       const body = await req.json();
       folderName = body?.folder_name;
       folderNames = body?.folder_names;
       cursoNome = body?.curso_nome;
+      if (typeof body?.ordem_minima === "number") ordemMinima = body.ordem_minima;
       if (body?.update_mode === true) mode = "update_by_title";
       else if (body?.mode === "update") mode = "update";
       else if (body?.mode === "update_by_title") mode = "update_by_title";
@@ -277,7 +285,7 @@ serve(async (req) => {
     // Array de pastas → processar em paralelo
     if (Array.isArray(folderNames) && folderNames.length > 0) {
       const resultados = await Promise.all(
-        folderNames.map((name) => processFolder(supabase, folders, name, mode, cursoNome))
+        folderNames.map((name) => processFolder(supabase, folders, name, mode, cursoNome, ordemMinima))
       );
       return new Response(
         JSON.stringify({ success: true, mode, resultados }),
@@ -285,7 +293,7 @@ serve(async (req) => {
       );
     }
 
-    const resultado = await processFolder(supabase, folders, folderName, mode, cursoNome);
+    const resultado = await processFolder(supabase, folders, folderName, mode, cursoNome, ordemMinima);
     const status = (resultado as any).error ? 404 : 200;
     return new Response(JSON.stringify(resultado), {
       status,
