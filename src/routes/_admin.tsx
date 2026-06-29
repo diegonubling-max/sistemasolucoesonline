@@ -63,6 +63,17 @@ function AdminLayout() {
     if (!authLoading && !session) navigate({ to: "/login" });
   }, [authLoading, session, navigate]);
 
+  // Guard: usuário autenticado precisa ser admin ou colaborador para acessar /admin/*
+  useEffect(() => {
+    if (authLoading || loadingColab || !session) return;
+    const isAdmin = userRole === "admin";
+    const isColaborador = !!colaborador;
+    if (!isAdmin && !isColaborador) {
+      console.warn("[admin guard] usuário sem role admin/colaborador — redirecionando para /aluno/login");
+      navigate({ to: "/aluno/login" });
+    }
+  }, [authLoading, loadingColab, session, userRole, colaborador, navigate]);
+
   const isSuperAdmin = session?.user?.email === "diegonubling@gmail.com" || userRole === "admin";
 
   usePushNotifications(isSuperAdmin, session?.user?.id);
