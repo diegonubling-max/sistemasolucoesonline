@@ -584,7 +584,7 @@ function Financeiro() {
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
-                    <TableCell>{p.matriculas?.colaboradores?.nome ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
+                    <TableCell>{p.matriculas?.alunos?.vendedora ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
                     <TableCell>
                       {p.forma_pagamento && (
                         <Badge 
