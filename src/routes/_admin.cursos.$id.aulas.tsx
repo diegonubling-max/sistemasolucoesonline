@@ -55,7 +55,7 @@ import {
 import { ThumbnailUpload } from "@/components/admin/ThumbnailUpload";
 
 export const Route = createFileRoute("/_admin/cursos/$id/aulas")({
-  head: () => ({ meta: [{ title: "Aulas — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Aulas — Soluções Online" }] }),
   component: AulasManager,
 });
 

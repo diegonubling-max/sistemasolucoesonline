@@ -12,7 +12,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_admin/alunos/novo")({
-  head: () => ({ meta: [{ title: "Nova Matrícula — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Nova Matrícula — Soluções Online" }] }),
   validateSearch: searchSchema,
   component: NovoAlunoMatricula,
 });

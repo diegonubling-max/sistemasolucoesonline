@@ -33,7 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_admin/pacotes")({
-  head: () => ({ meta: [{ title: "Pacotes — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Pacotes — Soluções Online" }] }),
   component: PacotesList,
 });
 

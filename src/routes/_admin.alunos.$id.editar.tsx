@@ -25,7 +25,7 @@ import { formatCurrency } from "@/lib/format";
 import { notifyPagamentoRecebido } from "@/lib/notify";
 
 export const Route = createFileRoute("/_admin/alunos/$id/editar")({
-  head: () => ({ meta: [{ title: "Editar aluno — EduManager" }] }),
+  head: () => ({ meta: [{ title: "Editar aluno — Soluções Online" }] }),
   component: EditarAluno,
 });
 
