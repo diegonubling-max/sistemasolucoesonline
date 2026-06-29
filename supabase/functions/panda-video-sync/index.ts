@@ -197,7 +197,8 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
 
   for (let i = 0; i < videos.length; i++) {
     const v = videos[i];
-    const ordem = i + 1;
+    const titulo = v.title || v.name || "";
+    const ordem = extrairOrdemDoTitulo(titulo, i + 1);
 
     if (ordensExistentes.has(ordem)) {
       pulados++;
