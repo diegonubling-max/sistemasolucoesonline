@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2, Trash2, AlertTriangle, Image, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Power, GripVertical, Loader2, Trash2, AlertTriangle, Image, CheckCircle2, Download } from "lucide-react";
 import {
   DndContext,
   closestCenter,
