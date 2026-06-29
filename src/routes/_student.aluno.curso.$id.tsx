@@ -119,6 +119,7 @@ function StudentCourse() {
           )
         `)
         .eq("id", id)
+        .order("ordem", { ascending: true, foreignTable: "aulas" })
         .single();
 
       if (error) throw error;
