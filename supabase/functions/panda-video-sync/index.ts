@@ -31,7 +31,7 @@ function extrairOrdemDoTitulo(titulo: string, fallback: number): number {
   return n ? parseInt(n[1], 10) : fallback;
 }
 
-async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert") {
+async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string) {
   const folder = folders.find(
     (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
   );
@@ -47,7 +47,7 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
   const videosData = await videosResp.json();
   const videos = videosData.videos || videosData || [];
 
-  const nomeCurso = MAPEAMENTO_CURSOS[folder.name] || folder.name;
+  const nomeCurso = cursoNome || MAPEAMENTO_CURSOS[folder.name] || folder.name;
   const { data: curso } = await supabase
     .from("cursos")
     .select("id, nome")
