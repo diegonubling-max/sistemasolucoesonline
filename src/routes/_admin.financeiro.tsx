@@ -166,16 +166,20 @@ function Financeiro() {
   });
 
   const { data: recebimentos, refetch: refetchRecebimentos } = useQuery({
-    queryKey: ["financeiro-recebimentos", recPeriod, selectedPoloId, userRole, colabData],
+    queryKey: ["financeiro-recebimentos", recPeriod, selectedPoloId, selectedVendedoraRec, userRole, colabData],
     queryFn: async () => {
       let q = supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
+        .select("*, matriculas!inner(colaborador_id, colaboradores(nome), alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("status", "pago")
         .gte("data_pagamento", recPeriod.start)
         .lte("data_pagamento", recPeriod.end)
         .order("data_pagamento", { ascending: false });
-      
+
+      if (selectedVendedoraRec !== "todas") {
+        q = q.eq("matriculas.colaborador_id", selectedVendedoraRec);
+      }
+
       const { data, error } = await filterByPolo(q);
       if (error) throw error;
       return data;
