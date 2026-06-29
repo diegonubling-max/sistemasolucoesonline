@@ -25,10 +25,8 @@ const MAPEAMENTO_CURSOS: Record<string, string> = {
 };
 
 function extrairOrdemDoTitulo(titulo: string, fallback: number): number {
-  const m = (titulo || "").match(/aula\s*0*(\d+)/i);
-  if (m) return parseInt(m[1], 10);
-  const n = (titulo || "").match(/0*(\d+)/);
-  return n ? parseInt(n[1], 10) : fallback;
+  const m = (titulo || "").match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : fallback;
 }
 
 async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string) {
@@ -76,7 +74,8 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
 
     for (let i = 0; i < videos.length; i++) {
       const v = videos[i];
-      const ordem = i + 1;
+      const titulo = v.title || v.name || "";
+      const ordem = extrairOrdemDoTitulo(titulo, i + 1);
       const playerUrl =
         v.video_player ||
         `https://player.pandavideo.com.br/embed/?v=${v.video_id || v.id}`;
@@ -196,7 +195,8 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
 
   for (let i = 0; i < videos.length; i++) {
     const v = videos[i];
-    const ordem = i + 1;
+    const titulo = v.title || v.name || "";
+    const ordem = extrairOrdemDoTitulo(titulo, i + 1);
 
     if (ordensExistentes.has(ordem)) {
       pulados++;
