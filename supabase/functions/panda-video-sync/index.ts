@@ -31,7 +31,7 @@ function extrairOrdemDoTitulo(titulo: string, fallback: number): number {
   return n ? parseInt(n[1], 10) : fallback;
 }
 
-async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert") {
+async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string) {
   const folder = folders.find(
     (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
   );
@@ -47,7 +47,7 @@ async function processFolder(supabase: any, folders: any[], folderName: string, 
   const videosData = await videosResp.json();
   const videos = videosData.videos || videosData || [];
 
-  const nomeCurso = MAPEAMENTO_CURSOS[folder.name] || folder.name;
+  const nomeCurso = cursoNome || MAPEAMENTO_CURSOS[folder.name] || folder.name;
   const { data: curso } = await supabase
     .from("cursos")
     .select("id, nome")
@@ -232,11 +232,13 @@ serve(async (req) => {
   try {
     let folderName: string | undefined;
     let folderNames: string[] | undefined;
+    let cursoNome: string | undefined;
     let mode: "insert" | "update" | "update_by_title" = "insert";
     try {
       const body = await req.json();
       folderName = body?.folder_name;
       folderNames = body?.folder_names;
+      cursoNome = body?.curso_nome;
       if (body?.update_mode === true) mode = "update_by_title";
       else if (body?.mode === "update") mode = "update";
       else if (body?.mode === "update_by_title") mode = "update_by_title";
@@ -253,7 +255,7 @@ serve(async (req) => {
     // Array de pastas → processar em paralelo
     if (Array.isArray(folderNames) && folderNames.length > 0) {
       const resultados = await Promise.all(
-        folderNames.map((name) => processFolder(supabase, folders, name, mode))
+        folderNames.map((name) => processFolder(supabase, folders, name, mode, cursoNome))
       );
       return new Response(
         JSON.stringify({ success: true, mode, resultados }),
@@ -261,18 +263,7 @@ serve(async (req) => {
       );
     }
 
-    // Sem folder_name → retorna apenas a lista de pastas disponíveis
-    if (!folderName) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          pastas: folders.map((f: any) => ({ id: f.id, name: f.name })),
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const resultado = await processFolder(supabase, folders, folderName, mode);
+    const resultado = await processFolder(supabase, folders, folderName, mode, cursoNome);
     const status = (resultado as any).error ? 404 : 200;
     return new Response(JSON.stringify(resultado), {
       status,
