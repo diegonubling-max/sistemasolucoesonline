@@ -782,6 +782,7 @@ export type Database = {
           ativo: boolean
           created_at: string
           descricao: string | null
+          destaque_perfil: boolean | null
           id: string
           is_prova_final: boolean | null
           material_pdf_url: string | null
@@ -793,6 +794,7 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           descricao?: string | null
+          destaque_perfil?: boolean | null
           id?: string
           is_prova_final?: boolean | null
           material_pdf_url?: string | null
@@ -804,6 +806,7 @@ export type Database = {
           ativo?: boolean
           created_at?: string
           descricao?: string | null
+          destaque_perfil?: boolean | null
           id?: string
           is_prova_final?: boolean | null
           material_pdf_url?: string | null

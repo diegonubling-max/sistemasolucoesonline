@@ -29,9 +29,22 @@ function extrairOrdemDoTitulo(titulo: string, fallback: number): number {
   return m ? parseInt(m[1], 10) : fallback;
 }
 
-async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string, ordemMinima: number = 0) {
+async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string, ordemMinima: number = 0, parentFolder?: string) {
+  let parentId: string | null | undefined = undefined;
+  if (parentFolder) {
+    const parent = folders.find(
+      (f: any) => (f.name || "").toLowerCase() === parentFolder.toLowerCase()
+    );
+    if (!parent) {
+      return { folder_name: folderName, error: `Pasta pai "${parentFolder}" não encontrada no Panda Video` };
+    }
+    parentId = parent.id;
+  }
+
   const folder = folders.find(
-    (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
+    (f: any) =>
+      (f.name || "").toLowerCase() === folderName.toLowerCase() &&
+      (parentId === undefined || f.parent_folder_id === parentId)
   );
 
   if (!folder) {
@@ -263,11 +276,13 @@ serve(async (req) => {
     let cursoNome: string | undefined;
     let ordemMinima = 0;
     let mode: "insert" | "update" | "update_by_title" = "insert";
+    let parentFolder: string | undefined;
     try {
       const body = await req.json();
       folderName = body?.folder_name;
       folderNames = body?.folder_names;
       cursoNome = body?.curso_nome;
+      parentFolder = body?.parent_folder;
       if (typeof body?.ordem_minima === "number") ordemMinima = body.ordem_minima;
       if (body?.update_mode === true) mode = "update_by_title";
       else if (body?.mode === "update") mode = "update";
@@ -285,7 +300,7 @@ serve(async (req) => {
     // Array de pastas → processar em paralelo
     if (Array.isArray(folderNames) && folderNames.length > 0) {
       const resultados = await Promise.all(
-        folderNames.map((name) => processFolder(supabase, folders, name, mode, cursoNome, ordemMinima))
+        folderNames.map((name) => processFolder(supabase, folders, name, mode, cursoNome, ordemMinima, parentFolder))
       );
       return new Response(
         JSON.stringify({ success: true, mode, resultados }),
@@ -293,7 +308,7 @@ serve(async (req) => {
       );
     }
 
-    const resultado = await processFolder(supabase, folders, folderName, mode, cursoNome, ordemMinima);
+    const resultado = await processFolder(supabase, folders, folderName, mode, cursoNome, ordemMinima, parentFolder);
     const status = (resultado as any).error ? 404 : 200;
     return new Response(JSON.stringify(resultado), {
       status,
