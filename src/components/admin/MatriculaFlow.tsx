@@ -1688,6 +1688,43 @@ export function MatriculaFlow({
         </div>
       )}
 
+      <Dialog open={!!pendingModeloId} onOpenChange={(o) => { if (!o) setPendingModeloId(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Modelo de Contrato</DialogTitle>
+            <DialogDescription>
+              Como deseja prosseguir com este modelo?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              onClick={() => {
+                if (!pendingModeloId) return;
+                setSelectedModeloId(pendingModeloId);
+                setShowEditor(false);
+                generateContract(pendingModeloId);
+                setPendingModeloId(null);
+              }}
+            >
+              Usar modelo padrão
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!pendingModeloId) return;
+                setSelectedModeloId(pendingModeloId);
+                setShowEditor(true);
+                generateContract(pendingModeloId);
+                setPendingModeloId(null);
+              }}
+            >
+              Editar contrato
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       <Dialog open={showAccessModal} onOpenChange={(o) => {
         if (!o) {
           setShowAccessModal(false);
