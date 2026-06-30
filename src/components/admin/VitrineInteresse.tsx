@@ -123,8 +123,7 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
                         </Button>
                       </a>
                     )}
-                    {/* Botão de excluir desativado temporariamente
-                    {canDelete && alunoId && (
+                    {canDelete && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button size="sm" variant="destructive" className="h-8 w-8 p-0">
@@ -133,24 +132,23 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir aluno?</AlertDialogTitle>
+                            <AlertDialogTitle>Remover interesse?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Tem certeza que deseja excluir este aluno da vitrine? Esta ação não pode ser desfeita.
+                              Tem certeza que deseja remover este registro de interesse de {aluno} no curso {curso}? Esta ação não pode ser desfeita.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
                             <AlertDialogAction
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              onClick={() => excluirAluno.mutate(alunoId)}
+                              onClick={() => excluirClique.mutate(c.id)}
                             >
-                              Excluir
+                              Remover
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
-                    */}
                   </div>
                 </li>
               );
