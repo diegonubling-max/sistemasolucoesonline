@@ -746,9 +746,9 @@ function StudentDashboard() {
                         <p className="text-xs text-gray-400 line-through">De {formatCurrency(pix)}</p>
                       )}
                       <p className="text-3xl font-extrabold text-green-600 leading-tight">
-                        {formatCurrency(pixDesc || pix)}
+                        {formatCurrency(pixDesc)}
                       </p>
-                      <p className="text-xs text-gray-600 mt-1">Parcela única de <b>{formatCurrency(pixDesc || pix)}</b></p>
+                      <p className="text-xs text-gray-600 mt-1">Parcela única de <b>{formatCurrency(pixDesc)}</b></p>
                     </div>
 
                     <div className="rounded-xl border border-orange-300 bg-orange-50 p-4">
@@ -757,9 +757,9 @@ function StudentDashboard() {
                         <p className="text-xs text-gray-400 line-through">De {formatCurrency(cartao)}</p>
                       )}
                       <p className="text-2xl font-extrabold text-orange-600 leading-tight">
-                        12x de {formatCurrency((cartaoDesc || cartao) / 12)}
+                        12x de {formatCurrency(cartaoDesc / 12)}
                       </p>
-                      <p className="text-xs text-gray-600 mt-1">Total: <b>{formatCurrency(cartaoDesc || cartao)}</b></p>
+                      <p className="text-xs text-gray-600 mt-1">Total: <b>{formatCurrency(cartaoDesc)}</b></p>
                     </div>
 
                     {podeDesconto && economia > 0 && (
