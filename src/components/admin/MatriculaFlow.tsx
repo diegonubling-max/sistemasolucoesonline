@@ -77,9 +77,12 @@ export function MatriculaFlow({
   const [showContractModal, setShowContractModal] = useState(false);
   const [showModelSelection, setShowModelSelection] = useState(false);
   const [selectedModeloId, setSelectedModeloId] = useState<string | null>(null);
+  const [pendingModeloId, setPendingModeloId] = useState<string | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
   const [contractContent, setContractContent] = useState("");
   const [contractLink, setContractLink] = useState<string | null>(null);
   const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
+
 
   const { data: modelos } = useQuery({
     queryKey: ["modelos-contrato"],
@@ -1608,12 +1611,12 @@ export function MatriculaFlow({
                     variant="outline"
                     className="h-auto py-6 flex flex-col items-center gap-3 hover:border-primary hover:bg-primary/5 transition-all group"
                     onClick={() => {
-                      setSelectedModeloId(modelo.id);
-                      generateContract(modelo.id);
+                      setPendingModeloId(modelo.id);
                     }}
                   >
                     <FileText className="h-8 w-8 text-muted-foreground group-hover:text-primary" />
                     <span className="font-bold text-base">{modelo.nome}</span>
+
                   </Button>
                 ))}
                 {(!modelos || modelos.length === 0) && (
@@ -1635,26 +1638,41 @@ export function MatriculaFlow({
             <Card className="flex flex-col min-h-[600px]">
               <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
                 <div>
-                  <CardTitle>Edição do Contrato</CardTitle>
-                  <CardDescription>Revise e ajuste o conteúdo se necessário antes de finalizar.</CardDescription>
+                  <CardTitle>{showEditor ? "Edição do Contrato" : "Modelo Selecionado"}</CardTitle>
+                  <CardDescription>
+                    {showEditor
+                      ? "Revise e ajuste o conteúdo se necessário antes de finalizar."
+                      : "O modelo padrão será usado. Você pode finalizar a matrícula ou editar o contrato."}
+                  </CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setSelectedModeloId(null)}>
+                <Button variant="outline" size="sm" onClick={() => { setSelectedModeloId(null); setShowEditor(false); }}>
                   Trocar Modelo
                 </Button>
               </CardHeader>
               <CardContent className="flex-1 p-0">
-                <RichTextEditor 
-                  content={contractContent} 
-                  onChange={setContractContent}
-                  className="min-h-[500px]"
-                />
-
+                {showEditor ? (
+                  <RichTextEditor
+                    content={contractContent}
+                    onChange={setContractContent}
+                    className="min-h-[500px]"
+                  />
+                ) : (
+                  <div className="p-8 flex flex-col items-center justify-center text-center gap-3 text-muted-foreground">
+                    <FileText className="h-10 w-10 text-primary" />
+                    <p className="font-medium text-foreground">
+                      {(modelos as any[] | undefined)?.find((m: any) => m.id === selectedModeloId)?.nome}
+                    </p>
+                    <Button variant="link" onClick={() => setShowEditor(true)}>
+                      Editar contrato
+                    </Button>
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="border-t p-6 flex justify-between bg-white sticky bottom-0 z-10">
                 <Button variant="outline" onClick={() => setStep(4)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
                 </Button>
-                <Button 
+                <Button
                   size="lg"
                   className="bg-green-600 hover:bg-green-700 font-bold px-10"
                   disabled={concludeMatricula.isPending}
@@ -1665,9 +1683,47 @@ export function MatriculaFlow({
                 </Button>
               </CardFooter>
             </Card>
+
           )}
         </div>
       )}
+
+      <Dialog open={!!pendingModeloId} onOpenChange={(o) => { if (!o) setPendingModeloId(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Modelo de Contrato</DialogTitle>
+            <DialogDescription>
+              Como deseja prosseguir com este modelo?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              onClick={() => {
+                if (!pendingModeloId) return;
+                setSelectedModeloId(pendingModeloId);
+                setShowEditor(false);
+                generateContract(pendingModeloId);
+                setPendingModeloId(null);
+              }}
+            >
+              Usar modelo padrão
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!pendingModeloId) return;
+                setSelectedModeloId(pendingModeloId);
+                setShowEditor(true);
+                generateContract(pendingModeloId);
+                setPendingModeloId(null);
+              }}
+            >
+              Editar contrato
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <Dialog open={showAccessModal} onOpenChange={(o) => {
         if (!o) {
