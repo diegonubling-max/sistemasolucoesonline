@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Eye, Power, Trash2, AlertTriangle, Loader2, FileText, FileCheck, FileWarning } from "lucide-react";
+import { Plus, Search, Pencil, Eye, Power, Trash2, AlertTriangle, Loader2, FileText, FileCheck, FileWarning, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,7 +128,7 @@ function AlunosList() {
 
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, cadastro_completo, matriculas(id), contratos(id, status)", { count: "exact" })
+        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, cadastro_completo, matriculas(id), contratos(id, status), cursos_vitrine(id)", { count: "exact" })
         .order("created_at", { ascending: false });
 
       if (statusFilter !== "all") {
@@ -275,6 +275,11 @@ function AlunosList() {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       <span>{a.nome}</span>
+                      {Array.isArray((a as any).cursos_vitrine) && (a as any).cursos_vitrine.length > 0 && (
+                        <ShoppingBag className="h-3.5 w-3.5 text-green-600" aria-label="Possui cursos na vitrine">
+                          <title>Possui cursos na vitrine</title>
+                        </ShoppingBag>
+                      )}
                       {(a as any).cadastro_completo === false && (
                         <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] px-1.5 py-0">
                           Incompleto
