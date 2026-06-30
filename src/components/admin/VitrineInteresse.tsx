@@ -53,16 +53,16 @@ export function VitrineInteresse({ selectedPoloId, colabPoloId, isSuperAdmin }: 
     },
   });
 
-  const excluirAluno = useMutation({
-    mutationFn: async (alunoId: string) => {
-      const { error } = await supabase.rpc("delete_aluno_completo", { p_aluno_id: alunoId });
+  const excluirClique = useMutation({
+    mutationFn: async (cliqueId: string) => {
+      const { error } = await supabase.from("vitrine_cliques").delete().eq("id", cliqueId);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Aluno excluído com sucesso!");
+      toast.success("Interesse removido!");
       qc.invalidateQueries({ queryKey: ["vitrine-cliques"] });
     },
-    onError: (e: any) => toast.error("Erro ao excluir aluno", { description: e.message }),
+    onError: (e: any) => toast.error("Erro ao remover", { description: e.message }),
   });
 
   return (
