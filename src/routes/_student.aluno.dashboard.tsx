@@ -699,109 +699,124 @@ function StudentDashboard() {
       </Dialog>
 
       <Dialog open={!!selectedVitrine} onOpenChange={(open) => !open && setSelectedVitrine(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-[#1E3A5F]" />
-              Desbloquear Curso
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedVitrine && (
-            <div className="space-y-6 py-4">
-              <div className="text-center space-y-2">
-                <h3 className="text-xl font-bold text-gray-900">{selectedVitrine.cursos?.nome}</h3>
-              </div>
+        <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto p-0">
+          {selectedVitrine && (() => {
+            const v = selectedVitrine;
+            const curso = v.cursos || {};
+            const pix = Number(v.valor_pix ?? v.preco_pix ?? 0);
+            const cartao = Number(v.valor_cartao ?? v.preco_cartao ?? 0);
+            const pixDesc = Number(v.valor_pix_desconto ?? 0);
+            const cartaoDesc = Number(v.valor_cartao_desconto ?? 0);
+            const pontosNec = Number(v.pontos_desconto ?? v.pontos_necessarios ?? 0);
+            const saldo = milhasSaldo ?? 0;
+            const temDesconto = pixDesc > 0 && cartaoDesc > 0 && pontosNec > 0;
+            const podeDesconto = temDesconto && saldo >= pontosNec;
+            const economia = podeDesconto ? Math.max(0, pix - pixDesc) : 0;
+            const parcelaCartaoDesc = cartaoDesc / 12;
+            const parcelaCartao = cartao / 12;
 
-              <div className="bg-gray-50 p-6 rounded-xl space-y-4 border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                      <Smartphone className="h-5 w-5" />
+            return (
+              <>
+                {curso.thumbnail_url ? (
+                  <div className="relative h-44 w-full overflow-hidden rounded-t-lg">
+                    <img src={curso.thumbnail_url} alt={curso.nome} className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute bottom-3 left-4 right-4">
+                      <h3 className="text-2xl font-extrabold text-white drop-shadow">{curso.nome}</h3>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Preço PIX</p>
-                      <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedVitrine.preco_pix)}</p>
-                    </div>
+                    {podeDesconto && (
+                      <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                        🔥 OFERTA DESBLOQUEADA
+                      </div>
+                    )}
                   </div>
-                </div>
+                ) : (
+                  <DialogHeader className="px-6 pt-6">
+                    <DialogTitle>{curso.nome}</DialogTitle>
+                  </DialogHeader>
+                )}
 
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
-                      <Smartphone className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Preço Cartão</p>
-                      {(() => {
-                        const base = Number(selectedVitrine.preco_com_pontos ?? selectedVitrine.preco_normal ?? selectedVitrine.preco_pix);
-                        const parcela = base / 10;
-                        const totalCartao = parcela * 12;
-                        return (
-                          <>
-                            <p className="text-xs text-gray-500 font-medium leading-none mt-1">12x</p>
-                            <p className="text-2xl font-extrabold text-gray-900 leading-tight">
-                              {formatCurrency(parcela)}
-                            </p>
-                            <p className="text-xs text-gray-500 font-medium">no cartão</p>
-                            <p className="text-xs text-gray-500 mt-1">Total: {formatCurrency(totalCartao)}</p>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {selectedVitrine.preco_com_pontos && selectedVitrine.pontos_necessarios && (
-                <div className="rounded-xl border-2 border-yellow-300 bg-yellow-50 p-4 space-y-2">
-                  <p className="flex items-center gap-2 font-bold text-yellow-800">
-                    <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                    Preço com Milhas EJA
-                  </p>
-                  <p className="text-sm text-gray-700">
-                    Use <b>{selectedVitrine.pontos_necessarios} pts</b> e pague apenas{" "}
-                    <b>{formatCurrency(selectedVitrine.preco_com_pontos)}</b>
-                  </p>
-                  {(milhasSaldo ?? 0) >= selectedVitrine.pontos_necessarios ? (
-                    <Button
-                      className="w-full bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => setConfirmResgate(selectedVitrine)}
-                    >
-                      🔥 Comprar com pontos
-                    </Button>
-                  ) : (
-                    <p className="text-xs text-red-600 font-medium">
-                      Faltam {selectedVitrine.pontos_necessarios - (milhasSaldo ?? 0)} pts para
-                      desbloquear este preço
+                <div className="px-6 pb-6 pt-4 space-y-5">
+                  {curso.descricao && (
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                      {curso.descricao}
                     </p>
                   )}
+
+                  {podeDesconto ? (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border-2 border-green-400 bg-gradient-to-br from-green-50 to-emerald-50 p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-green-700 uppercase tracking-wider">PIX — À vista</span>
+                          <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full font-bold">MELHOR PREÇO</span>
+                        </div>
+                        <p className="text-xs text-gray-400 line-through">De {formatCurrency(pix)}</p>
+                        <p className="text-3xl font-extrabold text-green-600 leading-tight">
+                          {formatCurrency(pixDesc)}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">Parcela única de <b>{formatCurrency(pixDesc)}</b></p>
+                      </div>
+
+                      <div className="rounded-xl border border-orange-300 bg-orange-50 p-4">
+                        <span className="text-xs font-bold text-orange-700 uppercase tracking-wider">Cartão</span>
+                        <p className="text-xs text-gray-400 line-through">De {formatCurrency(cartao)}</p>
+                        <p className="text-2xl font-extrabold text-orange-600 leading-tight">
+                          12x de {formatCurrency(parcelaCartaoDesc)}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">ou parcele em até 12x de <b>{formatCurrency(parcelaCartaoDesc)}</b></p>
+                      </div>
+
+                      {economia > 0 && (
+                        <div className="rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-3 text-center font-bold shadow-md">
+                          💰 Você economiza {formatCurrency(economia)} com suas Milhas EJA!
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border bg-gray-50 p-4">
+                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">PIX</span>
+                        <p className="text-2xl font-extrabold text-gray-900">{formatCurrency(pix)}</p>
+                        <p className="text-xs text-gray-500">Parcela única de {formatCurrency(pix)}</p>
+                      </div>
+                      <div className="rounded-xl border bg-gray-50 p-4">
+                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">Cartão</span>
+                        <p className="text-2xl font-extrabold text-gray-900">12x de {formatCurrency(parcelaCartao)}</p>
+                        <p className="text-xs text-gray-500">Total: {formatCurrency(cartao)}</p>
+                      </div>
+                      {temDesconto && (
+                        <div className="rounded-xl border-2 border-dashed border-yellow-400 bg-yellow-50 p-3 text-center">
+                          <p className="text-sm font-semibold text-yellow-800">
+                            ⭐ Faltam <b>{pontosNec - saldo} pts</b> para desbloquear o desconto
+                          </p>
+                          <p className="text-xs text-yellow-700 mt-1">
+                            Por apenas {formatCurrency(pixDesc)} no PIX
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <Button
+                    className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white gap-2 text-base font-bold py-6 animate-vitrine-pulse"
+                    onClick={() => {
+                      setCheckoutVitrine(selectedVitrine);
+                      setSelectedVitrine(null);
+                    }}
+                  >
+                    <Zap className="h-5 w-5" /> Garantir minha vaga
+                  </Button>
+
+                  <Button variant="outline" className="w-full" onClick={() => setSelectedVitrine(null)}>
+                    Fechar
+                  </Button>
                 </div>
-              )}
-
-
-              <div className="space-y-3">
-                <Button
-                  className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white gap-2 text-base font-bold py-6 animate-vitrine-pulse"
-                  onClick={() => {
-                    setCheckoutVitrine(selectedVitrine);
-                    setSelectedVitrine(null);
-                  }}
-                >
-                  <Zap className="h-5 w-5" /> Comprar agora (PIX ou Cartão)
-                </Button>
-              </div>
-
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" className="w-full" onClick={() => setSelectedVitrine(null)}>
-              Fechar
-            </Button>
-          </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
+
 
       <Dialog open={!!confirmResgate} onOpenChange={(o) => !o && setConfirmResgate(null)}>
         <DialogContent className="max-w-md">
