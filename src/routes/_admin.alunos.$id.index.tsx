@@ -1033,6 +1033,28 @@ function AlunoDetalhes() {
   );
 }
 
+      <Dialog open={showEditVitrineModal} onOpenChange={setShowEditVitrineModal}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar Vitrine — {(editingVitrineItem?.cursos as any)?.nome}</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">Valores sem desconto</p>
+              <Input placeholder="Valor PIX (R$)" type="number" value={editVitrinePrecoPix} onChange={(e) => setEditVitrinePrecoPix(e.target.value)} />
+              <Input placeholder="Valor Cartão (R$)" type="number" value={editVitrinePrecoCartao} onChange={(e) => setEditVitrinePrecoCartao(e.target.value)} />
+            </div>
+            <div className="border-t pt-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">Preços com desconto por pontos (opcional)</p>
+              <Input placeholder="Preço PIX com desconto (R$)" type="number" value={editVitrineValorPixDesconto} onChange={(e) => setEditVitrineValorPixDesconto(e.target.value)} />
+              <Input placeholder="Preço Cartão com desconto (R$)" type="number" value={editVitrineValorCartaoDesconto} onChange={(e) => setEditVitrineValorCartaoDesconto(e.target.value)} />
+              <Input placeholder="Pontos necessários para o desconto" type="number" value={editVitrinePontosDesconto} onChange={(e) => setEditVitrinePontosDesconto(e.target.value)} />
+            </div>
+          </div>
+          <Button onClick={() => updateVitrine.mutate()} disabled={updateVitrine.isPending}>
+            {updateVitrine.isPending ? "Salvando..." : "Salvar alterações"}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
 function Info({ label, value }: { label: string; value: any }) {
   return (<div><p className="text-[10px] text-muted-foreground uppercase">{label}</p><p className="font-medium">{value || "—"}</p></div>);
 }
