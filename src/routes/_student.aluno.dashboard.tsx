@@ -524,23 +524,21 @@ function StudentDashboard() {
                           const parcela = cartaoFinal / 12;
 
                           return (
-                            <div className="leading-tight text-yellow-300">
-                              <p className="text-[10px] font-medium opacity-90">
-                                PIX: {formatCurrency(valorPix)}
+                            <div className="leading-tight overflow-hidden">
+                              <p className="text-[10px] text-white/70 line-through truncate">
+                                De {formatCurrency(valorPix)}
                               </p>
-                              <p className="text-sm font-extrabold flex items-center gap-1 mt-0.5">
-                                {pontosNec != null && (
-                                  <>
-                                    <Star className="h-3.5 w-3.5 fill-yellow-300" />
-                                    {pontosNec} pts p/ desconto —{" "}
-                                  </>
-                                )}
-                                PIX: {formatCurrency(pixFinal)}
+                              <p className="text-lg font-extrabold text-yellow-300 truncate">
+                                {formatCurrency(pixFinal)}
+                                <span className="text-[10px] font-medium ml-1">
+                                  no PIX{pontosNec != null ? ` com ${pontosNec} pts` : ""}
+                                </span>
                               </p>
-                              <p className="text-[11px] font-semibold mt-0.5">
-                                12x de {formatCurrency(parcela)} no cartão
+                              <p className="text-[11px] text-yellow-300/90 truncate">
+                                ou 12x de {formatCurrency(parcela)}
                               </p>
                             </div>
+
                           );
                         })()}
                       </div>
