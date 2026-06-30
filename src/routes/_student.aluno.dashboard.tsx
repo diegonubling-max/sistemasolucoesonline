@@ -702,7 +702,7 @@ function StudentDashboard() {
       </Dialog>
 
       <Dialog open={!!selectedVitrine} onOpenChange={(open) => !open && setSelectedVitrine(null)}>
-        <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto p-0">
+        <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-0">
           {selectedVitrine && (() => {
             const v = selectedVitrine;
             const curso = v.cursos || {};
@@ -720,31 +720,38 @@ function StudentDashboard() {
 
             return (
               <>
-                {curso.thumbnail_url ? (
-                  <div className="relative h-44 w-full overflow-hidden rounded-t-lg">
-                    <img src={curso.thumbnail_url} alt={curso.nome} className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    <div className="absolute bottom-3 left-4 right-4">
-                      <h3 className="text-2xl font-extrabold text-white drop-shadow">{curso.nome}</h3>
-                    </div>
-                    {podeDesconto && (
-                      <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
-                        🔥 OFERTA DESBLOQUEADA
+                <DialogHeader className="px-6 pt-6 pb-2">
+                  <DialogTitle className="text-2xl font-extrabold text-[#1E3A5F]">{curso.nome}</DialogTitle>
+                </DialogHeader>
+
+                <div className="px-6 pb-2 pt-2">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {curso.thumbnail_url && (
+                      <div className="relative w-full sm:w-44 shrink-0 mx-auto sm:mx-0">
+                        <div className="aspect-[3/4] w-full overflow-hidden rounded-lg shadow-md bg-gray-100">
+                          <img src={curso.thumbnail_url} alt={curso.nome} className="h-full w-full object-cover" />
+                        </div>
+                        {podeDesconto && (
+                          <div className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
+                            🔥 OFERTA
+                          </div>
+                        )}
                       </div>
                     )}
+                    <div className="flex-1 min-w-0">
+                      {curso.descricao ? (
+                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                          {curso.descricao}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">Sem descrição disponível.</p>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <DialogHeader className="px-6 pt-6">
-                    <DialogTitle>{curso.nome}</DialogTitle>
-                  </DialogHeader>
-                )}
+                </div>
 
                 <div className="px-6 pb-6 pt-4 space-y-5">
-                  {curso.descricao && (
-                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                      {curso.descricao}
-                    </p>
-                  )}
+
 
                   {podeDesconto ? (
                     <div className="space-y-3">
