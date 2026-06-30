@@ -841,7 +841,20 @@ function AlunoDetalhes() {
                       </p>
                     )}
                   </div>
-                  <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeFromVitrine.mutate(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => {
+                      setEditingVitrineItem(item);
+                      setEditVitrinePrecoPix(String(v.preco_pix ?? v.valor_pix ?? ""));
+                      setEditVitrinePrecoCartao(String(v.preco_cartao ?? v.valor_cartao ?? ""));
+                      setEditVitrineValorPixDesconto(v.valor_pix_desconto != null ? String(v.valor_pix_desconto) : "");
+                      setEditVitrineValorCartaoDesconto(v.valor_cartao_desconto != null ? String(v.valor_cartao_desconto) : "");
+                      setEditVitrinePontosDesconto(v.pontos_desconto != null ? String(v.pontos_desconto) : "");
+                      setEditVitrineMaxParcelas(String(v.max_parcelas ?? "12"));
+                      setEditVitrineAtivo(v.ativo ?? true);
+                      setShowEditVitrineModal(true);
+                    }}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeFromVitrine.mutate(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
                 </CardContent></Card>
               );
             })}
@@ -1016,9 +1029,32 @@ function AlunoDetalhes() {
         poloId={aluno?.polo_id ?? null}
         parcelas={parcelas}
       />
+
+      <Dialog open={showEditVitrineModal} onOpenChange={setShowEditVitrineModal}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar Vitrine — {(editingVitrineItem?.cursos as any)?.nome}</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">Valores sem desconto</p>
+              <Input placeholder="Valor PIX (R$)" type="number" value={editVitrinePrecoPix} onChange={(e) => setEditVitrinePrecoPix(e.target.value)} />
+              <Input placeholder="Valor Cartão (R$)" type="number" value={editVitrinePrecoCartao} onChange={(e) => setEditVitrinePrecoCartao(e.target.value)} />
+            </div>
+            <div className="border-t pt-3 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">Preços com desconto por pontos (opcional)</p>
+              <Input placeholder="Preço PIX com desconto (R$)" type="number" value={editVitrineValorPixDesconto} onChange={(e) => setEditVitrineValorPixDesconto(e.target.value)} />
+              <Input placeholder="Preço Cartão com desconto (R$)" type="number" value={editVitrineValorCartaoDesconto} onChange={(e) => setEditVitrineValorCartaoDesconto(e.target.value)} />
+              <Input placeholder="Pontos necessários para o desconto" type="number" value={editVitrinePontosDesconto} onChange={(e) => setEditVitrinePontosDesconto(e.target.value)} />
+            </div>
+          </div>
+          <Button onClick={() => updateVitrine.mutate()} disabled={updateVitrine.isPending}>
+            {updateVitrine.isPending ? "Salvando..." : "Salvar alterações"}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function Info({ label, value }: { label: string; value: any }) {
   return (<div><p className="text-[10px] text-muted-foreground uppercase">{label}</p><p className="font-medium">{value || "—"}</p></div>);
