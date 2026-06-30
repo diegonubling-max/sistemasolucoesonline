@@ -734,76 +734,71 @@ function StudentDashboard() {
                 </div>
 
                 <div className="px-6 pb-6 pt-4 space-y-5">
-
-
-                  {podeDesconto ? (
-                    <div className="space-y-3">
-                      <div className="rounded-xl border-2 border-green-400 bg-gradient-to-br from-green-50 to-emerald-50 p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-bold text-green-700 uppercase tracking-wider">PIX — À vista</span>
+                  <div className="space-y-3">
+                    <div className={`rounded-xl border-2 p-4 shadow-sm ${podeDesconto ? "border-green-400 bg-gradient-to-br from-green-50 to-emerald-50" : "border-green-300 bg-green-50"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold text-green-700 uppercase tracking-wider">PIX — À vista</span>
+                        {podeDesconto && (
                           <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full font-bold">MELHOR PREÇO</span>
-                        </div>
+                        )}
+                      </div>
+                      {pix > 0 && pix !== pixDesc && (
                         <p className="text-xs text-gray-400 line-through">De {formatCurrency(pix)}</p>
-                        <p className="text-3xl font-extrabold text-green-600 leading-tight">
-                          {formatCurrency(pixDesc)}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">Parcela única de <b>{formatCurrency(pixDesc)}</b></p>
-                      </div>
+                      )}
+                      <p className="text-3xl font-extrabold text-green-600 leading-tight">
+                        {formatCurrency(pixDesc || pix)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">Parcela única de <b>{formatCurrency(pixDesc || pix)}</b></p>
+                    </div>
 
-                      <div className="rounded-xl border border-orange-300 bg-orange-50 p-4">
-                        <span className="text-xs font-bold text-orange-700 uppercase tracking-wider">Cartão</span>
+                    <div className="rounded-xl border border-orange-300 bg-orange-50 p-4">
+                      <span className="text-xs font-bold text-orange-700 uppercase tracking-wider">Cartão</span>
+                      {cartao > 0 && cartao !== cartaoDesc && (
                         <p className="text-xs text-gray-400 line-through">De {formatCurrency(cartao)}</p>
-                        <p className="text-2xl font-extrabold text-orange-600 leading-tight">
-                          12x de {formatCurrency(parcelaCartaoDesc)}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">ou parcele em até 12x de <b>{formatCurrency(parcelaCartaoDesc)}</b></p>
-                      </div>
+                      )}
+                      <p className="text-2xl font-extrabold text-orange-600 leading-tight">
+                        12x de {formatCurrency((cartaoDesc || cartao) / 12)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">Total: <b>{formatCurrency(cartaoDesc || cartao)}</b></p>
+                    </div>
 
-                      {economia > 0 && (
-                        <div className="rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-3 text-center font-bold shadow-md">
-                          💰 Você economiza {formatCurrency(economia)} com suas Milhas EJA!
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="rounded-xl border bg-gray-50 p-4">
-                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">PIX</span>
-                        <p className="text-2xl font-extrabold text-gray-900">{formatCurrency(pix)}</p>
-                        <p className="text-xs text-gray-500">Parcela única de {formatCurrency(pix)}</p>
+                    {podeDesconto && economia > 0 && (
+                      <div className="rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-3 text-center font-bold shadow-md">
+                        💰 Você economiza {formatCurrency(economia)} com suas Milhas EJA!
                       </div>
-                      <div className="rounded-xl border bg-gray-50 p-4">
-                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">Cartão</span>
-                        <p className="text-2xl font-extrabold text-gray-900">12x de {formatCurrency(parcelaCartao)}</p>
-                        <p className="text-xs text-gray-500">Total: {formatCurrency(cartao)}</p>
+                    )}
+
+                    {temDesconto && !podeDesconto && (
+                      <div className="rounded-xl border-2 border-dashed border-yellow-400 bg-yellow-50 p-3 text-center">
+                        <p className="text-sm font-semibold text-yellow-800">
+                          ⭐ Faltam <b>{pontosNec - saldo} pts</b> para desbloquear este desconto
+                        </p>
+                        <p className="text-xs text-yellow-700 mt-1">
+                          Continue estudando para acumular Milhas EJA!
+                        </p>
                       </div>
-                      {temDesconto && (
-                        <div className="rounded-xl border-2 border-dashed border-yellow-400 bg-yellow-50 p-3 text-center">
-                          <p className="text-sm font-semibold text-yellow-800">
-                            ⭐ Faltam <b>{pontosNec - saldo} pts</b> para desbloquear o desconto
-                          </p>
-                          <p className="text-xs text-yellow-700 mt-1">
-                            Por apenas {formatCurrency(pixDesc)} no PIX
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   <Button
-                    className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white gap-2 text-base font-bold py-6 animate-vitrine-pulse"
+                    disabled={temDesconto && !podeDesconto}
+                    className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white gap-2 text-base font-bold py-6 animate-vitrine-pulse disabled:opacity-60 disabled:animate-none disabled:cursor-not-allowed"
                     onClick={() => {
                       setCheckoutVitrine(selectedVitrine);
                       setSelectedVitrine(null);
                     }}
                   >
-                    <Zap className="h-5 w-5" /> Garantir minha vaga
+                    <Zap className="h-5 w-5" />
+                    {temDesconto && !podeDesconto
+                      ? `Faltam ${pontosNec - saldo} pts para liberar`
+                      : "Garantir minha vaga"}
                   </Button>
 
                   <Button variant="outline" className="w-full" onClick={() => setSelectedVitrine(null)}>
                     Fechar
                   </Button>
                 </div>
+
               </>
             );
           })()}
