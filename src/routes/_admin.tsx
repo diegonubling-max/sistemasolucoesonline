@@ -83,6 +83,19 @@ function AdminLayout() {
     if (isSuperAdmin) return;
 
     const isResponsavel = !!colaborador?.responsavel_polo;
+    const isVendedor = colaborador?.setor === 'Vendedor';
+
+    // Minhas Comissões: somente vendedor
+    if (path === "/minhas-comissoes" || path.startsWith("/minhas-comissoes/")) {
+      if (!isVendedor) navigate({ to: "/" });
+      return;
+    }
+
+    // Vendedor não acessa Financeiro completo
+    if (isVendedor && (path === "/financeiro" || path.startsWith("/financeiro/"))) {
+      navigate({ to: "/minhas-comissoes" });
+      return;
+    }
 
     // Minha Equipe: somente responsável de polo
     if (path === "/minha-equipe" || path.startsWith("/minha-equipe/")) {
