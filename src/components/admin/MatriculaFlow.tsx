@@ -1638,26 +1638,41 @@ export function MatriculaFlow({
             <Card className="flex flex-col min-h-[600px]">
               <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
                 <div>
-                  <CardTitle>Edição do Contrato</CardTitle>
-                  <CardDescription>Revise e ajuste o conteúdo se necessário antes de finalizar.</CardDescription>
+                  <CardTitle>{showEditor ? "Edição do Contrato" : "Modelo Selecionado"}</CardTitle>
+                  <CardDescription>
+                    {showEditor
+                      ? "Revise e ajuste o conteúdo se necessário antes de finalizar."
+                      : "O modelo padrão será usado. Você pode finalizar a matrícula ou editar o contrato."}
+                  </CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setSelectedModeloId(null)}>
+                <Button variant="outline" size="sm" onClick={() => { setSelectedModeloId(null); setShowEditor(false); }}>
                   Trocar Modelo
                 </Button>
               </CardHeader>
               <CardContent className="flex-1 p-0">
-                <RichTextEditor 
-                  content={contractContent} 
-                  onChange={setContractContent}
-                  className="min-h-[500px]"
-                />
-
+                {showEditor ? (
+                  <RichTextEditor
+                    content={contractContent}
+                    onChange={setContractContent}
+                    className="min-h-[500px]"
+                  />
+                ) : (
+                  <div className="p-8 flex flex-col items-center justify-center text-center gap-3 text-muted-foreground">
+                    <FileText className="h-10 w-10 text-primary" />
+                    <p className="font-medium text-foreground">
+                      {modelos?.find((m: any) => m.id === selectedModeloId)?.nome}
+                    </p>
+                    <Button variant="link" onClick={() => setShowEditor(true)}>
+                      Editar contrato
+                    </Button>
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="border-t p-6 flex justify-between bg-white sticky bottom-0 z-10">
                 <Button variant="outline" onClick={() => setStep(4)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
                 </Button>
-                <Button 
+                <Button
                   size="lg"
                   className="bg-green-600 hover:bg-green-700 font-bold px-10"
                   disabled={concludeMatricula.isPending}
@@ -1668,6 +1683,7 @@ export function MatriculaFlow({
                 </Button>
               </CardFooter>
             </Card>
+
           )}
         </div>
       )}
