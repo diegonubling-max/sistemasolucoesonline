@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Power, ListVideo, Trash2, AlertTriangle, Loader2, Folder } from "lucide-react";
+import { Plus, Search, Pencil, Power, ListVideo, Trash2, AlertTriangle, Loader2, Folder, ImageIcon, ImageOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +51,7 @@ function CursosList() {
     queryFn: async () => {
       let q = supabase
         .from("cursos")
-        .select("id, nome, descricao, ativo, created_at, segmento_id, segmentos(nome), aulas(count), matricula_cursos(count)")
+        .select("id, nome, descricao, ativo, created_at, segmento_id, thumbnail_url, segmentos(nome), aulas(count), matricula_cursos(count)")
         .order("nome", { ascending: true });
       
       if (search) q = q.ilike("nome", `%${search}%`);
@@ -182,7 +182,20 @@ function CursosList() {
                       
                       return (
                         <TableRow key={c.id} className="bg-white">
-                          <TableCell className="font-medium">{c.nome}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {c.thumbnail_url ? (
+                                <ImageIcon className="h-3.5 w-3.5 text-green-600 shrink-0" aria-label="Thumbnail cadastrada">
+                                  <title>Thumbnail cadastrada</title>
+                                </ImageIcon>
+                              ) : (
+                                <ImageOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-label="Sem thumbnail">
+                                  <title>Sem thumbnail</title>
+                                </ImageOff>
+                              )}
+                              <span>{c.nome}</span>
+                            </div>
+                          </TableCell>
                           <TableCell>{countAulas}</TableCell>
                           <TableCell>
                             {c.ativo ? (
