@@ -753,59 +753,59 @@ function StudentDashboard() {
                 <div className="px-6 pb-6 pt-4 space-y-5">
 
 
-                  {(() => {
-                    const showDesc = temDesconto;
-                    const pixMain = showDesc ? pixDesc : pix;
-                    const cartaoMain = showDesc ? cartaoDesc : cartao;
-                    const parcelaMain = cartaoMain / 12;
-                    return (
-                      <div className="space-y-3">
-                        <div className="rounded-xl border-2 border-green-400 bg-gradient-to-br from-green-50 to-emerald-50 p-4 shadow-sm">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold text-green-700 uppercase tracking-wider">PIX — À vista</span>
-                            {showDesc && (
-                              <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full font-bold">MELHOR PREÇO</span>
-                            )}
-                          </div>
-                          {showDesc && (
-                            <p className="text-xs text-gray-400 line-through">De {formatCurrency(pix)}</p>
-                          )}
-                          <p className="text-3xl font-extrabold text-green-600 leading-tight">
-                            {formatCurrency(pixMain)}
-                          </p>
-                          <p className="text-xs text-gray-600 mt-1">Parcela única de <b>{formatCurrency(pixMain)}</b></p>
+                  {podeDesconto ? (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border-2 border-green-400 bg-gradient-to-br from-green-50 to-emerald-50 p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-green-700 uppercase tracking-wider">PIX — À vista</span>
+                          <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full font-bold">MELHOR PREÇO</span>
                         </div>
-
-                        <div className="rounded-xl border border-orange-300 bg-orange-50 p-4">
-                          <span className="text-xs font-bold text-orange-700 uppercase tracking-wider">Cartão</span>
-                          {showDesc && (
-                            <p className="text-xs text-gray-400 line-through">De {formatCurrency(cartao)}</p>
-                          )}
-                          <p className="text-2xl font-extrabold text-orange-600 leading-tight">
-                            12x de {formatCurrency(parcelaMain)}
-                          </p>
-                          <p className="text-xs text-gray-600 mt-1">Total: <b>{formatCurrency(cartaoMain)}</b></p>
-                        </div>
-
-                        {podeDesconto && economia > 0 && (
-                          <div className="rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-3 text-center font-bold shadow-md">
-                            💰 Você economiza {formatCurrency(economia)} com suas Milhas EJA!
-                          </div>
-                        )}
-
-                        {showDesc && !podeDesconto && (
-                          <div className="rounded-xl border-2 border-dashed border-yellow-400 bg-yellow-50 p-3 text-center">
-                            <p className="text-sm font-semibold text-yellow-800">
-                              ⭐ Faltam <b>{Math.max(0, pontosNec - saldo)} pts</b> para desbloquear o desconto
-                            </p>
-                            <p className="text-xs text-yellow-700 mt-1">
-                              Continue assistindo às aulas e acumule Milhas EJA!
-                            </p>
-                          </div>
-                        )}
+                        <p className="text-xs text-gray-400 line-through">De {formatCurrency(pix)}</p>
+                        <p className="text-3xl font-extrabold text-green-600 leading-tight">
+                          {formatCurrency(pixDesc)}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">Parcela única de <b>{formatCurrency(pixDesc)}</b></p>
                       </div>
-                    );
-                  })()}
+
+                      <div className="rounded-xl border border-orange-300 bg-orange-50 p-4">
+                        <span className="text-xs font-bold text-orange-700 uppercase tracking-wider">Cartão</span>
+                        <p className="text-xs text-gray-400 line-through">De {formatCurrency(cartao)}</p>
+                        <p className="text-2xl font-extrabold text-orange-600 leading-tight">
+                          12x de {formatCurrency(parcelaCartaoDesc)}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">ou parcele em até 12x de <b>{formatCurrency(parcelaCartaoDesc)}</b></p>
+                      </div>
+
+                      {economia > 0 && (
+                        <div className="rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-3 text-center font-bold shadow-md">
+                          💰 Você economiza {formatCurrency(economia)} com suas Milhas EJA!
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border bg-gray-50 p-4">
+                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">PIX</span>
+                        <p className="text-2xl font-extrabold text-gray-900">{formatCurrency(pix)}</p>
+                        <p className="text-xs text-gray-500">Parcela única de {formatCurrency(pix)}</p>
+                      </div>
+                      <div className="rounded-xl border bg-gray-50 p-4">
+                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">Cartão</span>
+                        <p className="text-2xl font-extrabold text-gray-900">12x de {formatCurrency(parcelaCartao)}</p>
+                        <p className="text-xs text-gray-500">Total: {formatCurrency(cartao)}</p>
+                      </div>
+                      {temDesconto && (
+                        <div className="rounded-xl border-2 border-dashed border-yellow-400 bg-yellow-50 p-3 text-center">
+                          <p className="text-sm font-semibold text-yellow-800">
+                            ⭐ Faltam <b>{pontosNec - saldo} pts</b> para desbloquear o desconto
+                          </p>
+                          <p className="text-xs text-yellow-700 mt-1">
+                            Por apenas {formatCurrency(pixDesc)} no PIX
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <Button
                     className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-white gap-2 text-base font-bold py-6 animate-vitrine-pulse"
