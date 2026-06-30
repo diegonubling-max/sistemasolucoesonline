@@ -207,12 +207,15 @@ function StudentDashboard() {
   ];
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
+    <div className="space-y-6 sm:space-y-12 animate-in fade-in duration-700">
       {/* Welcome Banner / Carrossel do polo */}
-      <BannerCarousel poloId={(poloData as any)?.id} />
+      <div className="-mx-3 sm:mx-0 -mt-4 sm:mt-0">
+        <BannerCarousel poloId={(poloData as any)?.id} />
+      </div>
 
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900">Meus Cursos</h2>
+      <div className="space-y-4 sm:space-y-6">
+        <h2 className="text-2xl font-bold text-gray-900 px-1 sm:px-0">Meus Cursos</h2>
+
         
         {!cursos || cursos.length === 0 ? (
           <Card className="bg-white border-gray-200 border-dashed">
