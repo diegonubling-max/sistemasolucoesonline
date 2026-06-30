@@ -524,25 +524,22 @@ function StudentDashboard() {
                           const parcela = cartaoFinal / 12;
 
                           return (
-                            <div className="flex items-end justify-between gap-2">
-                              <div className="leading-tight">
-                                <p className="text-yellow-300 text-[10px] font-bold">12x</p>
-                                <p className="font-extrabold text-lg leading-none text-yellow-300">
-                                  {formatCurrency(parcela)}
-                                </p>
-                                <p className="text-yellow-300 text-[10px] font-bold">no cartão</p>
-                              </div>
-                              <div className="text-right">
+                            <div className="leading-tight text-yellow-300">
+                              <p className="text-[10px] font-medium opacity-90">
+                                PIX: {formatCurrency(valorPix)}
+                              </p>
+                              <p className="text-sm font-extrabold flex items-center gap-1 mt-0.5">
                                 {pontosNec != null && (
-                                  <p className="text-yellow-300 text-[10px] font-bold flex items-center justify-end gap-1">
-                                    <Star className="h-3 w-3 fill-yellow-300" />
-                                    {pontosNec} pts p/ desconto
-                                  </p>
+                                  <>
+                                    <Star className="h-3.5 w-3.5 fill-yellow-300" />
+                                    {pontosNec} pts p/ desconto —{" "}
+                                  </>
                                 )}
-                                <p className="text-yellow-300 text-[11px] font-bold">
-                                  PIX: {formatCurrency(pixFinal)}
-                                </p>
-                              </div>
+                                PIX: {formatCurrency(pixFinal)}
+                              </p>
+                              <p className="text-[11px] font-semibold mt-0.5">
+                                12x de {formatCurrency(parcela)} no cartão
+                              </p>
                             </div>
                           );
                         })()}
