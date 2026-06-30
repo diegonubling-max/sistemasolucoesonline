@@ -25,6 +25,8 @@ type SidebarItem = {
   anyPerm?: string[];
   adminOnly?: boolean;
   responsavelOnly?: boolean;
+  vendedorOnly?: boolean;
+  hideForVendedor?: boolean;
 };
 
 const items: SidebarItem[] = [
@@ -36,7 +38,8 @@ const items: SidebarItem[] = [
   { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
   { title: "Minha Equipe", url: "/minha-equipe", icon: UsersRound, enabled: true, responsavelOnly: true },
   { title: "Setor de Provas", url: "/setor-provas", icon: ClipboardCheck, enabled: true, anyPerm: ['ver_setor_provas', 'gerenciar_prova_final'] },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro' },
+  { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro', hideForVendedor: true },
+  { title: "Minhas Comissões", url: "/minhas-comissoes", icon: Wallet, enabled: true, vendedorOnly: true },
 ];
 
 export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colaborador?: any; mobileOpen?: boolean; onClose?: () => void }) {
@@ -180,10 +183,13 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {items.map((item) => {
           const isAdmin = session?.user?.email === 'admin@admin.com' || isSuperAdmin;
-          
+          const isVendedor = colaborador?.setor === 'Vendedor' && !isAdmin;
+
           if (item.adminOnly && !isAdmin) return null;
           if (item.responsavelOnly && !isResponsavel) return null;
-          
+          if (item.vendedorOnly && !isVendedor) return null;
+          if (item.hideForVendedor && isVendedor) return null;
+
           if (colaborador && !isResponsavel && (item.perm || item.anyPerm)) {
             const perms = colaborador.colaborador_permissoes?.[0];
             if (item.perm && !perms?.[item.perm]) return null;
