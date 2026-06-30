@@ -29,9 +29,22 @@ function extrairOrdemDoTitulo(titulo: string, fallback: number): number {
   return m ? parseInt(m[1], 10) : fallback;
 }
 
-async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string, ordemMinima: number = 0) {
+async function processFolder(supabase: any, folders: any[], folderName: string, mode: "insert" | "update" | "update_by_title" = "insert", cursoNome?: string, ordemMinima: number = 0, parentFolder?: string) {
+  let parentId: string | null | undefined = undefined;
+  if (parentFolder) {
+    const parent = folders.find(
+      (f: any) => (f.name || "").toLowerCase() === parentFolder.toLowerCase()
+    );
+    if (!parent) {
+      return { folder_name: folderName, error: `Pasta pai "${parentFolder}" não encontrada no Panda Video` };
+    }
+    parentId = parent.id;
+  }
+
   const folder = folders.find(
-    (f: any) => (f.name || "").toLowerCase() === folderName.toLowerCase()
+    (f: any) =>
+      (f.name || "").toLowerCase() === folderName.toLowerCase() &&
+      (parentId === undefined || f.parent_folder_id === parentId)
   );
 
   if (!folder) {
