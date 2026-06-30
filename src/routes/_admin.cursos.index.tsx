@@ -182,7 +182,20 @@ function CursosList() {
                       
                       return (
                         <TableRow key={c.id} className="bg-white">
-                          <TableCell className="font-medium">{c.nome}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {c.thumbnail_url ? (
+                                <ImageIcon className="h-3.5 w-3.5 text-green-600 shrink-0" aria-label="Thumbnail cadastrada">
+                                  <title>Thumbnail cadastrada</title>
+                                </ImageIcon>
+                              ) : (
+                                <ImageOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-label="Sem thumbnail">
+                                  <title>Sem thumbnail</title>
+                                </ImageOff>
+                              )}
+                              <span>{c.nome}</span>
+                            </div>
+                          </TableCell>
                           <TableCell>{countAulas}</TableCell>
                           <TableCell>
                             {c.ativo ? (
