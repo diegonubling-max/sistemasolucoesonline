@@ -685,7 +685,7 @@ function StudentDashboard() {
       </Dialog>
 
       <Dialog open={!!selectedVitrine} onOpenChange={(open) => !open && setSelectedVitrine(null)}>
-        <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-0">
+        <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto overscroll-contain p-0 touch-pan-y">
           {selectedVitrine && (() => {
             const v = selectedVitrine;
             const curso = v.cursos || {};
