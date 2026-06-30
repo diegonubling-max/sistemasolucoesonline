@@ -1611,12 +1611,12 @@ export function MatriculaFlow({
                     variant="outline"
                     className="h-auto py-6 flex flex-col items-center gap-3 hover:border-primary hover:bg-primary/5 transition-all group"
                     onClick={() => {
-                      setSelectedModeloId(modelo.id);
-                      generateContract(modelo.id);
+                      setPendingModeloId(modelo.id);
                     }}
                   >
                     <FileText className="h-8 w-8 text-muted-foreground group-hover:text-primary" />
                     <span className="font-bold text-base">{modelo.nome}</span>
+
                   </Button>
                 ))}
                 {(!modelos || modelos.length === 0) && (
