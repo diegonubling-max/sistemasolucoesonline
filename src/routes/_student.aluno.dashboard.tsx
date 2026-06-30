@@ -503,7 +503,11 @@ function StudentDashboard() {
                       </div>
                     </div>
 
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div
+                      className="absolute bottom-0 left-0 right-0 p-4 pt-10"
+                      style={{ background: "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))" }}
+                    >
+
                       <h3 className="text-white font-bold text-base leading-tight line-clamp-2">
                         {curso.nome}
                       </h3>
