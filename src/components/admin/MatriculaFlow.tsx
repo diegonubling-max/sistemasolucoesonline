@@ -1660,7 +1660,7 @@ export function MatriculaFlow({
                   <div className="p-8 flex flex-col items-center justify-center text-center gap-3 text-muted-foreground">
                     <FileText className="h-10 w-10 text-primary" />
                     <p className="font-medium text-foreground">
-                      {modelos?.find((m: any) => m.id === selectedModeloId)?.nome}
+                      {(modelos as any[] | undefined)?.find((m: any) => m.id === selectedModeloId)?.nome}
                     </p>
                     <Button variant="link" onClick={() => setShowEditor(true)}>
                       Editar contrato
