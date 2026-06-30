@@ -18,6 +18,7 @@ import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
 import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
 import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
+import { Route as AdminMinhasComissoesRouteImport } from './routes/_admin.minhas-comissoes'
 import { Route as AdminMinhaEquipeRouteImport } from './routes/_admin.minha-equipe'
 import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
 import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
@@ -81,6 +82,11 @@ const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
 const AdminPacotesRoute = AdminPacotesRouteImport.update({
   id: '/pacotes',
   path: '/pacotes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMinhasComissoesRoute = AdminMinhasComissoesRouteImport.update({
+  id: '/minhas-comissoes',
+  path: '/minhas-comissoes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMinhaEquipeRoute = AdminMinhaEquipeRouteImport.update({
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/minha-equipe': typeof AdminMinhaEquipeRoute
+  '/minhas-comissoes': typeof AdminMinhasComissoesRoute
   '/pacotes': typeof AdminPacotesRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
@@ -230,6 +237,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/minha-equipe': typeof AdminMinhaEquipeRoute
+  '/minhas-comissoes': typeof AdminMinhasComissoesRoute
   '/pacotes': typeof AdminPacotesRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/_admin/configuracoes': typeof AdminConfiguracoesRoute
   '/_admin/financeiro': typeof AdminFinanceiroRoute
   '/_admin/minha-equipe': typeof AdminMinhaEquipeRoute
+  '/_admin/minhas-comissoes': typeof AdminMinhasComissoesRoute
   '/_admin/pacotes': typeof AdminPacotesRoute
   '/_admin/segmentos': typeof AdminSegmentosRoute
   '/_admin/setor-provas': typeof AdminSetorProvasRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/financeiro'
     | '/minha-equipe'
+    | '/minhas-comissoes'
     | '/pacotes'
     | '/segmentos'
     | '/setor-provas'
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/financeiro'
     | '/minha-equipe'
+    | '/minhas-comissoes'
     | '/pacotes'
     | '/segmentos'
     | '/setor-provas'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/_admin/configuracoes'
     | '/_admin/financeiro'
     | '/_admin/minha-equipe'
+    | '/_admin/minhas-comissoes'
     | '/_admin/pacotes'
     | '/_admin/segmentos'
     | '/_admin/setor-provas'
@@ -454,6 +466,13 @@ declare module '@tanstack/react-router' {
       path: '/pacotes'
       fullPath: '/pacotes'
       preLoaderRoute: typeof AdminPacotesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/minhas-comissoes': {
+      id: '/_admin/minhas-comissoes'
+      path: '/minhas-comissoes'
+      fullPath: '/minhas-comissoes'
+      preLoaderRoute: typeof AdminMinhasComissoesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/minha-equipe': {
@@ -611,6 +630,7 @@ interface AdminRouteChildren {
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminMinhaEquipeRoute: typeof AdminMinhaEquipeRoute
+  AdminMinhasComissoesRoute: typeof AdminMinhasComissoesRoute
   AdminPacotesRoute: typeof AdminPacotesRoute
   AdminSegmentosRoute: typeof AdminSegmentosRoute
   AdminSetorProvasRoute: typeof AdminSetorProvasRoute
@@ -630,6 +650,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminMinhaEquipeRoute: AdminMinhaEquipeRoute,
+  AdminMinhasComissoesRoute: AdminMinhasComissoesRoute,
   AdminPacotesRoute: AdminPacotesRoute,
   AdminSegmentosRoute: AdminSegmentosRoute,
   AdminSetorProvasRoute: AdminSetorProvasRoute,

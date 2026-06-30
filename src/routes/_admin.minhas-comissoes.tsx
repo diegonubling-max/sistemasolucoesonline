@@ -87,7 +87,7 @@ function MinhasComissoes() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Minhas Comissões" description={`Olá, ${colaborador?.nome}`} icon={Wallet} />
+      <PageHeader title="Minhas Comissões" description={`Olá, ${colaborador?.nome}`} />
 
       <Card>
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
