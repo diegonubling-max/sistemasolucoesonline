@@ -77,9 +77,12 @@ export function MatriculaFlow({
   const [showContractModal, setShowContractModal] = useState(false);
   const [showModelSelection, setShowModelSelection] = useState(false);
   const [selectedModeloId, setSelectedModeloId] = useState<string | null>(null);
+  const [pendingModeloId, setPendingModeloId] = useState<string | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
   const [contractContent, setContractContent] = useState("");
   const [contractLink, setContractLink] = useState<string | null>(null);
   const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
+
 
   const { data: modelos } = useQuery({
     queryKey: ["modelos-contrato"],
