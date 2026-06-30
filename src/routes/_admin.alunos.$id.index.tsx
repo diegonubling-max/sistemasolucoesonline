@@ -841,7 +841,20 @@ function AlunoDetalhes() {
                       </p>
                     )}
                   </div>
-                  <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeFromVitrine.mutate(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => {
+                      setEditingVitrineItem(item);
+                      setEditVitrinePrecoPix(String(v.preco_pix ?? v.valor_pix ?? ""));
+                      setEditVitrinePrecoCartao(String(v.preco_cartao ?? v.valor_cartao ?? ""));
+                      setEditVitrineValorPixDesconto(v.valor_pix_desconto != null ? String(v.valor_pix_desconto) : "");
+                      setEditVitrineValorCartaoDesconto(v.valor_cartao_desconto != null ? String(v.valor_cartao_desconto) : "");
+                      setEditVitrinePontosDesconto(v.pontos_desconto != null ? String(v.pontos_desconto) : "");
+                      setEditVitrineMaxParcelas(String(v.max_parcelas ?? "12"));
+                      setEditVitrineAtivo(v.ativo ?? true);
+                      setShowEditVitrineModal(true);
+                    }}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="text-red-500" onClick={() => removeFromVitrine.mutate(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
                 </CardContent></Card>
               );
             })}
