@@ -139,6 +139,7 @@ function StudentDashboard() {
           cursos (
             id,
             nome,
+            descricao,
             thumbnail_url
           )
         `)
