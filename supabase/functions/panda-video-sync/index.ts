@@ -276,11 +276,13 @@ serve(async (req) => {
     let cursoNome: string | undefined;
     let ordemMinima = 0;
     let mode: "insert" | "update" | "update_by_title" = "insert";
+    let parentFolder: string | undefined;
     try {
       const body = await req.json();
       folderName = body?.folder_name;
       folderNames = body?.folder_names;
       cursoNome = body?.curso_nome;
+      parentFolder = body?.parent_folder;
       if (typeof body?.ordem_minima === "number") ordemMinima = body.ordem_minima;
       if (body?.update_mode === true) mode = "update_by_title";
       else if (body?.mode === "update") mode = "update";
@@ -298,7 +300,7 @@ serve(async (req) => {
     // Array de pastas → processar em paralelo
     if (Array.isArray(folderNames) && folderNames.length > 0) {
       const resultados = await Promise.all(
-        folderNames.map((name) => processFolder(supabase, folders, name, mode, cursoNome, ordemMinima))
+        folderNames.map((name) => processFolder(supabase, folders, name, mode, cursoNome, ordemMinima, parentFolder))
       );
       return new Response(
         JSON.stringify({ success: true, mode, resultados }),
@@ -306,7 +308,7 @@ serve(async (req) => {
       );
     }
 
-    const resultado = await processFolder(supabase, folders, folderName, mode, cursoNome, ordemMinima);
+    const resultado = await processFolder(supabase, folders, folderName, mode, cursoNome, ordemMinima, parentFolder);
     const status = (resultado as any).error ? 404 : 200;
     return new Response(JSON.stringify(resultado), {
       status,
