@@ -54,7 +54,7 @@ export function BannerCarousel({ poloId: poloIdProp }: BannerCarouselProps) {
 
   if (!banners || banners.length === 0) {
     return (
-      <div className="relative h-40 md:h-80 rounded-2xl overflow-hidden bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF] flex items-center px-4 sm:px-8 md:px-12 shadow-2xl">
+      <div className="relative h-40 md:h-80 sm:rounded-2xl overflow-hidden bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF] flex items-center px-4 sm:px-8 md:px-12 shadow-2xl">
         <div className="relative z-10 space-y-4 max-w-2xl">
           <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white tracking-tight">
             Bem-vindo(a) de volta!
