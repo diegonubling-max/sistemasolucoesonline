@@ -1029,9 +1029,6 @@ function AlunoDetalhes() {
         poloId={aluno?.polo_id ?? null}
         parcelas={parcelas}
       />
-    </div>
-  );
-}
 
       <Dialog open={showEditVitrineModal} onOpenChange={setShowEditVitrineModal}>
         <DialogContent>
@@ -1054,6 +1051,10 @@ function AlunoDetalhes() {
           </Button>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
 
 function Info({ label, value }: { label: string; value: any }) {
   return (<div><p className="text-[10px] text-muted-foreground uppercase">{label}</p><p className="font-medium">{value || "—"}</p></div>);
