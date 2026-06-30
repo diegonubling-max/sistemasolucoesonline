@@ -51,7 +51,7 @@ function CursosList() {
     queryFn: async () => {
       let q = supabase
         .from("cursos")
-        .select("id, nome, descricao, ativo, created_at, segmento_id, segmentos(nome), aulas(count), matricula_cursos(count)")
+        .select("id, nome, descricao, ativo, created_at, segmento_id, thumbnail_url, segmentos(nome), aulas(count), matricula_cursos(count)")
         .order("nome", { ascending: true });
       
       if (search) q = q.ilike("nome", `%${search}%`);
