@@ -134,6 +134,32 @@ function PosVendaPage() {
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
 
+  const reverter = useMutation({
+    mutationFn: async () => {
+      if (!revertModal) return;
+      // Deletar próximo PV gerado automaticamente (etapa + 1) da mesma matrícula
+      if (revertModal.etapa < 3) {
+        const { error: delErr } = await supabase
+          .from("pos_vendas")
+          .delete()
+          .eq("matricula_id", revertModal.matricula_id)
+          .eq("etapa", revertModal.etapa + 1);
+        if (delErr) throw delErr;
+      }
+      const { error } = await supabase
+        .from("pos_vendas")
+        .update({ status: "pendente", data_confirmacao: null, colaborador_id: null })
+        .eq("id", revertModal.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Pós-venda revertido");
+      qc.invalidateQueries({ queryKey: ["pos-vendas"] });
+      setRevertModal(null);
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
   return (
     <div className="space-y-6">
       <PageHeader title="Pós-Venda" description="Acompanhamento de pós-vendas em 3 etapas" />
