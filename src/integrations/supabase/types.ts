@@ -1350,6 +1350,7 @@ export type Database = {
           id: string
           matricula_id: string
           numero: number
+          numero_parcela_id: number | null
           observacao: string | null
           parcelas_cartao: number | null
           polo_id: string | null
@@ -1377,6 +1378,7 @@ export type Database = {
           id?: string
           matricula_id: string
           numero: number
+          numero_parcela_id?: number | null
           observacao?: string | null
           parcelas_cartao?: number | null
           polo_id?: string | null
@@ -1404,6 +1406,7 @@ export type Database = {
           id?: string
           matricula_id?: string
           numero?: number
+          numero_parcela_id?: number | null
           observacao?: string | null
           parcelas_cartao?: number | null
           polo_id?: string | null
