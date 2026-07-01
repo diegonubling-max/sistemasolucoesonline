@@ -71,7 +71,7 @@ export function BannerCarousel({ poloId: poloIdProp }: BannerCarouselProps) {
   const safeIndex = Math.min(index, banners.length - 1);
 
   return (
-    <div className="relative w-full h-[180px] md:h-[400px] sm:rounded-2xl overflow-hidden shadow-lg bg-gray-100">
+    <div className="relative w-full max-h-[200px] md:max-h-none h-[200px] md:h-[400px] sm:rounded-2xl md:overflow-hidden shadow-lg bg-gray-100">
       {banners.map((b, i) => (
         <img
           key={b.id}
