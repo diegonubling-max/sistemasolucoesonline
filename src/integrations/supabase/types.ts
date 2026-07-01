@@ -1525,6 +1525,67 @@ export type Database = {
         }
         Relationships: []
       }
+      pos_vendas: {
+        Row: {
+          aluno_id: string
+          colaborador_id: string | null
+          created_at: string
+          data_agendada: string
+          data_confirmacao: string | null
+          etapa: number
+          id: string
+          matricula_id: string
+          observacao: string | null
+          status: string
+        }
+        Insert: {
+          aluno_id: string
+          colaborador_id?: string | null
+          created_at?: string
+          data_agendada: string
+          data_confirmacao?: string | null
+          etapa: number
+          id?: string
+          matricula_id: string
+          observacao?: string | null
+          status?: string
+        }
+        Update: {
+          aluno_id?: string
+          colaborador_id?: string | null
+          created_at?: string
+          data_agendada?: string
+          data_confirmacao?: string | null
+          etapa?: number
+          id?: string
+          matricula_id?: string
+          observacao?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_vendas_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_vendas_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_vendas_matricula_id_fkey"
+            columns: ["matricula_id"]
+            isOneToOne: false
+            referencedRelation: "matriculas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prova_agendamentos: {
         Row: {
           aluno_id: string | null
@@ -1940,6 +2001,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_business_days: {
+        Args: { p_date: string; p_days: number }
+        Returns: string
+      }
       add_milhas_eja: {
         Args: {
           p_aluno_id: string
@@ -1986,6 +2051,7 @@ export type Database = {
         Args: { p_compra_id: string }
         Returns: Json
       }
+      next_business_day: { Args: { p_date: string }; Returns: string }
       redefinir_senha_aluno: {
         Args: { p_email: string; p_nova_senha: string }
         Returns: undefined
