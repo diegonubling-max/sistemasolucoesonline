@@ -292,6 +292,24 @@ function PosVendaPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!revertModal} onOpenChange={(o) => !o && setRevertModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reverter pós-venda</DialogTitle>
+            <DialogDescription>
+              Deseja reverter este pós-venda para pendente? Esta ação irá desfazer a confirmação realizada
+              {revertModal && revertModal.etapa < 3 ? " e remover o próximo pós-venda gerado automaticamente" : ""}.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRevertModal(null)}>Cancelar</Button>
+            <Button className="bg-amber-600 hover:bg-amber-700 text-white" onClick={() => reverter.mutate()} disabled={reverter.isPending}>
+              {reverter.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Reverter
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
