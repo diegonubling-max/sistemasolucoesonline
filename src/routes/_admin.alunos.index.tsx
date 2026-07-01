@@ -247,6 +247,17 @@ function AlunosList() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={origemFilter} onValueChange={(v) => { setOrigemFilter(v); setPage(0); }}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por origem" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as origens</SelectItem>
+                {ORIGENS.map((o) => (
+                  <SelectItem key={o} value={o}>{o}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Table>
