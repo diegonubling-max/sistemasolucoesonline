@@ -209,7 +209,7 @@ function StudentDashboard() {
   return (
     <div className="space-y-6 sm:space-y-12 animate-in fade-in duration-700">
       {/* Welcome Banner / Carrossel do polo */}
-      <div className="-mx-3 sm:mx-0 -mt-4 sm:mt-0">
+      <div className="-mx-3 sm:mx-0 -mt-4 sm:mt-0 mb-2 sm:mb-0 p-0">
         <BannerCarousel poloId={(poloData as any)?.id} />
       </div>
 
