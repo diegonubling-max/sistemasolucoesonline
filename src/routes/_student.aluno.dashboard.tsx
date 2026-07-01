@@ -257,11 +257,11 @@ function StudentDashboard() {
                 >
                   {/* Nome acima da thumbnail */}
                   <div className="mb-1 px-1">
-                    <h3 className="text-[13px] sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-2 min-h-[2.4em]">
+                    <h3 className="text-[13px] sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-2 mb-[2px]">
                       {curso.nome}
                     </h3>
                     {item.pontos_necessarios != null && Number(item.pontos_necessarios) > 0 && (
-                      <p className="text-[11px] font-medium text-yellow-600 mt-0.5">
+                      <p className="text-[11px] font-medium text-yellow-600 m-0 leading-tight">
                         ⭐ {Number(item.pontos_necessarios)} pts para desconto
                       </p>
                     )}
