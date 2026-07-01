@@ -782,10 +782,11 @@ function AlunoDetalhes() {
             <CardContent className="pt-6">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b"><th className="text-left py-2">Parcela</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Status</th><th className="text-right py-2">Ações</th></tr></thead>
+                  <thead><tr className="border-b"><th className="text-left py-2">Nº</th><th className="text-left py-2">Parcela</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Status</th><th className="text-right py-2">Ações</th></tr></thead>
                   <tbody>
                     {parcelas?.map((p) => (
                       <tr key={p.id} className="border-b">
+                        <td className="py-3 text-muted-foreground font-mono">{p.numero_parcela_id ?? '—'}</td>
                         <td className="py-3">{p.tipo === 'taxa_matricula' ? 'Matrícula' : `Parcela ${p.numero}`}</td>
                         <td className="py-3">{formatDate(p.data_vencimento)}</td>
                         <td className="py-3 font-bold">{formatCurrency(p.valor)}</td>
