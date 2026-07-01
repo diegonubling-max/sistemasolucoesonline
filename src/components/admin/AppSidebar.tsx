@@ -27,6 +27,7 @@ type SidebarItem = {
   responsavelOnly?: boolean;
   vendedorOnly?: boolean;
   hideForVendedor?: boolean;
+  posVendaOrAdmin?: boolean;
 };
 
 const items: SidebarItem[] = [
@@ -38,6 +39,7 @@ const items: SidebarItem[] = [
   { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
   { title: "Minha Equipe", url: "/minha-equipe", icon: UsersRound, enabled: true, responsavelOnly: true },
   { title: "Setor de Provas", url: "/setor-provas", icon: ClipboardCheck, enabled: true, anyPerm: ['ver_setor_provas', 'gerenciar_prova_final'] },
+  { title: "Pós-Venda", url: "/pos-venda", icon: HeartHandshake, enabled: true, posVendaOrAdmin: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro', hideForVendedor: true },
   { title: "Minhas Comissões", url: "/minhas-comissoes", icon: Wallet, enabled: true, vendedorOnly: true },
 ];
