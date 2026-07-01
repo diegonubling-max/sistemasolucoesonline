@@ -782,7 +782,7 @@ function AlunoDetalhes() {
             <CardContent className="pt-6">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b"><th className="text-left py-2">Nº</th><th className="text-left py-2">Parcela</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Status</th><th className="text-right py-2">Ações</th></tr></thead>
+                  <thead><tr className="border-b"><th className="text-left py-2">Nº</th><th className="text-left py-2">Parcela</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Status</th><th className="text-left py-2">Pago em</th><th className="text-right py-2">Ações</th></tr></thead>
                   <tbody>
                     {parcelas?.map((p) => (
                       <tr key={p.id} className="border-b">
@@ -793,6 +793,7 @@ function AlunoDetalhes() {
                         <td className="py-3">
                           <Badge variant={p.status === 'pago' ? "outline" : "secondary"} className={cn(p.status === 'pago' && "bg-green-50 text-green-700")}>{p.status}</Badge>
                         </td>
+                        <td className="py-3">{(p as any).data_pagamento ? formatDate((p as any).data_pagamento) : '—'}</td>
                         <td className="py-3 text-right">
                           {p.status === 'aberto' && (
                             <Button size="sm" variant="ghost" className="text-green-600" onClick={() => { setSelectedParcelaId(p.id); setSelectedParcelaValor(Number(p.valor)); setShowBaixaModal(true); }}>Baixa</Button>
