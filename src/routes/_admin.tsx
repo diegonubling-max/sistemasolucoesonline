@@ -84,6 +84,13 @@ function AdminLayout() {
 
     const isResponsavel = !!colaborador?.responsavel_polo;
     const isVendedor = colaborador?.setor === 'Vendedor';
+    const isPosVenda = colaborador?.setor === 'Pós-Venda';
+
+    // Pós-Venda: admin ou setor Pós-Venda
+    if (path === "/pos-venda" || path.startsWith("/pos-venda/")) {
+      if (!isPosVenda) navigate({ to: "/" });
+      return;
+    }
 
     // Minhas Comissões: somente vendedor
     if (path === "/minhas-comissoes" || path.startsWith("/minhas-comissoes/")) {
