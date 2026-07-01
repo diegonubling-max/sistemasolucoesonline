@@ -250,16 +250,33 @@ export function BannersPoloManager({ isSuperAdmin }: BannersPoloManagerProps) {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Imagem (JPG, PNG, WEBP)</Label>
-              <Input
+              <Label>Imagem (JPG, PNG, WEBP) — Tamanho recomendado: 1080x400px</Label>
+              <label
+                htmlFor="banner-file-input"
+                className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-muted-foreground/30 rounded-lg px-4 py-6 cursor-pointer hover:bg-muted/50 transition-colors text-center"
+              >
+                <Upload className="h-6 w-6 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  Clique para selecionar a imagem
+                </span>
+              </label>
+              <input
+                id="banner-file-input"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
+                className="hidden"
                 onChange={(e) => setForm((f) => ({ ...f, file: e.target.files?.[0] ?? null }))}
               />
+              {form.file && (
+                <p className="text-sm text-foreground font-medium truncate">
+                  📎 {form.file.name}
+                </p>
+              )}
               {editing && !form.file && (
                 <img src={editing.imagem_url} alt="Atual" className="h-24 rounded border object-cover" />
               )}
             </div>
+
             <div className="space-y-2">
               <Label>Título (opcional)</Label>
               <Input value={form.titulo} onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))} />
