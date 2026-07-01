@@ -45,34 +45,26 @@ export function BannersPoloManager({ isSuperAdmin }: BannersPoloManagerProps) {
   });
   const [uploading, setUploading] = useState(false);
 
-  // Available polos
+  // Florianópolis fixo (dropdown removido)
   const { data: polos } = useQuery({
-    queryKey: ["banners-polos-disponiveis", session?.user?.id, isSuperAdmin],
+    queryKey: ["banners-polo-florianopolis"],
     queryFn: async () => {
-      if (isSuperAdmin) {
-        const { data } = await supabase.from("polos").select("id, nome").eq("ativo", true).order("nome");
-        return data ?? [];
-      }
-      // colaborador: apenas o seu polo
-      const { data: col } = await supabase
-        .from("colaboradores")
-        .select("polo_id, polos:polo_id(id, nome)")
-        .eq("user_id", session!.user.id)
-        .eq("ativo", true);
-      const list = (col ?? [])
-        .map((c: any) => c.polos)
-        .filter(Boolean);
-      return list as { id: string; nome: string }[];
+      const { data } = await supabase
+        .from("polos")
+        .select("id, nome")
+        .ilike("nome", "%florian%")
+        .eq("ativo", true)
+        .limit(1);
+      return data ?? [];
     },
-    enabled: !!session?.user?.id,
   });
 
-  // Auto-select first polo
   useEffect(() => {
     if (!selectedPoloId && polos && polos.length > 0) {
       setSelectedPoloId(polos[0].id);
     }
   }, [polos, selectedPoloId]);
+
 
   // Banners do polo
   const { data: banners, isLoading } = useQuery({
@@ -192,24 +184,12 @@ export function BannersPoloManager({ isSuperAdmin }: BannersPoloManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
-        <div className="space-y-2 w-full sm:max-w-xs">
-          <Label>Polo</Label>
-          <Select value={selectedPoloId} onValueChange={setSelectedPoloId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um polo" />
-            </SelectTrigger>
-            <SelectContent>
-              {(polos ?? []).map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="flex items-center justify-end">
         <Button onClick={openCreate} disabled={!selectedPoloId || limitReached}>
           <Plus className="h-4 w-4 mr-2" /> Adicionar Banner
         </Button>
       </div>
+
 
       {limitReached && (
         <p className="text-sm text-amber-600">Limite de 3 banners ativos atingido. Desative um para adicionar outro.</p>
