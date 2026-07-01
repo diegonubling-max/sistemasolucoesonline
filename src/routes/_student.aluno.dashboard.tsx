@@ -256,7 +256,7 @@ function StudentDashboard() {
                   className="group cursor-pointer block w-[140px] shrink-0 snap-start sm:w-full"
                 >
                   {/* Nome acima da thumbnail */}
-                  <div className="mb-1 px-1">
+                  <div className="mb-0 px-1">
                     <h3 className="text-[13px] sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-2 mb-[2px]">
                       {curso.nome}
                     </h3>
