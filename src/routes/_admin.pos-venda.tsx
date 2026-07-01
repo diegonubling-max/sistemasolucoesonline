@@ -246,6 +246,11 @@ function PosVendaPage() {
                               <CheckCircle2 className="h-4 w-4 mr-1" /> Confirmar realizado
                             </Button>
                           )}
+                          {r.status === "concluido" && (
+                            <Button size="sm" variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-50" onClick={() => setRevertModal({ id: r.id, etapa: r.etapa, matricula_id: r.matricula_id })}>
+                              <Undo2 className="h-4 w-4 mr-1" /> Reverter
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
