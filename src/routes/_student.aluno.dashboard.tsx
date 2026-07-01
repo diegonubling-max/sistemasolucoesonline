@@ -312,6 +312,9 @@ function StudentDashboard() {
                             <span className="text-lg font-extrabold text-green-600 leading-none">
                               {formatCurrency(pixFinal)}
                             </span>
+                            <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">
+                              taxa única
+                            </span>
                             {temDesconto && (
                               <span className="text-[11px] text-gray-400 line-through">
                                 De {formatCurrency(valorPix)}
