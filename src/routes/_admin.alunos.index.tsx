@@ -109,7 +109,7 @@ function AlunosList() {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["alunos", search, page, selectedPoloId, userRole, statusFilter],
+    queryKey: ["alunos", search, page, selectedPoloId, userRole, statusFilter, origemFilter],
     queryFn: async () => {
       const userId = session?.user?.id;
       let colabPoloId = null;
