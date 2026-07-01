@@ -477,7 +477,13 @@ function StudentDashboard() {
                     <h3 className="text-[13px] sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-2 min-h-[2.4em]">
                       {curso.nome}
                     </h3>
+                    {item.pontos_necessarios != null && Number(item.pontos_necessarios) > 0 && (
+                      <p className="text-[11px] font-medium text-yellow-600 mt-0.5">
+                        ⭐ {Number(item.pontos_necessarios)} pts para desconto
+                      </p>
+                    )}
                   </div>
+
 
                   <div className="relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center justify-center">
