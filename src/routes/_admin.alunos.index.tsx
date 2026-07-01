@@ -137,7 +137,7 @@ function AlunosList() {
         q = q.eq('status', statusFilter);
       }
       if (origemFilter !== "all") {
-        q = q.eq('origem', origemFilter);
+        q = q.eq('origem', origemFilter as any);
       }
       
       if (isSuperAdmin) {
