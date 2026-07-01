@@ -54,7 +54,7 @@ export function BannerCarousel({ poloId: poloIdProp }: BannerCarouselProps) {
 
   if (!banners || banners.length === 0) {
     return (
-      <div className="relative w-full h-[400px] sm:rounded-2xl overflow-hidden bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF] flex items-center px-4 sm:px-8 md:px-12 shadow-2xl">
+      <div className="relative w-full h-[180px] md:h-[400px] sm:rounded-2xl overflow-hidden bg-gradient-to-r from-[#1E3A5F] to-[#2D6ADF] flex items-center px-4 sm:px-8 md:px-12 shadow-2xl">
         <div className="relative z-10 space-y-4 max-w-2xl">
           <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white tracking-tight">
             Bem-vindo(a) de volta!
@@ -71,14 +71,14 @@ export function BannerCarousel({ poloId: poloIdProp }: BannerCarouselProps) {
   const safeIndex = Math.min(index, banners.length - 1);
 
   return (
-    <div className="relative w-full h-[400px] sm:rounded-2xl overflow-hidden shadow-lg bg-gray-100">
+    <div className="relative w-full h-[180px] md:h-[400px] sm:rounded-2xl overflow-hidden shadow-lg bg-gray-100">
       {banners.map((b, i) => (
         <img
           key={b.id}
           src={b.imagem_url}
           alt={b.titulo || `Banner ${i + 1}`}
           className={cn(
-            "absolute inset-0 w-full h-full object-cover transition-opacity duration-700",
+            "absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700",
             i === safeIndex ? "opacity-100" : "opacity-0"
           )}
         />
