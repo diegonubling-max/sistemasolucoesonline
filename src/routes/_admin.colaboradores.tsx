@@ -244,6 +244,7 @@ function ColaboradoresList() {
         agendar_provas: false,
         gerenciar_prova_final: false,
         ver_setor_provas: false,
+        ver_pos_venda: false,
         ver_relatorios: false,
         ver_configuracoes: false,
       });
