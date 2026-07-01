@@ -33,9 +33,9 @@ function LoginPage() {
     fetchConfig();
   }, []);
 
-  useEffect(() => {
-    if (session) navigate({ to: "/" });
-  }, [session, navigate]);
+  // /login é rota pública — não redireciona automaticamente ao detectar sessão
+  // (evita loop com _admin.tsx que redireciona não-admins de volta para /login)
+
 
   useEffect(() => {
     if (typeof window === "undefined") return;
