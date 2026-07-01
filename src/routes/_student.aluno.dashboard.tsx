@@ -214,8 +214,8 @@ function StudentDashboard() {
       </div>
 
       {vitrine && vitrine.length > 0 && (
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900">Cursos exclusivos para você</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Cursos exclusivos para você</h2>
           
           <div className="flex gap-3 overflow-x-auto overflow-y-hidden snap-x pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-6">
             {vitrine.map((item: any) => {
