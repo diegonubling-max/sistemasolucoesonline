@@ -1,0 +1,1 @@
+ALTER TABLE public.colaborador_permissoes ADD COLUMN IF NOT EXISTS ver_pos_venda boolean NOT NULL DEFAULT false;
