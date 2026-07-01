@@ -63,7 +63,7 @@ const formSchema = z.object({
   comissao_parcelado: z.coerce.number().min(0).optional(),
 });
 
-const SETORES = ["Vendedor", "Setor de Provas", "Cobrança", "Administrativo", "Admin Polo", "Outros"];
+const SETORES = ["Vendedor", "Setor de Provas", "Pós-Venda", "Cobrança", "Administrativo", "Admin Polo", "Outros"];
 
 const PERMISSIONS_LIST = [
   { id: "ver_alunos", label: "Ver Alunos" },
