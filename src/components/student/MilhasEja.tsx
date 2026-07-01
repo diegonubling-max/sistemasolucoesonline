@@ -116,7 +116,7 @@ export function MilhasEjaBadge({ alunoId }: { alunoId: string }) {
         title="Ver Milhas EJA"
       >
         <Star className="h-4 w-4 text-yellow-300 fill-yellow-300" />
-        <span className="text-sm font-semibold">{saldo.pontos_disponiveis} pts</span>
+        <span className="text-sm font-semibold">{saldo.pontos_disponiveis} pts EJA</span>
         <span className="hidden sm:inline text-xs opacity-80 border-l border-white/30 pl-2 ml-1">
           {saldo.nivel}
         </span>
