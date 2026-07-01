@@ -49,6 +49,8 @@ function AlunosList() {
   const [globalSearchResult, setGlobalSearchResult] = useState<any>(null);
   const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [origemFilter, setOrigemFilter] = useState<string>("all");
+  const ORIGENS = ["Google", "Meta", "Indicação", "Outros"];
 
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
@@ -107,7 +109,7 @@ function AlunosList() {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["alunos", search, page, selectedPoloId, userRole, statusFilter],
+    queryKey: ["alunos", search, page, selectedPoloId, userRole, statusFilter, origemFilter],
     queryFn: async () => {
       const userId = session?.user?.id;
       let colabPoloId = null;
@@ -133,6 +135,9 @@ function AlunosList() {
 
       if (statusFilter !== "all") {
         q = q.eq('status', statusFilter);
+      }
+      if (origemFilter !== "all") {
+        q = q.eq('origem', origemFilter as any);
       }
       
       if (isSuperAdmin) {
@@ -239,6 +244,17 @@ function AlunosList() {
                 <SelectItem value="all">Todos os status</SelectItem>
                 {STATUS_LIST.map((s) => (
                   <SelectItem key={s} value={s}>{STATUS_CONFIG[s].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={origemFilter} onValueChange={(v) => { setOrigemFilter(v); setPage(0); }}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por origem" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as origens</SelectItem>
+                {ORIGENS.map((o) => (
+                  <SelectItem key={o} value={o}>{o}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
