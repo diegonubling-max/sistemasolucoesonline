@@ -88,7 +88,8 @@ function AdminLayout() {
 
     // Pós-Venda: admin ou setor Pós-Venda
     if (path === "/pos-venda" || path.startsWith("/pos-venda/")) {
-      if (!isPosVenda) navigate({ to: "/" });
+      const hasPerm = !!colaborador?.colaborador_permissoes?.[0]?.ver_pos_venda;
+      if (!isPosVenda && !hasPerm) navigate({ to: "/" });
       return;
     }
 

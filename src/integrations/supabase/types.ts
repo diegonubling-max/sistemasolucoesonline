@@ -539,6 +539,7 @@ export type Database = {
           ver_alunos: boolean | null
           ver_configuracoes: boolean | null
           ver_financeiro: boolean | null
+          ver_pos_venda: boolean
           ver_relatorios: boolean | null
           ver_setor_provas: boolean | null
         }
@@ -555,6 +556,7 @@ export type Database = {
           ver_alunos?: boolean | null
           ver_configuracoes?: boolean | null
           ver_financeiro?: boolean | null
+          ver_pos_venda?: boolean
           ver_relatorios?: boolean | null
           ver_setor_provas?: boolean | null
         }
@@ -571,6 +573,7 @@ export type Database = {
           ver_alunos?: boolean | null
           ver_configuracoes?: boolean | null
           ver_financeiro?: boolean | null
+          ver_pos_venda?: boolean
           ver_relatorios?: boolean | null
           ver_setor_provas?: boolean | null
         }
