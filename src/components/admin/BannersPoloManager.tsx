@@ -250,7 +250,7 @@ export function BannersPoloManager({ isSuperAdmin }: BannersPoloManagerProps) {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Imagem (JPG, PNG, WEBP) — Tamanho recomendado: 1080x400px</Label>
+              <Label>Imagem (JPG, PNG, WEBP) — Tamanho recomendado: 1080x500px</Label>
               <label
                 htmlFor="banner-file-input"
                 className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-muted-foreground/30 rounded-lg px-4 py-6 cursor-pointer hover:bg-muted/50 transition-colors text-center"
