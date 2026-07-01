@@ -793,6 +793,7 @@ function AlunoDetalhes() {
                         <td className="py-3">
                           <Badge variant={p.status === 'pago' ? "outline" : "secondary"} className={cn(p.status === 'pago' && "bg-green-50 text-green-700")}>{p.status}</Badge>
                         </td>
+                        <td className="py-3">{(p as any).data_pagamento ? formatDate((p as any).data_pagamento) : '—'}</td>
                         <td className="py-3 text-right">
                           {p.status === 'aberto' && (
                             <Button size="sm" variant="ghost" className="text-green-600" onClick={() => { setSelectedParcelaId(p.id); setSelectedParcelaValor(Number(p.valor)); setShowBaixaModal(true); }}>Baixa</Button>
