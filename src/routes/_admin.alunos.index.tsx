@@ -136,6 +136,9 @@ function AlunosList() {
       if (statusFilter !== "all") {
         q = q.eq('status', statusFilter);
       }
+      if (origemFilter !== "all") {
+        q = q.eq('origem', origemFilter);
+      }
       
       if (isSuperAdmin) {
         if (selectedPoloId && selectedPoloId !== 'all') {
