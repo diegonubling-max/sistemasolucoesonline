@@ -1041,7 +1041,12 @@ function AlunoDetalhes() {
             </div>
             <div className="border-t pt-3 space-y-2">
               <p className="text-xs font-semibold text-muted-foreground">Preços com desconto por pontos (opcional)</p>
-              <Input placeholder="Preço PIX com desconto (R$)" type="number" value={editVitrineValorPixDesconto} onChange={(e) => setEditVitrineValorPixDesconto(e.target.value)} />
+              <Input placeholder="Preço PIX com desconto (R$)" type="number" value={editVitrineValorPixDesconto} onChange={(e) => {
+                const v = e.target.value;
+                setEditVitrineValorPixDesconto(v);
+                const n = Number(v);
+                if (v && !isNaN(n) && n > 0) setEditVitrineValorCartaoDesconto((n / 10 * 12).toFixed(2));
+              }} />
               <Input placeholder="Preço Cartão com desconto (R$)" type="number" value={editVitrineValorCartaoDesconto} onChange={(e) => setEditVitrineValorCartaoDesconto(e.target.value)} />
               <Input placeholder="Pontos necessários para o desconto" type="number" value={editVitrinePontosDesconto} onChange={(e) => setEditVitrinePontosDesconto(e.target.value)} />
             </div>
