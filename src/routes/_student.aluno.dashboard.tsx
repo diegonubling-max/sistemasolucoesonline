@@ -306,7 +306,7 @@ function StudentDashboard() {
                           <div className="flex items-baseline gap-2 flex-wrap">
                             {pontosNec != null && (
                               <span className="text-[11px] font-semibold text-yellow-600 whitespace-nowrap">
-                                ⭐ {pontosNec} pts →
+                                ⭐ {pontosNec} pts EJA →
                               </span>
                             )}
                             <span className="text-lg font-extrabold text-green-600 leading-none">
