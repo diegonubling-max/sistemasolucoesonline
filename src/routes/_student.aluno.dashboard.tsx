@@ -730,11 +730,11 @@ function StudentDashboard() {
                 </DialogHeader>
 
                 <div className="px-6 pb-2 pt-2">
-                  <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex flex-row gap-3 sm:gap-4">
                     {curso.thumbnail_url && (
-                      <div className="relative w-full sm:w-44 shrink-0 mx-auto sm:mx-0">
-                        <div className="aspect-[3/4] w-full overflow-hidden rounded-lg shadow-md bg-gray-100">
-                          <img src={curso.thumbnail_url} alt={curso.nome} className="h-full w-full object-cover" />
+                      <div className="relative w-2/5 sm:w-44 shrink-0">
+                        <div className="w-full max-h-[180px] sm:max-h-none overflow-hidden rounded-lg shadow-md bg-gray-100 aspect-[3/4] sm:aspect-[3/4]">
+                          <img src={curso.thumbnail_url} alt={curso.nome} className="h-full w-full object-cover max-h-[180px] sm:max-h-none" />
                         </div>
                         {podeDesconto && (
                           <div className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
@@ -743,7 +743,8 @@ function StudentDashboard() {
                         )}
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 w-3/5 sm:w-auto">
+
                       {curso.descricao ? (
                         <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                           {curso.descricao}
