@@ -17,6 +17,7 @@ import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
 import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
+import { Route as AdminPosVendaRouteImport } from './routes/_admin.pos-venda'
 import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminMinhasComissoesRouteImport } from './routes/_admin.minhas-comissoes'
 import { Route as AdminMinhaEquipeRouteImport } from './routes/_admin.minha-equipe'
@@ -77,6 +78,11 @@ const AdminSetorProvasRoute = AdminSetorProvasRouteImport.update({
 const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
   id: '/segmentos',
   path: '/segmentos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPosVendaRoute = AdminPosVendaRouteImport.update({
+  id: '/pos-venda',
+  path: '/pos-venda',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPacotesRoute = AdminPacotesRouteImport.update({
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/minha-equipe': typeof AdminMinhaEquipeRoute
   '/minhas-comissoes': typeof AdminMinhasComissoesRoute
   '/pacotes': typeof AdminPacotesRoute
+  '/pos-venda': typeof AdminPosVendaRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/minha-equipe': typeof AdminMinhaEquipeRoute
   '/minhas-comissoes': typeof AdminMinhasComissoesRoute
   '/pacotes': typeof AdminPacotesRoute
+  '/pos-venda': typeof AdminPosVendaRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
@@ -272,6 +280,7 @@ export interface FileRoutesById {
   '/_admin/minha-equipe': typeof AdminMinhaEquipeRoute
   '/_admin/minhas-comissoes': typeof AdminMinhasComissoesRoute
   '/_admin/pacotes': typeof AdminPacotesRoute
+  '/_admin/pos-venda': typeof AdminPosVendaRoute
   '/_admin/segmentos': typeof AdminSegmentosRoute
   '/_admin/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
@@ -306,6 +315,7 @@ export interface FileRouteTypes {
     | '/minha-equipe'
     | '/minhas-comissoes'
     | '/pacotes'
+    | '/pos-venda'
     | '/segmentos'
     | '/setor-provas'
     | '/aluno/login'
@@ -337,6 +347,7 @@ export interface FileRouteTypes {
     | '/minha-equipe'
     | '/minhas-comissoes'
     | '/pacotes'
+    | '/pos-venda'
     | '/segmentos'
     | '/setor-provas'
     | '/aluno/login'
@@ -369,6 +380,7 @@ export interface FileRouteTypes {
     | '/_admin/minha-equipe'
     | '/_admin/minhas-comissoes'
     | '/_admin/pacotes'
+    | '/_admin/pos-venda'
     | '/_admin/segmentos'
     | '/_admin/setor-provas'
     | '/aluno/login'
@@ -459,6 +471,13 @@ declare module '@tanstack/react-router' {
       path: '/segmentos'
       fullPath: '/segmentos'
       preLoaderRoute: typeof AdminSegmentosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/pos-venda': {
+      id: '/_admin/pos-venda'
+      path: '/pos-venda'
+      fullPath: '/pos-venda'
+      preLoaderRoute: typeof AdminPosVendaRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/pacotes': {
@@ -632,6 +651,7 @@ interface AdminRouteChildren {
   AdminMinhaEquipeRoute: typeof AdminMinhaEquipeRoute
   AdminMinhasComissoesRoute: typeof AdminMinhasComissoesRoute
   AdminPacotesRoute: typeof AdminPacotesRoute
+  AdminPosVendaRoute: typeof AdminPosVendaRoute
   AdminSegmentosRoute: typeof AdminSegmentosRoute
   AdminSetorProvasRoute: typeof AdminSetorProvasRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -652,6 +672,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMinhaEquipeRoute: AdminMinhaEquipeRoute,
   AdminMinhasComissoesRoute: AdminMinhasComissoesRoute,
   AdminPacotesRoute: AdminPacotesRoute,
+  AdminPosVendaRoute: AdminPosVendaRoute,
   AdminSegmentosRoute: AdminSegmentosRoute,
   AdminSetorProvasRoute: AdminSetorProvasRoute,
   AdminIndexRoute: AdminIndexRoute,
