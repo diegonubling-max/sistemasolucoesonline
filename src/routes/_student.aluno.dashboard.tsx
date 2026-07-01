@@ -472,6 +472,12 @@ function StudentDashboard() {
                   }}
                   className="group cursor-pointer block w-[140px] shrink-0 snap-start sm:w-full"
                 >
+                  {/* Nome acima da thumbnail */}
+                  <div className="mb-2 px-1">
+                    <h3 className="text-[13px] sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-2 min-h-[2.4em]">
+                      {curso.nome}
+                    </h3>
+                  </div>
 
                   <div className="relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -507,46 +513,38 @@ function StudentDashboard() {
                       className="absolute bottom-0 left-0 right-0 p-4 pt-10"
                       style={{ background: "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))" }}
                     >
+                      {(() => {
+                        const valorPix = Number(item.valor_pix ?? item.preco_pix ?? 0);
+                        const valorCartao = Number(item.valor_cartao ?? item.preco_cartao ?? 0);
+                        const pixDesc = item.valor_pix_desconto != null ? Number(item.valor_pix_desconto) : null;
+                        const cartaoDesc = item.valor_cartao_desconto != null ? Number(item.valor_cartao_desconto) : null;
+                        const pontosNec = item.pontos_desconto != null
+                          ? Number(item.pontos_desconto)
+                          : item.pontos_necessarios != null
+                            ? Number(item.pontos_necessarios)
+                            : null;
 
-                      <h3 className="text-white font-bold text-base leading-tight line-clamp-2">
-                        {curso.nome}
-                      </h3>
-                      <div className="mt-2 space-y-0.5">
-                        {(() => {
-                          const valorPix = Number(item.valor_pix ?? item.preco_pix ?? 0);
-                          const valorCartao = Number(item.valor_cartao ?? item.preco_cartao ?? 0);
-                          const pixDesc = item.valor_pix_desconto != null ? Number(item.valor_pix_desconto) : null;
-                          const cartaoDesc = item.valor_cartao_desconto != null ? Number(item.valor_cartao_desconto) : null;
-                          const pontosNec = item.pontos_desconto != null
-                            ? Number(item.pontos_desconto)
-                            : item.pontos_necessarios != null
-                              ? Number(item.pontos_necessarios)
-                              : null;
+                        const cartaoFinal = cartaoDesc ?? valorCartao;
+                        const pixFinal = pixDesc ?? valorPix;
+                        const parcela = cartaoFinal / 12;
 
-                          const cartaoFinal = cartaoDesc ?? valorCartao;
-                          const pixFinal = pixDesc ?? valorPix;
-                          const parcela = cartaoFinal / 12;
-
-                          return (
-                            <div className="leading-tight overflow-hidden">
-                              <p className="text-[10px] text-white/70 line-through truncate">
-                                De {formatCurrency(valorPix)}
-                              </p>
-                              <p className="text-lg font-extrabold text-yellow-300 truncate">
-                                {formatCurrency(pixFinal)}
-                                <span className="text-[10px] font-medium ml-1">
-                                  no PIX{pontosNec != null ? ` com ${pontosNec} pts` : ""}
-                                </span>
-                              </p>
-                              <p className="text-[11px] text-yellow-300/90 truncate">
-                                ou 12x de {formatCurrency(parcela)}
-                              </p>
-                            </div>
-
-                          );
-                        })()}
-                      </div>
-
+                        return (
+                          <div className="leading-tight overflow-hidden">
+                            <p className="text-[10px] text-white/70 line-through truncate">
+                              De {formatCurrency(valorPix)}
+                            </p>
+                            <p className="text-lg font-extrabold text-yellow-300 truncate">
+                              {formatCurrency(pixFinal)}
+                              <span className="text-[10px] font-medium ml-1">
+                                no PIX{pontosNec != null ? ` com ${pontosNec} pts` : ""}
+                              </span>
+                            </p>
+                            <p className="text-[11px] text-yellow-300/90 truncate">
+                              ou 12x de {formatCurrency(parcela)}
+                            </p>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -555,6 +553,24 @@ function StudentDashboard() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Preço abaixo da thumbnail */}
+                  {(() => {
+                    const valorPix = Number(item.valor_pix ?? item.preco_pix ?? 0);
+                    const valorCartao = Number(item.valor_cartao ?? item.preco_cartao ?? 0);
+                    const pixDesc = item.valor_pix_desconto != null ? Number(item.valor_pix_desconto) : null;
+                    const cartaoDesc = item.valor_cartao_desconto != null ? Number(item.valor_cartao_desconto) : null;
+                    const pixFinal = pixDesc ?? valorPix;
+                    const cartaoFinal = cartaoDesc ?? valorCartao;
+                    const parcela = cartaoFinal / 12;
+                    return (
+                      <p className="mt-2 px-1 text-[11px] sm:text-xs text-gray-700 font-medium leading-tight">
+                        PIX: <span className="font-bold text-gray-900">{formatCurrency(pixFinal)}</span>
+                        <span className="text-gray-400"> | </span>
+                        12x de <span className="font-bold text-gray-900">{formatCurrency(parcela)}</span>
+                      </p>
+                    );
+                  })()}
                 </div>
               );
             })}
