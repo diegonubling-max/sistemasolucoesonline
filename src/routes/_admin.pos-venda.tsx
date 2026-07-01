@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, CheckCircle2, Loader2 } from "lucide-react";
+import { MessageSquare, CheckCircle2, Loader2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useVendedoras } from "@/hooks/use-vendedoras";
 
@@ -39,6 +39,7 @@ function PosVendaPage() {
   const [tab, setTab] = useState("ativos");
   const [obsModal, setObsModal] = useState<{ id: string; obs: string } | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ id: string; etapa: number } | null>(null);
+  const [revertModal, setRevertModal] = useState<{ id: string; etapa: number; matricula_id: string } | null>(null);
 
   const { data: vendedoras } = useVendedoras();
 
@@ -133,6 +134,32 @@ function PosVendaPage() {
     onError: (e: any) => toast.error(e?.message ?? "Erro"),
   });
 
+  const reverter = useMutation({
+    mutationFn: async () => {
+      if (!revertModal) return;
+      // Deletar próximo PV gerado automaticamente (etapa + 1) da mesma matrícula
+      if (revertModal.etapa < 3) {
+        const { error: delErr } = await supabase
+          .from("pos_vendas")
+          .delete()
+          .eq("matricula_id", revertModal.matricula_id)
+          .eq("etapa", revertModal.etapa + 1);
+        if (delErr) throw delErr;
+      }
+      const { error } = await supabase
+        .from("pos_vendas")
+        .update({ status: "pendente", data_confirmacao: null, colaborador_id: null })
+        .eq("id", revertModal.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Pós-venda revertido");
+      qc.invalidateQueries({ queryKey: ["pos-vendas"] });
+      setRevertModal(null);
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Erro"),
+  });
+
   return (
     <div className="space-y-6">
       <PageHeader title="Pós-Venda" description="Acompanhamento de pós-vendas em 3 etapas" />
@@ -219,6 +246,11 @@ function PosVendaPage() {
                               <CheckCircle2 className="h-4 w-4 mr-1" /> Confirmar realizado
                             </Button>
                           )}
+                          {r.status === "concluido" && (
+                            <Button size="sm" variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-50" onClick={() => setRevertModal({ id: r.id, etapa: r.etapa, matricula_id: r.matricula_id })}>
+                              <Undo2 className="h-4 w-4 mr-1" /> Reverter
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -256,6 +288,24 @@ function PosVendaPage() {
             <Button variant="outline" onClick={() => setConfirmModal(null)}>Cancelar</Button>
             <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => confirmar.mutate()} disabled={confirmar.isPending}>
               {confirmar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!revertModal} onOpenChange={(o) => !o && setRevertModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reverter pós-venda</DialogTitle>
+            <DialogDescription>
+              Deseja reverter este pós-venda para pendente? Esta ação irá desfazer a confirmação realizada
+              {revertModal && revertModal.etapa < 3 ? " e remover o próximo pós-venda gerado automaticamente" : ""}.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRevertModal(null)}>Cancelar</Button>
+            <Button className="bg-amber-600 hover:bg-amber-700 text-white" onClick={() => reverter.mutate()} disabled={reverter.isPending}>
+              {reverter.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Reverter
             </Button>
           </DialogFooter>
         </DialogContent>
