@@ -78,7 +78,7 @@ export function BannerCarousel({ poloId: poloIdProp }: BannerCarouselProps) {
           src={b.imagem_url}
           alt={b.titulo || `Banner ${i + 1}`}
           className={cn(
-            "absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700",
+            "absolute inset-0 w-full h-full object-contain md:object-cover object-center transition-opacity duration-700",
             i === safeIndex ? "opacity-100" : "opacity-0"
           )}
         />
