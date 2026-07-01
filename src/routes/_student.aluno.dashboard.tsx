@@ -213,6 +213,160 @@ function StudentDashboard() {
         <BannerCarousel poloId={(poloData as any)?.id} />
       </div>
 
+      {vitrine && vitrine.length > 0 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-900">Cursos exclusivos para você</h2>
+          
+          <div className="flex gap-3 overflow-x-auto overflow-y-hidden snap-x pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-6">
+            {vitrine.map((item: any) => {
+              const curso = item.cursos;
+              if (!curso) return null;
+              const gradientIndex = (curso.nome?.length || 0) % gradients.length;
+              const gradientClass = gradients[gradientIndex];
+              
+              return (
+                <div 
+                  key={item.id} 
+                  onClick={async () => {
+                    setSelectedVitrine(item);
+                    try {
+                      if (studentData?.id && curso?.id) {
+                        const today = new Date().toISOString().slice(0, 10);
+                        const { data: existing } = await supabase
+                          .from("vitrine_cliques")
+                          .select("id")
+                          .eq("aluno_id", studentData.id)
+                          .eq("curso_id", curso.id)
+                          .gte("clicado_em", `${today}T00:00:00Z`)
+                          .lte("clicado_em", `${today}T23:59:59Z`)
+                          .limit(1);
+                        if (!existing || existing.length === 0) {
+                          const { data: alunoRow } = await supabase
+                            .from("alunos").select("polo_id").eq("id", studentData.id).maybeSingle();
+                          await supabase.from("vitrine_cliques").insert({
+                            aluno_id: studentData.id,
+                            curso_id: curso.id,
+                            polo_id: (alunoRow as any)?.polo_id ?? null,
+                            clicado_em: new Date().toISOString(),
+                          });
+                        }
+                      }
+                    } catch (e) { console.warn("vitrine_cliques insert failed", e); }
+                  }}
+                  className="group cursor-pointer block w-[140px] shrink-0 snap-start sm:w-full"
+                >
+                  {/* Nome acima da thumbnail */}
+                  <div className="mb-1 px-1">
+                    <h3 className="text-[13px] sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-2 min-h-[2.4em]">
+                      {curso.nome}
+                    </h3>
+                    {item.pontos_necessarios != null && Number(item.pontos_necessarios) > 0 && (
+                      <p className="text-[11px] font-medium text-yellow-600 mt-0.5">
+                        ⭐ {Number(item.pontos_necessarios)} pts para desconto
+                      </p>
+                    )}
+                  </div>
+
+
+                  <div className="relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {curso.thumbnail_url ? (
+                        <img 
+                          src={curso.thumbnail_url} 
+                          alt={curso.nome}
+                          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center`}>
+                          <BookOpen className="h-12 w-12 text-white/40 mb-2" />
+                          <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/20" />
+                    </div>
+
+                    <div className="absolute top-3 left-3">
+                      <div className="bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        Disponível
+                      </div>
+                    </div>
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
+                        <Lock className="h-10 w-10 text-white" />
+                      </div>
+                    </div>
+
+                    <div
+                      className="absolute bottom-0 left-0 right-0 p-4 pt-10"
+                      style={{ background: "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))" }}
+                    >
+                      {(() => {
+                        const valorPix = Number(item.valor_pix ?? item.preco_pix ?? 0);
+                        const valorCartao = Number(item.valor_cartao ?? item.preco_cartao ?? 0);
+                        const pixDesc = item.valor_pix_desconto != null ? Number(item.valor_pix_desconto) : null;
+                        const cartaoDesc = item.valor_cartao_desconto != null ? Number(item.valor_cartao_desconto) : null;
+                        const pontosNec = item.pontos_desconto != null
+                          ? Number(item.pontos_desconto)
+                          : item.pontos_necessarios != null
+                            ? Number(item.pontos_necessarios)
+                            : null;
+
+                        const cartaoFinal = cartaoDesc ?? valorCartao;
+                        const pixFinal = pixDesc ?? valorPix;
+                        const parcela = cartaoFinal / 12;
+
+                        return (
+                          <div className="leading-tight overflow-hidden">
+                            <p className="text-[10px] text-white/70 line-through truncate">
+                              De {formatCurrency(valorPix)}
+                            </p>
+                            <p className="text-lg font-extrabold text-yellow-300 truncate">
+                              {formatCurrency(pixFinal)}
+                              <span className="text-[10px] font-medium ml-1">
+                                no PIX{pontosNec != null ? ` com ${pontosNec} pts` : ""}
+                              </span>
+                            </p>
+                            <p className="text-[11px] text-yellow-300/90 truncate">
+                              ou 12x de {formatCurrency(parcela)}
+                            </p>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    <div className="absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-white font-bold text-xs uppercase tracking-widest bg-[#1E3A5F] px-3 py-2 rounded-lg">
+                        Ver Detalhes
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Preço abaixo da thumbnail */}
+                  {(() => {
+                    const valorPix = Number(item.valor_pix ?? item.preco_pix ?? 0);
+                    const valorCartao = Number(item.valor_cartao ?? item.preco_cartao ?? 0);
+                    const pixDesc = item.valor_pix_desconto != null ? Number(item.valor_pix_desconto) : null;
+                    const cartaoDesc = item.valor_cartao_desconto != null ? Number(item.valor_cartao_desconto) : null;
+                    const pixFinal = pixDesc ?? valorPix;
+                    const cartaoFinal = cartaoDesc ?? valorCartao;
+                    const parcela = cartaoFinal / 12;
+                    return (
+                      <p className="mt-2 px-1 text-[11px] sm:text-xs text-gray-700 font-medium leading-tight">
+                        PIX: <span className="font-bold text-gray-900">{formatCurrency(pixFinal)}</span>
+                        <span className="text-gray-400"> | </span>
+                        12x de <span className="font-bold text-gray-900">{formatCurrency(parcela)}</span>
+                      </p>
+                    );
+                  })()}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4 sm:space-y-6">
         <h2 className="text-2xl font-bold text-gray-900 px-1 sm:px-0">Meus Cursos</h2>
 
@@ -429,160 +583,6 @@ function StudentDashboard() {
           </div>
         )}
       </div>
-
-      {vitrine && vitrine.length > 0 && (
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900">Cursos exclusivos para você</h2>
-          
-          <div className="flex gap-3 overflow-x-auto overflow-y-hidden snap-x pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-6">
-            {vitrine.map((item: any) => {
-              const curso = item.cursos;
-              if (!curso) return null;
-              const gradientIndex = (curso.nome?.length || 0) % gradients.length;
-              const gradientClass = gradients[gradientIndex];
-              
-              return (
-                <div 
-                  key={item.id} 
-                  onClick={async () => {
-                    setSelectedVitrine(item);
-                    try {
-                      if (studentData?.id && curso?.id) {
-                        const today = new Date().toISOString().slice(0, 10);
-                        const { data: existing } = await supabase
-                          .from("vitrine_cliques")
-                          .select("id")
-                          .eq("aluno_id", studentData.id)
-                          .eq("curso_id", curso.id)
-                          .gte("clicado_em", `${today}T00:00:00Z`)
-                          .lte("clicado_em", `${today}T23:59:59Z`)
-                          .limit(1);
-                        if (!existing || existing.length === 0) {
-                          const { data: alunoRow } = await supabase
-                            .from("alunos").select("polo_id").eq("id", studentData.id).maybeSingle();
-                          await supabase.from("vitrine_cliques").insert({
-                            aluno_id: studentData.id,
-                            curso_id: curso.id,
-                            polo_id: (alunoRow as any)?.polo_id ?? null,
-                            clicado_em: new Date().toISOString(),
-                          });
-                        }
-                      }
-                    } catch (e) { console.warn("vitrine_cliques insert failed", e); }
-                  }}
-                  className="group cursor-pointer block w-[140px] shrink-0 snap-start sm:w-full"
-                >
-                  {/* Nome acima da thumbnail */}
-                  <div className="mb-1 px-1">
-                    <h3 className="text-[13px] sm:text-sm font-semibold text-gray-900 leading-tight line-clamp-2 min-h-[2.4em]">
-                      {curso.nome}
-                    </h3>
-                    {item.pontos_necessarios != null && Number(item.pontos_necessarios) > 0 && (
-                      <p className="text-[11px] font-medium text-yellow-600 mt-0.5">
-                        ⭐ {Number(item.pontos_necessarios)} pts para desconto
-                      </p>
-                    )}
-                  </div>
-
-
-                  <div className="relative w-full aspect-[2/3] bg-[#f5f5f5] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(45,106,223,0.3)] border border-gray-100 shadow-sm flex items-center justify-center">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      {curso.thumbnail_url ? (
-                        <img 
-                          src={curso.thumbnail_url} 
-                          alt={curso.nome}
-                          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4 text-center`}>
-                          <BookOpen className="h-12 w-12 text-white/40 mb-2" />
-                          <span className="text-white font-bold text-sm line-clamp-2">{curso.nome}</span>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/20" />
-                    </div>
-
-                    <div className="absolute top-3 left-3">
-                      <div className="bg-black/50 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                        Disponível
-                      </div>
-                    </div>
-
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-full">
-                        <Lock className="h-10 w-10 text-white" />
-                      </div>
-                    </div>
-
-                    <div
-                      className="absolute bottom-0 left-0 right-0 p-4 pt-10"
-                      style={{ background: "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))" }}
-                    >
-                      {(() => {
-                        const valorPix = Number(item.valor_pix ?? item.preco_pix ?? 0);
-                        const valorCartao = Number(item.valor_cartao ?? item.preco_cartao ?? 0);
-                        const pixDesc = item.valor_pix_desconto != null ? Number(item.valor_pix_desconto) : null;
-                        const cartaoDesc = item.valor_cartao_desconto != null ? Number(item.valor_cartao_desconto) : null;
-                        const pontosNec = item.pontos_desconto != null
-                          ? Number(item.pontos_desconto)
-                          : item.pontos_necessarios != null
-                            ? Number(item.pontos_necessarios)
-                            : null;
-
-                        const cartaoFinal = cartaoDesc ?? valorCartao;
-                        const pixFinal = pixDesc ?? valorPix;
-                        const parcela = cartaoFinal / 12;
-
-                        return (
-                          <div className="leading-tight overflow-hidden">
-                            <p className="text-[10px] text-white/70 line-through truncate">
-                              De {formatCurrency(valorPix)}
-                            </p>
-                            <p className="text-lg font-extrabold text-yellow-300 truncate">
-                              {formatCurrency(pixFinal)}
-                              <span className="text-[10px] font-medium ml-1">
-                                no PIX{pontosNec != null ? ` com ${pontosNec} pts` : ""}
-                              </span>
-                            </p>
-                            <p className="text-[11px] text-yellow-300/90 truncate">
-                              ou 12x de {formatCurrency(parcela)}
-                            </p>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    <div className="absolute inset-0 bg-[#1E3A5F]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-white font-bold text-xs uppercase tracking-widest bg-[#1E3A5F] px-3 py-2 rounded-lg">
-                        Ver Detalhes
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Preço abaixo da thumbnail */}
-                  {(() => {
-                    const valorPix = Number(item.valor_pix ?? item.preco_pix ?? 0);
-                    const valorCartao = Number(item.valor_cartao ?? item.preco_cartao ?? 0);
-                    const pixDesc = item.valor_pix_desconto != null ? Number(item.valor_pix_desconto) : null;
-                    const cartaoDesc = item.valor_cartao_desconto != null ? Number(item.valor_cartao_desconto) : null;
-                    const pixFinal = pixDesc ?? valorPix;
-                    const cartaoFinal = cartaoDesc ?? valorCartao;
-                    const parcela = cartaoFinal / 12;
-                    return (
-                      <p className="mt-2 px-1 text-[11px] sm:text-xs text-gray-700 font-medium leading-tight">
-                        PIX: <span className="font-bold text-gray-900">{formatCurrency(pixFinal)}</span>
-                        <span className="text-gray-400"> | </span>
-                        12x de <span className="font-bold text-gray-900">{formatCurrency(parcela)}</span>
-                      </p>
-                    );
-                  })()}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Prova Final Scheduling Dialog */}
       <Dialog open={showProvaFinalDialog} onOpenChange={setShowProvaFinalDialog}>
