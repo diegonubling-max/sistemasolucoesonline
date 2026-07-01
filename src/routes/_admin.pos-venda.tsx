@@ -39,6 +39,7 @@ function PosVendaPage() {
   const [tab, setTab] = useState("ativos");
   const [obsModal, setObsModal] = useState<{ id: string; obs: string } | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ id: string; etapa: number } | null>(null);
+  const [revertModal, setRevertModal] = useState<{ id: string; etapa: number; matricula_id: string } | null>(null);
 
   const { data: vendedoras } = useVendedoras();
 
