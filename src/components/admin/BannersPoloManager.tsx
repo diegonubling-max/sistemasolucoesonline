@@ -184,24 +184,12 @@ export function BannersPoloManager({ isSuperAdmin }: BannersPoloManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
-        <div className="space-y-2 w-full sm:max-w-xs">
-          <Label>Polo</Label>
-          <Select value={selectedPoloId} onValueChange={setSelectedPoloId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um polo" />
-            </SelectTrigger>
-            <SelectContent>
-              {(polos ?? []).map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="flex items-center justify-end">
         <Button onClick={openCreate} disabled={!selectedPoloId || limitReached}>
           <Plus className="h-4 w-4 mr-2" /> Adicionar Banner
         </Button>
       </div>
+
 
       {limitReached && (
         <p className="text-sm text-amber-600">Limite de 3 banners ativos atingido. Desative um para adicionar outro.</p>
