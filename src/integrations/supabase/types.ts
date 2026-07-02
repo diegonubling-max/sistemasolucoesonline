@@ -540,6 +540,7 @@ export type Database = {
           ver_configuracoes: boolean | null
           ver_financeiro: boolean | null
           ver_pos_venda: boolean
+          ver_provas_agendadas: boolean
           ver_relatorios: boolean | null
           ver_setor_provas: boolean | null
         }
@@ -557,6 +558,7 @@ export type Database = {
           ver_configuracoes?: boolean | null
           ver_financeiro?: boolean | null
           ver_pos_venda?: boolean
+          ver_provas_agendadas?: boolean
           ver_relatorios?: boolean | null
           ver_setor_provas?: boolean | null
         }
@@ -574,6 +576,7 @@ export type Database = {
           ver_configuracoes?: boolean | null
           ver_financeiro?: boolean | null
           ver_pos_venda?: boolean
+          ver_provas_agendadas?: boolean
           ver_relatorios?: boolean | null
           ver_setor_provas?: boolean | null
         }
@@ -1597,6 +1600,8 @@ export type Database = {
           aluno_id: string | null
           created_at: string | null
           data_prova: string
+          docs_recebidos: boolean
+          docs_solicitados: boolean
           hora_prova: string
           id: string
           status: string | null
@@ -1605,6 +1610,8 @@ export type Database = {
           aluno_id?: string | null
           created_at?: string | null
           data_prova: string
+          docs_recebidos?: boolean
+          docs_solicitados?: boolean
           hora_prova: string
           id?: string
           status?: string | null
@@ -1613,6 +1620,8 @@ export type Database = {
           aluno_id?: string | null
           created_at?: string | null
           data_prova?: string
+          docs_recebidos?: boolean
+          docs_solicitados?: boolean
           hora_prova?: string
           id?: string
           status?: string | null
