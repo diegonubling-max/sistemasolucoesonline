@@ -75,6 +75,7 @@ const PERMISSIONS_LIST = [
   { id: "gerenciar_prova_final", label: "Gerenciar Prova Final" },
   { id: "ver_setor_provas", label: "Ver Setor de Provas" },
   { id: "ver_pos_venda", label: "Ver Pós-Venda" },
+  { id: "ver_provas_agendadas", label: "Ver Provas Agendadas" },
   { id: "ver_relatorios", label: "Ver Relatórios" },
   { id: "ver_configuracoes", label: "Ver Configurações" },
 ];
@@ -126,6 +127,7 @@ function ColaboradoresList() {
     gerenciar_prova_final: false,
     ver_setor_provas: false,
     ver_pos_venda: false,
+    ver_provas_agendadas: false,
     ver_relatorios: false,
     ver_configuracoes: false,
   });
@@ -245,6 +247,7 @@ function ColaboradoresList() {
         gerenciar_prova_final: false,
         ver_setor_provas: false,
         ver_pos_venda: false,
+        ver_provas_agendadas: false,
         ver_relatorios: false,
         ver_configuracoes: false,
       });
