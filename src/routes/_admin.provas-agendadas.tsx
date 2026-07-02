@@ -148,9 +148,11 @@ function ProvasAgendadasPage() {
 
   const toggleFlag = useMutation({
     mutationFn: async (v: { id: string; field: "docs_solicitados" | "docs_recebidos"; value: boolean }) => {
+      const patch: { docs_solicitados?: boolean; docs_recebidos?: boolean } = {};
+      patch[v.field] = v.value;
       const { error } = await supabase
         .from("prova_agendamentos")
-        .update({ [v.field]: v.value })
+        .update(patch)
         .eq("id", v.id);
       if (error) throw error;
     },
