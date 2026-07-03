@@ -70,7 +70,9 @@ export function useVideoProgress({
       if (ct < 0) ct = 0;
       const pct = ct >= dur ? 100 : +(ct / dur * 100).toFixed(2);
 
-      await supabase
+      console.log('[progress] persist chamado:', { percentual: pct, tempo: ct, posicao: ct, duracao: dur, alunoId, aulaId });
+
+      const { data, error } = await supabase
         .from("aluno_aulas_assistidas")
         .upsert(
           {
@@ -84,6 +86,8 @@ export function useVideoProgress({
           },
           { onConflict: "aluno_id,aula_id" },
         );
+
+      console.log('[progress] resultado supabase:', { data, error });
 
       // Milhas EJA + marcar concluída ao atingir 70%
       if (pct >= 70 && alunoId && aulaId && cursoId) {
@@ -198,6 +202,8 @@ export function useVideoProgress({
         if (pandaMsg === "panda_allData" && data.playerData) {
           const ct = Number(data.playerData.currentTime ?? 0);
           const dur = Number(data.playerData.duration ?? 0);
+          const pct = dur > 0 ? +(ct / dur * 100).toFixed(2) : 0;
+          console.log('[progress] panda_allData recebido:', ct, dur, pct);
           if (dur > 0) handleTick(ct, dur);
           return;
         }
