@@ -174,10 +174,12 @@ export function useVideoProgress({
         return;
       }
 
-      // Pandavideo
-      if (provider === "pandavideo" && (data.message === "panda_timeupdate" || data.event === "panda_timeupdate")) {
-        const ct = Number(data.currentTime ?? 0);
-        const dur = Number(data.duration ?? 0);
+      // Pandavideo: {message:"panda_timeupdate", currentTime, duration}
+      // ou {event/action:"panda_timeupdate", currentTime, duration}
+      const pandaMsg = data.message ?? data.event ?? data.action;
+      if (provider === "pandavideo" && typeof pandaMsg === "string" && pandaMsg.includes("timeupdate")) {
+        const ct = Number(data.currentTime ?? data.data?.currentTime ?? 0);
+        const dur = Number(data.duration ?? data.data?.duration ?? 0);
         if (dur > 0) handleTick(ct, dur);
         return;
       }
