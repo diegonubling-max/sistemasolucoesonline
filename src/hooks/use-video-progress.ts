@@ -59,10 +59,16 @@ export function useVideoProgress({
 
   const persist = useCallback(
     async (currentTime: number, duration: number) => {
-      if (!alunoId || !aulaId || !cursoId) return;
+      if (!alunoId || !aulaId || !cursoId) {
+        console.log('[progress] persist bloqueado: ids ausentes', { alunoId, aulaId, cursoId });
+        return;
+      }
       const dur = Math.floor(duration);
       // Nunca salvar com duracao_total = 0
-      if (dur <= 0) return;
+      if (dur <= 0) {
+        console.log('[progress] persist bloqueado: duração inválida', { currentTime, duration });
+        return;
+      }
 
       // tempo_assistido = currentTime do player (não acumulado), limitado à duração
       let ct = Math.floor(currentTime);
@@ -162,7 +168,12 @@ export function useVideoProgress({
 
   // Listener
   useEffect(() => {
-    if (provider === "unknown") return;
+    console.log('[progress] hook ativo:', { provider, alunoId, aulaId, cursoId, url });
+
+    if (provider === "unknown") {
+      console.log('[progress] listener não registrado: provider unknown', { url });
+      return;
+    }
 
     const onMessage = (e: MessageEvent) => {
       // Debug Panda: logar tudo que vier de pandavideo
@@ -195,7 +206,17 @@ export function useVideoProgress({
 
       // Pandavideo: verificar origem por segurança
       if (provider === "pandavideo") {
-        if (typeof e.origin === "string" && !e.origin.includes("pandavideo.com.br")) return;
+        console.log('[progress] dentro do listener, processando...', {
+          origin: e.origin,
+          alunoId,
+          aulaId,
+          cursoId,
+        });
+
+        if (typeof e.origin === "string" && !e.origin.includes("pandavideo.com.br")) {
+          console.log('[progress] panda ignorado: origin inválida', e.origin);
+          return;
+        }
         const pandaMsg = String(data.message ?? data.event ?? data.action ?? "");
 
         // Formato oficial: { message: "panda_allData", playerData: { currentTime, duration, ... } }
@@ -204,7 +225,11 @@ export function useVideoProgress({
           const dur = Number(data.playerData.duration ?? 0);
           const pct = dur > 0 ? +(ct / dur * 100).toFixed(2) : 0;
           console.log('[progress] panda_allData recebido:', ct, dur, pct);
-          if (dur > 0) handleTick(ct, dur);
+          if (dur > 0) {
+            handleTick(ct, dur);
+          } else {
+            console.log('[progress] panda_allData ignorado: duração inválida', data.playerData);
+          }
           return;
         }
 
@@ -220,7 +245,7 @@ export function useVideoProgress({
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [provider, handleTick, state.duration]);
+  }, [provider, handleTick, alunoId, aulaId, cursoId, url, state.duration]);
 
   // Initialize YouTube IFrame API listening
   useEffect(() => {
