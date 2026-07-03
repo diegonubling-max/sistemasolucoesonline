@@ -152,6 +152,11 @@ export function useVideoProgress({
     if (provider === "unknown") return;
 
     const onMessage = (e: MessageEvent) => {
+      // Debug Panda: logar tudo que vier de pandavideo
+      if (provider === "pandavideo" && typeof e.origin === "string" && e.origin.includes("pandavideo.com.br")) {
+        console.log("Panda event:", e.data);
+      }
+
       let data: any = e.data;
       if (typeof data === "string") {
         try { data = JSON.parse(data); } catch { return; }
@@ -174,14 +179,20 @@ export function useVideoProgress({
         return;
       }
 
-      // Pandavideo: {message:"panda_timeupdate", currentTime, duration}
-      // ou {event/action:"panda_timeupdate", currentTime, duration}
-      const pandaMsg = data.message ?? data.event ?? data.action;
-      if (provider === "pandavideo" && typeof pandaMsg === "string" && pandaMsg.includes("timeupdate")) {
-        const ct = Number(data.currentTime ?? data.data?.currentTime ?? 0);
-        const dur = Number(data.duration ?? data.data?.duration ?? 0);
-        if (dur > 0) handleTick(ct, dur);
-        return;
+      // Pandavideo: verificar origem por segurança
+      if (provider === "pandavideo") {
+        if (typeof e.origin === "string" && !e.origin.includes("pandavideo.com.br")) return;
+        // Formatos possíveis:
+        // { message: "panda_timeupdate" | "timeupdate", currentTime, duration }
+        // { event:   "panda_timeupdate" | "timeupdate", currentTime, duration }
+        // { action:  "panda_timeupdate" | "timeupdate", currentTime, duration }
+        const pandaMsg = String(data.message ?? data.event ?? data.action ?? "");
+        if (pandaMsg.includes("timeupdate")) {
+          const ct = Number(data.currentTime ?? data.data?.currentTime ?? 0);
+          const dur = Number(data.duration ?? data.data?.duration ?? 0);
+          if (dur > 0) handleTick(ct, dur);
+          return;
+        }
       }
     };
 
