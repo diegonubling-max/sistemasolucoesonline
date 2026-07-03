@@ -85,7 +85,7 @@ export function useVideoProgress({
           { onConflict: "aluno_id,aula_id" },
         );
 
-      // Milhas EJA: ao atingir 70% pela 1ª vez nesta aula
+      // Milhas EJA + marcar concluída ao atingir 70%
       if (pct >= 70 && alunoId && aulaId && cursoId) {
         const creditou = await creditarAulaAssistida(alunoId, aulaId);
         if (creditou) {
@@ -94,7 +94,7 @@ export function useVideoProgress({
         }
       }
 
-      if (pct >= 90 && !completedRef.current) {
+      if (pct >= 70 && !completedRef.current) {
         completedRef.current = true;
         onCompleted?.();
       }
