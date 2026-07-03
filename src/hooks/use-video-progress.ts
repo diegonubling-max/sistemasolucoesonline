@@ -85,7 +85,7 @@ export function useVideoProgress({
           { onConflict: "aluno_id,aula_id" },
         );
 
-      // Milhas EJA: ao atingir 70% pela 1ª vez nesta aula
+      // Milhas EJA + marcar concluída ao atingir 70%
       if (pct >= 70 && alunoId && aulaId && cursoId) {
         const creditou = await creditarAulaAssistida(alunoId, aulaId);
         if (creditou) {
@@ -94,7 +94,7 @@ export function useVideoProgress({
         }
       }
 
-      if (pct >= 90 && !completedRef.current) {
+      if (pct >= 70 && !completedRef.current) {
         completedRef.current = true;
         onCompleted?.();
       }
@@ -106,7 +106,7 @@ export function useVideoProgress({
     (currentTime: number, duration: number) => {
       setState({ currentTime, duration });
       const now = Date.now();
-      if (now - lastSaveRef.current >= 10_000) {
+      if (now - lastSaveRef.current >= 5_000) {
         lastSaveRef.current = now;
         void persist(currentTime, duration);
       }
@@ -174,10 +174,12 @@ export function useVideoProgress({
         return;
       }
 
-      // Pandavideo
-      if (provider === "pandavideo" && (data.message === "panda_timeupdate" || data.event === "panda_timeupdate")) {
-        const ct = Number(data.currentTime ?? 0);
-        const dur = Number(data.duration ?? 0);
+      // Pandavideo: {message:"panda_timeupdate", currentTime, duration}
+      // ou {event/action:"panda_timeupdate", currentTime, duration}
+      const pandaMsg = data.message ?? data.event ?? data.action;
+      if (provider === "pandavideo" && typeof pandaMsg === "string" && pandaMsg.includes("timeupdate")) {
+        const ct = Number(data.currentTime ?? data.data?.currentTime ?? 0);
+        const dur = Number(data.duration ?? data.data?.duration ?? 0);
         if (dur > 0) handleTick(ct, dur);
         return;
       }
