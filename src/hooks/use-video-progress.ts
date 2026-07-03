@@ -70,7 +70,9 @@ export function useVideoProgress({
       if (ct < 0) ct = 0;
       const pct = ct >= dur ? 100 : +(ct / dur * 100).toFixed(2);
 
-      await supabase
+      console.log('[progress] persist chamado:', { percentual: pct, tempo: ct, posicao: ct, duracao: dur, alunoId, aulaId });
+
+      const { data, error } = await supabase
         .from("aluno_aulas_assistidas")
         .upsert(
           {
@@ -84,6 +86,8 @@ export function useVideoProgress({
           },
           { onConflict: "aluno_id,aula_id" },
         );
+
+      console.log('[progress] resultado supabase:', { data, error });
 
       // Milhas EJA + marcar concluída ao atingir 70%
       if (pct >= 70 && alunoId && aulaId && cursoId) {
