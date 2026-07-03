@@ -192,11 +192,17 @@ export function useVideoProgress({
       // Pandavideo: verificar origem por segurança
       if (provider === "pandavideo") {
         if (typeof e.origin === "string" && !e.origin.includes("pandavideo.com.br")) return;
-        // Formatos possíveis:
-        // { message: "panda_timeupdate" | "timeupdate", currentTime, duration }
-        // { event:   "panda_timeupdate" | "timeupdate", currentTime, duration }
-        // { action:  "panda_timeupdate" | "timeupdate", currentTime, duration }
         const pandaMsg = String(data.message ?? data.event ?? data.action ?? "");
+
+        // Formato oficial: { message: "panda_allData", playerData: { currentTime, duration, ... } }
+        if (pandaMsg === "panda_allData" && data.playerData) {
+          const ct = Number(data.playerData.currentTime ?? 0);
+          const dur = Number(data.playerData.duration ?? 0);
+          if (dur > 0) handleTick(ct, dur);
+          return;
+        }
+
+        // Fallback: variações com timeupdate
         if (pandaMsg.includes("timeupdate")) {
           const ct = Number(data.currentTime ?? data.data?.currentTime ?? 0);
           const dur = Number(data.duration ?? data.data?.duration ?? 0);
