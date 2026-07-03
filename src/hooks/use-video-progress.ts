@@ -202,6 +202,8 @@ export function useVideoProgress({
         if (pandaMsg === "panda_allData" && data.playerData) {
           const ct = Number(data.playerData.currentTime ?? 0);
           const dur = Number(data.playerData.duration ?? 0);
+          const pct = dur > 0 ? +(ct / dur * 100).toFixed(2) : 0;
+          console.log('[progress] panda_allData recebido:', ct, dur, pct);
           if (dur > 0) handleTick(ct, dur);
           return;
         }
