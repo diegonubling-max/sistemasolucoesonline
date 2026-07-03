@@ -131,21 +131,26 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
 
   const marcarConcluida = useMutation({
     mutationFn: async (payload: { cursoId: string; aulaIds: string[] }) => {
+      if (payload.aulaIds.length === 0) return;
       const rows = payload.aulaIds.map(aulaId => ({
         aluno_id: alunoId,
         aula_id: aulaId,
         curso_id: payload.cursoId,
         percentual_assistido: 100,
         tempo_assistido: 999999,
+        assistida_em: new Date().toISOString(),
       }));
+      // upsert com onConflict cobre AMBOS os casos:
+      // - aula sem registro para o aluno → INSERT
+      // - aula com registro existente < 70 → UPDATE
       const { error } = await supabase
         .from("aluno_aulas_assistidas")
         .upsert(rows, { onConflict: "aluno_id,aula_id" });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Progresso atualizado com sucesso");
-      queryClient.invalidateQueries({ queryKey: ["aluno-progresso-aulas-v2", alunoId] });
+      await queryClient.refetchQueries({ queryKey: ["aluno-progresso-aulas-v2", alunoId] });
       setConfirm(null);
     },
     onError: (err: any) => {
@@ -159,7 +164,12 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
       marcarConcluida.mutate({ cursoId: confirm.cursoId, aulaIds: [confirm.aulaId] });
     } else {
       const curso = progresso?.find(c => c.id === confirm.cursoId);
-      const aulaIds = (curso?.aulas ?? []).filter(a => a.percentual < 70).map(a => a.id);
+      // Inclui TODAS as aulas do curso com percentual < 70
+      // (aulas sem registro têm percentual = 0, então entram aqui;
+      // o upsert acima faz INSERT para elas e UPDATE para as demais)
+      const aulaIds = (curso?.aulas ?? [])
+        .filter(a => Number(a.percentual) < 70)
+        .map(a => a.id);
       if (aulaIds.length === 0) {
         setConfirm(null);
         return;
