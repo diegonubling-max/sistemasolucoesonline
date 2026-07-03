@@ -214,11 +214,14 @@ function StudentCourse() {
 
     // Pandavideo
     if (url.includes('pandavideo.com.br')) {
+      const sep = url.includes('?') ? '&' : '?';
+      const src = url.includes('smartAutoPlay') ? url : `${url}${sep}smartAutoPlay=1`;
       return (
         <iframe
           ref={iframeRef}
           className="w-full h-full"
-          src={url}
+          src={src}
+          allow="autoplay; encrypted-media"
           allowFullScreen
         ></iframe>
       );
