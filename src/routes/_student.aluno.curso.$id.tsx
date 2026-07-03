@@ -16,6 +16,38 @@ export const Route = createFileRoute("/_student/aluno/curso/$id")({
   component: StudentCourse,
 });
 
+function DebugOverlay() {
+  const [debugEvents, setDebugEvents] = useState<string[]>([]);
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setEnabled(window.localStorage.getItem("debug") === "true");
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const handler = (e: MessageEvent) => {
+      let str = "";
+      try { str = JSON.stringify(e.data); } catch { str = String(e.data); }
+      setDebugEvents((prev) => [...prev.slice(-2), str.slice(0, 100)]);
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [enabled]);
+
+  if (!enabled) return null;
+  return (
+    <div className="fixed bottom-4 right-4 z-[9999] max-w-sm bg-black/85 text-green-300 text-xs font-mono p-3 rounded-lg shadow-xl border border-green-500/30 space-y-1">
+      <div className="text-green-500 font-bold mb-1">🐞 postMessage debug</div>
+      {debugEvents.length === 0 && <div className="text-white/50">Aguardando eventos…</div>}
+      {debugEvents.map((ev, i) => (
+        <div key={i} className="break-all border-t border-white/10 pt-1">{ev}</div>
+      ))}
+    </div>
+  );
+}
+
 function StudentCourse() {
   const { id } = Route.useParams();
   const { session } = useAuth();
@@ -236,6 +268,7 @@ function StudentCourse() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
+      <DebugOverlay />
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-2">
           <Link to="/aluno/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-1 text-sm font-medium transition-colors">
