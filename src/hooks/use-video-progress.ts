@@ -106,7 +106,7 @@ export function useVideoProgress({
     (currentTime: number, duration: number) => {
       setState({ currentTime, duration });
       const now = Date.now();
-      if (now - lastSaveRef.current >= 10_000) {
+      if (now - lastSaveRef.current >= 5_000) {
         lastSaveRef.current = now;
         void persist(currentTime, duration);
       }
