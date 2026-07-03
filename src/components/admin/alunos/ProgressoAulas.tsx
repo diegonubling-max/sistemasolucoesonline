@@ -1,10 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BookOpen, CheckCircle2, Loader2, PlayCircle, Circle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { BookOpen, CheckCircle2, Loader2, PlayCircle, Circle, CheckCheck } from "lucide-react";
 import { formatSeconds } from "@/hooks/use-video-progress";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface ProgressoAulasProps {
   alunoId: string;
@@ -28,11 +41,18 @@ type CursoProgresso = {
   mediaProgresso: number;
 };
 
+type ConfirmState =
+  | { type: "aula"; alunoId: string; cursoId: string; aulaId: string; aulaTitulo: string }
+  | { type: "curso"; alunoId: string; cursoId: string; cursoNome: string }
+  | null;
+
 export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
+  const queryClient = useQueryClient();
+  const [confirm, setConfirm] = useState<ConfirmState>(null);
+
   const { data: progresso, isLoading } = useQuery<CursoProgresso[]>({
     queryKey: ["aluno-progresso-aulas-v2", alunoId],
     queryFn: async () => {
-      // 1. Cursos matriculados
       const { data: matriculas } = await supabase
         .from("matriculas")
         .select("id")
@@ -58,7 +78,6 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
       const cursoIds = cursos.map(c => c.id);
       if (cursoIds.length === 0) return [];
 
-      // 2. Aulas dos cursos
       const { data: aulasData } = await supabase
         .from("aulas")
         .select("id, titulo, ordem, curso_id, ativo")
@@ -66,7 +85,6 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
         .eq("ativo", true)
         .order("ordem", { ascending: true });
 
-      // 3. Progresso do aluno em cada aula
       const { data: progressoData } = await supabase
         .from("aluno_aulas_assistidas")
         .select("aula_id, percentual_assistido, tempo_assistido, duracao_total, created_at")
@@ -74,7 +92,6 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
         .in("curso_id", cursoIds)
         .order("created_at", { ascending: false });
 
-      // Map: aula_id -> latest row
       const progressoMap = new Map<string, any>();
       progressoData?.forEach(p => {
         if (!progressoMap.has(p.aula_id)) progressoMap.set(p.aula_id, p);
@@ -112,6 +129,45 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
     },
   });
 
+  const marcarConcluida = useMutation({
+    mutationFn: async (payload: { cursoId: string; aulaIds: string[] }) => {
+      const rows = payload.aulaIds.map(aulaId => ({
+        aluno_id: alunoId,
+        aula_id: aulaId,
+        curso_id: payload.cursoId,
+        percentual_assistido: 100,
+        tempo_assistido: 999999,
+      }));
+      const { error } = await supabase
+        .from("aluno_aulas_assistidas")
+        .upsert(rows, { onConflict: "aluno_id,aula_id" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Progresso atualizado com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["aluno-progresso-aulas-v2", alunoId] });
+      setConfirm(null);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Erro ao atualizar progresso");
+    },
+  });
+
+  const handleConfirm = () => {
+    if (!confirm) return;
+    if (confirm.type === "aula") {
+      marcarConcluida.mutate({ cursoId: confirm.cursoId, aulaIds: [confirm.aulaId] });
+    } else {
+      const curso = progresso?.find(c => c.id === confirm.cursoId);
+      const aulaIds = (curso?.aulas ?? []).filter(a => a.percentual < 70).map(a => a.id);
+      if (aulaIds.length === 0) {
+        setConfirm(null);
+        return;
+      }
+      marcarConcluida.mutate({ cursoId: confirm.cursoId, aulaIds });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
@@ -148,7 +204,6 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
 
   return (
     <div className="space-y-6">
-      {/* Resumo Geral */}
       <Card className="bg-primary/5 border-primary/20">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -178,54 +233,118 @@ export function ProgressoAulas({ alunoId }: ProgressoAulasProps) {
         </CardContent>
       </Card>
 
-      {/* Lista de Cursos (Accordion - múltiplos abertos) */}
       <Accordion type="multiple" className="space-y-3">
-        {progresso.map((curso) => (
-          <AccordionItem
-            key={curso.id}
-            value={curso.id}
-            className="border rounded-lg bg-card px-4"
-          >
-            <AccordionTrigger className="hover:no-underline py-4">
-              <div className="flex items-center justify-between gap-2 w-full pr-2">
-                <span className="flex items-center gap-2 font-medium">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  {curso.nome}
-                </span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  {curso.aulasConcluidas}/{curso.totalAulas} concluídas · engajamento {curso.mediaProgresso}%
-                </span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              {curso.aulas.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma aula cadastrada.</p>
-              ) : (
-                <div className="space-y-3 pb-2">
-                  {curso.aulas.map((aula) => (
-                    <div key={aula.id} className="space-y-1">
-                      <div className="flex items-center justify-between gap-2 text-sm">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          {statusIcon(aula.percentual)}
-                          <span className="truncate" title={aula.titulo}>{aula.titulo}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-                          {Math.round(aula.percentual)}% assistido
-                          {aula.duracao_total > 0 && (
-                            <> ({formatSeconds(aula.tempo_assistido)} de {formatSeconds(aula.duracao_total)})</>
-                          )}
-                        </span>
-                      </div>
-                      <Progress value={aula.percentual} className="h-1.5" />
-                    </div>
-                  ))}
+        {progresso.map((curso) => {
+          const temPendentes = curso.aulas.some(a => a.percentual < 70);
+          return (
+            <AccordionItem
+              key={curso.id}
+              value={curso.id}
+              className="border rounded-lg bg-card px-4"
+            >
+              <AccordionTrigger className="hover:no-underline py-4">
+                <div className="flex items-center justify-between gap-2 w-full pr-2">
+                  <span className="flex items-center gap-2 font-medium">
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    {curso.nome}
+                  </span>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {curso.aulasConcluidas}/{curso.totalAulas} concluídas · engajamento {curso.mediaProgresso}%
+                  </span>
                 </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
+              </AccordionTrigger>
+              <AccordionContent>
+                {temPendentes && (
+                  <div className="flex justify-end pb-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirm({ type: "curso", alunoId, cursoId: curso.id, cursoNome: curso.nome });
+                      }}
+                    >
+                      <CheckCheck className="h-4 w-4 mr-1" />
+                      Marcar todas como concluídas
+                    </Button>
+                  </div>
+                )}
+                {curso.aulas.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhuma aula cadastrada.</p>
+                ) : (
+                  <div className="space-y-3 pb-2">
+                    {curso.aulas.map((aula) => (
+                      <div key={aula.id} className="space-y-1">
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            {statusIcon(aula.percentual)}
+                            <span className="truncate" title={aula.titulo}>{aula.titulo}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                              {Math.round(aula.percentual)}% assistido
+                              {aula.duracao_total > 0 && (
+                                <> ({formatSeconds(aula.tempo_assistido)} de {formatSeconds(aula.duracao_total)})</>
+                              )}
+                            </span>
+                            {aula.percentual < 70 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0"
+                                title="Marcar como concluída"
+                                onClick={() =>
+                                  setConfirm({
+                                    type: "aula",
+                                    alunoId,
+                                    cursoId: curso.id,
+                                    aulaId: aula.id,
+                                    aulaTitulo: aula.titulo,
+                                  })
+                                }
+                              >
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <Progress value={aula.percentual} className="h-1.5" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
       </Accordion>
 
+      <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar marcação manual</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirm?.type === "aula" &&
+                `Marcar "${confirm.aulaTitulo}" como concluída manualmente?`}
+              {confirm?.type === "curso" &&
+                `Marcar todas as aulas de "${confirm.cursoNome}" como concluídas manualmente para este aluno?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={marcarConcluida.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirm();
+              }}
+              disabled={marcarConcluida.isPending}
+            >
+              {marcarConcluida.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
