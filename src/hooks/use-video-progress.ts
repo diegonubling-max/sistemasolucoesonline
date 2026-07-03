@@ -147,6 +147,15 @@ export function useVideoProgress({
     setState({ currentTime: 0, duration: 0 });
   }, [aulaId]);
 
+  // Debug: log ALL postMessages (temporário)
+  useEffect(() => {
+    const debugListener = (event: MessageEvent) => {
+      console.log('PostMessage recebido:', JSON.stringify(event.data), 'origin:', event.origin);
+    };
+    window.addEventListener('message', debugListener);
+    return () => window.removeEventListener('message', debugListener);
+  }, []);
+
   // Listener
   useEffect(() => {
     if (provider === "unknown") return;
@@ -156,6 +165,7 @@ export function useVideoProgress({
       if (provider === "pandavideo" && typeof e.origin === "string" && e.origin.includes("pandavideo.com.br")) {
         console.log("Panda event:", e.data);
       }
+
 
       let data: any = e.data;
       if (typeof data === "string") {
