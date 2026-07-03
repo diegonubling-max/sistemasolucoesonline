@@ -268,6 +268,7 @@ function StudentCourse() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
+      <DebugOverlay />
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-2">
           <Link to="/aluno/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-1 text-sm font-medium transition-colors">
