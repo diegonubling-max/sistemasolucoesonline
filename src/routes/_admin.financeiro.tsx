@@ -580,8 +580,14 @@ function Financeiro() {
                 <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Vendedora</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {(recebimentos ?? []).map((p: any) => (
-                  <TableRow key={p.id}>
+                {(recebimentos ?? []).map((p: any) => {
+                  const alunoId = p.matriculas?.alunos?.id;
+                  return (
+                  <TableRow
+                    key={p.id}
+                    className={alunoId ? "cursor-pointer hover:bg-muted/50" : undefined}
+                    onClick={() => { if (alunoId) navigate({ to: "/alunos/$id", params: { id: alunoId }, search: { tab: "financeiro" } as any }); }}
+                  >
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.vendedora ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
