@@ -224,7 +224,7 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
                           <TableCell>{v.alunos?.ctr ?? "—"}</TableCell>
                           <TableCell className="capitalize">{v.tipo_pagamento}</TableCell>
                           <TableCell className="text-right">{formatCurrency(Number(v.valor))}</TableCell>
-                          <TableCell>{formatDate(v.created_at)}</TableCell>
+                          <TableCell>{formatDate(v.competencia)}</TableCell>
                           <TableCell>
                             {v.estornado ? (
                               <Badge variant="destructive">Estornada</Badge>
