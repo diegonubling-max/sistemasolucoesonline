@@ -619,7 +619,8 @@ function Financeiro() {
                       )}
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
                 {recebimentos?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum recebimento no período.</TableCell></TableRow>}
               </TableBody>
             </Table>
