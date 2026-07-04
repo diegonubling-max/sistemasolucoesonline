@@ -183,7 +183,7 @@ function Financeiro() {
       const alunosJoin = selectedVendedoraRec !== "todas" ? "alunos!inner" : "alunos";
       let q = supabase
         .from("parcelas")
-        .select(`*, matriculas!inner(${alunosJoin}(nome, ctr, telefone, vendedora), matricula_pacotes(pacotes(tipo)))`)
+        .select(`*, matriculas!inner(${alunosJoin}(id, nome, ctr, telefone, vendedora), matricula_pacotes(pacotes(tipo)))`)
         .eq("status", "pago")
         .gte("data_pagamento", recPeriod.start)
         .lte("data_pagamento", recPeriod.end)
