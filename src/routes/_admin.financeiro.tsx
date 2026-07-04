@@ -666,7 +666,7 @@ function Financeiro() {
                       )}
                     </TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
-                    <TableCell>—</TableCell>
+                    <TableCell>{p.forma_pagamento === 'pix' ? 'PIX' : p.forma_pagamento === 'cartao' ? 'Cartão' : p.forma_pagamento === 'boleto' ? 'Boleto' : '—'}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
