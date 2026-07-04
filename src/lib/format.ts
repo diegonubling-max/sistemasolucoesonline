@@ -39,9 +39,18 @@ export function calcAge(dateStr: string): number {
   return age;
 }
 
-export function formatDate(date: string | null | undefined) {
+export function formatDate(date: string | Date | null | undefined) {
   if (!date) return "—";
-  return new Date(date).toLocaleDateString("pt-BR");
+  if (typeof date === "string") {
+    // Date-only string "YYYY-MM-DD" → parse as local to evitar shift UTC
+    const dateOnly = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnly) {
+      const [, y, m, d] = dateOnly;
+      return new Date(Number(y), Number(m) - 1, Number(d)).toLocaleDateString("pt-BR");
+    }
+    return new Date(date).toLocaleDateString("pt-BR");
+  }
+  return date.toLocaleDateString("pt-BR");
 }
 
 export function generateStudentPassword(name: string): string {
