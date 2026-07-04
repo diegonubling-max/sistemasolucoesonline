@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -42,6 +42,7 @@ type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atra
 function Financeiro() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const today = new Date();
 
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
@@ -205,7 +206,7 @@ function Financeiro() {
     queryFn: async () => {
       let q = supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
+        .select("*, matriculas(alunos(id, nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
         .eq("status", "aberto")
         .gte("data_vencimento", aRecPeriod.start)
         .lte("data_vencimento", aRecPeriod.end)
@@ -647,8 +648,14 @@ function Financeiro() {
                 <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {(aReceber ?? []).map((p: any) => (
-                  <TableRow key={p.id}>
+                {(aReceber ?? []).map((p: any) => {
+                  const alunoId = p.matriculas?.alunos?.id;
+                  return (
+                  <TableRow
+                    key={p.id}
+                    className={alunoId ? "cursor-pointer hover:bg-muted/50" : undefined}
+                    onClick={() => alunoId && navigate({ to: "/alunos/$id", params: { id: alunoId }, search: { tab: "financeiro" } })}
+                  >
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell className="flex items-center gap-2">
                       {p.matriculas?.alunos?.ctr}
@@ -663,13 +670,14 @@ function Financeiro() {
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
                         <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
                 {aReceber?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nada a receber no período.</TableCell></TableRow>}
               </TableBody>
             </Table>
