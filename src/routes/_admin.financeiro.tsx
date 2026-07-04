@@ -183,7 +183,7 @@ function Financeiro() {
       const alunosJoin = selectedVendedoraRec !== "todas" ? "alunos!inner" : "alunos";
       let q = supabase
         .from("parcelas")
-        .select(`*, matriculas!inner(${alunosJoin}(id, nome, ctr, telefone, vendedora), matricula_pacotes(pacotes(tipo)))`)
+        .select(`*, matriculas!inner(${alunosJoin}(nome, ctr, telefone, vendedora), matricula_pacotes(pacotes(tipo)))`)
         .eq("status", "pago")
         .gte("data_pagamento", recPeriod.start)
         .lte("data_pagamento", recPeriod.end)
@@ -580,14 +580,8 @@ function Financeiro() {
                 <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Vendedora</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {(recebimentos ?? []).map((p: any) => {
-                  const alunoId = p.matriculas?.alunos?.id;
-                  return (
-                  <TableRow
-                    key={p.id}
-                    className={alunoId ? "cursor-pointer hover:bg-muted/50" : undefined}
-                    onClick={() => { if (alunoId) window.location.href = `/alunos/${alunoId}?tab=financeiro`; }}
-                  >
+                {(recebimentos ?? []).map((p: any) => (
+                  <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.vendedora ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
@@ -619,8 +613,7 @@ function Financeiro() {
                       )}
                     </TableCell>
                   </TableRow>
-                  );
-                })}
+                ))}
                 {recebimentos?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum recebimento no período.</TableCell></TableRow>}
               </TableBody>
             </Table>
