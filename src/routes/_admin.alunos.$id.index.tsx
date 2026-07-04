@@ -658,7 +658,7 @@ function AlunoDetalhes() {
         }
       />
 
-      <Tabs defaultValue="geral" className="w-full">
+      <Tabs defaultValue={Route.useSearch().tab || "geral"} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="geral">Dados Gerais</TabsTrigger>
           <TabsTrigger value="perfil" className="flex items-center gap-2">
