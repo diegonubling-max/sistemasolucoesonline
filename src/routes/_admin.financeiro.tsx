@@ -657,16 +657,17 @@ function Financeiro() {
                     onClick={() => alunoId && navigate({ to: "/alunos/$id", params: { id: alunoId }, search: { tab: "financeiro" } })}
                   >
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      {p.matriculas?.alunos?.ctr}
-                      {p.asaas_id ? (
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-1 h-4">Asaas</Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1 h-4">Carnê</Badge>
-                      )}
-                    </TableCell>
+                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
-                    <TableCell>{p.forma_pagamento === 'pix' ? 'PIX' : p.forma_pagamento === 'cartao' ? 'Cartão' : p.forma_pagamento === 'boleto' ? 'Boleto' : '—'}</TableCell>
+                    <TableCell>
+                      {p.forma_pagamento === 'pix' ? (
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none rounded-full text-xs font-bold">PIX</Badge>
+                      ) : p.forma_pagamento === 'boleto' ? (
+                        <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none rounded-full text-xs font-bold">Boleto</Badge>
+                      ) : p.forma_pagamento === 'cartao' ? (
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none rounded-full text-xs font-bold">Cartão</Badge>
+                      ) : null}
+                    </TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
                     <TableCell>{getStatusBadge(p)}</TableCell>
