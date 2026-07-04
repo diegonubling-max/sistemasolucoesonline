@@ -42,6 +42,7 @@ type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atra
 function Financeiro() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const today = new Date();
 
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
