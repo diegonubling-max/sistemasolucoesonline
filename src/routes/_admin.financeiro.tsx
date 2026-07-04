@@ -586,7 +586,7 @@ function Financeiro() {
                   <TableRow
                     key={p.id}
                     className={alunoId ? "cursor-pointer hover:bg-muted/50" : undefined}
-                    onClick={() => { if (alunoId) navigate({ to: "/alunos/$id", params: { id: alunoId }, search: { tab: "financeiro" } as any }); }}
+                    onClick={() => { if (alunoId) window.location.href = `/alunos/${alunoId}?tab=financeiro`; }}
                   >
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
