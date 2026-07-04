@@ -38,6 +38,9 @@ import { notifyPagamentoRecebido } from "@/lib/notify";
 
 export const Route = createFileRoute("/_admin/alunos/$id/")({
   head: () => ({ meta: [{ title: "Aluno — Soluções Online" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+  }),
   component: AlunoDetalhes,
 });
 
