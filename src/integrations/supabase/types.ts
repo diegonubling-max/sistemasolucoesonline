@@ -1947,18 +1947,21 @@ export type Database = {
       zapi_disparos_controle: {
         Row: {
           aluno_id: string
+          ciclo_fds: number | null
           enviado_em: string
           id: string
           tipo_disparo: string
         }
         Insert: {
           aluno_id: string
+          ciclo_fds?: number | null
           enviado_em?: string
           id?: string
           tipo_disparo: string
         }
         Update: {
           aluno_id?: string
+          ciclo_fds?: number | null
           enviado_em?: string
           id?: string
           tipo_disparo?: string
@@ -1972,6 +1975,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      zapi_mensagens_fds: {
+        Row: {
+          assistiu: boolean
+          ciclo: number
+          created_at: string | null
+          dia: string
+          id: string
+          mensagem: string
+          updated_at: string | null
+        }
+        Insert: {
+          assistiu?: boolean
+          ciclo: number
+          created_at?: string | null
+          dia: string
+          id?: string
+          mensagem: string
+          updated_at?: string | null
+        }
+        Update: {
+          assistiu?: boolean
+          ciclo?: number
+          created_at?: string | null
+          dia?: string
+          id?: string
+          mensagem?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       zapi_mensagens_log: {
         Row: {

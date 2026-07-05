@@ -2,8 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   sendNuncaAcessou,
   sendSemAcesso4Dias,
-  sendMensagemSabado,
-  sendMensagemDomingo,
+  sendWhatsApp,
 } from "@/services/zApiService";
 
 // Verifica se o aluno cai no grupo do horário (split aleatório estável por id)
@@ -178,59 +177,67 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
           }
 
 
-          // 3) Sábado — enviar sempre que for sábado e aluno não acessou hoje
-          if (dow === 6) {
+          // 3) Fim de semana — ciclos progressivos (sábado/domingo)
+          if (dow === 6 || dow === 0) {
+            const diaLabel: "sabado" | "domingo" = dow === 6 ? "sabado" : "domingo";
             try {
-              const inicioDia = new Date(hojeBR);
-              inicioDia.setHours(0, 0, 0, 0);
-              const { count } = await supabaseAdmin
-                .from("aluno_sessoes")
+              // Toggle global
+              const { data: cfg } = await supabaseAdmin
+                .from("configuracoes")
+                .select("valor")
+                .eq("chave", `zapi_disparo_${diaLabel}`)
+                .maybeSingle();
+              const enabled = !cfg || cfg.valor !== "false";
+              if (!enabled) continue;
+
+              // Ciclo com base na data da matrícula (usa created_at do aluno)
+              const dataMatricula = new Date(aluno.created_at as string);
+              const semanas = Math.floor(
+                (hojeBR.getTime() - dataMatricula.getTime()) / (7 * 24 * 60 * 60 * 1000),
+              );
+              const ciclo = semanas + 1;
+              if (ciclo < 1 || ciclo > 6) continue;
+
+              // Assistiu >=70% em pelo menos 1 aula nos últimos 7 dias?
+              const seteDiasAtras = new Date(hojeBR.getTime() - 7 * 24 * 60 * 60 * 1000);
+              const { count: assistidasCount } = await supabaseAdmin
+                .from("aluno_aulas_assistidas")
                 .select("id", { count: "exact", head: true })
                 .eq("aluno_id", aluno.id)
-                .gte("login_em", inicioDia.toISOString());
-              if ((count ?? 0) === 0) {
-                const { aula, materia } = await ultimaAula(aluno.id);
-                await sendMensagemSabado({
-                  telefone: aluno.telefone,
-                  nome: aluno.nome,
-                  ultimaAula: aula,
-                  materia,
-                  alunoId: aluno.id,
-                });
+                .gte("percentual_assistido", 70)
+                .gte("assistida_em", seteDiasAtras.toISOString());
+              const assistiu = (assistidasCount ?? 0) > 0;
 
-                result.sabado++;
-              }
+              // Busca mensagem
+              const { data: msgRow } = await supabaseAdmin
+                .from("zapi_mensagens_fds")
+                .select("mensagem")
+                .eq("dia", diaLabel)
+                .eq("ciclo", ciclo)
+                .eq("assistiu", assistiu)
+                .maybeSingle();
+              if (!msgRow?.mensagem) continue;
+
+              const primeiroNome =
+                (aluno.nome || "").trim().split(/\s+/)[0] || "";
+              const nomeFmt = primeiroNome
+                ? primeiroNome.charAt(0).toUpperCase() +
+                  primeiroNome.slice(1).toLowerCase()
+                : "";
+              const mensagem = msgRow.mensagem.replace(/\[nome\]/gi, nomeFmt);
+
+              await sendWhatsApp(aluno.telefone, mensagem, {
+                alunoId: aluno.id,
+                tipo: `${diaLabel}_ciclo_${ciclo}` as any,
+              });
+
+              if (diaLabel === "sabado") result.sabado++;
+              else result.domingo++;
             } catch (e: any) {
-              result.erros.push(`sabado ${aluno.id}: ${e.message}`);
+              result.erros.push(`${diaLabel} ${aluno.id}: ${e.message}`);
             }
           }
 
-          // 4) Domingo
-          if (dow === 0) {
-            try {
-              const inicioDia = new Date(hojeBR);
-              inicioDia.setHours(0, 0, 0, 0);
-              const { count } = await supabaseAdmin
-                .from("aluno_sessoes")
-                .select("id", { count: "exact", head: true })
-                .eq("aluno_id", aluno.id)
-                .gte("login_em", inicioDia.toISOString());
-              if ((count ?? 0) === 0) {
-                const { aula, materia } = await ultimaAula(aluno.id);
-                await sendMensagemDomingo({
-                  telefone: aluno.telefone,
-                  nome: aluno.nome,
-                  ultimaAula: aula,
-                  materia,
-                  alunoId: aluno.id,
-                });
-
-                result.domingo++;
-              }
-            } catch (e: any) {
-              result.erros.push(`domingo ${aluno.id}: ${e.message}`);
-            }
-          }
         }
 
         return new Response(JSON.stringify({ ok: true, ...result }), {
