@@ -2,8 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   sendNuncaAcessou,
   sendSemAcesso4Dias,
-  sendMensagemSabado,
-  sendMensagemDomingo,
+  sendWhatsApp,
 } from "@/services/zApiService";
 
 // Verifica se o aluno cai no grupo do horário (split aleatório estável por id)
