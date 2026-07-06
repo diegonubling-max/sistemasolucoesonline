@@ -5,12 +5,10 @@ import {
   sendWhatsApp,
 } from "@/services/zApiService";
 
-// Verifica se o aluno cai no grupo do horário (split aleatório estável por id)
-function alunoNoGrupo(alunoId: string, grupo: number): boolean {
-  // soma simples dos char codes -> mod 3
-  let acc = 0;
-  for (let i = 0; i < alunoId.length; i++) acc = (acc + alunoId.charCodeAt(i)) % 9973;
-  return acc % 3 === grupo;
+// Verifica se o CTR do aluno termina no dígito do grupo (0-9)
+function alunoNoGrupo(ctr: number | null | undefined, grupo: number): boolean {
+  if (ctr == null) return false;
+  return Math.abs(ctr) % 10 === grupo;
 }
 
 function calcularDiaDisparo(dataUltimoAcesso: Date): Date {
@@ -46,7 +44,7 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
         let grupo = 0;
         try {
           const body = (await request.json()) as { grupo?: number };
-          grupo = Number(body?.grupo ?? 0) % 3;
+          grupo = Number(body?.grupo ?? 0) % 10;
         } catch {
           grupo = 0;
         }
@@ -77,7 +75,7 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
           });
         }
 
-        const alunosGrupo = (alunos ?? []).filter((a) => alunoNoGrupo(a.id, grupo));
+        const alunosGrupo = (alunos ?? []).filter((a) => alunoNoGrupo(a.ctr, grupo));
 
         // Disparos já registrados deste grupo
         const ids = alunosGrupo.map((a) => a.id);
