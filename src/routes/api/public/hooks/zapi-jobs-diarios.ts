@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
         let grupo = 0;
         try {
           const body = (await request.json()) as { grupo?: number };
-          grupo = Number(body?.grupo ?? 0) % 3;
+          grupo = Number(body?.grupo ?? 0) % 10;
         } catch {
           grupo = 0;
         }
