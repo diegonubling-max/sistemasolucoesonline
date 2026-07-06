@@ -813,7 +813,10 @@ function AdminSettings() {
             )}
 
             {activeTab === 'disparos' && isSuperAdmin && (
-              <div className="animate-in slide-in-from-right-2 duration-300">
+              <div className="animate-in slide-in-from-right-2 duration-300 space-y-4">
+                <div className="flex justify-start">
+                  <OfertaCursosModal />
+                </div>
                 <DisparosWhatsAppCard />
               </div>
             )}
