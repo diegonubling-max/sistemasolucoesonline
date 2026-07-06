@@ -75,7 +75,7 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
           });
         }
 
-        const alunosGrupo = (alunos ?? []).filter((a) => alunoNoGrupo(a.id, grupo));
+        const alunosGrupo = (alunos ?? []).filter((a) => alunoNoGrupo(a.ctr, grupo));
 
         // Disparos já registrados deste grupo
         const ids = alunosGrupo.map((a) => a.id);
