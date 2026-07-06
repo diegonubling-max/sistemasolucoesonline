@@ -7,6 +7,7 @@ import {
   Eye, EyeOff, Upload, Image as ImageIcon
 } from "lucide-react";
 import { BannersPoloManager } from "@/components/admin/BannersPoloManager";
+import { OfertaCursosModal } from "@/components/admin/OfertaCursosModal";
 import { Switch } from "@/components/ui/switch";
 import { MessageCircle } from "lucide-react";
 
@@ -813,7 +814,10 @@ function AdminSettings() {
             )}
 
             {activeTab === 'disparos' && isSuperAdmin && (
-              <div className="animate-in slide-in-from-right-2 duration-300">
+              <div className="animate-in slide-in-from-right-2 duration-300 space-y-4">
+                <div className="flex justify-start">
+                  <OfertaCursosModal />
+                </div>
                 <DisparosWhatsAppCard />
               </div>
             )}
