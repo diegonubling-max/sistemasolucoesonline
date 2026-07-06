@@ -7,6 +7,7 @@ import {
   Eye, EyeOff, Upload, Image as ImageIcon
 } from "lucide-react";
 import { BannersPoloManager } from "@/components/admin/BannersPoloManager";
+import { OfertaCursosModal } from "@/components/admin/OfertaCursosModal";
 import { Switch } from "@/components/ui/switch";
 import { MessageCircle } from "lucide-react";
 
