@@ -156,9 +156,9 @@ function Dashboard() {
         colaboradoresAtivos: colabAtivos.count ?? 0,
         origens,
         faturamento: {
-          recebido: receivedSum(pagoMes.data),
-          aReceberMes: sum(abertoMes.data),
-          atrasado: sum(atrasado.data),
+          recebido: receivedSum(pagoMes.data) + sumParcial(parcialPagos.data),
+          aReceberMes: sumRestante(abertoMes.data),
+          atrasado: sumRestante(atrasado.data),
           totalGeral: sum(totalAberto.data),
         },
         statsByPolo
