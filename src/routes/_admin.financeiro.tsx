@@ -873,7 +873,7 @@ function Financeiro() {
                     <TableCell>{p.matriculas?.alunos?.telefone}</TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(p.status === 'parcial' ? Number(p.valor) - Number(p.valor_pago_total || 0) : p.valor)}</TableCell>
                     <TableCell><Badge variant="destructive">{p.diasAtraso} dias</Badge></TableCell>
                     <TableCell className="text-right">
                       <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
