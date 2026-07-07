@@ -91,11 +91,15 @@ function Dashboard() {
       const lastDay = endOfMonth(today);
 
 
-      const [a, c, m, aa, pagamentosMes, abertoMes, atrasado, totalAberto, origensData, colabAtivos] = await Promise.all([
+      const [a, c, m, aa, parcelasPagasMes, pagamentosMes, abertoMes, atrasado, totalAberto, origensData, colabAtivos] = await Promise.all([
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         filterByPolo(supabase.from("matriculas").select("*", { count: "exact", head: true })),
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true }).eq("ativo", true)),
+        filterByPolo(supabase.from("parcelas").select("valor, data_pagamento, polo_id")
+          .eq("status", "pago")
+          .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
+          .lte("data_pagamento", format(lastDay, "yyyy-MM-dd"))),
         supabase.from("parcelas_pagamentos")
           .select("valor_pago, data_pagamento, parcelas!inner(polo_id)")
           .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
@@ -115,7 +119,9 @@ function Dashboard() {
       if (activePoloId) {
         pagamentosRows = pagamentosRows.filter((r: any) => r.parcelas?.polo_id === activePoloId);
       }
-      const recebidoTotal = pagamentosRows.reduce((acc: number, r: any) => acc + Number(r.valor_pago || 0), 0);
+      const recebidoPagamentos = pagamentosRows.reduce((acc: number, r: any) => acc + Number(r.valor_pago || 0), 0);
+      const recebidoParcelasPagas = (parcelasPagasMes.data ?? []).reduce((acc: number, r: any) => acc + Number(r.valor || 0), 0);
+      const recebidoTotal = recebidoPagamentos + recebidoParcelasPagas;
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
       const sumRestante = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + (Number(curr.valor) - Number(curr.valor_pago_total || 0)), 0);
