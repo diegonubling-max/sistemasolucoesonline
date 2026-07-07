@@ -311,6 +311,57 @@ function AlunoDetalhes() {
       const resObj = res as { status: string; restante: number } | null;
       if (resObj?.status === "pago") {
         notifyPagamentoRecebido(selectedParcelaId, selectedParcelaValor, data.forma_pagamento);
+
+        // Gera comissão automaticamente apenas na baixa TOTAL da Parcela 1
+        try {
+          const { data: parcela } = await supabase
+            .from("parcelas")
+            .select("tipo, numero, matricula_id")
+            .eq("id", selectedParcelaId)
+            .single();
+
+          if (parcela && parcela.tipo === "parcela" && parcela.numero === 1 && parcela.matricula_id) {
+            const { data: matricula } = await supabase
+              .from("matriculas")
+              .select("aluno_id, colaborador_id")
+              .eq("id", parcela.matricula_id)
+              .single();
+
+            if (matricula?.colaborador_id) {
+              const { count } = await supabase
+                .from("comissoes")
+                .select("id", { count: "exact", head: true })
+                .eq("matricula_id", parcela.matricula_id);
+
+              if ((count ?? 0) === 0) {
+                const { data: colaborador } = await supabase
+                  .from("colaboradores")
+                  .select("nome, comissao_avista, comissao_parcelado")
+                  .eq("id", matricula.colaborador_id)
+                  .single();
+
+                if (colaborador?.nome) {
+                  const tipo = data.forma_pagamento === "boleto" ? "boleto" : "avista";
+                  const valor = tipo === "boleto"
+                    ? Number(colaborador.comissao_parcelado ?? 50)
+                    : Number(colaborador.comissao_avista ?? 120);
+
+                  await supabase.from("comissoes").insert({
+                    aluno_id: matricula.aluno_id,
+                    matricula_id: parcela.matricula_id,
+                    vendedora: colaborador.nome,
+                    valor,
+                    status: "pendente",
+                    competencia: data.data_pagamento,
+                    tipo_pagamento: tipo,
+                  });
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Erro ao gerar comissão:", err);
+        }
       }
       return { ...data, _result: resObj };
     },
