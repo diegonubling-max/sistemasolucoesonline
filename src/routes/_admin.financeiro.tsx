@@ -171,76 +171,27 @@ function Financeiro() {
   });
 
   const { data: recebimentos, refetch: refetchRecebimentos } = useQuery({
-    queryKey: ["financeiro-recebimentos", recPeriod, selectedPoloId, selectedVendedoraRec, userRole, colabData],
+    queryKey: ["financeiro-recebimentos", recPeriod, selectedVendedoraRec],
     queryFn: async () => {
-      const alunosJoin = selectedVendedoraRec !== "todas" ? "alunos!inner" : "alunos";
-      const activePoloId = isSuperAdmin
-        ? (selectedPoloId && selectedPoloId !== "all" ? selectedPoloId : null)
-        : (colabData?.polo_id ?? null);
-
-      // 1) Pagamentos parciais (parcelas_pagamentos)
-      let qPag = supabase
-        .from("parcelas_pagamentos")
-        .select(`id, valor_pago, data_pagamento, forma_pagamento, parcelas!inner(id, valor, valor_pago_total, tipo, status, polo_id, matriculas!inner(${alunosJoin}(nome, ctr, telefone, vendedora), matricula_pacotes(pacotes(tipo))))`)
+      let q = (supabase as any)
+        .from("view_recebimentos_periodo")
+        .select("*")
         .gte("data_pagamento", recPeriod.start)
-        .lte("data_pagamento", recPeriod.end);
+        .lte("data_pagamento", recPeriod.end)
+        .order("data_pagamento", { ascending: false });
+
       if (selectedVendedoraRec !== "todas") {
-        qPag = qPag.eq("parcelas.matriculas.alunos.vendedora", selectedVendedoraRec);
+        q = q.eq("vendedora", selectedVendedoraRec);
       }
 
-      // 2) Parcelas pagas integralmente (parcelas.status='pago')
-      let qParc = supabase
-        .from("parcelas")
-        .select(`id, valor, valor_pago_total, data_pagamento, forma_pagamento, tipo, status, polo_id, matriculas!inner(${alunosJoin}(nome, ctr, telefone, vendedora), matricula_pacotes(pacotes(tipo)))`)
-        .eq("status", "pago")
-        .gte("data_pagamento", recPeriod.start)
-        .lte("data_pagamento", recPeriod.end);
-      qParc = filterByPolo(qParc);
-      if (selectedVendedoraRec !== "todas") {
-        qParc = qParc.eq("matriculas.alunos.vendedora", selectedVendedoraRec);
-      }
-
-      const [pagRes, parcRes] = await Promise.all([qPag, qParc]);
-      if (pagRes.error) throw pagRes.error;
-      if (parcRes.error) throw parcRes.error;
-
-      let pagRows = (pagRes.data ?? []) as any[];
-      if (activePoloId) {
-        pagRows = pagRows.filter((r) => r.parcelas?.polo_id === activePoloId);
-      }
-
-      const fromPagamentos = pagRows.map((r: any) => ({
-        id: `pag-${r.id}`,
-        parcela_id: r.parcelas?.id,
-        valor: r.valor_pago,
-        valor_original: r.parcelas?.valor,
-        data_pagamento: r.data_pagamento,
-        forma_pagamento: r.forma_pagamento,
-        tipo: r.parcelas?.tipo,
-        status: r.parcelas?.status,
-        matriculas: r.parcelas?.matriculas,
-        is_parcial: r.parcelas?.status === "parcial" || Number(r.valor_pago) < Number(r.parcelas?.valor || 0),
-      }));
-
-      const fromParcelas = ((parcRes.data ?? []) as any[]).map((r: any) => ({
-        id: `parc-${r.id}`,
-        parcela_id: r.id,
-        valor: r.valor,
-        valor_original: r.valor,
-        data_pagamento: r.data_pagamento,
-        forma_pagamento: r.forma_pagamento,
-        tipo: r.tipo,
-        status: r.status,
-        matriculas: r.matriculas,
-        is_parcial: false,
-      }));
-
-      return [...fromPagamentos, ...fromParcelas].sort((a, b) =>
-        (b.data_pagamento ?? "").localeCompare(a.data_pagamento ?? "")
-      );
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as any[];
     },
     enabled: activeFilter === "recebimentos"
   });
+
+
 
 
 
