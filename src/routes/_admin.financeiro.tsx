@@ -888,7 +888,7 @@ function Financeiro() {
             <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <p className="text-sm font-semibold">{atraso?.length || 0} alunos em atraso</p>
-                <p className="font-bold">Total em atraso: {formatCurrency((atraso ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
+                <p className="font-bold">Total em atraso: {formatCurrency((atraso ?? []).reduce((acc: number, p: any) => acc + (p.status === 'parcial' ? Number(p.valor) - Number(p.valor_pago_total || 0) : Number(p.valor)), 0))}</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => exportCSV(atraso || [], "alunos-em-atraso", ["Dias em Atraso"], (p) => [String(p.diasAtraso)])}>
                 <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
