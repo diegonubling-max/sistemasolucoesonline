@@ -144,23 +144,36 @@ function Financeiro() {
 
       console.log("DEBUG [Financeiro Global Stats]:", { isSuperAdmin, selectedPoloId, colabPoloId: colabData?.polo_id });
 
+      const parcelasPagasMesQ = filterByPolo(supabase.from("parcelas").select("valor, data_pagamento, polo_id")
+        .eq("status", "pago")
+        .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
+        .lte("data_pagamento", format(lastDay, "yyyy-MM-dd")));
       const pagamentosMesQ = supabase.from("parcelas_pagamentos").select("valor_pago, data_pagamento, parcelas!inner(polo_id)")
         .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
         .lte("data_pagamento", format(lastDay, "yyyy-MM-dd"));
-      const [pagoMes, abertoMes, atrasado, totalAberto] = await Promise.all([
+      const [parcelasPagasMes, pagamentosMes, abertoMes, atrasado, totalAberto] = await Promise.all([
+        parcelasPagasMesQ,
         pagamentosMesQ,
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total").in("status", ["aberto", "parcial"]).gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total").in("status", ["aberto", "parcial"]).lt("data_vencimento", format(today, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).lt("data_vencimento", format(today, "yyyy-MM-dd"))),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
-      const sumRestante = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + (Number(curr.valor) - Number(curr.valor_pago_total || 0)), 0);
-      let pagoRows = (pagoMes.data ?? []) as any[];
-      if (selectedPoloId && selectedPoloId !== "todos") {
-        pagoRows = pagoRows.filter((r: any) => r.parcelas?.polo_id === selectedPoloId);
+      const valorEmAberto = (parcela: any) => parcela.status === "parcial"
+        ? Number(parcela.valor) - Number(parcela.valor_pago_total || 0)
+        : Number(parcela.valor);
+      const sumRestante = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + valorEmAberto(curr), 0);
+      let pagamentoRows = (pagamentosMes.data ?? []) as any[];
+      const activePoloId = isSuperAdmin
+        ? (selectedPoloId && selectedPoloId !== "all" ? selectedPoloId : null)
+        : (colabData?.polo_id ?? null);
+      if (activePoloId) {
+        pagamentoRows = pagamentoRows.filter((r: any) => r.parcelas?.polo_id === activePoloId);
       }
-      const recebido = pagoRows.reduce((acc: number, r: any) => acc + Number(r.valor_pago), 0);
+      const recebidoParcelasPagas = sum(parcelasPagasMes.data);
+      const recebidoPagamentos = pagamentoRows.reduce((acc: number, r: any) => acc + Number(r.valor_pago || 0), 0);
+      const recebido = recebidoParcelasPagas + recebidoPagamentos;
 
       return {
         recebido,
@@ -522,6 +535,10 @@ function Financeiro() {
     return <Badge className="bg-yellow-500">Aberto</Badge>;
   };
 
+  const getValorEmAtraso = (p: any) => p.status === "parcial"
+    ? Number(p.valor) - Number(p.valor_pago_total || 0)
+    : Number(p.valor);
+
   const filterButtons = [
     { id: "recebimentos", label: "Recebimentos", sub: "por período", icon: TrendingUp },
     { id: "a_receber", label: "A Receber", sub: "por período", icon: Landmark },
@@ -873,7 +890,7 @@ function Financeiro() {
                     <TableCell>{p.matriculas?.alunos?.telefone}</TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(p.status === 'parcial' ? Number(p.valor) - Number(p.valor_pago_total || 0) : p.valor)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(getValorEmAtraso(p))}</TableCell>
                     <TableCell><Badge variant="destructive">{p.diasAtraso} dias</Badge></TableCell>
                     <TableCell className="text-right">
                       <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
@@ -888,7 +905,7 @@ function Financeiro() {
             <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <p className="text-sm font-semibold">{atraso?.length || 0} alunos em atraso</p>
-                <p className="font-bold">Total em atraso: {formatCurrency((atraso ?? []).reduce((acc: number, p: any) => acc + (p.status === 'parcial' ? Number(p.valor) - Number(p.valor_pago_total || 0) : Number(p.valor)), 0))}</p>
+                <p className="font-bold">Total em atraso: {formatCurrency((atraso ?? []).reduce((acc: number, p: any) => acc + getValorEmAtraso(p), 0))}</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => exportCSV(atraso || [], "alunos-em-atraso", ["Dias em Atraso"], (p) => [String(p.diasAtraso)])}>
                 <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
