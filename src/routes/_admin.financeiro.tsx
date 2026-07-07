@@ -137,7 +137,7 @@ function Financeiro() {
   };
 
   const { data: globalStats } = useQuery({
-    queryKey: ["financeiro-global-stats", selectedPoloId, userRole, colabData],
+    queryKey: ["financeiro-global-stats", selectedPoloId, userRole, colabData, atrasoPeriod],
     queryFn: async () => {
       const firstDay = startOfMonth(today);
       const lastDay = endOfMonth(today);
