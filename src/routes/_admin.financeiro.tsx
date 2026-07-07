@@ -214,8 +214,11 @@ function Financeiro() {
       const { data, error } = await q;
       if (error) throw error;
       let rows = (data ?? []) as any[];
-      if (selectedPoloId && selectedPoloId !== "todos") {
-        rows = rows.filter((r) => r.parcelas?.polo_id === selectedPoloId);
+      const activePoloId = isSuperAdmin
+        ? (selectedPoloId && selectedPoloId !== "all" ? selectedPoloId : null)
+        : (colabData?.polo_id ?? null);
+      if (activePoloId) {
+        rows = rows.filter((r) => r.parcelas?.polo_id === activePoloId);
       }
       return rows.map((r: any) => ({
         id: r.id,
