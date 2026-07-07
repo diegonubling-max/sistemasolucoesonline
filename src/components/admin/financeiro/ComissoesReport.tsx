@@ -77,16 +77,18 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
         .from("comissoes")
         .update({ status: "pago", data_pagamento: dataPagamentoPrevista })
         .eq("vendedora", vendedora)
-        .eq("competencia", competencia)
+        .gte("competencia", mesInicio)
+        .lte("competencia", mesFim)
         .neq("status", "pago");
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Comissões marcadas como pagas!");
-      qc.invalidateQueries({ queryKey: ["comissoes", competencia] });
+      qc.invalidateQueries({ queryKey: ["comissoes", mesInicio, mesFim] });
     },
     onError: (e: Error) => toast.error("Erro ao marcar como pago", { description: e.message }),
   });
+
 
   // Agrupa por vendedora
   const grupos = useMemo(() => {
