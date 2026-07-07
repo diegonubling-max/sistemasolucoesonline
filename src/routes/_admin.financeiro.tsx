@@ -590,14 +590,18 @@ function Financeiro() {
                 <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Vendedora</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {(recebimentos ?? []).map((p: any) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.vendedora ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
+                {(recebimentos ?? []).map((p: any, idx: number) => (
+                  <TableRow
+                    key={`${p.aluno_id}-${p.data_pagamento}-${idx}`}
+                    className={p.aluno_id ? "cursor-pointer hover:bg-muted/50" : ""}
+                    onClick={() => p.aluno_id && navigate({ to: "/alunos/$id", params: { id: p.aluno_id } })}
+                  >
+                    <TableCell className="font-medium">{p.aluno_nome}</TableCell>
+                    <TableCell>{p.ctr}</TableCell>
+                    <TableCell>{p.vendedora ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
                     <TableCell>
                       {p.forma_pagamento && (
-                        <Badge 
+                        <Badge
                           className={cn(
                             "font-bold",
                             p.forma_pagamento === 'boleto' ? "bg-blue-100 text-blue-700 hover:bg-blue-100" :
@@ -605,8 +609,8 @@ function Financeiro() {
                             "bg-purple-100 text-purple-700 hover:bg-purple-100"
                           )}
                         >
-                          {p.forma_pagamento === 'boleto' ? 'Boleto' : 
-                           p.forma_pagamento === 'pix' ? 'PIX' : 
+                          {p.forma_pagamento === 'boleto' ? 'Boleto' :
+                           p.forma_pagamento === 'pix' ? 'PIX' :
                            'Cartão'}
                         </Badge>
                       )}
@@ -615,13 +619,14 @@ function Financeiro() {
                     <TableCell className="text-right">
                       <div className="flex flex-col items-end">
                         <span className="font-bold">{formatCurrency(p.valor)}</span>
-                        {p.is_parcial && (
-                          <Badge className="bg-yellow-400 text-yellow-950 text-[10px]">🟡 Parcial de {formatCurrency(p.valor_original)}</Badge>
+                        {p.tipo_pagamento === 'parcial' && (
+                          <Badge className="bg-yellow-400 text-yellow-950 text-[10px]">🟡 Parcial</Badge>
                         )}
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
+
                 {recebimentos?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum recebimento no período.</TableCell></TableRow>}
               </TableBody>
             </Table>
