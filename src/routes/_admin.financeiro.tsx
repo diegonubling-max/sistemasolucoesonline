@@ -305,7 +305,7 @@ function Financeiro() {
       let q = supabase
         .from("parcelas")
         .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
-        .eq("status", "aberto")
+        .in("status", ["aberto", "parcial"])
         .lt("data_vencimento", format(today, "yyyy-MM-dd"))
         .gte("data_vencimento", atrasoPeriod.start)
         .lte("data_vencimento", atrasoPeriod.end)

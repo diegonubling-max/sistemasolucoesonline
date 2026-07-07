@@ -91,20 +91,23 @@ function Dashboard() {
       const lastDay = endOfMonth(today);
 
 
-      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData, colabAtivos] = await Promise.all([
+      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData, colabAtivos, parcialPagos] = await Promise.all([
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         filterByPolo(supabase.from("matriculas").select("*", { count: "exact", head: true })),
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true }).eq("ativo", true)),
         filterByPolo(supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd"))),
-        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
-        filterByPolo(supabase.from("parcelas").select("valor").eq("status", "aberto").lt("data_vencimento", format(today, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).lt("data_vencimento", format(today, "yyyy-MM-dd"))),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
         filterByPolo(supabase.from("alunos").select("origem")),
         filterByPolo(supabase.from("colaboradores").select("*", { count: "exact", head: true }).eq("ativo", true)),
+        filterByPolo(supabase.from("parcelas").select("valor_pago_total").eq("status", "parcial").gt("valor_pago_total", 0)),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
+      const sumRestante = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + (Number(curr.valor) - Number(curr.valor_pago_total || 0)), 0);
+      const sumParcial = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor_pago_total || 0), 0);
       const receivedSum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => {
         const isCartao = curr.forma_pagamento === 'cartao';
         const val = isCartao && curr.valor_liquido ? Number(curr.valor_liquido) : Number(curr.valor);
@@ -153,9 +156,9 @@ function Dashboard() {
         colaboradoresAtivos: colabAtivos.count ?? 0,
         origens,
         faturamento: {
-          recebido: receivedSum(pagoMes.data),
-          aReceberMes: sum(abertoMes.data),
-          atrasado: sum(atrasado.data),
+          recebido: receivedSum(pagoMes.data) + sumParcial(parcialPagos.data),
+          aReceberMes: sumRestante(abertoMes.data),
+          atrasado: sumRestante(atrasado.data),
           totalGeral: sum(totalAberto.data),
         },
         statsByPolo
