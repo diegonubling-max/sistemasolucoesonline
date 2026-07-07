@@ -214,8 +214,11 @@ function Financeiro() {
       const { data, error } = await q;
       if (error) throw error;
       let rows = (data ?? []) as any[];
-      if (selectedPoloId && selectedPoloId !== "todos") {
-        rows = rows.filter((r) => r.parcelas?.polo_id === selectedPoloId);
+      const activePoloId = isSuperAdmin
+        ? (selectedPoloId && selectedPoloId !== "all" ? selectedPoloId : null)
+        : (colabData?.polo_id ?? null);
+      if (activePoloId) {
+        rows = rows.filter((r) => r.parcelas?.polo_id === activePoloId);
       }
       return rows.map((r: any) => ({
         id: r.id,
@@ -735,7 +738,7 @@ function Financeiro() {
               </TableBody>
             </Table>
             <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <p className="font-bold">Total a receber: {formatCurrency((aReceber ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
+              <p className="font-bold">Total a receber: {formatCurrency((aReceber ?? []).reduce((acc: number, p: any) => acc + (p.status === "parcial" ? Number(p.valor) - Number(p.valor_pago_total || 0) : Number(p.valor)), 0))}</p>
               <Button variant="outline" size="sm" onClick={() => exportCSV(aReceber || [], "a-receber")}>
                 <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
