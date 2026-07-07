@@ -155,7 +155,7 @@ function Financeiro() {
         parcelasPagasMesQ,
         pagamentosMesQ,
         filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).lt("data_vencimento", format(today, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).lt("data_vencimento", format(today, "yyyy-MM-dd")).gte("data_vencimento", atrasoPeriod.start).lte("data_vencimento", atrasoPeriod.end)),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
       ]);
 
