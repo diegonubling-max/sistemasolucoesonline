@@ -91,37 +91,23 @@ function Dashboard() {
       const lastDay = endOfMonth(today);
 
 
-      const [a, c, m, aa, parcelasPagasMes, pagamentosMes, abertoMes, atrasado, totalAberto, origensData, colabAtivos] = await Promise.all([
+      const [a, c, m, aa, vRecebido, vAReceber, vAtraso, totalAberto, origensData, colabAtivos] = await Promise.all([
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         filterByPolo(supabase.from("matriculas").select("*", { count: "exact", head: true })),
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true }).eq("ativo", true)),
-        filterByPolo(supabase.from("parcelas").select("valor, data_pagamento, polo_id")
-          .eq("status", "pago")
-          .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
-          .lte("data_pagamento", format(lastDay, "yyyy-MM-dd"))),
-        supabase.from("parcelas_pagamentos")
-          .select("valor_pago, data_pagamento, parcelas!inner(polo_id)")
-          .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
-          .lte("data_pagamento", format(lastDay, "yyyy-MM-dd")),
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).lt("data_vencimento", format(today, "yyyy-MM-dd"))),
+        supabase.from("view_total_recebido_mes").select("total").maybeSingle(),
+        supabase.from("view_a_receber_mes").select("total").maybeSingle(),
+        supabase.from("view_em_atraso").select("total").maybeSingle(),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
         filterByPolo(supabase.from("alunos").select("origem")),
         filterByPolo(supabase.from("colaboradores").select("*", { count: "exact", head: true }).eq("ativo", true)),
       ]);
 
-      const colabPoloId = colabData?.polo_id;
-      const activePoloId = isSuperAdmin
-        ? (selectedPoloId && selectedPoloId !== 'all' ? selectedPoloId : null)
-        : (colabPoloId ?? null);
-      let pagamentosRows = (pagamentosMes.data ?? []) as any[];
-      if (activePoloId) {
-        pagamentosRows = pagamentosRows.filter((r: any) => r.parcelas?.polo_id === activePoloId);
-      }
-      const recebidoPagamentos = pagamentosRows.reduce((acc: number, r: any) => acc + Number(r.valor_pago || 0), 0);
-      const recebidoParcelasPagas = (parcelasPagasMes.data ?? []).reduce((acc: number, r: any) => acc + Number(r.valor || 0), 0);
-      const recebidoTotal = recebidoPagamentos + recebidoParcelasPagas;
+      const recebidoTotal = Number((vRecebido.data as any)?.total ?? 0);
+      const aReceberTotal = Number((vAReceber.data as any)?.total ?? 0);
+      const atrasoTotal = Number((vAtraso.data as any)?.total ?? 0);
+
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
       const sumRestante = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + (Number(curr.valor) - Number(curr.valor_pago_total || 0)), 0);
