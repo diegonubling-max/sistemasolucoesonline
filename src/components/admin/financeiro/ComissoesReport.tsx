@@ -217,7 +217,7 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Wallet className="h-5 w-5 text-emerald-600" />
-                      Comissões de {g.vendedora} — {format(new Date(mes + "-01"), "MM/yyyy")}
+                      Comissões de {g.vendedora} — {tituloMes}
                     </DialogTitle>
                   </DialogHeader>
                   <Table>
