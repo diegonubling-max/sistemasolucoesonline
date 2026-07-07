@@ -2097,7 +2097,40 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      view_a_receber_mes: {
+        Row: {
+          total: number | null
+        }
+        Relationships: []
+      }
+      view_em_atraso: {
+        Row: {
+          total: number | null
+        }
+        Relationships: []
+      }
+      view_recebimentos_periodo: {
+        Row: {
+          aluno_id: string | null
+          aluno_nome: string | null
+          ctr: number | null
+          data_pagamento: string | null
+          descricao: string | null
+          forma_pagamento: string | null
+          matricula_id: string | null
+          telefone: string | null
+          tipo_pagamento: string | null
+          valor: number | null
+          vendedora: string | null
+        }
+        Relationships: []
+      }
+      view_total_recebido_mes: {
+        Row: {
+          total: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_business_days: {

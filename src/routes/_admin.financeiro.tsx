@@ -137,52 +137,26 @@ function Financeiro() {
   };
 
   const { data: globalStats } = useQuery({
-    queryKey: ["financeiro-global-stats", selectedPoloId, userRole, colabData, atrasoPeriod],
+    queryKey: ["financeiro-global-stats", selectedPoloId, userRole, colabData],
     queryFn: async () => {
-      const firstDay = startOfMonth(today);
-      const lastDay = endOfMonth(today);
-
-      console.log("DEBUG [Financeiro Global Stats]:", { isSuperAdmin, selectedPoloId, colabPoloId: colabData?.polo_id });
-
-      const parcelasPagasMesQ = filterByPolo(supabase.from("parcelas").select("valor, data_pagamento, polo_id")
-        .eq("status", "pago")
-        .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
-        .lte("data_pagamento", format(lastDay, "yyyy-MM-dd")));
-      const pagamentosMesQ = supabase.from("parcelas_pagamentos").select("valor_pago, data_pagamento, parcelas!inner(polo_id)")
-        .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
-        .lte("data_pagamento", format(lastDay, "yyyy-MM-dd"));
-      const [parcelasPagasMes, pagamentosMes, abertoMes, atrasado, totalAberto] = await Promise.all([
-        parcelasPagasMesQ,
-        pagamentosMesQ,
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).lt("data_vencimento", format(today, "yyyy-MM-dd")).gte("data_vencimento", atrasoPeriod.start).lte("data_vencimento", atrasoPeriod.end)),
+      const [vRecebido, vAReceber, vAtraso, totalAberto] = await Promise.all([
+        supabase.from("view_total_recebido_mes").select("total").maybeSingle(),
+        supabase.from("view_a_receber_mes").select("total").maybeSingle(),
+        supabase.from("view_em_atraso").select("total").maybeSingle(),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
-      const valorEmAberto = (parcela: any) => parcela.status === "parcial"
-        ? Number(parcela.valor) - Number(parcela.valor_pago_total || 0)
-        : Number(parcela.valor);
-      const sumRestante = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + valorEmAberto(curr), 0);
-      let pagamentoRows = (pagamentosMes.data ?? []) as any[];
-      const activePoloId = isSuperAdmin
-        ? (selectedPoloId && selectedPoloId !== "all" ? selectedPoloId : null)
-        : (colabData?.polo_id ?? null);
-      if (activePoloId) {
-        pagamentoRows = pagamentoRows.filter((r: any) => r.parcelas?.polo_id === activePoloId);
-      }
-      const recebidoParcelasPagas = sum(parcelasPagasMes.data);
-      const recebidoPagamentos = pagamentoRows.reduce((acc: number, r: any) => acc + Number(r.valor_pago || 0), 0);
-      const recebido = recebidoParcelasPagas + recebidoPagamentos;
 
       return {
-        recebido,
-        aReceberMes: sumRestante(abertoMes.data),
-        atrasado: sumRestante(atrasado.data),
+        recebido: Number((vRecebido.data as any)?.total ?? 0),
+        aReceberMes: Number((vAReceber.data as any)?.total ?? 0),
+        atrasado: Number((vAtraso.data as any)?.total ?? 0),
         totalGeral: sum(totalAberto.data),
       };
     },
   });
+
 
   const { data: vendedorasAlunos } = useQuery({
     queryKey: ["vendedoras-alunos-distinct", selectedPoloId, userRole, colabData],
@@ -197,76 +171,27 @@ function Financeiro() {
   });
 
   const { data: recebimentos, refetch: refetchRecebimentos } = useQuery({
-    queryKey: ["financeiro-recebimentos", recPeriod, selectedPoloId, selectedVendedoraRec, userRole, colabData],
+    queryKey: ["financeiro-recebimentos", recPeriod, selectedVendedoraRec],
     queryFn: async () => {
-      const alunosJoin = selectedVendedoraRec !== "todas" ? "alunos!inner" : "alunos";
-      const activePoloId = isSuperAdmin
-        ? (selectedPoloId && selectedPoloId !== "all" ? selectedPoloId : null)
-        : (colabData?.polo_id ?? null);
-
-      // 1) Pagamentos parciais (parcelas_pagamentos)
-      let qPag = supabase
-        .from("parcelas_pagamentos")
-        .select(`id, valor_pago, data_pagamento, forma_pagamento, parcelas!inner(id, valor, valor_pago_total, tipo, status, polo_id, matriculas!inner(${alunosJoin}(nome, ctr, telefone, vendedora), matricula_pacotes(pacotes(tipo))))`)
+      let q = (supabase as any)
+        .from("view_recebimentos_periodo")
+        .select("*")
         .gte("data_pagamento", recPeriod.start)
-        .lte("data_pagamento", recPeriod.end);
+        .lte("data_pagamento", recPeriod.end)
+        .order("data_pagamento", { ascending: false });
+
       if (selectedVendedoraRec !== "todas") {
-        qPag = qPag.eq("parcelas.matriculas.alunos.vendedora", selectedVendedoraRec);
+        q = q.eq("vendedora", selectedVendedoraRec);
       }
 
-      // 2) Parcelas pagas integralmente (parcelas.status='pago')
-      let qParc = supabase
-        .from("parcelas")
-        .select(`id, valor, valor_pago_total, data_pagamento, forma_pagamento, tipo, status, polo_id, matriculas!inner(${alunosJoin}(nome, ctr, telefone, vendedora), matricula_pacotes(pacotes(tipo)))`)
-        .eq("status", "pago")
-        .gte("data_pagamento", recPeriod.start)
-        .lte("data_pagamento", recPeriod.end);
-      qParc = filterByPolo(qParc);
-      if (selectedVendedoraRec !== "todas") {
-        qParc = qParc.eq("matriculas.alunos.vendedora", selectedVendedoraRec);
-      }
-
-      const [pagRes, parcRes] = await Promise.all([qPag, qParc]);
-      if (pagRes.error) throw pagRes.error;
-      if (parcRes.error) throw parcRes.error;
-
-      let pagRows = (pagRes.data ?? []) as any[];
-      if (activePoloId) {
-        pagRows = pagRows.filter((r) => r.parcelas?.polo_id === activePoloId);
-      }
-
-      const fromPagamentos = pagRows.map((r: any) => ({
-        id: `pag-${r.id}`,
-        parcela_id: r.parcelas?.id,
-        valor: r.valor_pago,
-        valor_original: r.parcelas?.valor,
-        data_pagamento: r.data_pagamento,
-        forma_pagamento: r.forma_pagamento,
-        tipo: r.parcelas?.tipo,
-        status: r.parcelas?.status,
-        matriculas: r.parcelas?.matriculas,
-        is_parcial: r.parcelas?.status === "parcial" || Number(r.valor_pago) < Number(r.parcelas?.valor || 0),
-      }));
-
-      const fromParcelas = ((parcRes.data ?? []) as any[]).map((r: any) => ({
-        id: `parc-${r.id}`,
-        parcela_id: r.id,
-        valor: r.valor,
-        valor_original: r.valor,
-        data_pagamento: r.data_pagamento,
-        forma_pagamento: r.forma_pagamento,
-        tipo: r.tipo,
-        status: r.status,
-        matriculas: r.matriculas,
-        is_parcial: false,
-      }));
-
-      return [...fromPagamentos, ...fromParcelas].sort((a, b) =>
-        (b.data_pagamento ?? "").localeCompare(a.data_pagamento ?? "")
-      );
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as any[];
     },
     enabled: activeFilter === "recebimentos"
   });
+
+
 
 
 
@@ -665,14 +590,18 @@ function Financeiro() {
                 <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Vendedora</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {(recebimentos ?? []).map((p: any) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.vendedora ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
+                {(recebimentos ?? []).map((p: any, idx: number) => (
+                  <TableRow
+                    key={`${p.aluno_id}-${p.data_pagamento}-${idx}`}
+                    className={p.aluno_id ? "cursor-pointer hover:bg-muted/50" : ""}
+                    onClick={() => p.aluno_id && navigate({ to: "/alunos/$id", params: { id: p.aluno_id } })}
+                  >
+                    <TableCell className="font-medium">{p.aluno_nome}</TableCell>
+                    <TableCell>{p.ctr}</TableCell>
+                    <TableCell>{p.vendedora ?? <span className="text-muted-foreground italic">—</span>}</TableCell>
                     <TableCell>
                       {p.forma_pagamento && (
-                        <Badge 
+                        <Badge
                           className={cn(
                             "font-bold",
                             p.forma_pagamento === 'boleto' ? "bg-blue-100 text-blue-700 hover:bg-blue-100" :
@@ -680,8 +609,8 @@ function Financeiro() {
                             "bg-purple-100 text-purple-700 hover:bg-purple-100"
                           )}
                         >
-                          {p.forma_pagamento === 'boleto' ? 'Boleto' : 
-                           p.forma_pagamento === 'pix' ? 'PIX' : 
+                          {p.forma_pagamento === 'boleto' ? 'Boleto' :
+                           p.forma_pagamento === 'pix' ? 'PIX' :
                            'Cartão'}
                         </Badge>
                       )}
@@ -690,13 +619,14 @@ function Financeiro() {
                     <TableCell className="text-right">
                       <div className="flex flex-col items-end">
                         <span className="font-bold">{formatCurrency(p.valor)}</span>
-                        {p.is_parcial && (
-                          <Badge className="bg-yellow-400 text-yellow-950 text-[10px]">🟡 Parcial de {formatCurrency(p.valor_original)}</Badge>
+                        {p.tipo_pagamento === 'parcial' && (
+                          <Badge className="bg-yellow-400 text-yellow-950 text-[10px]">🟡 Parcial</Badge>
                         )}
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
+
                 {recebimentos?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum recebimento no período.</TableCell></TableRow>}
               </TableBody>
             </Table>
