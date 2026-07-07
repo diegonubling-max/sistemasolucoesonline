@@ -654,6 +654,7 @@ export type Database = {
           estorno_competencia: string | null
           id: string
           matricula_id: string | null
+          parcela_pagamento_id: string | null
           status: string | null
           tipo_pagamento: string
           valor: number
@@ -669,6 +670,7 @@ export type Database = {
           estorno_competencia?: string | null
           id?: string
           matricula_id?: string | null
+          parcela_pagamento_id?: string | null
           status?: string | null
           tipo_pagamento: string
           valor: number
@@ -684,6 +686,7 @@ export type Database = {
           estorno_competencia?: string | null
           id?: string
           matricula_id?: string | null
+          parcela_pagamento_id?: string | null
           status?: string | null
           tipo_pagamento?: string
           valor?: number
@@ -702,6 +705,13 @@ export type Database = {
             columns: ["matricula_id"]
             isOneToOne: false
             referencedRelation: "matriculas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_parcela_pagamento_id_fkey"
+            columns: ["parcela_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "parcelas_pagamentos"
             referencedColumns: ["id"]
           },
         ]
