@@ -154,7 +154,7 @@ function Financeiro() {
       const [parcelasPagasMes, pagamentosMes, abertoMes, atrasado, totalAberto] = await Promise.all([
         parcelasPagasMesQ,
         pagamentosMesQ,
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total").in("status", ["aberto", "parcial"]).gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
+        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
         filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).lt("data_vencimento", format(today, "yyyy-MM-dd"))),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
       ]);
@@ -165,8 +165,11 @@ function Financeiro() {
         : Number(parcela.valor);
       const sumRestante = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + valorEmAberto(curr), 0);
       let pagamentoRows = (pagamentosMes.data ?? []) as any[];
-      if (selectedPoloId && selectedPoloId !== "all") {
-        pagamentoRows = pagamentoRows.filter((r: any) => r.parcelas?.polo_id === selectedPoloId);
+      const activePoloId = isSuperAdmin
+        ? (selectedPoloId && selectedPoloId !== "all" ? selectedPoloId : null)
+        : (colabData?.polo_id ?? null);
+      if (activePoloId) {
+        pagamentoRows = pagamentoRows.filter((r: any) => r.parcelas?.polo_id === activePoloId);
       }
       const recebidoParcelasPagas = sum(parcelasPagasMes.data);
       const recebidoPagamentos = pagamentoRows.reduce((acc: number, r: any) => acc + Number(r.valor_pago || 0), 0);
