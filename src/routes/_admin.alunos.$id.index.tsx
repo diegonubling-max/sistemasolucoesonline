@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { HistoricoPagamentosModal } from "@/components/admin/HistoricoPagamentosModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
 import { generateAsaasCobrar, asaasRequest } from "@/services/asaas";
