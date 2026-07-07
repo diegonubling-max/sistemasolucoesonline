@@ -1010,7 +1010,7 @@ function AlunoDetalhes() {
 
       <BaixaModal open={showBaixaModal} onOpenChange={setShowBaixaModal} isLoading={darBaixa.isPending} valorOriginal={selectedParcelaValor} valorPagoAtual={selectedParcelaPagoAtual} onConfirm={(data) => darBaixa.mutate(data)} />
       <ResumoBaixaModal open={!!resumoBaixa} onOpenChange={() => setResumoBaixa(null)} data={resumoBaixa} />
-      <HistoricoPagamentosModal parcelaId={historicoParcelaId} onOpenChange={(o) => !o && setHistoricoParcelaId(null)} />
+      <HistoricoPagamentosModal parcelaId={historicoParcelaId} onOpenChange={(o: boolean) => !o && setHistoricoParcelaId(null)} />
       <Dialog open={showResetDefaultModal} onOpenChange={setShowResetDefaultModal}>
         <DialogContent>
           <DialogHeader><DialogTitle>Confirmar redefinição</DialogTitle></DialogHeader>
