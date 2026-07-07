@@ -33,15 +33,23 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
   const [mes, setMes] = useState<string>(format(new Date(), "yyyy-MM"));
   const [openVendedora, setOpenVendedora] = useState<string | null>(null);
 
-  const competencia = useMemo(() => {
+  const { competencia, mesInicio, mesFim, tituloMes } = useMemo(() => {
     const [y, m] = mes.split("-").map(Number);
-    return format(startOfMonth(new Date(y, m - 1, 1)), "yyyy-MM-dd");
+    const first = new Date(y, m - 1, 1);
+    const last = new Date(y, m, 0);
+    return {
+      competencia: format(first, "yyyy-MM-dd"),
+      mesInicio: format(first, "yyyy-MM-dd"),
+      mesFim: format(last, "yyyy-MM-dd"),
+      tituloMes: format(first, "MM/yyyy"),
+    };
   }, [mes]);
 
   const dataPagamentoPrevista = useMemo(() => {
     const [y, m] = mes.split("-").map(Number);
     return format(new Date(y, m, 20), "yyyy-MM-dd"); // dia 20 do mês seguinte
   }, [mes]);
+
 
   const { data: comissoes, isLoading } = useQuery({
     queryKey: ["comissoes", competencia, poloId],
