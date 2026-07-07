@@ -161,8 +161,9 @@ function Dashboard() {
         origens,
         faturamento: {
           recebido: recebidoTotal,
-          aReceberMes: sumRestante(abertoMes.data),
-          atrasado: sumRestante(atrasado.data),
+          aReceberMes: aReceberTotal,
+          atrasado: atrasoTotal,
+
           totalGeral: sum(totalAberto.data),
         },
         statsByPolo
