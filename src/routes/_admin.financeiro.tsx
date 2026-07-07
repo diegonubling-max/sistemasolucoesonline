@@ -137,52 +137,26 @@ function Financeiro() {
   };
 
   const { data: globalStats } = useQuery({
-    queryKey: ["financeiro-global-stats", selectedPoloId, userRole, colabData, atrasoPeriod],
+    queryKey: ["financeiro-global-stats", selectedPoloId, userRole, colabData],
     queryFn: async () => {
-      const firstDay = startOfMonth(today);
-      const lastDay = endOfMonth(today);
-
-      console.log("DEBUG [Financeiro Global Stats]:", { isSuperAdmin, selectedPoloId, colabPoloId: colabData?.polo_id });
-
-      const parcelasPagasMesQ = filterByPolo(supabase.from("parcelas").select("valor, data_pagamento, polo_id")
-        .eq("status", "pago")
-        .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
-        .lte("data_pagamento", format(lastDay, "yyyy-MM-dd")));
-      const pagamentosMesQ = supabase.from("parcelas_pagamentos").select("valor_pago, data_pagamento, parcelas!inner(polo_id)")
-        .gte("data_pagamento", format(firstDay, "yyyy-MM-dd"))
-        .lte("data_pagamento", format(lastDay, "yyyy-MM-dd"));
-      const [parcelasPagasMes, pagamentosMes, abertoMes, atrasado, totalAberto] = await Promise.all([
-        parcelasPagasMesQ,
-        pagamentosMesQ,
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).gte("data_vencimento", format(firstDay, "yyyy-MM-dd")).lte("data_vencimento", format(lastDay, "yyyy-MM-dd"))),
-        filterByPolo(supabase.from("parcelas").select("valor, valor_pago_total, status").in("status", ["aberto", "parcial"]).lt("data_vencimento", format(today, "yyyy-MM-dd")).gte("data_vencimento", atrasoPeriod.start).lte("data_vencimento", atrasoPeriod.end)),
+      const [vRecebido, vAReceber, vAtraso, totalAberto] = await Promise.all([
+        supabase.from("view_total_recebido_mes").select("total").maybeSingle(),
+        supabase.from("view_a_receber_mes").select("total").maybeSingle(),
+        supabase.from("view_em_atraso").select("total").maybeSingle(),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
-      const valorEmAberto = (parcela: any) => parcela.status === "parcial"
-        ? Number(parcela.valor) - Number(parcela.valor_pago_total || 0)
-        : Number(parcela.valor);
-      const sumRestante = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + valorEmAberto(curr), 0);
-      let pagamentoRows = (pagamentosMes.data ?? []) as any[];
-      const activePoloId = isSuperAdmin
-        ? (selectedPoloId && selectedPoloId !== "all" ? selectedPoloId : null)
-        : (colabData?.polo_id ?? null);
-      if (activePoloId) {
-        pagamentoRows = pagamentoRows.filter((r: any) => r.parcelas?.polo_id === activePoloId);
-      }
-      const recebidoParcelasPagas = sum(parcelasPagasMes.data);
-      const recebidoPagamentos = pagamentoRows.reduce((acc: number, r: any) => acc + Number(r.valor_pago || 0), 0);
-      const recebido = recebidoParcelasPagas + recebidoPagamentos;
 
       return {
-        recebido,
-        aReceberMes: sumRestante(abertoMes.data),
-        atrasado: sumRestante(atrasado.data),
+        recebido: Number((vRecebido.data as any)?.total ?? 0),
+        aReceberMes: Number((vAReceber.data as any)?.total ?? 0),
+        atrasado: Number((vAtraso.data as any)?.total ?? 0),
         totalGeral: sum(totalAberto.data),
       };
     },
   });
+
 
   const { data: vendedorasAlunos } = useQuery({
     queryKey: ["vendedoras-alunos-distinct", selectedPoloId, userRole, colabData],
