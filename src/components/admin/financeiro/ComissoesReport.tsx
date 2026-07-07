@@ -52,13 +52,6 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
 
 
   const { data: comissoes, isLoading } = useQuery({
-    queryKey: ["comissoes", competencia, poloId],
-    queryFn: async () => {
-      const filtraPolo = poloId && poloId !== "all";
-      let query = supabase
-        .from("comissoes")
-        .select(filtraPolo ? "*, alunos!inner(nome, ctr, polo_id)" : "*, alunos(nome, ctr, polo_id)")
-  const { data: comissoes, isLoading } = useQuery({
     queryKey: ["comissoes", mesInicio, mesFim, poloId],
     queryFn: async () => {
       const filtraPolo = poloId && poloId !== "all";
@@ -75,6 +68,7 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
       return (data ?? []) as unknown as ComissaoRow[];
     },
   });
+
 
 
   const marcarPago = useMutation({
