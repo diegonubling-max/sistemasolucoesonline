@@ -91,7 +91,7 @@ function Dashboard() {
       const lastDay = endOfMonth(today);
 
 
-      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData, colabAtivos] = await Promise.all([
+      const [a, c, m, aa, pagoMes, abertoMes, atrasado, totalAberto, origensData, colabAtivos, parcialPagos] = await Promise.all([
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         filterByPolo(supabase.from("matriculas").select("*", { count: "exact", head: true })),
@@ -102,6 +102,7 @@ function Dashboard() {
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
         filterByPolo(supabase.from("alunos").select("origem")),
         filterByPolo(supabase.from("colaboradores").select("*", { count: "exact", head: true }).eq("ativo", true)),
+        filterByPolo(supabase.from("parcelas").select("valor_pago_total").eq("status", "parcial").gt("valor_pago_total", 0)),
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
