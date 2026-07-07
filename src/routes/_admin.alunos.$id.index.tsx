@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { HistoricoPagamentosModal } from "@/components/admin/HistoricoPagamentosModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
 import { generateAsaasCobrar, asaasRequest } from "@/services/asaas";
@@ -58,6 +59,8 @@ function AlunoDetalhes() {
   const [selectedParcelaId, setSelectedParcelaId] = useState<string | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const [selectedParcelaValor, setSelectedParcelaValor] = useState<number>(0);
+  const [selectedParcelaPagoAtual, setSelectedParcelaPagoAtual] = useState<number>(0);
+  const [historicoParcelaId, setHistoricoParcelaId] = useState<string | null>(null);
   const [showAsaasModal, setShowAsaasModal] = useState(false);
   const [showAsaasResultModal, setShowAsaasResultModal] = useState(false);
   const [asaasResult, setAsaasResult] = useState<any>(null);
@@ -288,24 +291,34 @@ function AlunoDetalhes() {
     mutationFn: async (data: {
       data_pagamento: string;
       forma_pagamento: string;
+      valor_pago: number;
       parcelas_cartao?: number;
       taxa_cartao?: number;
       valor_liquido?: number;
     }) => {
       if (!selectedParcelaId) return;
-      const { error } = await supabase
-        .from("parcelas")
-        .update({
-          status: "pago",
-          ...data
-        })
-        .eq("id", selectedParcelaId);
+      const { data: res, error } = await supabase.rpc("registrar_pagamento_parcela", {
+        p_parcela_id: selectedParcelaId,
+        p_valor_pago: data.valor_pago,
+        p_data_pagamento: data.data_pagamento,
+        p_forma_pagamento: data.forma_pagamento,
+        p_parcelas_cartao: data.parcelas_cartao ?? undefined,
+        p_taxa_cartao: data.taxa_cartao ?? undefined,
+        p_valor_liquido: data.valor_liquido ?? undefined,
+        p_observacao: undefined,
+      });
       if (error) throw error;
-      notifyPagamentoRecebido(selectedParcelaId, selectedParcelaValor, data.forma_pagamento);
-      return data;
+      const resObj = res as { status: string; restante: number } | null;
+      if (resObj?.status === "pago") {
+        notifyPagamentoRecebido(selectedParcelaId, selectedParcelaValor, data.forma_pagamento);
+      }
+      return { ...data, _result: resObj };
     },
     onSuccess: (data: any) => {
-      if (data.forma_pagamento === 'cartao') {
+      const isParcial = data._result?.status === "parcial";
+      if (isParcial) {
+        toast.success(`Pagamento parcial registrado. Restante: R$ ${Number(data._result.restante).toFixed(2)}`);
+      } else if (data.forma_pagamento === 'cartao') {
         setResumoBaixa({
           formaPagamento: 'cartao',
           parcelas: data.parcelas_cartao,
@@ -788,19 +801,38 @@ function AlunoDetalhes() {
                 <table className="w-full text-sm">
                   <thead><tr className="border-b"><th className="text-left py-2">Nº</th><th className="text-left py-2">Parcela</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Status</th><th className="text-left py-2">Pago em</th><th className="text-right py-2">Ações</th></tr></thead>
                   <tbody>
-                    {parcelas?.map((p) => (
-                      <tr key={p.id} className="border-b">
+                    {parcelas?.map((p) => {
+                      const pagoTot = Number((p as any).valor_pago_total || 0);
+                      const restante = Number(p.valor) - pagoTot;
+                      const isParcial = p.status === 'parcial';
+                      return (
+                      <tr
+                        key={p.id}
+                        className={cn("border-b", isParcial && "cursor-pointer hover:bg-muted/30")}
+                        onClick={() => isParcial && setHistoricoParcelaId(p.id)}
+                      >
                         <td className="py-3 text-muted-foreground font-mono">{p.numero_parcela_id ?? '—'}</td>
                         <td className="py-3">{p.tipo === 'taxa_matricula' ? 'Matrícula' : `Parcela ${p.numero}`}</td>
                         <td className="py-3">{formatDate(p.data_vencimento)}</td>
-                        <td className="py-3 font-bold">{formatCurrency(p.valor)}</td>
                         <td className="py-3">
-                          <Badge variant={p.status === 'pago' ? "outline" : "secondary"} className={cn(p.status === 'pago' && "bg-green-50 text-green-700")}>{p.status}</Badge>
+                          <div className="font-bold">{formatCurrency(p.valor)}</div>
+                          {isParcial && (
+                            <div className="text-[10px] text-muted-foreground">Pago: {formatCurrency(pagoTot)} · Restante: {formatCurrency(restante)}</div>
+                          )}
+                        </td>
+                        <td className="py-3">
+                          {p.status === 'pago' ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700">pago</Badge>
+                          ) : p.status === 'parcial' ? (
+                            <Badge className="bg-yellow-400 text-yellow-950">🟡 Parcial</Badge>
+                          ) : (
+                            <Badge variant="secondary">{p.status}</Badge>
+                          )}
                         </td>
                         <td className="py-3">{(p as any).data_pagamento ? formatDate((p as any).data_pagamento) : '—'}</td>
-                        <td className="py-3 text-right">
-                          {p.status === 'aberto' && (
-                            <Button size="sm" variant="ghost" className="text-green-600" onClick={() => { setSelectedParcelaId(p.id); setSelectedParcelaValor(Number(p.valor)); setShowBaixaModal(true); }}>Baixa</Button>
+                        <td className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                          {(p.status === 'aberto' || p.status === 'parcial') && (
+                            <Button size="sm" variant="ghost" className="text-green-600" onClick={() => { setSelectedParcelaId(p.id); setSelectedParcelaValor(Number(p.valor)); setSelectedParcelaPagoAtual(pagoTot); setShowBaixaModal(true); }}>Baixa</Button>
                           )}
                           <Button
                             size="icon"
@@ -818,7 +850,8 @@ function AlunoDetalhes() {
                         </td>
 
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -975,8 +1008,9 @@ function AlunoDetalhes() {
 
 
 
-      <BaixaModal open={showBaixaModal} onOpenChange={setShowBaixaModal} isLoading={darBaixa.isPending} valorOriginal={selectedParcelaValor} onConfirm={(data) => darBaixa.mutate(data)} />
+      <BaixaModal open={showBaixaModal} onOpenChange={setShowBaixaModal} isLoading={darBaixa.isPending} valorOriginal={selectedParcelaValor} valorPagoAtual={selectedParcelaPagoAtual} onConfirm={(data) => darBaixa.mutate(data)} />
       <ResumoBaixaModal open={!!resumoBaixa} onOpenChange={() => setResumoBaixa(null)} data={resumoBaixa} />
+      <HistoricoPagamentosModal parcelaId={historicoParcelaId} onOpenChange={(o: boolean) => !o && setHistoricoParcelaId(null)} />
       <Dialog open={showResetDefaultModal} onOpenChange={setShowResetDefaultModal}>
         <DialogContent>
           <DialogHeader><DialogTitle>Confirmar redefinição</DialogTitle></DialogHeader>

@@ -1367,6 +1367,7 @@ export type Database = {
           valor: number
           valor_bruto: number | null
           valor_liquido: number | null
+          valor_pago_total: number | null
           valor_taxa: number | null
         }
         Insert: {
@@ -1395,6 +1396,7 @@ export type Database = {
           valor: number
           valor_bruto?: number | null
           valor_liquido?: number | null
+          valor_pago_total?: number | null
           valor_taxa?: number | null
         }
         Update: {
@@ -1423,6 +1425,7 @@ export type Database = {
           valor?: number
           valor_bruto?: number | null
           valor_liquido?: number | null
+          valor_pago_total?: number | null
           valor_taxa?: number | null
         }
         Relationships: [
@@ -1438,6 +1441,44 @@ export type Database = {
             columns: ["polo_id"]
             isOneToOne: false
             referencedRelation: "polos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parcelas_pagamentos: {
+        Row: {
+          created_at: string | null
+          data_pagamento: string
+          forma_pagamento: string | null
+          id: string
+          observacao: string | null
+          parcela_id: string
+          valor_pago: number
+        }
+        Insert: {
+          created_at?: string | null
+          data_pagamento: string
+          forma_pagamento?: string | null
+          id?: string
+          observacao?: string | null
+          parcela_id: string
+          valor_pago: number
+        }
+        Update: {
+          created_at?: string | null
+          data_pagamento?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacao?: string | null
+          parcela_id?: string
+          valor_pago?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcelas_pagamentos_parcela_id_fkey"
+            columns: ["parcela_id"]
+            isOneToOne: false
+            referencedRelation: "parcelas"
             referencedColumns: ["id"]
           },
         ]
@@ -2108,12 +2149,25 @@ export type Database = {
         Args: { p_aluno_id: string; p_aula_id: string; p_curso_id: string }
         Returns: undefined
       }
+      registrar_pagamento_parcela: {
+        Args: {
+          p_data_pagamento: string
+          p_forma_pagamento: string
+          p_observacao?: string
+          p_parcela_id: string
+          p_parcelas_cartao?: number
+          p_taxa_cartao?: number
+          p_valor_liquido?: number
+          p_valor_pago: number
+        }
+        Returns: Json
+      }
       resgatar_curso_vitrine: { Args: { p_vitrine_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "aluno"
       origem_aluno: "Google" | "Meta" | "Indicação" | "Outros"
-      payment_status: "aberto" | "pago" | "isento"
+      payment_status: "aberto" | "pago" | "isento" | "parcial"
       payment_type: "taxa_matricula" | "parcela"
       sexo_aluno: "Masculino" | "Feminino"
       tipo_pacote: "boleto" | "cartao" | "pix"
@@ -2246,7 +2300,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "aluno"],
       origem_aluno: ["Google", "Meta", "Indicação", "Outros"],
-      payment_status: ["aberto", "pago", "isento"],
+      payment_status: ["aberto", "pago", "isento", "parcial"],
       payment_type: ["taxa_matricula", "parcela"],
       sexo_aluno: ["Masculino", "Feminino"],
       tipo_pacote: ["boleto", "cartao", "pix"],
