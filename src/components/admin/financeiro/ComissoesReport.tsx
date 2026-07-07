@@ -111,8 +111,9 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
         liquido: 0,
         todasPagas: true,
       };
-      const isEstornoDoMes = c.estornado && c.estorno_competencia === competencia;
-      const isGeradaDoMes = c.competencia === competencia;
+      const isEstornoDoMes = c.estornado && !!c.estorno_competencia && c.estorno_competencia >= mesInicio && c.estorno_competencia <= mesFim;
+      const isGeradaDoMes = c.competencia >= mesInicio && c.competencia <= mesFim;
+
       if (isGeradaDoMes) {
         g.vendas.push(c);
         if (!c.estornado) g.totalGerado += Number(c.valor);
