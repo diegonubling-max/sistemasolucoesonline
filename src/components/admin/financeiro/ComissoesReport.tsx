@@ -135,7 +135,7 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Wallet className="h-5 w-5 text-emerald-600" />
-            Comissões — competência {format(new Date(mes + "-01"), "MM/yyyy")}
+            Comissões — competência {tituloMes}
           </h3>
           <div className="flex items-center gap-2">
             <Input type="month" className="w-44" value={mes} onChange={(e) => setMes(e.target.value)} />
