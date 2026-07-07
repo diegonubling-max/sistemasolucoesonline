@@ -51,7 +51,7 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
         .from("comissoes")
         .select(filtraPolo ? "*, alunos!inner(nome, ctr, polo_id)" : "*, alunos(nome, ctr, polo_id)")
         .or(`competencia.eq.${competencia},estorno_competencia.eq.${competencia}`)
-        .order("created_at", { ascending: false });
+        .order("competencia", { ascending: false });
       if (filtraPolo) query = query.eq("alunos.polo_id", poloId);
       const { data, error } = await query;
       if (error) throw error;
