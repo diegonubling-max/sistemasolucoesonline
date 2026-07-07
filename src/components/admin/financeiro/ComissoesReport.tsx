@@ -127,7 +127,7 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
       map.set(c.vendedora, g);
     }
     return Array.from(map.values()).sort((a, b) => a.vendedora.localeCompare(b.vendedora));
-  }, [comissoes, competencia]);
+  }, [comissoes, mesInicio, mesFim]);
 
   return (
     <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
