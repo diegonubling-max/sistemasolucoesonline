@@ -106,6 +106,8 @@ function Dashboard() {
       ]);
 
       const sum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor), 0);
+      const sumRestante = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + (Number(curr.valor) - Number(curr.valor_pago_total || 0)), 0);
+      const sumParcial = (items: any[] | null) => (items ?? []).reduce((acc, curr) => acc + Number(curr.valor_pago_total || 0), 0);
       const receivedSum = (items: any[] | null) => (items ?? []).reduce((acc, curr) => {
         const isCartao = curr.forma_pagamento === 'cartao';
         const val = isCartao && curr.valor_liquido ? Number(curr.valor_liquido) : Number(curr.valor);
