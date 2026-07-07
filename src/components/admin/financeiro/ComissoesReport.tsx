@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Wallet, CheckCircle, Loader2, Eye, DollarSign } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { format, startOfMonth } from "date-fns";
+import { format } from "date-fns";
 import { toast } from "sonner";
 
 interface ComissaoRow {
@@ -33,9 +33,16 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
   const [mes, setMes] = useState<string>(format(new Date(), "yyyy-MM"));
   const [openVendedora, setOpenVendedora] = useState<string | null>(null);
 
-  const competencia = useMemo(() => {
+  const { competencia, mesInicio, mesFim, tituloMes } = useMemo(() => {
     const [y, m] = mes.split("-").map(Number);
-    return format(startOfMonth(new Date(y, m - 1, 1)), "yyyy-MM-dd");
+    const first = new Date(y, m - 1, 1);
+    const last = new Date(y, m, 0);
+    return {
+      competencia: format(first, "yyyy-MM-dd"),
+      mesInicio: format(first, "yyyy-MM-dd"),
+      mesFim: format(last, "yyyy-MM-dd"),
+      tituloMes: format(first, "MM/yyyy"),
+    };
   }, [mes]);
 
   const dataPagamentoPrevista = useMemo(() => {
@@ -43,14 +50,17 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
     return format(new Date(y, m, 20), "yyyy-MM-dd"); // dia 20 do mês seguinte
   }, [mes]);
 
+
   const { data: comissoes, isLoading } = useQuery({
-    queryKey: ["comissoes", competencia, poloId],
+    queryKey: ["comissoes", mesInicio, mesFim, poloId],
     queryFn: async () => {
       const filtraPolo = poloId && poloId !== "all";
       let query = supabase
         .from("comissoes")
         .select(filtraPolo ? "*, alunos!inner(nome, ctr, polo_id)" : "*, alunos(nome, ctr, polo_id)")
-        .or(`competencia.eq.${competencia},estorno_competencia.eq.${competencia}`)
+        .or(
+          `and(competencia.gte.${mesInicio},competencia.lte.${mesFim}),and(estorno_competencia.gte.${mesInicio},estorno_competencia.lte.${mesFim})`,
+        )
         .order("competencia", { ascending: false });
       if (filtraPolo) query = query.eq("alunos.polo_id", poloId);
       const { data, error } = await query;
@@ -59,22 +69,26 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
     },
   });
 
+
+
   const marcarPago = useMutation({
     mutationFn: async (vendedora: string) => {
       const { error } = await supabase
         .from("comissoes")
         .update({ status: "pago", data_pagamento: dataPagamentoPrevista })
         .eq("vendedora", vendedora)
-        .eq("competencia", competencia)
+        .gte("competencia", mesInicio)
+        .lte("competencia", mesFim)
         .neq("status", "pago");
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Comissões marcadas como pagas!");
-      qc.invalidateQueries({ queryKey: ["comissoes", competencia] });
+      qc.invalidateQueries({ queryKey: ["comissoes", mesInicio, mesFim] });
     },
     onError: (e: Error) => toast.error("Erro ao marcar como pago", { description: e.message }),
   });
+
 
   // Agrupa por vendedora
   const grupos = useMemo(() => {
@@ -97,8 +111,9 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
         liquido: 0,
         todasPagas: true,
       };
-      const isEstornoDoMes = c.estornado && c.estorno_competencia === competencia;
-      const isGeradaDoMes = c.competencia === competencia;
+      const isEstornoDoMes = c.estornado && !!c.estorno_competencia && c.estorno_competencia >= mesInicio && c.estorno_competencia <= mesFim;
+      const isGeradaDoMes = c.competencia >= mesInicio && c.competencia <= mesFim;
+
       if (isGeradaDoMes) {
         g.vendas.push(c);
         if (!c.estornado) g.totalGerado += Number(c.valor);
@@ -112,7 +127,7 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
       map.set(c.vendedora, g);
     }
     return Array.from(map.values()).sort((a, b) => a.vendedora.localeCompare(b.vendedora));
-  }, [comissoes, competencia]);
+  }, [comissoes, mesInicio, mesFim]);
 
   return (
     <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
@@ -120,7 +135,7 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Wallet className="h-5 w-5 text-emerald-600" />
-            Comissões — competência {format(new Date(mes + "-01"), "MM/yyyy")}
+            Comissões — competência {tituloMes}
           </h3>
           <div className="flex items-center gap-2">
             <Input type="month" className="w-44" value={mes} onChange={(e) => setMes(e.target.value)} />
@@ -202,7 +217,7 @@ export function ComissoesReport({ poloId = "all" }: { poloId?: string }) {
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Wallet className="h-5 w-5 text-emerald-600" />
-                      Comissões de {g.vendedora} — {format(new Date(mes + "-01"), "MM/yyyy")}
+                      Comissões de {g.vendedora} — {tituloMes}
                     </DialogTitle>
                   </DialogHeader>
                   <Table>
