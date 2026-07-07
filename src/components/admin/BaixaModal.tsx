@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Loader2, CreditCard, Landmark, QrCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatCurrency } from "@/lib/format";
 
 interface BaixaModalProps {
   open: boolean;
@@ -15,34 +17,28 @@ interface BaixaModalProps {
   onConfirm: (data: {
     data_pagamento: string;
     forma_pagamento: string;
+    valor_pago: number;
     parcelas_cartao?: number;
     taxa_cartao?: number;
     valor_liquido?: number;
   }) => void;
   isLoading: boolean;
   valorOriginal: number;
+  valorPagoAtual?: number;
 }
 
 const TAXAS_CARTAO: Record<number, number> = {
-  1: 4.20,
-  2: 6.09,
-  3: 7.01,
-  4: 7.91,
-  5: 8.80,
-  6: 9.67,
-  7: 12.59,
-  8: 13.42,
-  9: 14.25,
-  10: 15.06,
-  11: 15.87,
-  12: 16.66,
+  1: 4.20, 2: 6.09, 3: 7.01, 4: 7.91, 5: 8.80, 6: 9.67,
+  7: 12.59, 8: 13.42, 9: 14.25, 10: 15.06, 11: 15.87, 12: 16.66,
 };
 
-export function BaixaModal({ open, onOpenChange, onConfirm, isLoading, valorOriginal }: BaixaModalProps) {
+export function BaixaModal({ open, onOpenChange, onConfirm, isLoading, valorOriginal, valorPagoAtual = 0 }: BaixaModalProps) {
+  const restanteInicial = Math.max(0, valorOriginal - valorPagoAtual);
   const [etapa, setEtapa] = useState<1 | 2 | 3>(1);
   const [formaPagamento, setFormaPagamento] = useState<string | null>(null);
   const [parcelasCartao, setParcelasCartao] = useState<number>(1);
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
+  const [valorPago, setValorPago] = useState<number>(restanteInicial);
 
   useEffect(() => {
     if (open) {
@@ -50,26 +46,26 @@ export function BaixaModal({ open, onOpenChange, onConfirm, isLoading, valorOrig
       setFormaPagamento(null);
       setParcelasCartao(1);
       setDataPagamento(new Date());
+      setValorPago(Math.max(0, valorOriginal - valorPagoAtual));
     }
-  }, [open]);
+  }, [open, valorOriginal, valorPagoAtual]);
 
   const handleSelectForma = (forma: string) => {
     setFormaPagamento(forma);
-    if (forma === 'cartao') {
-      setEtapa(2);
-    } else {
-      setEtapa(3);
-    }
+    setEtapa(forma === 'cartao' ? 2 : 3);
   };
 
+  const saldoRestante = Math.max(0, restanteInicial - valorPago);
   const taxa = formaPagamento === 'cartao' ? TAXAS_CARTAO[parcelasCartao] : 0;
-  const valorTaxa = (valorOriginal * taxa) / 100;
-  const valorLiquido = valorOriginal - valorTaxa;
+  const valorTaxa = (valorPago * taxa) / 100;
+  const valorLiquido = valorPago - valorTaxa;
+  const valorInvalido = valorPago <= 0 || valorPago > restanteInicial + 0.001;
 
   const handleConfirmar = () => {
     onConfirm({
       data_pagamento: format(dataPagamento, "yyyy-MM-dd"),
       forma_pagamento: formaPagamento!,
+      valor_pago: valorPago,
       ...(formaPagamento === 'cartao' ? {
         parcelas_cartao: parcelasCartao,
         taxa_cartao: taxa,
@@ -85,12 +81,12 @@ export function BaixaModal({ open, onOpenChange, onConfirm, isLoading, valorOrig
           <DialogTitle>
             {etapa === 1 && "Como o aluno efetuou o pagamento?"}
             {etapa === 2 && "Em quantas vezes o aluno pagou?"}
-            {etapa === 3 && "Data do pagamento"}
+            {etapa === 3 && "Dados do pagamento"}
           </DialogTitle>
           <DialogDescription>
             {etapa === 1 && "Selecione a forma de pagamento utilizada."}
             {etapa === 2 && "Selecione o número de parcelas no cartão."}
-            {etapa === 3 && "Informe a data em que o valor foi recebido."}
+            {etapa === 3 && "Informe o valor pago e a data do recebimento."}
           </DialogDescription>
         </DialogHeader>
 
@@ -126,36 +122,14 @@ export function BaixaModal({ open, onOpenChange, onConfirm, isLoading, valorOrig
               <div className="space-y-2">
                 <Label>Parcelas</Label>
                 <Select value={parcelasCartao.toString()} onValueChange={(v) => setParcelasCartao(parseInt(v))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
+                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => (
                       <SelectItem key={n} value={n.toString()}>{n}x</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="bg-muted/50 p-4 rounded-xl border-2 border-dashed space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Parcelas selecionadas:</span>
-                  <span className="font-bold">{parcelasCartao}x</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Valor bruto:</span>
-                  <span className="font-bold">R$ {valorOriginal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between text-sm text-red-600">
-                  <span>Taxa ({taxa}%):</span>
-                  <span className="font-bold">- R$ {valorTaxa.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="pt-2 border-t flex justify-between font-black text-primary">
-                  <span>Valor líquido:</span>
-                  <span>R$ {valorLiquido.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                </div>
-              </div>
-
               <div className="flex justify-between">
                 <Button variant="ghost" onClick={() => setEtapa(1)}>Voltar</Button>
                 <Button onClick={() => setEtapa(3)}>Continuar</Button>
@@ -164,42 +138,62 @@ export function BaixaModal({ open, onOpenChange, onConfirm, isLoading, valorOrig
           )}
 
           {etapa === 3 && (
-            <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Valor pago</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max={restanteInicial}
+                  value={valorPago}
+                  onChange={(e) => setValorPago(Math.max(0, Number(e.target.value)))}
+                />
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    Saldo restante: <span className={cn("font-bold", saldoRestante > 0 ? "text-yellow-600" : "text-green-600")}>{formatCurrency(saldoRestante)}</span>
+                  </span>
+                  {valorPagoAtual > 0 && (
+                    <span className="text-muted-foreground">Já pago: {formatCurrency(valorPagoAtual)}</span>
+                  )}
+                </div>
+                {valorInvalido && (
+                  <p className="text-xs text-red-600">Valor deve ser maior que 0 e menor ou igual ao restante.</p>
+                )}
+              </div>
+
+              {formaPagamento === 'cartao' && (
+                <div className="bg-muted/50 p-3 rounded-xl border border-dashed space-y-1 text-sm">
+                  <div className="flex justify-between"><span>Parcelas:</span><span className="font-bold">{parcelasCartao}x</span></div>
+                  <div className="flex justify-between text-red-600"><span>Taxa ({taxa}%):</span><span className="font-bold">- {formatCurrency(valorTaxa)}</span></div>
+                  <div className="flex justify-between pt-1 border-t font-black text-primary"><span>Líquido:</span><span>{formatCurrency(valorLiquido)}</span></div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>Data do Pagamento</Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !dataPagamento && "text-muted-foreground"
-                      )}
-                    >
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !dataPagamento && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dataPagamento ? format(dataPagamento, "dd/MM/yyyy") : <span>Selecione a data</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dataPagamento}
-                      onSelect={(d) => d && setDataPagamento(d)}
-                      initialFocus
-                    />
+                    <Calendar mode="single" selected={dataPagamento} onSelect={(d) => d && setDataPagamento(d)} initialFocus />
                   </PopoverContent>
                 </Popover>
               </div>
 
-              <div className="flex justify-between">
+              <div className="flex justify-between pt-2">
                 <Button variant="ghost" onClick={() => setEtapa(formaPagamento === 'cartao' ? 2 : 1)}>Voltar</Button>
-                <Button 
+                <Button
                   className="bg-green-600 hover:bg-green-700"
-                  disabled={isLoading}
+                  disabled={isLoading || valorInvalido}
                   onClick={handleConfirmar}
                 >
                   {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Confirmar Baixa
+                  Confirmar {saldoRestante > 0 ? "Pagamento Parcial" : "Baixa"}
                 </Button>
               </div>
             </div>
