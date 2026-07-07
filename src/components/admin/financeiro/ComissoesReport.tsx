@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Wallet, CheckCircle, Loader2, Eye, DollarSign } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { format, startOfMonth } from "date-fns";
+import { format } from "date-fns";
 import { toast } from "sonner";
 
 interface ComissaoRow {
