@@ -505,12 +505,21 @@ function AlunoDetalhes() {
     ultimoAcesso: sessoes?.[0]?.login_em || null
   };
 
-  const totalPago = parcelas?.filter(p => p.status === 'pago').reduce((acc, p) => {
-    const isCartao = p.forma_pagamento === 'cartao';
-    const val = isCartao && p.valor_liquido ? Number(p.valor_liquido) : Number(p.valor);
-    return acc + val;
+  const totalPago = parcelas?.reduce((acc, p) => {
+    if (p.status === 'pago') {
+      const isCartao = p.forma_pagamento === 'cartao';
+      return acc + (isCartao && p.valor_liquido ? Number(p.valor_liquido) : Number(p.valor));
+    }
+    if (p.status === 'parcial') {
+      return acc + Number((p as any).valor_pago_total || 0);
+    }
+    return acc;
   }, 0) || 0;
-  const totalAberto = parcelas?.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
+  const totalAberto = parcelas?.reduce((acc, p) => {
+    if (p.status === 'aberto') return acc + Number(p.valor);
+    if (p.status === 'parcial') return acc + (Number(p.valor) - Number((p as any).valor_pago_total || 0));
+    return acc;
+  }, 0) || 0;
   const totalGeral = parcelas?.filter(p => p.status !== 'isento').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
 
   const [sendingAccess, setSendingAccess] = useState(false);
