@@ -279,10 +279,11 @@ O aluno está no aguardo do processo de certificação junto à certificadora, p
 
 Por ser verdade, firmo o presente.`;
 
-function GerarDeclaracaoModal({ docId, nomeInicial, onClose }: { docId: string; nomeInicial: string; onClose: () => void }) {
+function GerarDeclaracaoModal({ docId, nomeInicial, textoInicial, onClose }: { docId: string; nomeInicial: string; textoInicial?: string; onClose: () => void }) {
   const qc = useQueryClient();
   const [nome, setNome] = useState(nomeInicial);
-  const [texto, setTexto] = useState(DECLARACAO_TEXTO_PADRAO);
+  const [texto, setTexto] = useState(textoInicial ?? DECLARACAO_TEXTO_PADRAO);
+
   const [loading, setLoading] = useState(false);
 
   const handleGerar = async () => {
