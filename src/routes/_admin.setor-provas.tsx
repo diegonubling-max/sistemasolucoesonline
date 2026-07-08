@@ -93,6 +93,9 @@ function DocumentacaoTab() {
   const [search, setSearch] = useState("");
   const [statusDoc, setStatusDoc] = useState<string>("all");
   const [loteFilter, setLoteFilter] = useState<string>("all");
+  const [poloFilter, setPoloFilter] = useState<string>("all");
+  const [certFilter, setCertFilter] = useState<string>("all");
+
   const [editDocId, setEditDocId] = useState<string | null>(null);
   const [encDocId, setEncDocId] = useState<string | null>(null);
   const [declDoc, setDeclDoc] = useState<{ id: string; nome: string; texto?: string } | null>(null);
@@ -135,6 +138,15 @@ function DocumentacaoTab() {
     },
   });
 
+  const { data: certsList } = useQuery({
+    queryKey: ["sp-certs-active"],
+    queryFn: async () => {
+      const { data } = await sb.from("certificadoras").select("id, nome").eq("ativo", true).order("nome");
+      return data ?? [];
+    },
+  });
+
+
   const filtered = useMemo(() => {
     if (!rows) return [];
     const s = search.trim().toLowerCase();
@@ -143,9 +155,15 @@ function DocumentacaoTab() {
       if (statusDoc === "completa" && !r.documentacao_completa) return false;
       if (statusDoc === "incompleta" && r.documentacao_completa) return false;
       if (loteFilter !== "all" && r.lote !== loteFilter) return false;
+      if (poloFilter !== "all") {
+        const p = r.alunos?.polos?.nome ?? r.polo;
+        if (p !== poloFilter) return false;
+      }
+      if (certFilter !== "all" && r.certificadora_id !== certFilter) return false;
       return true;
     });
-  }, [rows, search, statusDoc, loteFilter]);
+  }, [rows, search, statusDoc, loteFilter, poloFilter, certFilter]);
+
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
@@ -161,29 +179,44 @@ function DocumentacaoTab() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div className="relative md:col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="relative lg:col-span-2">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome ou telefone..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <Select value={statusDoc} onValueChange={setStatusDoc}>
-          <SelectTrigger><SelectValue placeholder="Status documentação" /></SelectTrigger>
+        <Select value={poloFilter} onValueChange={setPoloFilter}>
+          <SelectTrigger><SelectValue placeholder="Polo" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="completa">Completa</SelectItem>
-            <SelectItem value="incompleta">Incompleta</SelectItem>
+            <SelectItem value="all">Todos os Polos</SelectItem>
+            {POLOS_FIXOS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={certFilter} onValueChange={setCertFilter}>
+          <SelectTrigger><SelectValue placeholder="Certificadora" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as Certificadoras</SelectItem>
+            {(certsList ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={loteFilter} onValueChange={setLoteFilter}>
           <SelectTrigger><SelectValue placeholder="Lote" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os lotes</SelectItem>
+            <SelectItem value="all">Todos os Lotes</SelectItem>
             {((lotes ?? []) as string[]).map((l) => (
               <SelectItem key={l} value={l}>{l}</SelectItem>
             ))}
           </SelectContent>
         </Select>
+        <Select value={statusDoc} onValueChange={setStatusDoc}>
+          <SelectTrigger><SelectValue placeholder="Documentação" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="completa">Completa</SelectItem>
+            <SelectItem value="incompleta">Incompleta</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
 
       <div className="flex justify-end">
         <Button onClick={() => setNovoOpen(true)}>
