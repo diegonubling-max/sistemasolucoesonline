@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 const Z_API_BASE =
   "https://api.z-api.io/instances/3F4CC1DC22AB31BDE17ECE717FF40C71/token/E55BC981D8AA6846EAFEAEE4";
-const Z_API_CLIENT_TOKEN = "E55BC981D8AA6846EAFEAEE4";
+const Z_API_CLIENT_TOKEN = "F2ffd89a74df2440aad10b65315696d0eS";
 
 function formatPhone(telefone: string) {
   const numero = (telefone || "").replace(/\D/g, "");
