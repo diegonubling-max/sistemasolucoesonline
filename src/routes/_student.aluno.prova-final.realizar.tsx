@@ -61,6 +61,12 @@ function ProvaExecucaoPage() {
     enabled: !!aluno?.id,
   });
 
+  useEffect(() => {
+    const ms = (agendamento as any)?.materias_selecionadas;
+    if (Array.isArray(ms) && ms.length > 0) setAgendamentoMaterias(ms);
+  }, [agendamento]);
+
+
   const { data: questoes, isLoading: loadingQuestoes } = useQuery({
     queryKey: ["questoes-materia", materiaAtual],
     queryFn: async () => {
