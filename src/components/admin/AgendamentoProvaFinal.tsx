@@ -20,6 +20,7 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
   const qc = useQueryClient();
   const [dataProva, setDataProva] = useState(format(new Date(), "yyyy-MM-dd"));
   const [horaProva, setHoraProva] = useState("14:00");
+  const [materias, setMaterias] = useState<string[]>([...MATERIAS_PADRAO]);
 
   const { data: agendamentos, isLoading } = useQuery({
     queryKey: ["prova-agendamentos", alunoId],
