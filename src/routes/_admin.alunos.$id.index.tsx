@@ -856,9 +856,6 @@ function AlunoDetalhes() {
           </div>
         </TabsContent>
 
-        <TabsContent value="perfil">
-          <PerfilVocacionalTab alunoId={id} />
-        </TabsContent>
 
         <TabsContent value="financeiro" className="space-y-6">
           <div className="flex items-center justify-between gap-4">
