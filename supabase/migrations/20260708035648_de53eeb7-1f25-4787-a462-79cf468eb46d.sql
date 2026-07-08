@@ -1,0 +1,1 @@
+ALTER TABLE public.documentacao_alunos ADD COLUMN IF NOT EXISTS arquivos_paths JSONB NOT NULL DEFAULT '[]'::jsonb;
