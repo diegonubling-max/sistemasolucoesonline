@@ -1385,7 +1385,11 @@ function CertificadoraFormModal({ editing, onClose }: { editing: any; onClose: (
           <div className="col-span-2"><Label>Telefone do Responsável</Label><Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} /></div>
         </div>
         <div className="grid grid-cols-3 gap-3 border-t pt-3">
-          {VALID_FIELDS.map((f) => (
+          {[
+            { id: "rec_firma", label: "Rec. Firma" },
+            { id: "d_oficial", label: "D. Oficial" },
+            { id: "visto_confere", label: "Visto Confere" },
+          ].map((f) => (
             <label key={f.id} className="flex items-center gap-2 cursor-pointer">
               <Checkbox checked={(form as any)[f.id]} onCheckedChange={(v) => setForm({ ...form, [f.id]: !!v })} />
               <span className="text-sm">{f.label}</span>
