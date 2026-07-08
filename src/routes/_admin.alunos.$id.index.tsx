@@ -752,11 +752,10 @@ function AlunoDetalhes() {
       <Tabs defaultValue={initialTab || "geral"} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="geral">Dados Gerais</TabsTrigger>
-          <TabsTrigger value="perfil" className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" /> Perfil
-          </TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-          <TabsTrigger value="vitrine">Vitrine</TabsTrigger>
+          <TabsTrigger value="vitrine" className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4" /> Vitrine
+          </TabsTrigger>
           <TabsTrigger value="progresso">Progresso</TabsTrigger>
           <TabsTrigger value="historico" className="flex items-center gap-2">
             <History className="h-4 w-4" /> Histórico
