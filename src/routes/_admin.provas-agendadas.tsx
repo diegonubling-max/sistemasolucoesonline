@@ -763,3 +763,89 @@ Boa prova! 🍀`;
     </div>
   );
 }
+
+function DetalhesAgendamentoDialog({ agendamento, onClose }: { agendamento: any | null; onClose: () => void }) {
+  const { data: resultados, isLoading } = useQuery({
+    queryKey: ["prova-resultados-detalhes", agendamento?.id],
+    enabled: !!agendamento?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prova_resultados")
+        .select("materia, total_acertos, total_questoes, percentual, aprovado, finalizado_em, iniciado_em")
+        .eq("agendamento_id", agendamento.id);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const materias: string[] = (agendamento?.materias_selecionadas && agendamento.materias_selecionadas.length > 0)
+    ? agendamento.materias_selecionadas
+    : MATERIAS_PADRAO;
+
+  const resPorMateria = new Map<string, any>();
+  (resultados ?? []).forEach((r: any) => resPorMateria.set(r.materia, r));
+
+  return (
+    <Dialog open={!!agendamento} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Detalhes do Agendamento</DialogTitle>
+        </DialogHeader>
+        {agendamento && (
+          <div className="space-y-4">
+            <div className="rounded-lg border p-3 bg-muted/20 grid grid-cols-2 gap-2 text-sm">
+              <div><b>Nome:</b> {agendamento.nome}</div>
+              <div><b>CTR:</b> {agendamento.ctrDisplay ?? "—"}</div>
+              <div><b>Telefone:</b> {agendamento.telefoneDisplay ?? "—"}</div>
+              <div><b>Polo:</b> {agendamento.poloDisplay ?? "—"}</div>
+              <div><b>Data:</b> {agendamento.data_prova ? new Date(agendamento.data_prova + "T00:00:00").toLocaleDateString("pt-BR") : "—"}</div>
+              <div><b>Horário:</b> {agendamento.hora_prova?.slice(0, 5) ?? "—"}</div>
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold mb-2">Resultados por matéria</div>
+              {isLoading ? (
+                <div className="py-4 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {materias.map((m) => {
+                    const r = resPorMateria.get(m);
+                    let statusLabel = "Pendente";
+                    let cls = "bg-gray-50 border-gray-200 text-gray-600";
+                    if (r) {
+                      if (r.finalizado_em) {
+                        statusLabel = r.aprovado ? "✅ Aprovado" : "❌ Reprovado";
+                        cls = r.aprovado
+                          ? "bg-green-50 border-green-200 text-green-700"
+                          : "bg-red-50 border-red-200 text-red-700";
+                      } else {
+                        statusLabel = "Em andamento";
+                        cls = "bg-amber-50 border-amber-200 text-amber-700";
+                      }
+                    }
+                    return (
+                      <div key={m} className={`rounded-md border p-2 text-xs ${cls}`}>
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold">{m}</span>
+                          <span>{statusLabel}</span>
+                        </div>
+                        {r?.finalizado_em && (
+                          <div className="mt-1 text-[11px] opacity-80">
+                            {r.total_acertos}/{r.total_questoes} acertos ({Number(r.percentual ?? 0).toFixed(1)}%)
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button onClick={onClose}>Fechar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
