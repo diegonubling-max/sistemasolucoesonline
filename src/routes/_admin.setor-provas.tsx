@@ -1324,35 +1324,9 @@ function EnviosTab() {
           <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} className="w-[150px]" title="Data fim" />
         </div>
 
-        {lotesComContagem.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {lotesComContagem.map(({ lote, count }) => {
-              const active = loteFilter === lote;
-              return (
-                <button
-                  key={lote}
-                  type="button"
-                  onClick={() => setLoteFilter(active ? "all" : lote)}
-                  className={`rounded-md border px-3 py-2 text-sm transition-colors ${
-                    active
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card hover:bg-muted border-border"
-                  }`}
-                >
-                  <span className="font-medium">{lote}</span>
-                  <span className={`ml-2 ${active ? "opacity-90" : "text-muted-foreground"}`}>
-                    {count} {count === 1 ? "aluno" : "alunos"}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-
-
-
         <Table>
+
+
 
           <TableHeader>
             <TableRow>
