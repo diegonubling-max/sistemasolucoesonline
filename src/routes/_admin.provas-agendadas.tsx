@@ -50,10 +50,9 @@ function ProvasAgendadasPage() {
       let q = supabase
         .from("prova_agendamentos")
         .select(`
-          id, data_prova, hora_prova, status, docs_solicitados, docs_recebidos,
+          id, aluno_id, data_prova, hora_prova, status, docs_solicitados, docs_recebidos,
           is_externo, nome_aluno, telefone, polo, ctr,
-          situacao_financeira, resultado, observacao,
-          aluno:alunos ( id, nome, ctr, telefone )
+          situacao_financeira, resultado, observacao
         `)
         .order("data_prova", { ascending: true });
       if (dataInicio) q = q.gte("data_prova", dataInicio);
@@ -62,12 +61,27 @@ function ProvasAgendadasPage() {
       if (error) throw error;
       const agendamentos = (data ?? []) as any[];
 
+      const alunoIds = Array.from(
+        new Set(agendamentos.filter((a) => !a.is_externo && a.aluno_id).map((a) => a.aluno_id))
+      );
+      let alunosMap = new Map<string, any>();
+      if (alunoIds.length > 0) {
+        const { data: alunosData, error: alunosErr } = await supabase
+          .from("alunos")
+          .select("id, nome, ctr, telefone")
+          .in("id", alunoIds);
+        if (alunosErr) throw alunosErr;
+        (alunosData ?? []).forEach((a: any) => alunosMap.set(a.id, a));
+      }
+
       return agendamentos.map((a) => {
-        const nome = a.is_externo ? (a.nome_aluno ?? "—") : (a.aluno?.nome ?? "—");
-        const ctr = a.is_externo ? (a.ctr ?? "—") : (a.aluno?.ctr ?? "—");
-        const telefone = a.is_externo ? (a.telefone ?? "—") : (a.aluno?.telefone ?? "—");
+        const aluno = a.aluno_id ? alunosMap.get(a.aluno_id) : null;
+        const nome = a.is_externo ? (a.nome_aluno ?? "—") : (aluno?.nome ?? "—");
+        const ctr = a.is_externo ? (a.ctr ?? "—") : (aluno?.ctr ?? "—");
+        const telefone = a.is_externo ? (a.telefone ?? "—") : (aluno?.telefone ?? "—");
         return {
           ...a,
+          aluno,
           nome,
           ctrDisplay: ctr,
           telefoneDisplay: telefone,
@@ -75,6 +89,7 @@ function ProvasAgendadasPage() {
       });
     },
   });
+
 
   const filtered = useMemo(() => {
     const base = (rows ?? []).filter((r: any) => {
