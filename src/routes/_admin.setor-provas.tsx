@@ -237,7 +237,7 @@ function DocumentacaoTab() {
                 <TableHead className="w-[20%]">Aluno</TableHead>
                 <TableHead className="w-[12%]">Polo</TableHead>
                 <TableHead className="w-[12%]">Vendedora</TableHead>
-                <TableHead className="w-[9%]">Documentação</TableHead>
+                <TableHead className="w-[11%]">Documentação</TableHead>
                 <TableHead className="w-[12%]">Certificadora</TableHead>
                 <TableHead className="w-[7%]">Lote</TableHead>
                 <TableHead className="w-[9%]">Data Envio</TableHead>
@@ -263,9 +263,9 @@ function DocumentacaoTab() {
                     <TableCell className="truncate">{r.quem_vendeu ?? "-"}</TableCell>
                     <TableCell>
                       {status === "completa" ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✅</Badge>
+                        <Badge className="rounded-full bg-green-500 hover:bg-green-500 text-white text-xs px-2 py-0.5">✅ Completa</Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">⚠️</Badge>
+                        <Badge className="rounded-full bg-red-500 hover:bg-red-500 text-white text-xs px-2 py-0.5">⚠️ Incompleta</Badge>
                       )}
                     </TableCell>
 
