@@ -133,6 +133,9 @@ Boa prova! 🍀`;
       if (!extNome.trim() || !extTelefone.trim() || !extPoloId || !extData || !extHora) {
         throw new Error("Preencha todos os campos");
       }
+      if (extMaterias.length === 0) {
+        throw new Error("Selecione pelo menos uma matéria");
+      }
       let quemAgendou = session?.user.email ?? "sistema";
       if (session?.user.id) {
         const { data: colab } = await supabase
@@ -147,7 +150,8 @@ Boa prova! 🍀`;
         p_hora_prova: extHora,
         p_situacao_financeira: extSitFin,
         p_quem_agendou: quemAgendou,
-      });
+        p_materias: extMaterias,
+      } as any);
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
       const r = row as { aluno_externo_id: string; ctr: string; senha: string };
@@ -165,6 +169,7 @@ Boa prova! 🍀`;
       setExternoResult({ ctr: row.ctr, senha: row.senha, data: row.dataUsed, hora: row.horaUsed, whatsSent: row.whatsSent });
       setExternoOpen(false);
       setExtNome(""); setExtTelefone(""); setExtData(""); setExtHora(""); setExtSitFin("ja_pago");
+      setExtMaterias([...MATERIAS_PADRAO]);
       qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
     },
     onError: (e: any) => toast.error("Erro ao cadastrar externo", { description: e.message }),
