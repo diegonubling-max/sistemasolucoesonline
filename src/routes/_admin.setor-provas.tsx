@@ -237,7 +237,7 @@ function DocumentacaoTab() {
                 <TableHead className="w-[20%]">Aluno</TableHead>
                 <TableHead className="w-[12%]">Polo</TableHead>
                 <TableHead className="w-[12%]">Vendedora</TableHead>
-                <TableHead className="w-[9%]">Documentação</TableHead>
+                <TableHead className="w-[11%]">Documentação</TableHead>
                 <TableHead className="w-[12%]">Certificadora</TableHead>
                 <TableHead className="w-[7%]">Lote</TableHead>
                 <TableHead className="w-[9%]">Data Envio</TableHead>
