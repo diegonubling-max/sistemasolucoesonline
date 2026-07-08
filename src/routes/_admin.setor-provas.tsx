@@ -984,102 +984,63 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
 /* ============================== ABA 2: ENVIOS ============================== */
 
 function EnviosTab() {
-  const qc = useQueryClient();
-  const [novoOpen, setNovoOpen] = useState(false);
-  const [verLote, setVerLote] = useState<any>(null);
-
-  const { data: lotes, isLoading } = useQuery({
-    queryKey: ["sp-lotes"],
+  const selectedPoloId = usePoloFilter();
+  const { data: rows, isLoading } = useQuery({
+    queryKey: ["sp-envios-rows", selectedPoloId],
     queryFn: async () => {
-      const { data } = await sb
-        .from("lotes")
-        .select("id, mes_ano, data_envio, enviado, certificadoras(nome), lote_alunos(id)")
-        .order("created_at", { ascending: false });
-      return data ?? [];
-    },
-  });
-
-  const marcarEnviado = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await sb.from("lotes").update({ enviado: true, data_envio: new Date().toISOString().slice(0, 10) }).eq("id", id);
+      const { data, error } = await sb
+        .from("documentacao_alunos")
+        .select(`
+          id, nome_aluno, polo, lote, data_envio,
+          certificadoras(nome),
+          alunos(polo_id, polos(nome))
+        `)
+        .not("data_envio", "is", null)
+        .order("data_envio", { ascending: false });
       if (error) throw error;
+      let list = data ?? [];
+      if (selectedPoloId !== "all") {
+        list = list.filter((r: any) => r.alunos?.polo_id === selectedPoloId);
+      }
+      return list;
     },
-    onSuccess: () => {
-      toast.success("Lote marcado como enviado");
-      qc.invalidateQueries({ queryKey: ["sp-lotes"] });
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-  const deleteLote = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await sb.from("lotes").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Lote excluído");
-      qc.invalidateQueries({ queryKey: ["sp-lotes"] });
-    },
-    onError: (e: any) => toast.error(e.message),
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => setNovoOpen(true)}><Plus className="h-4 w-4 mr-2" /> Novo Lote</Button>
-      </div>
-      <Card>
-        <CardContent className="pt-6 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Lote</TableHead>
-                <TableHead>Certificadora</TableHead>
-                <TableHead>Total Alunos</TableHead>
-                <TableHead>Data Envio</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+    <Card>
+      <CardContent className="pt-6 overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Aluno</TableHead>
+              <TableHead>Polo</TableHead>
+              <TableHead>Certificadora</TableHead>
+              <TableHead>Lote</TableHead>
+              <TableHead>Data Envio</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow><TableCell colSpan={5} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+            ) : rows?.length === 0 ? (
+              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum envio registrado.</TableCell></TableRow>
+            ) : rows?.map((r: any) => (
+              <TableRow key={r.id}>
+                <TableCell className="font-medium">{r.nome_aluno}</TableCell>
+                <TableCell>{r.alunos?.polos?.nome ?? r.polo ?? "-"}</TableCell>
+                <TableCell>{r.certificadoras?.nome ?? "-"}</TableCell>
+                <TableCell>{r.lote ?? "-"}</TableCell>
+                <TableCell>{r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
-              ) : lotes?.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum lote cadastrado.</TableCell></TableRow>
-              ) : lotes?.map((l: any) => (
-                <TableRow key={l.id}>
-                  <TableCell className="font-medium">{l.mes_ano}</TableCell>
-                  <TableCell>{l.certificadoras?.nome ?? "-"}</TableCell>
-                  <TableCell>{l.lote_alunos?.length ?? 0}</TableCell>
-                  <TableCell>{l.data_envio ? new Date(l.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant={l.enviado ? "default" : "secondary"}>{l.enviado ? "Enviado" : "Pendente"}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button size="sm" variant="ghost" onClick={() => setVerLote(l)} title="Ver alunos">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {!l.enviado && (
-                      <Button size="sm" variant="ghost" onClick={() => marcarEnviado.mutate(l.id)} title="Marcar como enviado">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      </Button>
-                    )}
-                    <Button size="sm" variant="ghost" onClick={() => { if (confirm("Excluir lote?")) deleteLote.mutate(l.id); }} title="Excluir">
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      <NovoLoteModal open={novoOpen} onClose={() => setNovoOpen(false)} />
-      {verLote && <AlunosLoteModal lote={verLote} onClose={() => setVerLote(null)} />}
-    </div>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
 
-function NovoLoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+function _UnusedNovoLoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
   const [mesAno, setMesAno] = useState("");
   const [certId, setCertId] = useState("");
