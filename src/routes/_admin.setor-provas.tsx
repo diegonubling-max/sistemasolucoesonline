@@ -329,7 +329,7 @@ function DocumentacaoTab() {
                       )}
                     </TableCell>
 
-                    <TableCell className="text-right space-x-1">
+                    <TableCell className="text-right whitespace-nowrap space-x-1">
                       <Button size="sm" variant="ghost" onClick={() => setEncDocId(r.id)} title="Encaminhar para certificadora">
                         <Send className="h-4 w-4" />
                       </Button>
