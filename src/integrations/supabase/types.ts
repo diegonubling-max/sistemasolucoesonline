@@ -2414,6 +2414,13 @@ export type Database = {
           total_q: number
         }[]
       }
+      gerar_ctr_externo_existente: {
+        Args: { p_agendamento_id: string }
+        Returns: {
+          ctr: string
+          senha: string
+        }[]
+      }
       get_contrato_publico: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
