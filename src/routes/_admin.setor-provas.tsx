@@ -1374,8 +1374,8 @@ function EnviosTab() {
               <TableHead className="w-[9%]">Certificadora</TableHead>
               <TableHead className="w-[9%]">Data Envio</TableHead>
               <TableHead className="w-[7%]">Lote</TableHead>
-              <TableHead className="w-[8%]">Documentação</TableHead>
-              <TableHead className="w-[12%]">Declaração</TableHead>
+              <TableHead className="w-[10%]">Documentação</TableHead>
+              <TableHead className="w-[10%]">Declaração</TableHead>
               <TableHead className="w-[12%] text-right whitespace-nowrap">Ações</TableHead>
             </TableRow>
           </TableHeader>
