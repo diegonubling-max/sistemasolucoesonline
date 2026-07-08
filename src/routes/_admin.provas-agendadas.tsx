@@ -38,12 +38,73 @@ const HOJE = new Date().toISOString().slice(0, 10);
 
 function ProvasAgendadasPage() {
   const qc = useQueryClient();
+  const { session } = useAuth();
   const [tab, setTab] = useState<TabKey>("agendada");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [sitFinFilter, setSitFinFilter] = useState<SitFinFilter>("todos");
   const [tipoFilter, setTipoFilter] = useState<TipoFilter>("todos");
   const [editing, setEditing] = useState<any | null>(null);
+  const [externoOpen, setExternoOpen] = useState(false);
+  const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string } | null>(null);
+  const [extNome, setExtNome] = useState("");
+  const [extTelefone, setExtTelefone] = useState("");
+  const [extPoloId, setExtPoloId] = useState("");
+  const [extData, setExtData] = useState("");
+  const [extHora, setExtHora] = useState("");
+  const [extSitFin, setExtSitFin] = useState<"ja_pago" | "boleto">("ja_pago");
+
+  const { data: polos } = useQuery({
+    queryKey: ["polos-externo-select"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("polos").select("id, nome").order("nome");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Default polo = Florianópolis
+  useEffect(() => {
+    if (!extPoloId && polos && polos.length > 0) {
+      const flori = polos.find((p: any) => (p.nome ?? "").toLowerCase().includes("florian"));
+      setExtPoloId(flori?.id ?? polos[0].id);
+    }
+  }, [polos, extPoloId]);
+
+  const criarExterno = useMutation({
+    mutationFn: async () => {
+      if (!extNome.trim() || !extTelefone.trim() || !extPoloId || !extData || !extHora) {
+        throw new Error("Preencha todos os campos");
+      }
+      let quemAgendou = session?.user.email ?? "sistema";
+      if (session?.user.id) {
+        const { data: colab } = await supabase
+          .from("colaboradores").select("nome").eq("user_id", session.user.id).maybeSingle();
+        if (colab?.nome) quemAgendou = colab.nome;
+      }
+      const { data, error } = await supabase.rpc("criar_aluno_externo_com_prova", {
+        p_nome: extNome.trim(),
+        p_telefone: extTelefone.trim(),
+        p_polo_id: extPoloId,
+        p_data_prova: extData,
+        p_hora_prova: extHora,
+        p_situacao_financeira: extSitFin,
+        p_quem_agendou: quemAgendou,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row as { aluno_externo_id: string; ctr: string; senha: string };
+    },
+    onSuccess: (row) => {
+      setExternoResult({ ctr: row.ctr, senha: row.senha, data: extData, hora: extHora });
+      setExternoOpen(false);
+      setExtNome(""); setExtTelefone(""); setExtData(""); setExtHora(""); setExtSitFin("ja_pago");
+      qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
+    },
+    onError: (e: any) => toast.error("Erro ao cadastrar externo", { description: e.message }),
+  });
+
+
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["provas-agendadas-list", dataInicio, dataFim],
