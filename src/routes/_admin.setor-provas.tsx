@@ -1361,9 +1361,11 @@ function EnviosTab() {
           }}
         />
       )}
+      {viewRow && <VisualizarCertModal row={viewRow} onClose={() => setViewRow(null)} />}
     </Card>
   );
 }
+
 
 
 function _UnusedNovoLoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
