@@ -186,7 +186,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
       )}
 
 
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
         {items.map((item) => {
           const isAdmin = session?.user?.email === 'admin@admin.com' || isSuperAdmin;
           const isVendedor = colaborador?.setor === 'Vendedor' && !isAdmin;
