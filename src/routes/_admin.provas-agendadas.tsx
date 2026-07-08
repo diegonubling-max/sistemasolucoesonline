@@ -385,7 +385,13 @@ function ProvasAgendadasPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Provas Agendadas" description="Acompanhe as provas agendadas dos alunos" />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <PageHeader title="Provas Agendadas" description="Acompanhe as provas agendadas dos alunos" />
+        <Button onClick={() => setExternoOpen(true)} className="bg-primary">
+          <UserPlus className="h-4 w-4 mr-2" /> Agendar Externo
+        </Button>
+      </div>
+
 
       <Card>
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
