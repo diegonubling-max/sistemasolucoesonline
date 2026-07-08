@@ -245,19 +245,18 @@ function DocumentacaoTab() {
                 <TableHead className="w-[20%]">Aluno</TableHead>
                 <TableHead className="w-[12%]">Polo</TableHead>
                 <TableHead className="w-[12%]">Vendedora</TableHead>
-                <TableHead className="w-[11%]">Documentação</TableHead>
-                <TableHead className="w-[12%]">Certificadora</TableHead>
-                <TableHead className="w-[7%]">Lote</TableHead>
-                <TableHead className="w-[9%]">Data Envio</TableHead>
-                <TableHead className="w-[11%]">Declaração</TableHead>
+                <TableHead className="w-[13%]">Documentação</TableHead>
+                <TableHead className="w-[14%]">Certificadora</TableHead>
+                <TableHead className="w-[8%]">Lote</TableHead>
+                <TableHead className="w-[13%]">Declaração</TableHead>
                 <TableHead className="w-[8%] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum aluno encontrado.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum aluno encontrado.</TableCell></TableRow>
               ) : filtered.map((r: any) => {
                 const status = r.documentacao_completa ? "completa" : "incompleta";
                 const ctrLabel = r.alunos?.ctr ?? r.ctr;
@@ -271,7 +270,7 @@ function DocumentacaoTab() {
                     <TableCell className="truncate">{r.quem_vendeu ?? "-"}</TableCell>
                     <TableCell>
                       {status === "completa" ? (
-                        <Badge className="rounded-full bg-green-500 hover:bg-green-500 text-white text-xs px-2 py-0.5">✅ Completa</Badge>
+                        <Badge className="rounded-full bg-green-700 hover:bg-green-700 text-white text-xs px-2 py-0.5">✅ Completa</Badge>
                       ) : (
                         <Badge className="rounded-full bg-red-500 hover:bg-red-500 text-white text-xs px-2 py-0.5">⚠️ Incompleta</Badge>
                       )}
@@ -279,7 +278,6 @@ function DocumentacaoTab() {
 
                     <TableCell className="truncate">{r.certificadoras?.nome ?? "-"}</TableCell>
                     <TableCell className="truncate">{r.lote ?? "-"}</TableCell>
-                    <TableCell>{r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
                     <TableCell>
                       {r.declaracao_gerada ? (
                         <div className="flex items-center gap-1">
