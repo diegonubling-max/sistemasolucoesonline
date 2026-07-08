@@ -93,7 +93,9 @@ function DocumentacaoTab() {
   const [loteFilter, setLoteFilter] = useState<string>("all");
   const [editDocId, setEditDocId] = useState<string | null>(null);
   const [encDocId, setEncDocId] = useState<string | null>(null);
+  const [declDoc, setDeclDoc] = useState<{ id: string; nome: string } | null>(null);
   const [novoOpen, setNovoOpen] = useState(false);
+
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["sp-doc-rows", selectedPoloId],
