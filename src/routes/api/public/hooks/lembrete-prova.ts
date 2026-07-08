@@ -48,7 +48,7 @@ export const Route = createFileRoute("/api/public/hooks/lembrete-prova")({
         try {
           const { data: provas, error } = await supabaseAdmin
             .from("prova_agendamentos")
-            .select("id, aluno_id, hora_prova, data_prova, status, alunos:aluno_id(id, nome, telefone)")
+            .select("id, aluno_id, hora_prova, data_prova, status, is_externo, nome_aluno, telefone, ctr, alunos:aluno_id(id, nome, telefone)")
             .eq("data_prova", hojeISO)
             .eq("status", "agendada")
             .gte("hora_prova", horaInicio)
@@ -56,11 +56,49 @@ export const Route = createFileRoute("/api/public/hooks/lembrete-prova")({
           if (error) throw error;
 
           for (const p of provas ?? []) {
+            const isExterno = !!(p as any).is_externo;
             const aluno = (p as any)?.alunos;
-            if (!aluno?.telefone) continue;
+            const telefone = isExterno ? (p as any).telefone : aluno?.telefone;
+            const nomeCompleto = isExterno ? (p as any).nome_aluno : aluno?.nome;
+            const alunoId = isExterno ? null : aluno?.id ?? null;
+            if (!telefone) continue;
+
             const hora = String(p.hora_prova).substring(0, 5);
-            const nome = getPrimeiroNome(aluno.nome);
-            const mensagem = `Oi, *${nome}*! 👋
+            const nome = getPrimeiroNome(nomeCompleto ?? "");
+
+            let mensagem: string;
+            if (isExterno && (p as any).ctr) {
+              const ctr = (p as any).ctr as string;
+              const { data: ext } = await supabaseAdmin
+                .from("alunos_externos")
+                .select("senha")
+                .eq("ctr", ctr)
+                .maybeSingle();
+              const senha = ext?.senha ?? "";
+              mensagem = `Olá ${nome}! 👋
+
+Lembrete: sua *prova online* começa em 30 minutos! 📝
+
+🕐 *Horário:* ${hora}
+🔑 *CTR:* ${ctr}
+🔒 *Senha:* ${senha}
+
+Acesse aqui:
+👉 https://sistemasolucoesonline.lovable.app/aluno/login
+
+Boa prova! 🍀`;
+            } else if (isExterno) {
+              mensagem = `Olá ${nome}! 👋
+
+Lembrete: sua *prova online* começa em 30 minutos! 📝
+
+🕐 *Horário:* ${hora}
+
+Entre em contato com o polo para receber seus dados de acesso.
+
+Boa prova! 🍀`;
+            } else {
+              mensagem = `Oi, *${nome}*! 👋
 
 Lembrete: sua prova está agendada para hoje às *${hora}*. ⏰
 
@@ -69,6 +107,7 @@ Certifique-se de estar com uma boa conexão de internet na hora da prova, para n
 Caso queira reagendar para uma nova data e horário, nos comunique.
 
 Boa sorte! 🍀`;
+            }
 
             try {
               const res = await fetch(`${Z_API_BASE}/send-text`, {
@@ -77,21 +116,21 @@ Boa sorte! 🍀`;
                   "Content-Type": "application/json",
                   "Client-Token": Z_API_CLIENT_TOKEN,
                 },
-                body: JSON.stringify({ phone: formatPhone(aluno.telefone), message: mensagem }),
+                body: JSON.stringify({ phone: formatPhone(telefone), message: mensagem }),
               });
               const body = await res.text().catch(() => "");
               if (!res.ok) {
                 await supabaseAdmin.from("zapi_mensagens_log").insert({
-                  aluno_id: aluno.id,
+                  aluno_id: alunoId,
                   tipo: "lembrete_prova",
                   mensagem,
                   status: "erro",
                   erro_detalhe: `HTTP ${res.status}: ${body}`,
                 });
-                result.erros.push(`aluno ${aluno.id}: HTTP ${res.status}`);
+                result.erros.push(`ag ${p.id}: HTTP ${res.status}`);
               } else {
                 await supabaseAdmin.from("zapi_mensagens_log").insert({
-                  aluno_id: aluno.id,
+                  aluno_id: alunoId,
                   tipo: "lembrete_prova",
                   mensagem,
                   status: "enviado",
@@ -100,13 +139,13 @@ Boa sorte! 🍀`;
               }
             } catch (e: any) {
               await supabaseAdmin.from("zapi_mensagens_log").insert({
-                aluno_id: aluno.id,
+                aluno_id: alunoId,
                 tipo: "lembrete_prova",
                 mensagem,
                 status: "erro",
                 erro_detalhe: e?.message || String(e),
               });
-              result.erros.push(`aluno ${aluno.id}: ${e?.message || e}`);
+              result.erros.push(`ag ${p.id}: ${e?.message || e}`);
             }
           }
         } catch (e: any) {
