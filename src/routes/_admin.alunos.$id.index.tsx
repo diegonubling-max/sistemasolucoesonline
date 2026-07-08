@@ -29,7 +29,7 @@ import { generateAsaasCobrar, asaasRequest } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
-import { PerfilVocacionalTab } from "@/components/admin/alunos/PerfilVocacionalTab";
+
 import { MensagensTab } from "@/components/admin/alunos/MensagensTab";
 import { TrocarPacoteModal } from "@/components/admin/TrocarPacoteModal";
 
