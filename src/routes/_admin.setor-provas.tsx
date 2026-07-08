@@ -1120,36 +1120,116 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
 
 /* ============================== ABA 2: ENVIOS ============================== */
 
+const POLOS_FIXOS = ["Florianópolis", "Matriz", "Novo Hamburgo", "Porto Alegre", "Outros"];
+
 function EnviosTab() {
   const qc = useQueryClient();
-  const selectedPoloId = usePoloFilter();
   const [declDoc, setDeclDoc] = useState<{ id: string; nome: string; texto?: string } | null>(null);
+  const [search, setSearch] = useState("");
+  const [certFilter, setCertFilter] = useState("all");
+  const [poloFilter, setPoloFilter] = useState("all");
+  const [vendedorFilter, setVendedorFilter] = useState("all");
+  const [dataIni, setDataIni] = useState("");
+  const [dataFim, setDataFim] = useState("");
+  const [ordem, setOrdem] = useState("data_desc");
+
   const { data: rows, isLoading } = useQuery({
-    queryKey: ["sp-envios-rows", selectedPoloId],
+    queryKey: ["sp-envios-rows"],
     queryFn: async () => {
       const { data, error } = await sb
         .from("documentacao_alunos")
         .select(`
-          id, nome_aluno, polo, quem_vendeu, lote, data_envio,
+          id, nome_aluno, polo, quem_vendeu, lote, data_envio, certificadora_id,
           documentacao_completa, declaracao_gerada, declaracao_data,
           certificadoras(nome),
           alunos(polo_id, polos(nome))
         `)
-        .not("data_envio", "is", null)
-        .order("data_envio", { ascending: false });
+        .not("data_envio", "is", null);
       if (error) throw error;
-      let list = data ?? [];
-      if (selectedPoloId !== "all") {
-        list = list.filter((r: any) => r.alunos?.polo_id === selectedPoloId);
-      }
-      return list;
+      return data ?? [];
     },
   });
 
+  const { data: certs } = useQuery({
+    queryKey: ["sp-certs-active"],
+    queryFn: async () => {
+      const { data } = await sb.from("certificadoras").select("id, nome").eq("ativo", true).order("nome");
+      return data ?? [];
+    },
+  });
+
+  const vendedores = useMemo(
+    () => Array.from(new Set((rows ?? []).map((r: any) => r.quem_vendeu).filter(Boolean))),
+    [rows]
+  );
+
+  const filtered = useMemo(() => {
+    let list = (rows ?? []).filter((r: any) => {
+      if (search && !r.nome_aluno?.toLowerCase().includes(search.toLowerCase())) return false;
+      if (certFilter !== "all" && r.certificadora_id !== certFilter) return false;
+      if (poloFilter !== "all") {
+        const p = r.alunos?.polos?.nome ?? r.polo;
+        if (p !== poloFilter) return false;
+      }
+      if (vendedorFilter !== "all" && r.quem_vendeu !== vendedorFilter) return false;
+      if (dataIni && (!r.data_envio || r.data_envio < dataIni)) return false;
+      if (dataFim && (!r.data_envio || r.data_envio > dataFim)) return false;
+      return true;
+    });
+    list = [...list].sort((a: any, b: any) => {
+      if (ordem === "nome_az") return (a.nome_aluno ?? "").localeCompare(b.nome_aluno ?? "");
+      if (ordem === "nome_za") return (b.nome_aluno ?? "").localeCompare(a.nome_aluno ?? "");
+      const da = a.data_envio ?? "";
+      const db = b.data_envio ?? "";
+      return ordem === "data_asc" ? da.localeCompare(db) : db.localeCompare(da);
+    });
+    return list;
+  }, [rows, search, certFilter, poloFilter, vendedorFilter, dataIni, dataFim, ordem]);
+
   return (
     <Card>
-      <CardContent className="pt-6 overflow-x-auto">
+      <CardContent className="pt-6 space-y-4 overflow-x-auto">
+        <div className="flex flex-wrap gap-2">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar aluno..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          </div>
+          <Select value={certFilter} onValueChange={setCertFilter}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Certificadora" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas certificadoras</SelectItem>
+              {(certs ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={poloFilter} onValueChange={setPoloFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Polo" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos polos</SelectItem>
+              {POLOS_FIXOS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={vendedorFilter} onValueChange={setVendedorFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Vendedor" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos vendedores</SelectItem>
+              {vendedores.map((v: any) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Input type="date" value={dataIni} onChange={(e) => setDataIni(e.target.value)} className="w-[150px]" title="Data início" />
+          <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} className="w-[150px]" title="Data fim" />
+          <Select value={ordem} onValueChange={setOrdem}>
+            <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="data_desc">Data de Envio (mais recente)</SelectItem>
+              <SelectItem value="data_asc">Data de Envio (mais antiga)</SelectItem>
+              <SelectItem value="nome_az">Nome A-Z</SelectItem>
+              <SelectItem value="nome_za">Nome Z-A</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <Table>
+
           <TableHeader>
             <TableRow>
               <TableHead>Aluno</TableHead>
