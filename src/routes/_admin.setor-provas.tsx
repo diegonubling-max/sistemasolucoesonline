@@ -304,129 +304,255 @@ function GerarDeclaracaoButton({ aluno }: { aluno: any }) {
 
 /* ============================== MODAL EDITAR REGISTRO ============================== */
 
-const DOC_FIELDS = [
-  { id: "rg_cpf", label: "RG e CPF" },
-  { id: "historico_fundamental", label: "Histórico Ensino Fundamental" },
-  { id: "historico_fund_medio", label: "Histórico Ensino Fund. e Médio" },
-  { id: "comprovante_residencia", label: "Comprovante de Residência" },
+const DOC_ENV_FIELDS: { key: string; label: string }[] = [
+  { key: "doc_rg_cpf", label: "RG e CPF" },
+  { key: "doc_comprovante_residencia", label: "Comprovante de Residência" },
+  { key: "doc_historico_fundamental", label: "Histórico Ensino Fundamental" },
+  { key: "doc_historico_fundamental_medio", label: "Histórico Ensino Fund. e Médio" },
 ];
-const VALID_FIELDS = [
-  { id: "rec_firma", label: "Rec. Firma" },
-  { id: "d_oficial", label: "D. Oficial" },
-  { id: "visto_confere", label: "Visto Confere" },
+const CTRL_FIELDS: { key: string; label: string }[] = [
+  { key: "documentacao_completa", label: "Documentação Completa" },
+  { key: "necessita_reconhecimento_firma", label: "Rec. Firma" },
+  { key: "necessita_diario_oficial", label: "Diário Oficial" },
+  { key: "necessita_visto_confere", label: "Visto Confere" },
 ];
+const POLO_OPTIONS = ["Florianópolis", "Matriz", "Novo Hamburgo", "Porto Alegre", "Outros"];
 
-function EditarRegistroModal({ alunoId, onClose }: { alunoId: string; onClose: () => void }) {
+function EditarRegistroModal({ docId, onClose }: { docId: string; onClose: () => void }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState<any>({
-    rg_cpf: false, historico_fundamental: false, historico_fund_medio: false,
-    comprovante_residencia: false, outros: false, outros_descricao: "",
-    rec_firma: false, d_oficial: false, visto_confere: false,
-  });
+  const [form, setForm] = useState<any>(null);
+  const [novosArquivos, setNovosArquivos] = useState<File[]>([]);
+  const [dragOver, setDragOver] = useState(false);
 
-  const { data: aluno } = useQuery({
-    queryKey: ["sp-aluno-edit", alunoId],
+  const { data: doc, isLoading } = useQuery({
+    queryKey: ["sp-doc-edit", docId],
     queryFn: async () => {
-      const { data } = await sb.from("alunos").select("id, nome, telefone, vendedora, polos(nome)").eq("id", alunoId).maybeSingle();
+      const { data, error } = await sb.from("documentacao_alunos").select("*").eq("id", docId).maybeSingle();
+      if (error) throw error;
       return data;
     },
   });
-  const { data: doc } = useQuery({
-    queryKey: ["sp-aluno-doc", alunoId],
+
+  const { data: certs } = useQuery({
+    queryKey: ["sp-certs-active"],
     queryFn: async () => {
-      const { data } = await sb.from("aluno_documentos").select("*").eq("aluno_id", alunoId).maybeSingle();
-      return data;
+      const { data } = await sb.from("certificadoras").select("id, nome").eq("ativo", true).order("nome");
+      return data ?? [];
     },
   });
 
   useEffect(() => {
-    if (doc) {
-      setForm({
-        rg_cpf: !!doc.rg_cpf, historico_fundamental: !!doc.historico_fundamental,
-        historico_fund_medio: !!doc.historico_fund_medio,
-        comprovante_residencia: !!doc.comprovante_residencia,
-        outros: !!doc.outros, outros_descricao: doc.outros_descricao ?? "",
-        rec_firma: !!doc.rec_firma, d_oficial: !!doc.d_oficial, visto_confere: !!doc.visto_confere,
-      });
-    }
+    if (doc) setForm({ ...doc, arquivos_paths: doc.arquivos_paths ?? [] });
   }, [doc]);
+
+  const setF = (k: string, v: any) => setForm((prev: any) => ({ ...prev, [k]: v }));
+
+  const removeArquivo = (path: string) => {
+    setForm((prev: any) => ({
+      ...prev,
+      arquivos_paths: (prev.arquivos_paths ?? []).filter((p: string) => p !== path),
+      _removidos: [...(prev._removidos ?? []), path],
+    }));
+  };
 
   const saveMut = useMutation({
     mutationFn: async () => {
-      if (doc) {
-        const { error } = await sb.from("aluno_documentos").update(form).eq("aluno_id", alunoId);
-        if (error) throw error;
-      } else {
-        const { error } = await sb.from("aluno_documentos").insert({ aluno_id: alunoId, ...form });
-        if (error) throw error;
+      if (!form) throw new Error("Formulário não carregado");
+      // Upload novos arquivos
+      const novosPaths: string[] = [];
+      for (const file of novosArquivos) {
+        const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+        const path = `${docId}/${Date.now()}_${safeName}`;
+        const { error: upErr } = await supabase.storage.from("documentos-alunos").upload(path, file, { upsert: false });
+        if (upErr) throw upErr;
+        novosPaths.push(path);
       }
+      // Remover arquivos deletados do storage
+      const removidos: string[] = form._removidos ?? [];
+      if (removidos.length) {
+        await supabase.storage.from("documentos-alunos").remove(removidos);
+      }
+      const arquivos_paths = [...(form.arquivos_paths ?? []), ...novosPaths];
+
+      const payload = {
+        nome_aluno: form.nome_aluno,
+        polo: form.polo,
+        quem_vendeu: form.quem_vendeu,
+        telefone: form.telefone,
+        ctr: form.ctr,
+        doc_rg_cpf: !!form.doc_rg_cpf,
+        doc_comprovante_residencia: !!form.doc_comprovante_residencia,
+        doc_historico_fundamental: !!form.doc_historico_fundamental,
+        doc_historico_fundamental_medio: !!form.doc_historico_fundamental_medio,
+        doc_outros: !!form.doc_outros,
+        doc_outros_descricao: form.doc_outros_descricao,
+        documentacao_completa: !!form.documentacao_completa,
+        necessita_reconhecimento_firma: !!form.necessita_reconhecimento_firma,
+        necessita_diario_oficial: !!form.necessita_diario_oficial,
+        necessita_visto_confere: !!form.necessita_visto_confere,
+        certificadora_id: form.certificadora_id || null,
+        lote: form.lote || null,
+        data_envio: form.data_envio || null,
+        observacao: form.observacao,
+        arquivos_paths,
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = await sb.from("documentacao_alunos").update(payload).eq("id", docId);
+      if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Documentos atualizados");
+      toast.success("Registro atualizado");
       qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
-      qc.invalidateQueries({ queryKey: ["sp-aluno-doc", alunoId] });
+      qc.invalidateQueries({ queryKey: ["sp-envios-rows"] });
       onClose();
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Registro — Setor de Provas</DialogTitle>
-          <DialogDescription>Documentação, arquivos e validações do aluno</DialogDescription>
+          <DialogTitle>Editar Registro — Documentação</DialogTitle>
+          <DialogDescription>Atualize os dados, arquivos e status do aluno</DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div><Label>Nome do Aluno</Label><Input value={aluno?.nome ?? ""} readOnly /></div>
-          <div><Label>Polo</Label><Input value={aluno?.polos?.nome ?? ""} readOnly /></div>
-          <div><Label>Quem fez a venda</Label><Input value={aluno?.vendedora ?? ""} readOnly /></div>
-          <div><Label>Telefone</Label><Input value={aluno?.telefone ?? ""} readOnly /></div>
-        </div>
+        {isLoading || !form ? (
+          <div className="py-8 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2"><Label>Nome do Aluno</Label><Input value={form.nome_aluno ?? ""} onChange={(e) => setF("nome_aluno", e.target.value)} /></div>
+              <div>
+                <Label>Polo</Label>
+                <Select value={form.polo ?? ""} onValueChange={(v) => setF("polo", v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {POLO_OPTIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Quem fez a venda</Label><Input value={form.quem_vendeu ?? ""} onChange={(e) => setF("quem_vendeu", e.target.value)} /></div>
+              <div><Label>Telefone</Label><Input value={form.telefone ?? ""} onChange={(e) => setF("telefone", e.target.value)} /></div>
+              <div><Label>CTR</Label><Input value={form.ctr ?? ""} onChange={(e) => setF("ctr", e.target.value)} /></div>
+            </div>
 
-        <div className="space-y-3 border-t pt-4">
-          <h4 className="font-semibold">Documentos Enviados</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {DOC_FIELDS.map((f) => (
-              <label key={f.id} className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={form[f.id]} onCheckedChange={(v) => setForm({ ...form, [f.id]: !!v })} />
-                <span className="text-sm">{f.label}</span>
+            <div className="space-y-3 border-t pt-4">
+              <h4 className="font-semibold">Documentos Recebidos</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {DOC_ENV_FIELDS.map((f) => (
+                  <label key={f.key} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={!!form[f.key]} onCheckedChange={(v) => setF(f.key, !!v)} />
+                    <span className="text-sm">{f.label}</span>
+                  </label>
+                ))}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={!!form.doc_outros} onCheckedChange={(v) => setF("doc_outros", !!v)} />
+                  <span className="text-sm">Outros</span>
+                </label>
+              </div>
+              {form.doc_outros && (
+                <Input placeholder="Descrição de outros documentos" value={form.doc_outros_descricao ?? ""} onChange={(e) => setF("doc_outros_descricao", e.target.value)} />
+              )}
+            </div>
+
+            <div className="space-y-3 border-t pt-4">
+              <h4 className="font-semibold">Controle</h4>
+              <div className="grid grid-cols-2 gap-3">
+                {CTRL_FIELDS.map((f) => (
+                  <label key={f.key} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={!!form[f.key]} onCheckedChange={(v) => setF(f.key, !!v)} />
+                    <span className="text-sm">{f.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 border-t pt-4">
+              <div>
+                <Label>Certificadora</Label>
+                <Select value={form.certificadora_id ?? ""} onValueChange={(v) => setF("certificadora_id", v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {(certs ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Lote</Label>
+                <Select value={form.lote ?? ""} onValueChange={(v) => setF("lote", v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {LOTES_FIXOS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Data de Envio</Label>
+                <Input type="date" value={form.data_envio ?? ""} onChange={(e) => setF("data_envio", e.target.value)} />
+              </div>
+              <div className="col-span-2">
+                <Label>Observação</Label>
+                <Textarea rows={3} value={form.observacao ?? ""} onChange={(e) => setF("observacao", e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-2 border-t pt-4">
+              <Label>Arquivos anexados</Label>
+              {(form.arquivos_paths ?? []).length === 0 && novosArquivos.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum arquivo anexado.</p>
+              )}
+              {(form.arquivos_paths ?? []).length > 0 && (
+                <ul className="space-y-1">
+                  {(form.arquivos_paths as string[]).map((p) => (
+                    <li key={p} className="flex items-center justify-between text-sm border rounded px-2 py-1">
+                      <span className="truncate">{p.split("/").pop()}</span>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => removeArquivo(p)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <label
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault(); setDragOver(false);
+                  const files = Array.from(e.dataTransfer.files).filter((f) => /\.(pdf|jpe?g|png)$/i.test(f.name));
+                  setNovosArquivos((prev) => [...prev, ...files]);
+                }}
+                className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition ${dragOver ? "border-primary bg-muted/50" : "border-muted-foreground/30 hover:bg-muted/30"}`}
+              >
+                <Upload className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                <div className="text-xs text-muted-foreground">Adicionar arquivos (PDF, JPG, PNG)</div>
+                <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    setNovosArquivos((prev) => [...prev, ...files]);
+                    e.target.value = "";
+                  }}
+                />
               </label>
-            ))}
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox checked={form.outros} onCheckedChange={(v) => setForm({ ...form, outros: !!v })} />
-              <span className="text-sm">Outros</span>
-            </label>
+              {novosArquivos.length > 0 && (
+                <ul className="space-y-1">
+                  {novosArquivos.map((f, i) => (
+                    <li key={i} className="flex items-center justify-between text-sm border rounded px-2 py-1 bg-muted/30">
+                      <span className="truncate">{f.name} <span className="text-xs text-muted-foreground">(novo)</span></span>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setNovosArquivos((prev) => prev.filter((_, j) => j !== i))}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-          {form.outros && (
-            <Textarea
-              placeholder="Descreva os outros documentos..."
-              value={form.outros_descricao}
-              onChange={(e) => setForm({ ...form, outros_descricao: e.target.value })}
-            />
-          )}
-        </div>
-
-
-
-
-        <div className="space-y-3 border-t pt-4">
-          <h4 className="font-semibold">Validações</h4>
-          <div className="grid grid-cols-3 gap-3">
-            {VALID_FIELDS.map((f) => (
-              <label key={f.id} className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={form[f.id]} onCheckedChange={(v) => setForm({ ...form, [f.id]: !!v })} />
-                <span className="text-sm">{f.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
+          <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending || !form}>
             {saveMut.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Salvar
           </Button>
@@ -435,6 +561,7 @@ function EditarRegistroModal({ alunoId, onClose }: { alunoId: string; onClose: (
     </Dialog>
   );
 }
+
 
 /* ============================== MODAL ENCAMINHAR ============================== */
 
