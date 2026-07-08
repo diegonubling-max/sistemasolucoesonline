@@ -91,8 +91,8 @@ function DocumentacaoTab() {
   const [search, setSearch] = useState("");
   const [statusDoc, setStatusDoc] = useState<string>("all");
   const [loteFilter, setLoteFilter] = useState<string>("all");
-  const [editAlunoId, setEditAlunoId] = useState<string | null>(null);
-  const [encAlunoId, setEncAlunoId] = useState<string | null>(null);
+  const [editDocId, setEditDocId] = useState<string | null>(null);
+  const [encDocId, setEncDocId] = useState<string | null>(null);
   const [novoOpen, setNovoOpen] = useState(false);
 
   const { data: rows, isLoading } = useQuery({
