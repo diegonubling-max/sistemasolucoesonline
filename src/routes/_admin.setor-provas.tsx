@@ -111,7 +111,9 @@ function DocumentacaoTab() {
           certificadoras(nome),
           alunos(id, ctr, polo_id, polos(nome))
         `)
+        .is("data_envio", null)
         .order("created_at", { ascending: false });
+
       if (error) throw error;
       let list = data ?? [];
       if (selectedPoloId !== "all") {
