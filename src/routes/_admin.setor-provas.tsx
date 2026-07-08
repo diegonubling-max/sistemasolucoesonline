@@ -98,79 +98,56 @@ function DocumentacaoTab() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["sp-doc-rows", selectedPoloId],
     queryFn: async () => {
-      // alunos com prova_resultados aprovado=true OU presentes em aluno_documentos
-      const { data: aprovados } = await sb
-        .from("prova_resultados")
-        .select("aluno_id")
-        .eq("aprovado", true);
-      const { data: comDocs } = await sb
-        .from("aluno_documentos")
-        .select("aluno_id");
-      const ids = Array.from(new Set([
-        ...(aprovados ?? []).map((r: any) => r.aluno_id).filter(Boolean),
-        ...(comDocs ?? []).map((r: any) => r.aluno_id).filter(Boolean),
-      ]));
-      if (ids.length === 0) return [];
-
-      let q = sb
-        .from("alunos")
+      const { data, error } = await sb
+        .from("documentacao_alunos")
         .select(`
-          id, nome, telefone, cpf, vendedora, polo_id,
-          polos(nome),
-          aluno_documentos(*),
-          declaracoes_matricula(id),
-          lote_alunos(
-            lote_id,
-            lotes(id, mes_ano, data_envio, enviado, certificadoras(nome))
-          )
+          id, aluno_id, nome_aluno, polo, quem_vendeu, telefone, ctr,
+          documentacao_completa, certificadora_id, lote, data_envio,
+          declaracao_gerada, created_at,
+          certificadoras(nome),
+          alunos(id, ctr, polo_id, polos(nome))
         `)
-        .in("id", ids);
-      if (selectedPoloId !== "all") q = q.eq("polo_id", selectedPoloId);
-
-      const { data, error } = await q;
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      let list = data ?? [];
+      if (selectedPoloId !== "all") {
+        list = list.filter((r: any) => r.alunos?.polo_id === selectedPoloId);
+      }
+      return list;
     },
   });
 
   const { data: lotes } = useQuery({
-    queryKey: ["sp-lotes-filter"],
+    queryKey: ["sp-lotes-filter-doc"],
     queryFn: async () => {
-      const { data } = await sb.from("lotes").select("id, mes_ano").order("mes_ano", { ascending: false });
-      return data ?? [];
+      const { data } = await sb
+        .from("documentacao_alunos")
+        .select("lote")
+        .not("lote", "is", null);
+      const unique = Array.from(new Set((data ?? []).map((r: any) => r.lote).filter(Boolean)));
+      return unique.sort();
     },
   });
-
-  const getStatusDoc = (al: any) => {
-    const d = al.aluno_documentos?.[0];
-    if (!d) return "incompleta";
-    const ok = d.rg_cpf && d.historico_fundamental && d.historico_fund_medio && d.comprovante_residencia;
-    return ok ? "completa" : "incompleta";
-  };
 
   const filtered = useMemo(() => {
     if (!rows) return [];
     const s = search.trim().toLowerCase();
     return rows.filter((r: any) => {
-      if (s && !r.nome?.toLowerCase().includes(s) && !r.telefone?.includes(s)) return false;
-      if (statusDoc !== "all" && getStatusDoc(r) !== statusDoc) return false;
-      if (loteFilter !== "all") {
-        const has = r.lote_alunos?.some((la: any) => la.lote_id === loteFilter);
-        if (!has) return false;
-      }
+      if (s && !r.nome_aluno?.toLowerCase().includes(s) && !r.telefone?.includes(s)) return false;
+      if (statusDoc === "completa" && !r.documentacao_completa) return false;
+      if (statusDoc === "incompleta" && r.documentacao_completa) return false;
+      if (loteFilter !== "all" && r.lote !== loteFilter) return false;
       return true;
     });
   }, [rows, search, statusDoc, loteFilter]);
 
   const deleteMut = useMutation({
-    mutationFn: async (alunoId: string) => {
-      const { data: la } = await sb.from("lote_alunos").select("id").eq("aluno_id", alunoId);
-      if (la?.length) await sb.from("lote_alunos").delete().eq("aluno_id", alunoId);
-      await sb.from("aluno_documentos").delete().eq("aluno_id", alunoId);
-      await sb.from("aluno_documentos_arquivos").delete().eq("aluno_id", alunoId);
+    mutationFn: async (id: string) => {
+      const { error } = await sb.from("documentacao_alunos").delete().eq("id", id);
+      if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Registro removido do setor de provas");
+      toast.success("Registro removido");
       qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
     },
     onError: (e: any) => toast.error(e.message),
@@ -195,8 +172,8 @@ function DocumentacaoTab() {
           <SelectTrigger><SelectValue placeholder="Lote" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os lotes</SelectItem>
-            {lotes?.map((l: any) => (
-              <SelectItem key={l.id} value={l.id}>{l.mes_ano}</SelectItem>
+            {((lotes ?? []) as string[]).map((l) => (
+              <SelectItem key={l} value={l}>{l}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -230,38 +207,46 @@ function DocumentacaoTab() {
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum aluno encontrado.</TableCell></TableRow>
               ) : filtered.map((r: any) => {
-                const status = getStatusDoc(r);
-                const la = r.lote_alunos?.[0];
-                const lote = la?.lotes;
+                const status = r.documentacao_completa ? "completa" : "incompleta";
+                const ctrLabel = r.alunos?.ctr ?? r.ctr;
                 return (
                   <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.nome}</TableCell>
-                    <TableCell>{r.polos?.nome ?? "-"}</TableCell>
-                    <TableCell>{r.vendedora ?? "-"}</TableCell>
+                    <TableCell className="font-medium">
+                      {r.nome_aluno}
+                      {r.aluno_id && ctrLabel ? <span className="text-xs text-muted-foreground ml-2">CTR {ctrLabel}</span> : null}
+                    </TableCell>
+                    <TableCell>{r.alunos?.polos?.nome ?? r.polo ?? "-"}</TableCell>
+                    <TableCell>{r.quem_vendeu ?? "-"}</TableCell>
                     <TableCell>
                       <Badge variant={status === "completa" ? "default" : "secondary"}>
                         {status === "completa" ? "Completa" : "Incompleta"}
                       </Badge>
                     </TableCell>
-                    <TableCell>{lote?.certificadoras?.nome ?? "-"}</TableCell>
-                    <TableCell>{lote?.mes_ano ?? "-"}</TableCell>
-                    <TableCell>{lote?.data_envio ? new Date(lote.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
+                    <TableCell>{r.certificadoras?.nome ?? "-"}</TableCell>
+                    <TableCell>{r.lote ?? "-"}</TableCell>
+                    <TableCell>{r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
                     <TableCell>
-                      {r.declaracoes_matricula?.length > 0 ? (
+                      {r.declaracao_gerada ? (
                         <Badge variant="outline" className="bg-green-50 text-green-700">Gerada</Badge>
+                      ) : r.aluno_id ? (
+                        <GerarDeclaracaoButton aluno={{ id: r.aluno_id, nome: r.nome_aluno, cpf: null, polo_id: r.alunos?.polo_id }} />
                       ) : (
-                        <GerarDeclaracaoButton aluno={r} />
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
-                      <Button size="sm" variant="ghost" onClick={() => setEncAlunoId(r.id)} title="Encaminhar para certificadora">
-                        <Send className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setEditAlunoId(r.id)} title="Editar">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      {r.aluno_id && (
+                        <Button size="sm" variant="ghost" onClick={() => setEncAlunoId(r.aluno_id)} title="Encaminhar para certificadora">
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {r.aluno_id && (
+                        <Button size="sm" variant="ghost" onClick={() => setEditAlunoId(r.aluno_id)} title="Editar">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button size="sm" variant="ghost" onClick={() => {
-                        if (confirm(`Remover ${r.nome} do setor de provas?`)) deleteMut.mutate(r.id);
+                        if (confirm(`Remover ${r.nome_aluno} do setor de provas?`)) deleteMut.mutate(r.id);
                       }} title="Excluir">
                         <Trash2 className="h-4 w-4 text-red-600" />
                       </Button>
