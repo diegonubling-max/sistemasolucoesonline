@@ -213,7 +213,7 @@ Boa prova! 🍀`;
         .select(`
           id, aluno_id, data_prova, hora_prova, status, docs_solicitados, docs_recebidos,
           is_externo, nome_aluno, telefone, polo, ctr, ultimo_heartbeat,
-          situacao_financeira, resultado, observacao
+          situacao_financeira, resultado, observacao, materias_selecionadas
         `)
         .order("data_prova", { ascending: true });
       if (dataInicio) q = q.gte("data_prova", dataInicio);
