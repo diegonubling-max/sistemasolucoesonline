@@ -228,7 +228,9 @@ function ProvasAgendadasPage() {
                     {isHoje && <Badge className="bg-red-500 text-white">PROVA HOJE</Badge>}
                   </div>
                 </TableCell>
+                <TableCell>{r.telefoneDisplay}</TableCell>
                 <TableCell>{r.ctrDisplay}</TableCell>
+
                 <TableCell>{r.is_externo ? (r.polo ?? "—") : "—"}</TableCell>
                 <TableCell>{new Date(r.data_prova + "T00:00:00").toLocaleDateString("pt-BR")}</TableCell>
                 <TableCell>{r.hora_prova?.slice(0, 5) ?? "—"}</TableCell>
