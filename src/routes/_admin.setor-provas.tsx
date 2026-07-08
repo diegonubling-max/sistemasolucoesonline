@@ -438,12 +438,16 @@ function EditarRegistroModal({ alunoId, onClose }: { alunoId: string; onClose: (
 
 /* ============================== MODAL ENCAMINHAR ============================== */
 
-function EncaminharModal({ alunoId, onClose }: { alunoId: string; onClose: () => void }) {
+const LOTES_FIXOS = [
+  "01/2026","02/2026","03/2026","04/2026","05/2026","06/2026",
+  "07/2026","08/2026","09/2026","10/2026","11/2026","12/2026",
+];
+
+function EncaminharModal({ docId, onClose }: { docId: string; onClose: () => void }) {
   const qc = useQueryClient();
   const [certId, setCertId] = useState<string>("");
   const [dataEnvio, setDataEnvio] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [loteId, setLoteId] = useState<string>("");
-  const [novoLote, setNovoLote] = useState<string>("");
+  const [lote, setLote] = useState<string>("");
 
   const { data: certs } = useQuery({
     queryKey: ["sp-certs-active"],
@@ -452,45 +456,24 @@ function EncaminharModal({ alunoId, onClose }: { alunoId: string; onClose: () =>
       return data ?? [];
     },
   });
-  const { data: lotesDisponiveis } = useQuery({
-    queryKey: ["sp-lotes-by-cert", certId],
-    queryFn: async () => {
-      if (!certId) return [];
-      const { data } = await sb.from("lotes").select("id, mes_ano").eq("certificadora_id", certId).eq("enviado", false).order("mes_ano", { ascending: false });
-      return data ?? [];
-    },
-    enabled: !!certId,
-  });
 
   const mut = useMutation({
     mutationFn: async () => {
       if (!certId) throw new Error("Selecione uma certificadora");
-      let usedLoteId = loteId;
-      if (!usedLoteId) {
-        if (!novoLote.match(/^\d{2}\/\d{4}$/)) throw new Error("Lote inválido (use MM/AAAA)");
-        const { data, error } = await sb.from("lotes").insert({
-          mes_ano: novoLote, certificadora_id: certId, data_envio: dataEnvio, enviado: false,
-        }).select("id").single();
-        if (error) throw error;
-        usedLoteId = data.id;
-      } else {
-        await sb.from("lotes").update({ data_envio: dataEnvio }).eq("id", usedLoteId);
-      }
-      // Remove vínculos antigos (apenas em lotes não enviados)
-      const { data: oldLinks } = await sb
-        .from("lote_alunos")
-        .select("id, lotes(enviado)")
-        .eq("aluno_id", alunoId);
-      const removeIds = (oldLinks ?? []).filter((l: any) => !l.lotes?.enviado).map((l: any) => l.id);
-      if (removeIds.length) await sb.from("lote_alunos").delete().in("id", removeIds);
-
-      const { error } = await sb.from("lote_alunos").insert({ lote_id: usedLoteId, aluno_id: alunoId });
+      if (!lote) throw new Error("Selecione um lote");
+      if (!dataEnvio) throw new Error("Selecione a data de envio");
+      const { error } = await sb.from("documentacao_alunos").update({
+        certificadora_id: certId,
+        data_envio: dataEnvio,
+        lote,
+        updated_at: new Date().toISOString(),
+      }).eq("id", docId);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Aluno encaminhado para certificadora");
+      toast.success("Aluno encaminhado para certificadora com sucesso");
       qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
-      qc.invalidateQueries({ queryKey: ["sp-lotes"] });
+      qc.invalidateQueries({ queryKey: ["sp-envios-rows"] });
       onClose();
     },
     onError: (e: any) => toast.error(e.message),
@@ -504,7 +487,7 @@ function EncaminharModal({ alunoId, onClose }: { alunoId: string; onClose: () =>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Certificadora</Label>
+            <Label>Certificadora *</Label>
             <Select value={certId} onValueChange={setCertId}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
@@ -513,24 +496,18 @@ function EncaminharModal({ alunoId, onClose }: { alunoId: string; onClose: () =>
             </Select>
           </div>
           <div>
-            <Label>Data de Envio</Label>
+            <Label>Data de Envio *</Label>
             <Input type="date" value={dataEnvio} onChange={(e) => setDataEnvio(e.target.value)} />
           </div>
           <div>
-            <Label>Lote existente</Label>
-            <Select value={loteId} onValueChange={setLoteId} disabled={!certId}>
-              <SelectTrigger><SelectValue placeholder="Selecione um lote pendente (ou crie novo abaixo)" /></SelectTrigger>
+            <Label>Lote *</Label>
+            <Select value={lote} onValueChange={setLote}>
+              <SelectTrigger><SelectValue placeholder="Selecione o lote" /></SelectTrigger>
               <SelectContent>
-                {lotesDisponiveis?.map((l: any) => <SelectItem key={l.id} value={l.id}>{l.mes_ano}</SelectItem>)}
+                {LOTES_FIXOS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          {!loteId && (
-            <div>
-              <Label>Ou criar novo lote (MM/AAAA)</Label>
-              <Input placeholder="06/2026" value={novoLote} onChange={(e) => setNovoLote(e.target.value)} />
-            </div>
-          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
@@ -543,6 +520,7 @@ function EncaminharModal({ alunoId, onClose }: { alunoId: string; onClose: () =>
     </Dialog>
   );
 }
+
 
 /* ============================== MODAL NOVO REGISTRO ============================== */
 
