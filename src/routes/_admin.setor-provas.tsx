@@ -826,6 +826,7 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Florianópolis">Florianópolis</SelectItem>
+                    <SelectItem value="Matriz">Matriz</SelectItem>
                     <SelectItem value="Novo Hamburgo">Novo Hamburgo</SelectItem>
                     <SelectItem value="Porto Alegre">Porto Alegre</SelectItem>
                     <SelectItem value="Outros">Outros</SelectItem>
@@ -885,12 +886,15 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
                   </Select>
                 </div>
                 <div>
-                  <Label>Lote (MM/YYYY)</Label>
-                  <Input value={lote} onChange={(e) => setLote(e.target.value)} placeholder="06/2026" />
-                </div>
-                <div className="col-span-2">
-                  <Label>Data de Envio</Label>
-                  <Input type="date" value={dataEnvio} onChange={(e) => setDataEnvio(e.target.value)} />
+                  <Label>Lote</Label>
+                  <Select value={lote} onValueChange={setLote}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                      {["01/2026","02/2026","03/2026","04/2026","05/2026","06/2026","07/2026","08/2026","09/2026","10/2026","11/2026","12/2026"].map((m) => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="col-span-2">
                   <Label>Observação</Label>
