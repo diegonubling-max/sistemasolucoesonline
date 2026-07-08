@@ -392,6 +392,50 @@ export type Database = {
         }
         Relationships: []
       }
+      alunos_externos: {
+        Row: {
+          cpf: string | null
+          created_at: string | null
+          ctr: string
+          id: string
+          nome: string
+          polo_id: string | null
+          quem_cadastrou: string | null
+          senha: string
+          telefone: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string | null
+          ctr: string
+          id?: string
+          nome: string
+          polo_id?: string | null
+          quem_cadastrou?: string | null
+          senha: string
+          telefone?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string | null
+          ctr?: string
+          id?: string
+          nome?: string
+          polo_id?: string | null
+          quem_cadastrou?: string | null
+          senha?: string
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alunos_externos_polo_id_fkey"
+            columns: ["polo_id"]
+            isOneToOne: false
+            referencedRelation: "polos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aulas: {
         Row: {
           ativo: boolean
@@ -2327,6 +2371,22 @@ export type Database = {
         Args: { p_ctr: number; p_email: string; p_senha: string }
         Returns: undefined
       }
+      criar_aluno_externo_com_prova: {
+        Args: {
+          p_data_prova: string
+          p_hora_prova: string
+          p_nome: string
+          p_polo_id: string
+          p_quem_agendou: string
+          p_situacao_financeira: string
+          p_telefone: string
+        }
+        Returns: {
+          aluno_externo_id: string
+          ctr: string
+          senha: string
+        }[]
+      }
       delete_aluno_completo: {
         Args: { p_aluno_id: string }
         Returns: undefined
@@ -2337,6 +2397,7 @@ export type Database = {
       }
       delete_pacote: { Args: { p_pacote_id: string }; Returns: undefined }
       delete_user_auth: { Args: { user_email: string }; Returns: undefined }
+      externo_tem_acesso_hoje: { Args: { p_ctr: string }; Returns: boolean }
       get_contrato_publico: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
@@ -2348,6 +2409,16 @@ export type Database = {
       liberar_curso_vitrine_pago: {
         Args: { p_compra_id: string }
         Returns: Json
+      }
+      login_aluno_externo: {
+        Args: { p_ctr: string; p_senha: string }
+        Returns: {
+          id: string
+          nome: string
+          polo_id: string
+          telefone: string
+          tem_acesso: boolean
+        }[]
       }
       next_business_day: { Args: { p_date: string }; Returns: string }
       redefinir_senha_aluno: {
