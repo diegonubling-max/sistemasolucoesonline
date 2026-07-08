@@ -1325,9 +1325,11 @@ function CertificadosTab() {
   const [certFilter, setCertFilter] = useState("all");
   const [digFilter, setDigFilter] = useState("all");
   const [fisFilter, setFisFilter] = useState("all");
-  const [atualizarId, setAtualizarId] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [enviarDigRow, setEnviarDigRow] = useState<any>(null);
+  const [receberFisRow, setReceberFisRow] = useState<any>(null);
+  const [obsRow, setObsRow] = useState<any>(null);
   const [viewRow, setViewRow] = useState<any>(null);
+
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["sp-certificados", selectedPoloId],
