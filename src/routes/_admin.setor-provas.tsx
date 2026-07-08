@@ -184,27 +184,27 @@ function DocumentacaoTab() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="relative lg:col-span-2">
+      <div className="flex flex-nowrap gap-2 overflow-x-auto items-center">
+        <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome ou telefone..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <Select value={poloFilter} onValueChange={setPoloFilter}>
-          <SelectTrigger><SelectValue placeholder="Polo" /></SelectTrigger>
+          <SelectTrigger className="w-[160px] shrink-0"><SelectValue placeholder="Polo" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os Polos</SelectItem>
             {POLOS_FIXOS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={certFilter} onValueChange={setCertFilter}>
-          <SelectTrigger><SelectValue placeholder="Certificadora" /></SelectTrigger>
+          <SelectTrigger className="w-[180px] shrink-0"><SelectValue placeholder="Certificadora" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as Certificadoras</SelectItem>
             {(certsList ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={loteFilter} onValueChange={setLoteFilter}>
-          <SelectTrigger><SelectValue placeholder="Lote" /></SelectTrigger>
+          <SelectTrigger className="w-[140px] shrink-0"><SelectValue placeholder="Lote" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os Lotes</SelectItem>
             {((lotes ?? []) as string[]).map((l) => (
@@ -213,7 +213,7 @@ function DocumentacaoTab() {
           </SelectContent>
         </Select>
         <Select value={statusDoc} onValueChange={setStatusDoc}>
-          <SelectTrigger><SelectValue placeholder="Documentação" /></SelectTrigger>
+          <SelectTrigger className="w-[160px] shrink-0"><SelectValue placeholder="Documentação" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="completa">Completa</SelectItem>
