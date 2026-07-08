@@ -163,10 +163,25 @@ function AlunoDetalhes() {
   });
 
   const { data: allCourses } = useQuery({
-    queryKey: ["all-courses"],
+    queryKey: ["all-courses-with-segmento"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("cursos").select("id, nome").order("nome");
+      const { data, error } = await supabase
+        .from("cursos")
+        .select("id, nome, segmento_id, segmentos(nome)")
+        .order("nome");
       if (error) throw error;
+      return (data ?? []).filter((c: any) => (c.segmentos as any)?.nome !== "Curso Preparatório");
+    },
+  });
+
+  const { data: perfilVocacional } = useQuery({
+    queryKey: ["aluno-perfil-vocacional-vitrine", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("aluno_perfil_vocacional")
+        .select("segmentos_recomendados")
+        .eq("aluno_id", id)
+        .maybeSingle();
       return data;
     },
   });
