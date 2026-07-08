@@ -348,6 +348,7 @@ function DocumentacaoTab() {
               })}
             </TableBody>
           </Table>
+          <div className="mt-3 text-sm text-muted-foreground">Total: {filtered.length} registros</div>
         </CardContent>
       </Card>
 
