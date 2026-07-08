@@ -347,6 +347,29 @@ function DocumentacaoTab() {
       {declDoc && <GerarDeclaracaoModal docId={declDoc.id} nomeInicial={declDoc.nome} textoInicial={declDoc.texto} onClose={() => setDeclDoc(null)} />}
       <NovoRegistroModal open={novoOpen} onClose={() => setNovoOpen(false)} />
 
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Registro</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o registro de {confirmDelete?.nome}? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                if (confirmDelete) deleteMut.mutate(confirmDelete.id);
+                setConfirmDelete(null);
+              }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
