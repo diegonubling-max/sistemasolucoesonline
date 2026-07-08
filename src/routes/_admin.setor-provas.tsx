@@ -112,6 +112,11 @@ function DocumentacaoTab() {
   const [encDocId, setEncDocId] = useState<string | null>(null);
   const [declDoc, setDeclDoc] = useState<{ id: string; nome: string; texto?: string } | null>(null);
   const [novoOpen, setNovoOpen] = useState(false);
+  useEffect(() => {
+    const h = () => setNovoOpen(true);
+    window.addEventListener("open-novo-registro", h);
+    return () => window.removeEventListener("open-novo-registro", h);
+  }, []);
 
 
   const { data: rows, isLoading } = useQuery({
