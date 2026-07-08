@@ -227,7 +227,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
               key={item.title}
               to={item.url}
               onClick={() => onClose?.()}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-200 ${
+              className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-all duration-200 ${
                 active
                   ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold shadow-md scale-[1.02]"
                   : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
