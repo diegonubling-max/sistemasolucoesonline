@@ -195,6 +195,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
           if (item.vendedorOnly && !isVendedor) return null;
           if (item.hideForVendedor && isVendedor) return null;
           if (item.posVendaOrAdmin && !isAdmin && colaborador?.setor !== 'Pós-Venda' && !colaborador?.colaborador_permissoes?.[0]?.ver_pos_venda) return null;
+          if (item.documentacaoAccess && !isAdmin && colaborador?.setor !== 'Setor de Provas') return null;
 
           if (colaborador && !isResponsavel && (item.perm || item.anyPerm)) {
             const perms = colaborador.colaborador_permissoes?.[0];
