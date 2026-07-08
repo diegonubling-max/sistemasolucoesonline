@@ -231,18 +231,18 @@ function DocumentacaoTab() {
 
       <Card>
         <CardContent className="pt-6 overflow-x-auto">
-          <Table>
+          <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow>
-                <TableHead>Aluno</TableHead>
-                <TableHead>Polo</TableHead>
-                <TableHead>Vendedora</TableHead>
-                <TableHead>Documentação</TableHead>
-                <TableHead>Certificadora</TableHead>
-                <TableHead>Lote</TableHead>
-                <TableHead>Data Envio</TableHead>
-                <TableHead>Declaração</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="w-[20%]">Aluno</TableHead>
+                <TableHead className="w-[12%]">Polo</TableHead>
+                <TableHead className="w-[12%]">Vendedora</TableHead>
+                <TableHead className="w-[9%]">Documentação</TableHead>
+                <TableHead className="w-[12%]">Certificadora</TableHead>
+                <TableHead className="w-[7%]">Lote</TableHead>
+                <TableHead className="w-[9%]">Data Envio</TableHead>
+                <TableHead className="w-[11%]">Declaração</TableHead>
+                <TableHead className="w-[8%] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
