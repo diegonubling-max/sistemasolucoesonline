@@ -1167,6 +1167,7 @@ function EnviosTab() {
   const [declFilter, setDeclFilter] = useState("all");
   const [dataIni, setDataIni] = useState("");
   const [dataFim, setDataFim] = useState("");
+  const [viewRow, setViewRow] = useState<any>(null);
 
 
   const { data: rows, isLoading } = useQuery({
@@ -1175,8 +1176,11 @@ function EnviosTab() {
       const { data, error } = await sb
         .from("documentacao_alunos")
         .select(`
-          id, nome_aluno, polo, quem_vendeu, lote, data_envio, certificadora_id,
-          documentacao_completa, declaracao_gerada, declaracao_data,
+          id, nome_aluno, polo, telefone, quem_vendeu, lote, data_envio, certificadora_id,
+          documentacao_completa, declaracao_gerada, declaracao_data, cert_observacao,
+          doc_rg_cpf, doc_comprovante_residencia, doc_historico_fundamental, doc_historico_fundamental_medio, doc_outros,
+          arquivos_paths,
+          cert_digital_enviado, cert_fisico_recebido, cert_fisico_enviado_aluno, cert_fisico_rastreio,
           certificadoras(nome),
           alunos(polo_id, polos(nome))
         `)
@@ -1185,6 +1189,7 @@ function EnviosTab() {
       return data ?? [];
     },
   });
+
 
   const { data: certs } = useQuery({
     queryKey: ["sp-certs-active"],
