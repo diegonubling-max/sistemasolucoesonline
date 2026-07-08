@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import {
   Plus, Search, Pencil, Trash2, Loader2, Send, FileText,
-  Building2, CheckCircle2, AlertCircle, Eye,
+  Building2, CheckCircle2, AlertCircle, Eye, Upload, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
