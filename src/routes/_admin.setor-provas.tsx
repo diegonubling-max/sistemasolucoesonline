@@ -235,16 +235,12 @@ function DocumentacaoTab() {
                       )}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
-                      {r.aluno_id && (
-                        <Button size="sm" variant="ghost" onClick={() => setEncAlunoId(r.aluno_id)} title="Encaminhar para certificadora">
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {r.aluno_id && (
-                        <Button size="sm" variant="ghost" onClick={() => setEditAlunoId(r.aluno_id)} title="Editar">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <Button size="sm" variant="ghost" onClick={() => setEncDocId(r.id)} title="Encaminhar para certificadora">
+                        <Send className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditDocId(r.id)} title="Editar">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => {
                         if (confirm(`Remover ${r.nome_aluno} do setor de provas?`)) deleteMut.mutate(r.id);
                       }} title="Excluir">
