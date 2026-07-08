@@ -138,6 +138,15 @@ function DocumentacaoTab() {
     },
   });
 
+  const { data: certsList } = useQuery({
+    queryKey: ["sp-certs-active"],
+    queryFn: async () => {
+      const { data } = await sb.from("certificadoras").select("id, nome").eq("ativo", true).order("nome");
+      return data ?? [];
+    },
+  });
+
+
   const filtered = useMemo(() => {
     if (!rows) return [];
     const s = search.trim().toLowerCase();
