@@ -242,7 +242,8 @@ function ProvasAgendadasPage() {
 
   const sitFinBadge = (v: string | null) => {
     if (v === "ja_pago") return <Badge className="bg-blue-500">Já pago</Badge>;
-    if (v === "boleto") return <Badge className="bg-yellow-500">Boleto</Badge>;
+    if (v === "boleto" || v === "aberto") return <Badge className="bg-yellow-500">Boleto/Aberto</Badge>;
+    if (v === "atraso") return <Badge className="bg-red-500">Em atraso</Badge>;
     return <span className="text-muted-foreground">—</span>;
   };
 
