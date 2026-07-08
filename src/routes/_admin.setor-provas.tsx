@@ -826,6 +826,7 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Florianópolis">Florianópolis</SelectItem>
+                    <SelectItem value="Matriz">Matriz</SelectItem>
                     <SelectItem value="Novo Hamburgo">Novo Hamburgo</SelectItem>
                     <SelectItem value="Porto Alegre">Porto Alegre</SelectItem>
                     <SelectItem value="Outros">Outros</SelectItem>
