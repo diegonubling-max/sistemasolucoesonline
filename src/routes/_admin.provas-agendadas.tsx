@@ -170,7 +170,7 @@ function ProvasAgendadasPage() {
         if (tipoFilter === "externo" && !r.is_externo) return false;
         if (tipoFilter === "sistema" && r.is_externo) return false;
       }
-      if (sitFinFilter !== "todos" && r.situacao_financeira !== sitFinFilter) return false;
+      if (sitFinFilter !== "todos" && r.sitFinComputed !== sitFinFilter) return false;
       return true;
     });
     if (tab === "agendada" || tab === "reagendar") {
