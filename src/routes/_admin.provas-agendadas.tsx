@@ -648,7 +648,7 @@ Boa prova! 🍀`;
 
       {/* Dialog: Agendar Externo */}
       <Dialog open={externoOpen} onOpenChange={setExternoOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Agendar Aluno Externo</DialogTitle>
           </DialogHeader>
