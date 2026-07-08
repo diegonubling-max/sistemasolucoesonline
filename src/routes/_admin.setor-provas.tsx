@@ -1368,15 +1368,15 @@ function EnviosTab() {
 
           <TableHeader>
             <TableRow>
-              <TableHead>Aluno</TableHead>
-              <TableHead>Polo</TableHead>
-              <TableHead>Vendedor</TableHead>
-              <TableHead>Certificadora</TableHead>
-              <TableHead>Data Envio</TableHead>
-              <TableHead>Lote</TableHead>
-              <TableHead>Documentação</TableHead>
-              <TableHead>Declaração</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="w-[25%]">Aluno</TableHead>
+              <TableHead className="w-[9%]">Polo</TableHead>
+              <TableHead className="w-[9%]">Vendedor</TableHead>
+              <TableHead className="w-[9%]">Certificadora</TableHead>
+              <TableHead className="w-[9%]">Data Envio</TableHead>
+              <TableHead className="w-[7%]">Lote</TableHead>
+              <TableHead className="w-[8%]">Documentação</TableHead>
+              <TableHead className="w-[12%]">Declaração</TableHead>
+              <TableHead className="w-[12%] text-right whitespace-nowrap">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
