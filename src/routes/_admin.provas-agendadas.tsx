@@ -351,17 +351,22 @@ function ProvasAgendadasPage() {
         <TableBody>
           {filtered.map((r: any) => {
             const isHoje = tab === "agendada" && r.data_prova === HOJE;
+            const isOnline = r.ultimo_heartbeat &&
+              (Date.now() - new Date(r.ultimo_heartbeat).getTime()) < 120_000;
             return (
               <TableRow key={r.id} className={isHoje ? "bg-yellow-50 dark:bg-yellow-950/30" : ""}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span>{r.nome}</span>
                     {r.is_externo && (
-                      <Badge variant="secondary" className="text-[10px] bg-gray-200 text-gray-700">Externo</Badge>
+                      <Badge className="text-[10px] bg-blue-500 text-white">🔷 Externo</Badge>
                     )}
                     {isHoje && <Badge className="bg-red-500 text-white">PROVA HOJE</Badge>}
-                    {r.status === "iniciado" && (
+                    {r.status === "iniciado" && isOnline && (
                       <Badge className="bg-green-600 text-white">🟢 Em Prova</Badge>
+                    )}
+                    {r.status === "iniciado" && !isOnline && (
+                      <Badge className="bg-yellow-500 text-white">🟡 Iniciou</Badge>
                     )}
                   </div>
                 </TableCell>
