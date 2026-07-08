@@ -54,9 +54,16 @@ export function SetorProvasPage() {
         title="Setor de Provas"
         description="Documentação, envios para certificadoras e controle de certificados"
         actions={
-          <Button variant="outline" onClick={() => setCertOpen(true)}>
-            <Building2 className="h-4 w-4 mr-2" /> Certificadoras
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setCertOpen(true)}>
+              <Building2 className="h-4 w-4 mr-2" /> Certificadoras
+            </Button>
+            {tab === "documentacao" && (
+              <Button onClick={() => window.dispatchEvent(new Event("open-novo-registro"))}>
+                <Plus className="h-4 w-4 mr-2" /> Novo Registro
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -105,6 +112,11 @@ function DocumentacaoTab() {
   const [encDocId, setEncDocId] = useState<string | null>(null);
   const [declDoc, setDeclDoc] = useState<{ id: string; nome: string; texto?: string } | null>(null);
   const [novoOpen, setNovoOpen] = useState(false);
+  useEffect(() => {
+    const h = () => setNovoOpen(true);
+    window.addEventListener("open-novo-registro", h);
+    return () => window.removeEventListener("open-novo-registro", h);
+  }, []);
 
 
   const { data: rows, isLoading } = useQuery({
@@ -223,11 +235,7 @@ function DocumentacaoTab() {
       </div>
 
 
-      <div className="flex justify-end">
-        <Button onClick={() => setNovoOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Novo Registro
-        </Button>
-      </div>
+
 
       <Card>
         <CardContent className="pt-6 overflow-x-auto">
