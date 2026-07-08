@@ -79,7 +79,13 @@ function ProvasAgendadasPage() {
   const filtered = useMemo(() => {
     const base = (rows ?? []).filter((r: any) => {
       const st = (r.status ?? "agendada") as string;
-      if (st !== tab) return false;
+      if (tab === "reagendar") {
+        if (st !== "agendada") return false;
+        if (!r.data_prova || r.data_prova >= HOJE) return false;
+      } else {
+        if (st !== tab) return false;
+        if (tab === "agendada" && r.data_prova && r.data_prova < HOJE) return false;
+      }
       if (tipoFilter !== "todos") {
         if (tipoFilter === "externo" && !r.is_externo) return false;
         if (tipoFilter === "sistema" && r.is_externo) return false;
@@ -87,7 +93,7 @@ function ProvasAgendadasPage() {
       if (sitFinFilter !== "todos" && r.situacao_financeira !== sitFinFilter) return false;
       return true;
     });
-    if (tab === "agendada") {
+    if (tab === "agendada" || tab === "reagendar") {
       base.sort((a: any, b: any) => {
         const d = (a.data_prova ?? "").localeCompare(b.data_prova ?? "");
         if (d !== 0) return d;
@@ -100,10 +106,16 @@ function ProvasAgendadasPage() {
   }, [rows, tab, tipoFilter, sitFinFilter]);
 
   const counts = useMemo(() => {
-    const c = { agendada: 0, aprovado: 0, reprovado: 0 } as Record<TabKey, number>;
+    const c = { agendada: 0, aprovado: 0, reprovado: 0, reagendar: 0 } as Record<TabKey, number>;
     (rows ?? []).forEach((r: any) => {
-      const st = (r.status ?? "agendada") as TabKey;
-      if (st in c) c[st]++;
+      const st = (r.status ?? "agendada") as string;
+      if (st === "agendada" && r.data_prova && r.data_prova < HOJE) {
+        c.reagendar++;
+      } else if (st === "agendada") {
+        c.agendada++;
+      } else if (st === "aprovado" || st === "reprovado") {
+        c[st as TabKey]++;
+      }
     });
     return c;
   }, [rows]);
