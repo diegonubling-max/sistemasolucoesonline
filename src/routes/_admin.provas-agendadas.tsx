@@ -47,6 +47,7 @@ function ProvasAgendadasPage() {
   const [editing, setEditing] = useState<any | null>(null);
   const [externoOpen, setExternoOpen] = useState(false);
   const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string } | null>(null);
+  const [gerarCtrFor, setGerarCtrFor] = useState<any | null>(null);
   const [extNome, setExtNome] = useState("");
   const [extTelefone, setExtTelefone] = useState("");
   const [extPoloId, setExtPoloId] = useState("");
@@ -102,6 +103,23 @@ function ProvasAgendadasPage() {
       qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
     },
     onError: (e: any) => toast.error("Erro ao cadastrar externo", { description: e.message }),
+  });
+
+  const gerarCtr = useMutation({
+    mutationFn: async (ag: any) => {
+      const { data, error } = await supabase.rpc("gerar_ctr_externo_existente", {
+        p_agendamento_id: ag.id,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return { ...(row as { ctr: string; senha: string }), ag };
+    },
+    onSuccess: ({ ctr, senha, ag }) => {
+      setGerarCtrFor(null);
+      setExternoResult({ ctr, senha, data: ag.data_prova, hora: ag.hora_prova ?? "00:00" });
+      qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
+    },
+    onError: (e: any) => toast.error("Erro ao gerar CTR", { description: e.message }),
   });
 
 
@@ -368,6 +386,16 @@ function ProvasAgendadasPage() {
                     {r.status === "iniciado" && !isOnline && (
                       <Badge className="bg-yellow-500 text-white">🟡 Iniciou</Badge>
                     )}
+                    {r.is_externo && !r.ctr && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 px-2 text-[11px]"
+                        onClick={() => setGerarCtrFor(r)}
+                      >
+                        Gerar CTR
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>{r.telefoneDisplay}</TableCell>
@@ -620,6 +648,24 @@ function ProvasAgendadasPage() {
           )}
           <DialogFooter>
             <Button onClick={() => setExternoResult(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Dialog: Confirmação Gerar CTR */}
+      <Dialog open={!!gerarCtrFor} onOpenChange={(o) => !o && setGerarCtrFor(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Gerar acesso externo</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm">
+            Gerar acesso para <b>{gerarCtrFor?.nome}</b>?
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGerarCtrFor(null)}>Cancelar</Button>
+            <Button onClick={() => gerarCtr.mutate(gerarCtrFor)} disabled={gerarCtr.isPending}>
+              {gerarCtr.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Confirmar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
