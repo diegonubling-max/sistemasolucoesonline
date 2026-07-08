@@ -1246,9 +1246,10 @@ function EnviosTab() {
           <TableBody>
             {isLoading ? (
               <TableRow><TableCell colSpan={9} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
-            ) : rows?.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum envio registrado.</TableCell></TableRow>
-            ) : rows?.map((r: any) => (
+            ) : filtered.map((r: any) => (
+
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.nome_aluno}</TableCell>
                 <TableCell>{r.alunos?.polos?.nome ?? r.polo ?? "-"}</TableCell>
