@@ -29,6 +29,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import declaracaoConclusaoTpl from "@/templates/declaracao-conclusao.html?raw";
@@ -94,6 +98,7 @@ function DocumentacaoTab() {
   const [statusDoc, setStatusDoc] = useState<string>("all");
   const [loteFilter, setLoteFilter] = useState<string>("all");
   const [poloFilter, setPoloFilter] = useState<string>("all");
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; nome: string } | null>(null);
   const [certFilter, setCertFilter] = useState<string>("all");
 
   const [editDocId, setEditDocId] = useState<string | null>(null);
@@ -325,9 +330,7 @@ function DocumentacaoTab() {
                       <Button size="sm" variant="ghost" onClick={() => setEditDocId(r.id)} title="Editar">
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        if (confirm(`Remover ${r.nome_aluno} do setor de provas?`)) deleteMut.mutate(r.id);
-                      }} title="Excluir">
+                      <Button size="sm" variant="ghost" onClick={() => setConfirmDelete({ id: r.id, nome: r.nome_aluno })} title="Excluir">
                         <Trash2 className="h-4 w-4 text-red-600" />
                       </Button>
                     </TableCell>
@@ -343,6 +346,29 @@ function DocumentacaoTab() {
       {encDocId && <EncaminharModal docId={encDocId} onClose={() => setEncDocId(null)} />}
       {declDoc && <GerarDeclaracaoModal docId={declDoc.id} nomeInicial={declDoc.nome} textoInicial={declDoc.texto} onClose={() => setDeclDoc(null)} />}
       <NovoRegistroModal open={novoOpen} onClose={() => setNovoOpen(false)} />
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Registro</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o registro de {confirmDelete?.nome}? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                if (confirmDelete) deleteMut.mutate(confirmDelete.id);
+                setConfirmDelete(null);
+              }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
