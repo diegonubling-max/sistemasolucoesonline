@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_admin/provas-agendadas")({
 
 type SitFinFilter = "todos" | "ja_pago" | "boleto";
 type TipoFilter = "todos" | "sistema" | "externo";
-type TabKey = "agendada" | "aprovado" | "reprovado";
+type TabKey = "agendada" | "aprovado" | "reprovado" | "reagendar";
 
 const HOJE = new Date().toISOString().slice(0, 10);
 
@@ -79,7 +79,13 @@ function ProvasAgendadasPage() {
   const filtered = useMemo(() => {
     const base = (rows ?? []).filter((r: any) => {
       const st = (r.status ?? "agendada") as string;
-      if (st !== tab) return false;
+      if (tab === "reagendar") {
+        if (st !== "agendada") return false;
+        if (!r.data_prova || r.data_prova >= HOJE) return false;
+      } else {
+        if (st !== tab) return false;
+        if (tab === "agendada" && r.data_prova && r.data_prova < HOJE) return false;
+      }
       if (tipoFilter !== "todos") {
         if (tipoFilter === "externo" && !r.is_externo) return false;
         if (tipoFilter === "sistema" && r.is_externo) return false;
@@ -87,7 +93,7 @@ function ProvasAgendadasPage() {
       if (sitFinFilter !== "todos" && r.situacao_financeira !== sitFinFilter) return false;
       return true;
     });
-    if (tab === "agendada") {
+    if (tab === "agendada" || tab === "reagendar") {
       base.sort((a: any, b: any) => {
         const d = (a.data_prova ?? "").localeCompare(b.data_prova ?? "");
         if (d !== 0) return d;
@@ -100,10 +106,16 @@ function ProvasAgendadasPage() {
   }, [rows, tab, tipoFilter, sitFinFilter]);
 
   const counts = useMemo(() => {
-    const c = { agendada: 0, aprovado: 0, reprovado: 0 } as Record<TabKey, number>;
+    const c = { agendada: 0, aprovado: 0, reprovado: 0, reagendar: 0 } as Record<TabKey, number>;
     (rows ?? []).forEach((r: any) => {
-      const st = (r.status ?? "agendada") as TabKey;
-      if (st in c) c[st]++;
+      const st = (r.status ?? "agendada") as string;
+      if (st === "agendada" && r.data_prova && r.data_prova < HOJE) {
+        c.reagendar++;
+      } else if (st === "agendada") {
+        c.agendada++;
+      } else if (st === "aprovado" || st === "reprovado") {
+        c[st as TabKey]++;
+      }
     });
     return c;
   }, [rows]);
@@ -129,6 +141,8 @@ function ProvasAgendadasPage() {
         status: v.status || "agendada",
         resultado: v.status === "aprovado" ? "aprovado" : v.status === "reprovado" ? "reprovado" : null,
         observacao: v.observacao || null,
+        data_prova: v.data_prova || null,
+        hora_prova: v.hora_prova || null,
       };
       if (v.is_externo) {
         patch.nome_aluno = v.nome_aluno || null;
@@ -158,6 +172,8 @@ function ProvasAgendadasPage() {
     nome_aluno: r.nome_aluno ?? "",
     telefone: r.telefone ?? "",
     polo: r.polo ?? "",
+    data_prova: r.data_prova ?? "",
+    hora_prova: r.hora_prova ? r.hora_prova.slice(0, 5) : "",
     situacao_financeira: r.situacao_financeira ?? "",
     status: r.status ?? "agendada",
     observacao: r.observacao ?? "",
@@ -177,7 +193,7 @@ function ProvasAgendadasPage() {
             <TableHead>Data da Prova</TableHead>
             <TableHead>Horário</TableHead>
             <TableHead>Sit. Financeira</TableHead>
-            
+            {tab === "reagendar" && <TableHead>Observação</TableHead>}
             <TableHead>Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -200,6 +216,11 @@ function ProvasAgendadasPage() {
                 <TableCell>{new Date(r.data_prova + "T00:00:00").toLocaleDateString("pt-BR")}</TableCell>
                 <TableCell>{r.hora_prova?.slice(0, 5) ?? "—"}</TableCell>
                 <TableCell>{sitFinBadge(r.situacao_financeira)}</TableCell>
+                {tab === "reagendar" && (
+                  <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                    {r.observacao ?? "—"}
+                  </TableCell>
+                )}
                 <TableCell>
                   <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
                     <Pencil className="h-4 w-4" />
@@ -257,6 +278,7 @@ function ProvasAgendadasPage() {
           <TabsTrigger value="agendada">🟡 Agendadas ({counts.agendada})</TabsTrigger>
           <TabsTrigger value="aprovado">🟢 Aprovados ({counts.aprovado})</TabsTrigger>
           <TabsTrigger value="reprovado">🔴 Reprovados ({counts.reprovado})</TabsTrigger>
+          <TabsTrigger value="reagendar">🔄 Reagendar ({counts.reagendar})</TabsTrigger>
         </TabsList>
         <TabsContent value="agendada">
           <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
@@ -265,6 +287,9 @@ function ProvasAgendadasPage() {
           <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
         </TabsContent>
         <TabsContent value="reprovado">
+          <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
+        </TabsContent>
+        <TabsContent value="reagendar">
           <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
         </TabsContent>
       </Tabs>
@@ -286,7 +311,17 @@ function ProvasAgendadasPage() {
                     <Label>Telefone</Label>
                     <Input value={editing.telefone} onChange={(e) => setEditing({ ...editing, telefone: e.target.value })} />
                   </div>
-                  <div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Data da Prova</Label>
+                  <Input type="date" value={editing.data_prova} onChange={(e) => setEditing({ ...editing, data_prova: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Horário</Label>
+                  <Input type="time" value={editing.hora_prova} onChange={(e) => setEditing({ ...editing, hora_prova: e.target.value })} />
+                </div>
+              </div>
+              <div>
                     <Label>Polo</Label>
                     <Input value={editing.polo} onChange={(e) => setEditing({ ...editing, polo: e.target.value })} />
                   </div>
