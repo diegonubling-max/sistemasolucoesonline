@@ -298,10 +298,11 @@ function ProvasAgendadasPage() {
                 <TableCell>{r.telefoneDisplay}</TableCell>
                 <TableCell>{r.ctrDisplay}</TableCell>
 
-                <TableCell>{r.is_externo ? (r.polo ?? "—") : "—"}</TableCell>
+                <TableCell>{r.poloDisplay}</TableCell>
                 <TableCell>{new Date(r.data_prova + "T00:00:00").toLocaleDateString("pt-BR")}</TableCell>
                 <TableCell>{r.hora_prova?.slice(0, 5) ?? "—"}</TableCell>
-                <TableCell>{sitFinBadge(r.situacao_financeira)}</TableCell>
+                <TableCell>{sitFinBadge(r.sitFinComputed)}</TableCell>
+                <TableCell>{r.notaDisplay != null ? `${Number(r.notaDisplay).toFixed(1)}%` : "—"}</TableCell>
                 {tab === "reagendar" && (
                   <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
                     {r.observacao ?? "—"}
