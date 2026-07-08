@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_admin/provas-agendadas")({
 
 type SitFinFilter = "todos" | "ja_pago" | "boleto";
 type TipoFilter = "todos" | "sistema" | "externo";
-type TabKey = "agendada" | "aprovado" | "reprovado";
+type TabKey = "agendada" | "aprovado" | "reprovado" | "reagendar";
 
 const HOJE = new Date().toISOString().slice(0, 10);
 
