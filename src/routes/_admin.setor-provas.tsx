@@ -1318,59 +1318,255 @@ function AlunosLoteModal({ lote, onClose }: { lote: any; onClose: () => void }) 
 /* ============================== ABA 3: CERTIFICADOS ============================== */
 
 function CertificadosTab() {
+  const qc = useQueryClient();
   const selectedPoloId = usePoloFilter();
+  const [search, setSearch] = useState("");
+  const [loteFilter, setLoteFilter] = useState("all");
+  const [certFilter, setCertFilter] = useState("all");
+  const [digFilter, setDigFilter] = useState("all");
+  const [fisFilter, setFisFilter] = useState("all");
+  const [atualizarId, setAtualizarId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [viewRow, setViewRow] = useState<any>(null);
+
   const { data: rows, isLoading } = useQuery({
     queryKey: ["sp-certificados", selectedPoloId],
     queryFn: async () => {
-      const { data } = await sb
-        .from("lote_alunos")
+      const { data, error } = await sb
+        .from("documentacao_alunos")
         .select(`
-          id,
-          alunos(id, nome, polo_id, polos(nome)),
-          lotes!inner(mes_ano, data_envio, enviado, certificadoras(nome))
+          id, nome_aluno, polo, telefone, lote, data_envio, certificadora_id,
+          cert_digital_enviado, cert_fisico_recebido, cert_fisico_enviado_aluno, cert_fisico_rastreio,
+          certificadoras(nome),
+          alunos(polo_id, polos(nome))
         `)
-        .eq("lotes.enviado", true);
-      const filtered = (data ?? []).filter((r: any) =>
-        selectedPoloId === "all" || r.alunos?.polo_id === selectedPoloId
-      );
-      return filtered;
+        .not("data_envio", "is", null)
+        .order("data_envio", { ascending: false });
+      if (error) throw error;
+      let list = data ?? [];
+      if (selectedPoloId !== "all") {
+        list = list.filter((r: any) => r.alunos?.polo_id === selectedPoloId);
+      }
+      return list;
     },
   });
+
+  const { data: certs } = useQuery({
+    queryKey: ["sp-certs-active"],
+    queryFn: async () => {
+      const { data } = await sb.from("certificadoras").select("id, nome").eq("ativo", true).order("nome");
+      return data ?? [];
+    },
+  });
+
+  const lotesUnicos = useMemo(
+    () => Array.from(new Set((rows ?? []).map((r: any) => r.lote).filter(Boolean))),
+    [rows]
+  );
+
+  const filtered = useMemo(() => {
+    return (rows ?? []).filter((r: any) => {
+      if (search && !r.nome_aluno?.toLowerCase().includes(search.toLowerCase())) return false;
+      if (loteFilter !== "all" && r.lote !== loteFilter) return false;
+      if (certFilter !== "all" && r.certificadora_id !== certFilter) return false;
+      if (digFilter === "enviado" && !r.cert_digital_enviado) return false;
+      if (digFilter === "nao" && r.cert_digital_enviado) return false;
+      if (fisFilter === "aguardando" && r.cert_fisico_recebido) return false;
+      if (fisFilter === "recebido" && !(r.cert_fisico_recebido && !r.cert_fisico_enviado_aluno)) return false;
+      if (fisFilter === "enviado" && !r.cert_fisico_enviado_aluno) return false;
+      return true;
+    });
+  }, [rows, search, loteFilter, certFilter, digFilter, fisFilter]);
+
   return (
     <Card>
-      <CardContent className="pt-6 overflow-x-auto">
+      <CardContent className="pt-6 space-y-4 overflow-x-auto">
+        <div className="flex flex-wrap gap-2">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar aluno..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          </div>
+          <Select value={loteFilter} onValueChange={setLoteFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Lote" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os lotes</SelectItem>
+              {lotesUnicos.map((l: any) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={certFilter} onValueChange={setCertFilter}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Certificadora" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas certificadoras</SelectItem>
+              {(certs ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={digFilter} onValueChange={setDigFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Cert. Digital" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="enviado">Enviado</SelectItem>
+              <SelectItem value="nao">Não enviado</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={fisFilter} onValueChange={setFisFilter}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Cert. Físico" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="aguardando">Aguardando</SelectItem>
+              <SelectItem value="recebido">Recebido</SelectItem>
+              <SelectItem value="enviado">Enviado ao aluno</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Aluno</TableHead>
-              <TableHead>Polo</TableHead>
               <TableHead>Lote</TableHead>
               <TableHead>Certificadora</TableHead>
-              <TableHead>Data Envio</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Cert. Digital</TableHead>
+              <TableHead>Cert. Físico</TableHead>
+              <TableHead>Rastreio</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
-            ) : rows?.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum certificado.</TableCell></TableRow>
-            ) : rows?.map((r: any) => (
+              <TableRow><TableCell colSpan={7} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+            ) : filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum certificado.</TableCell></TableRow>
+            ) : filtered.map((r: any) => (
               <TableRow key={r.id}>
-                <TableCell>{r.alunos?.nome}</TableCell>
-                <TableCell>{r.alunos?.polos?.nome ?? "-"}</TableCell>
-                <TableCell>{r.lotes?.mes_ano}</TableCell>
-                <TableCell>{r.lotes?.certificadoras?.nome ?? "-"}</TableCell>
-                <TableCell>{r.lotes?.data_envio ? new Date(r.lotes.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
-                <TableCell><Badge variant="outline">Aguardando</Badge></TableCell>
+                <TableCell>
+                  <div className="font-medium">{r.nome_aluno}</div>
+                  <div className="text-xs text-muted-foreground">{r.telefone ?? "-"}</div>
+                </TableCell>
+                <TableCell>{r.lote ?? "-"}</TableCell>
+                <TableCell>{r.certificadoras?.nome ?? "-"}</TableCell>
+                <TableCell>
+                  {r.cert_digital_enviado ? (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✉️ Enviado</Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">🚫 Não enviado</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {r.cert_fisico_enviado_aluno ? (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✅ Enviado ao aluno</Badge>
+                  ) : r.cert_fisico_recebido ? (
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">📦 Recebido</Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">⏳ Aguardando chegada</Badge>
+                  )}
+                </TableCell>
+                <TableCell>{r.cert_fisico_rastreio || "-"}</TableCell>
+                <TableCell className="text-right space-x-1">
+                  <Button size="sm" variant="ghost" title="Email" onClick={() => toast.info("Em breve")}>
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" title="Atualizar certificado físico" onClick={() => setAtualizarId(r.id)}>
+                    <Package className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" title="Editar" onClick={() => setEditId(r.id)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" title="Visualizar" onClick={() => setViewRow(r)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </CardContent>
+
+      {atualizarId && <AtualizarCertFisicoModal docId={atualizarId} onClose={() => { setAtualizarId(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
+      {editId && <EditarRegistroModal docId={editId} onClose={() => { setEditId(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
+      {viewRow && <VisualizarCertModal row={viewRow} onClose={() => setViewRow(null)} />}
     </Card>
   );
 }
+
+function AtualizarCertFisicoModal({ docId, onClose }: { docId: string; onClose: () => void }) {
+  const [recebido, setRecebido] = useState(false);
+  const [enviadoAluno, setEnviadoAluno] = useState(false);
+  const [rastreio, setRastreio] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useQuery({
+    queryKey: ["sp-cert-fisico", docId],
+    queryFn: async () => {
+      const { data } = await sb
+        .from("documentacao_alunos")
+        .select("cert_fisico_recebido, cert_fisico_enviado_aluno, cert_fisico_rastreio")
+        .eq("id", docId)
+        .maybeSingle();
+      if (data) {
+        setRecebido(!!data.cert_fisico_recebido);
+        setEnviadoAluno(!!data.cert_fisico_enviado_aluno);
+        setRastreio(data.cert_fisico_rastreio ?? "");
+      }
+      return data ?? null;
+    },
+  });
+
+  const salvar = async () => {
+    setLoading(true);
+    const { error } = await sb.from("documentacao_alunos").update({
+      cert_fisico_recebido: recebido,
+      cert_fisico_enviado_aluno: enviadoAluno,
+      cert_fisico_rastreio: rastreio || null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", docId);
+    setLoading(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Atualizado");
+    onClose();
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Atualizar Certificado Físico</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <label className="flex items-center gap-2"><Checkbox checked={recebido} onCheckedChange={(v) => setRecebido(!!v)} /> Recebido</label>
+          <label className="flex items-center gap-2"><Checkbox checked={enviadoAluno} onCheckedChange={(v) => setEnviadoAluno(!!v)} /> Enviado ao aluno</label>
+          <div>
+            <Label>Rastreio</Label>
+            <Input value={rastreio} onChange={(e) => setRastreio(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={salvar} disabled={loading}>{loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function VisualizarCertModal({ row, onClose }: { row: any; onClose: () => void }) {
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{row.nome_aluno}</DialogTitle></DialogHeader>
+        <div className="space-y-2 text-sm">
+          <div><b>Telefone:</b> {row.telefone ?? "-"}</div>
+          <div><b>Polo:</b> {row.alunos?.polos?.nome ?? row.polo ?? "-"}</div>
+          <div><b>Lote:</b> {row.lote ?? "-"}</div>
+          <div><b>Certificadora:</b> {row.certificadoras?.nome ?? "-"}</div>
+          <div><b>Data envio:</b> {row.data_envio ? new Date(row.data_envio).toLocaleDateString("pt-BR") : "-"}</div>
+          <div><b>Cert. Digital:</b> {row.cert_digital_enviado ? "Enviado" : "Não enviado"}</div>
+          <div><b>Cert. Físico:</b> {row.cert_fisico_enviado_aluno ? "Enviado ao aluno" : row.cert_fisico_recebido ? "Recebido" : "Aguardando"}</div>
+          <div><b>Rastreio:</b> {row.cert_fisico_rastreio || "-"}</div>
+        </div>
+        <DialogFooter><Button onClick={onClose}>Fechar</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 /* ============================== MODAL CERTIFICADORAS ============================== */
 
