@@ -276,6 +276,7 @@ function ProvasAgendadasPage() {
             <TableHead>Data da Prova</TableHead>
             <TableHead>Horário</TableHead>
             <TableHead>Sit. Financeira</TableHead>
+            <TableHead>Nota</TableHead>
             {tab === "reagendar" && <TableHead>Observação</TableHead>}
             <TableHead>Ações</TableHead>
           </TableRow>
