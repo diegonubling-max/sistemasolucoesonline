@@ -492,9 +492,14 @@ Boa prova! 🍀`;
                   </TableCell>
                 )}
                 <TableCell>
-                  <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => setDetalhesFor(r)} title="Ver detalhes">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(r)} title="Editar">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             );
