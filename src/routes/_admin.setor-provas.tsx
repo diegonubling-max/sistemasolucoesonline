@@ -1468,16 +1468,16 @@ function CertificadosTab() {
                 </TableCell>
                 <TableCell>{r.cert_fisico_rastreio || "-"}</TableCell>
                 <TableCell className="text-right space-x-1">
-                  <Button size="sm" variant="ghost" title="Email" onClick={() => toast.info("Em breve")}>
+                  <Button size="sm" variant="ghost" title="Enviar Certificado Digital" onClick={() => setEnviarDigRow(r)}>
                     <Mail className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" title="Atualizar certificado físico" onClick={() => setAtualizarId(r.id)}>
+                  <Button size="sm" variant="ghost" title="Certificado Físico Recebido" onClick={() => setReceberFisRow(r)}>
                     <Package className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" title="Editar" onClick={() => setEditId(r.id)}>
+                  <Button size="sm" variant="ghost" title="Observação do Certificado" onClick={() => setObsRow(r)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" title="Visualizar" onClick={() => setViewRow(r)}>
+                  <Button size="sm" variant="ghost" title="Ver Detalhes" onClick={() => setViewRow(r)}>
                     <Eye className="h-4 w-4" />
                   </Button>
                 </TableCell>
@@ -1487,9 +1487,11 @@ function CertificadosTab() {
         </Table>
       </CardContent>
 
-      {atualizarId && <AtualizarCertFisicoModal docId={atualizarId} onClose={() => { setAtualizarId(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
-      {editId && <EditarRegistroModal docId={editId} onClose={() => { setEditId(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
+      {enviarDigRow && <EnviarDigitalModal row={enviarDigRow} onClose={() => { setEnviarDigRow(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
+      {receberFisRow && <ReceberFisicoModal row={receberFisRow} onClose={() => { setReceberFisRow(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
+      {obsRow && <ObservacaoCertModal row={obsRow} onClose={() => { setObsRow(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
       {viewRow && <VisualizarCertModal row={viewRow} onClose={() => setViewRow(null)} />}
+
     </Card>
   );
 }
