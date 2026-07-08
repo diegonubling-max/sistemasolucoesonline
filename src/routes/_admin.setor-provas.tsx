@@ -98,6 +98,7 @@ function DocumentacaoTab() {
   const [statusDoc, setStatusDoc] = useState<string>("all");
   const [loteFilter, setLoteFilter] = useState<string>("all");
   const [poloFilter, setPoloFilter] = useState<string>("all");
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; nome: string } | null>(null);
   const [certFilter, setCertFilter] = useState<string>("all");
 
   const [editDocId, setEditDocId] = useState<string | null>(null);
