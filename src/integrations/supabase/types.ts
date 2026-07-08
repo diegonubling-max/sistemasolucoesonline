@@ -974,6 +974,7 @@ export type Database = {
           cert_fisico_enviado_aluno: boolean
           cert_fisico_rastreio: string | null
           cert_fisico_recebido: boolean
+          cert_observacao: string | null
           certificadora_id: string | null
           created_at: string
           ctr: string | null
@@ -1011,6 +1012,7 @@ export type Database = {
           cert_fisico_enviado_aluno?: boolean
           cert_fisico_rastreio?: string | null
           cert_fisico_recebido?: boolean
+          cert_observacao?: string | null
           certificadora_id?: string | null
           created_at?: string
           ctr?: string | null
@@ -1048,6 +1050,7 @@ export type Database = {
           cert_fisico_enviado_aluno?: boolean
           cert_fisico_rastreio?: string | null
           cert_fisico_recebido?: boolean
+          cert_observacao?: string | null
           certificadora_id?: string | null
           created_at?: string
           ctr?: string | null

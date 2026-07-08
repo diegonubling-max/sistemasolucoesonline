@@ -1325,9 +1325,11 @@ function CertificadosTab() {
   const [certFilter, setCertFilter] = useState("all");
   const [digFilter, setDigFilter] = useState("all");
   const [fisFilter, setFisFilter] = useState("all");
-  const [atualizarId, setAtualizarId] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [enviarDigRow, setEnviarDigRow] = useState<any>(null);
+  const [receberFisRow, setReceberFisRow] = useState<any>(null);
+  const [obsRow, setObsRow] = useState<any>(null);
   const [viewRow, setViewRow] = useState<any>(null);
+
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["sp-certificados", selectedPoloId],
@@ -1335,11 +1337,15 @@ function CertificadosTab() {
       const { data, error } = await sb
         .from("documentacao_alunos")
         .select(`
-          id, nome_aluno, polo, telefone, lote, data_envio, certificadora_id,
+          id, nome_aluno, polo, telefone, quem_vendeu, lote, data_envio, certificadora_id,
+          documentacao_completa, declaracao_gerada, declaracao_data, cert_observacao,
+          doc_rg_cpf, doc_comprovante_residencia, doc_historico_fundamental, doc_historico_fundamental_medio, doc_outros,
+          arquivos_paths,
           cert_digital_enviado, cert_fisico_recebido, cert_fisico_enviado_aluno, cert_fisico_rastreio,
           certificadoras(nome),
           alunos(polo_id, polos(nome))
         `)
+
         .not("data_envio", "is", null)
         .order("data_envio", { ascending: false });
       if (error) throw error;
@@ -1462,16 +1468,16 @@ function CertificadosTab() {
                 </TableCell>
                 <TableCell>{r.cert_fisico_rastreio || "-"}</TableCell>
                 <TableCell className="text-right space-x-1">
-                  <Button size="sm" variant="ghost" title="Email" onClick={() => toast.info("Em breve")}>
+                  <Button size="sm" variant="ghost" title="Enviar Certificado Digital" onClick={() => setEnviarDigRow(r)}>
                     <Mail className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" title="Atualizar certificado físico" onClick={() => setAtualizarId(r.id)}>
+                  <Button size="sm" variant="ghost" title="Certificado Físico Recebido" onClick={() => setReceberFisRow(r)}>
                     <Package className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" title="Editar" onClick={() => setEditId(r.id)}>
+                  <Button size="sm" variant="ghost" title="Observação do Certificado" onClick={() => setObsRow(r)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" title="Visualizar" onClick={() => setViewRow(r)}>
+                  <Button size="sm" variant="ghost" title="Ver Detalhes" onClick={() => setViewRow(r)}>
                     <Eye className="h-4 w-4" />
                   </Button>
                 </TableCell>
@@ -1481,65 +1487,112 @@ function CertificadosTab() {
         </Table>
       </CardContent>
 
-      {atualizarId && <AtualizarCertFisicoModal docId={atualizarId} onClose={() => { setAtualizarId(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
-      {editId && <EditarRegistroModal docId={editId} onClose={() => { setEditId(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
+      {enviarDigRow && <EnviarDigitalModal row={enviarDigRow} onClose={() => { setEnviarDigRow(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
+      {receberFisRow && <ReceberFisicoModal row={receberFisRow} onClose={() => { setReceberFisRow(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
+      {obsRow && <ObservacaoCertModal row={obsRow} onClose={() => { setObsRow(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
       {viewRow && <VisualizarCertModal row={viewRow} onClose={() => setViewRow(null)} />}
+
     </Card>
   );
 }
 
-function AtualizarCertFisicoModal({ docId, onClose }: { docId: string; onClose: () => void }) {
-  const [recebido, setRecebido] = useState(false);
-  const [enviadoAluno, setEnviadoAluno] = useState(false);
-  const [rastreio, setRastreio] = useState("");
+function EnviarDigitalModal({ row, onClose }: { row: any; onClose: () => void }) {
   const [loading, setLoading] = useState(false);
-
-  useQuery({
-    queryKey: ["sp-cert-fisico", docId],
-    queryFn: async () => {
-      const { data } = await sb
-        .from("documentacao_alunos")
-        .select("cert_fisico_recebido, cert_fisico_enviado_aluno, cert_fisico_rastreio")
-        .eq("id", docId)
-        .maybeSingle();
-      if (data) {
-        setRecebido(!!data.cert_fisico_recebido);
-        setEnviadoAluno(!!data.cert_fisico_enviado_aluno);
-        setRastreio(data.cert_fisico_rastreio ?? "");
-      }
-      return data ?? null;
-    },
-  });
-
-  const salvar = async () => {
+  const confirmar = async () => {
     setLoading(true);
     const { error } = await sb.from("documentacao_alunos").update({
-      cert_fisico_recebido: recebido,
-      cert_fisico_enviado_aluno: enviadoAluno,
-      cert_fisico_rastreio: rastreio || null,
+      cert_digital_enviado: true,
+      cert_digital_data: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    }).eq("id", docId);
+    }).eq("id", row.id);
     setLoading(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Atualizado");
+    toast.success("Certificado digital enviado");
     onClose();
   };
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Atualizar Certificado Físico</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <label className="flex items-center gap-2"><Checkbox checked={recebido} onCheckedChange={(v) => setRecebido(!!v)} /> Recebido</label>
-          <label className="flex items-center gap-2"><Checkbox checked={enviadoAluno} onCheckedChange={(v) => setEnviadoAluno(!!v)} /> Enviado ao aluno</label>
-          <div>
-            <Label>Rastreio</Label>
-            <Input value={rastreio} onChange={(e) => setRastreio(e.target.value)} />
-          </div>
-        </div>
+        <DialogHeader>
+          <DialogTitle>Enviar Certificado Digital</DialogTitle>
+          <DialogDescription>
+            Confirmar envio do certificado digital para <b>{row.nome_aluno}</b>?
+            <br /><span className="text-xs text-muted-foreground">A data de envio será registrada automaticamente.</span>
+          </DialogDescription>
+        </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={salvar} disabled={loading}>{loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Salvar</Button>
+          <Button onClick={confirmar} disabled={loading}>
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Confirmar Envio
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReceberFisicoModal({ row, onClose }: { row: any; onClose: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const confirmar = async () => {
+    setLoading(true);
+    const { error } = await sb.from("documentacao_alunos").update({
+      cert_fisico_recebido: true,
+      cert_fisico_data_recebimento: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq("id", row.id);
+    setLoading(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Recebimento registrado");
+    onClose();
+  };
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Certificado Físico Recebido</DialogTitle>
+          <DialogDescription>
+            Confirmar recebimento do certificado físico de <b>{row.nome_aluno}</b> na escola?
+            <br /><span className="text-xs text-muted-foreground">A data de recebimento será registrada automaticamente.</span>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={confirmar} disabled={loading}>
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Confirmar Recebimento
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ObservacaoCertModal({ row, onClose }: { row: any; onClose: () => void }) {
+  const [obs, setObs] = useState<string>(row.cert_observacao ?? "");
+  const [loading, setLoading] = useState(false);
+  const salvar = async () => {
+    setLoading(true);
+    const { error } = await sb.from("documentacao_alunos").update({
+      cert_observacao: obs || null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", row.id);
+    setLoading(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Observação salva");
+    onClose();
+  };
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Observação do Certificado</DialogTitle>
+          <DialogDescription>Aluno: {row.nome_aluno}</DialogDescription>
+        </DialogHeader>
+        <Textarea placeholder="Observação..." rows={6} value={obs} onChange={(e) => setObs(e.target.value)} />
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={salvar} disabled={loading}>
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Salvar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1547,25 +1600,100 @@ function AtualizarCertFisicoModal({ docId, onClose }: { docId: string; onClose: 
 }
 
 function VisualizarCertModal({ row, onClose }: { row: any; onClose: () => void }) {
+  const arquivos: string[] = Array.isArray(row.arquivos_paths) ? row.arquivos_paths : [];
+  const docs = [
+    { k: "doc_rg_cpf", label: "RG/CPF" },
+    { k: "doc_comprovante_residencia", label: "Comprovante de Residência" },
+    { k: "doc_historico_fundamental", label: "Histórico Fundamental" },
+    { k: "doc_historico_fundamental_medio", label: "Histórico Fundamental/Médio" },
+    { k: "doc_outros", label: "Outros" },
+  ];
+  const getUrl = async (path: string) => {
+    const { data } = await sb.storage.from("documentos-alunos").createSignedUrl(path, 60);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  };
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>{row.nome_aluno}</DialogTitle></DialogHeader>
-        <div className="space-y-2 text-sm">
-          <div><b>Telefone:</b> {row.telefone ?? "-"}</div>
-          <div><b>Polo:</b> {row.alunos?.polos?.nome ?? row.polo ?? "-"}</div>
-          <div><b>Lote:</b> {row.lote ?? "-"}</div>
-          <div><b>Certificadora:</b> {row.certificadoras?.nome ?? "-"}</div>
-          <div><b>Data envio:</b> {row.data_envio ? new Date(row.data_envio).toLocaleDateString("pt-BR") : "-"}</div>
-          <div><b>Cert. Digital:</b> {row.cert_digital_enviado ? "Enviado" : "Não enviado"}</div>
-          <div><b>Cert. Físico:</b> {row.cert_fisico_enviado_aluno ? "Enviado ao aluno" : row.cert_fisico_recebido ? "Recebido" : "Aguardando"}</div>
-          <div><b>Rastreio:</b> {row.cert_fisico_rastreio || "-"}</div>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Detalhes — {row.nome_aluno}</DialogTitle></DialogHeader>
+        <div className="space-y-4 text-sm">
+          <div className="grid grid-cols-2 gap-2">
+            <div><b>Aluno:</b> {row.nome_aluno}</div>
+            <div><b>Polo:</b> {row.alunos?.polos?.nome ?? row.polo ?? "-"}</div>
+            <div><b>Vendedor:</b> {row.quem_vendeu ?? "-"}</div>
+            <div><b>Telefone:</b> {row.telefone ?? "-"}</div>
+            <div><b>Certificadora:</b> {row.certificadoras?.nome ?? "-"}</div>
+            <div><b>Lote:</b> {row.lote ?? "-"}</div>
+            <div><b>Data de Envio:</b> {row.data_envio ? new Date(row.data_envio).toLocaleDateString("pt-BR") : "-"}</div>
+            <div><b>Declaração:</b> {row.declaracao_gerada ? `Gerada${row.declaracao_data ? ` em ${new Date(row.declaracao_data).toLocaleDateString("pt-BR")}` : ""}` : "Não gerada"}</div>
+          </div>
+
+          <div>
+            <div className="font-semibold mb-1">Documentos recebidos</div>
+            <div className="grid grid-cols-2 gap-1">
+              {docs.map((d) => (
+                <div key={d.k}>{row[d.k] ? "✅" : "❌"} {d.label}</div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="font-semibold mb-1">Arquivos Anexados</div>
+            {arquivos.length === 0 ? (
+              <div className="text-muted-foreground">Nenhum arquivo.</div>
+            ) : (
+              <ul className="list-disc pl-5">
+                {arquivos.map((p, i) => (
+                  <li key={i}>
+                    <button className="text-blue-600 hover:underline" onClick={() => getUrl(p)}>
+                      {p.split("/").pop()}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <div className="font-semibold mb-1">Certificados</div>
+            <div className="flex flex-wrap gap-2">
+              {row.cert_digital_enviado ? (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✉️ Digital enviado</Badge>
+              ) : (
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">🚫 Digital não enviado</Badge>
+              )}
+              {row.cert_fisico_enviado_aluno ? (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✅ Físico enviado ao aluno</Badge>
+              ) : row.cert_fisico_recebido ? (
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">📦 Físico recebido</Badge>
+              ) : (
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">⏳ Físico aguardando</Badge>
+              )}
+              {row.cert_fisico_rastreio && <Badge variant="outline">Rastreio: {row.cert_fisico_rastreio}</Badge>}
+            </div>
+          </div>
+
+          {row.cert_observacao && (
+            <div>
+              <div className="font-semibold mb-1">Observação</div>
+              <div className="whitespace-pre-wrap">{row.cert_observacao}</div>
+            </div>
+          )}
+
+          <div className="pt-2 border-t">
+            {row.documentacao_completa ? (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✅ Doc. Completa</Badge>
+            ) : (
+              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">⚠️ Doc. Incompleta</Badge>
+            )}
+          </div>
         </div>
         <DialogFooter><Button onClick={onClose}>Fechar</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
 
 
 /* ============================== MODAL CERTIFICADORAS ============================== */
