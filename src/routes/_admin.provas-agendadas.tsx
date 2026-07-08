@@ -19,9 +19,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Loader2, Pencil, UserPlus, Copy } from "lucide-react";
+import { CheckCircle2, Loader2, Pencil, UserPlus, Copy, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { MateriasSelector, MATERIAS_PADRAO } from "@/components/prova/MateriasSelector";
 
 export const Route = createFileRoute("/_admin/provas-agendadas")({
   head: () => ({
