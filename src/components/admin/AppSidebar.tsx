@@ -163,13 +163,14 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
           aria-hidden
         />
       )}
-    <aside className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 w-64 h-screen md:h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border shadow-lg transition-transform duration-200 ease-in-out`}>
-      <div className="px-6 py-6 border-b border-sidebar-border">
-        <h1 className="text-2xl font-bold tracking-tight">
+    <aside className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 w-56 h-screen md:h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border shadow-lg transition-transform duration-200 ease-in-out`}>
+      <div className="px-4 py-4 border-b border-sidebar-border">
+        <h1 className="text-xl font-bold tracking-tight">
           <span className="text-white">{nomeEscola.split(' ')[0]}</span> <span className="text-[#2ECC71]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
         </h1>
-        <p className="text-xs text-sidebar-foreground/60 mt-1 uppercase tracking-wider font-semibold">Painel Administrativo</p>
+        <p className="text-[10px] text-sidebar-foreground/60 mt-0.5 uppercase tracking-wider font-semibold">Painel Administrativo</p>
       </div>
+
 
       {isResponsavel && responsavelPoloNome && (
         <div className="px-6 py-2 border-b border-sidebar-border bg-amber-500/10 flex items-center gap-2">
