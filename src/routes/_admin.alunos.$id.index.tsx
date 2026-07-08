@@ -933,7 +933,26 @@ function AlunoDetalhes() {
         </TabsContent>
 
         <TabsContent value="vitrine" className="space-y-6">
-          <div className="flex justify-end"><Button onClick={() => setShowVitrineModal(true)}><Plus className="h-4 w-4 mr-2" /> Adicionar</Button></div>
+          <Card>
+            <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
+              {perfilVocacional?.perfil_identificado ? (
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Perfil vocacional</p>
+                  <p className="font-semibold">{perfilVocacional.perfil_identificado}</p>
+                  {((perfilVocacional.segmentos_recomendados ?? []) as string[]).length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {((perfilVocacional.segmentos_recomendados ?? []) as string[]).join(" · ")}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" /> Aluno ainda não realizou o teste vocacional
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          <div className="flex justify-end"><Button onClick={() => setShowVitrineModal(true)}><Plus className="h-4 w-4 mr-2" /> Adicionar Curso</Button></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {vitrine?.map((item) => {
               const v = item as any;
