@@ -115,7 +115,7 @@ function ExternoProvaPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
-                {MATERIAS.length} matérias, 10 questões cada. Cada resposta é salva automaticamente e você pode retomar de onde parou se cair a conexão. Você tem até 4 horas.
+                {(agendamento.materias_selecionadas?.length ?? MATERIAS_DEFAULT.length)} matérias, 10 questões cada. Cada resposta é salva automaticamente e você pode retomar de onde parou se cair a conexão. Você tem até 4 horas.
               </div>
               <Button size="lg" className="w-full h-14 text-lg font-bold" onClick={handleIniciar}>
                 Iniciar Prova <ArrowRight className="ml-2" />
@@ -127,7 +127,7 @@ function ExternoProvaPage() {
         <ProvaFluxo
           alunoId={externoId!}
           agendamentoId={agendamento.id}
-          materias={MATERIAS}
+          materias={agendamento.materias_selecionadas && agendamento.materias_selecionadas.length > 0 ? agendamento.materias_selecionadas : MATERIAS_DEFAULT}
           onSair={handleSair}
         />
       )}
