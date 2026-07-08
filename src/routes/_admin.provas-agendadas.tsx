@@ -278,6 +278,7 @@ function ProvasAgendadasPage() {
           <TabsTrigger value="agendada">🟡 Agendadas ({counts.agendada})</TabsTrigger>
           <TabsTrigger value="aprovado">🟢 Aprovados ({counts.aprovado})</TabsTrigger>
           <TabsTrigger value="reprovado">🔴 Reprovados ({counts.reprovado})</TabsTrigger>
+          <TabsTrigger value="reagendar">🔄 Reagendar ({counts.reagendar})</TabsTrigger>
         </TabsList>
         <TabsContent value="agendada">
           <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
@@ -286,6 +287,9 @@ function ProvasAgendadasPage() {
           <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
         </TabsContent>
         <TabsContent value="reprovado">
+          <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
+        </TabsContent>
+        <TabsContent value="reagendar">
           <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
         </TabsContent>
       </Tabs>
