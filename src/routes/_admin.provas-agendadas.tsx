@@ -692,6 +692,7 @@ Boa prova! 🍀`;
                 </SelectContent>
               </Select>
             </div>
+            <MateriasSelector value={extMaterias} onChange={setExtMaterias} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setExternoOpen(false)}>Cancelar</Button>
