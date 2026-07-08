@@ -83,12 +83,14 @@ function ProvaFinalPage() {
       console.log("[ProvaFinal] aluno_id encontrado na tabela alunos:", { aluno_id: alunoAgendamento?.id, error: alunoError });
       if (alunoError) throw alunoError;
 
+      const hojeStr = new Date().toISOString().slice(0, 10);
       const { data, error } = await supabase
         .from("prova_agendamentos")
         .select("*")
         .eq("aluno_id", alunoAgendamento.id)
-        .eq("status", "agendado")
-        .single();
+        .eq("status", "agendada")
+        .eq("data_prova", hojeStr)
+        .maybeSingle();
 
       console.log("[ProvaFinal] resultado da query de agendamentos:", { aluno_id: alunoAgendamento.id, data, error });
       if (error?.code === "PGRST116") return null;
