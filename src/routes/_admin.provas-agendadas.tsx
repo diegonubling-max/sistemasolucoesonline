@@ -203,7 +203,9 @@ function ProvasAgendadasPage() {
         <TableHeader>
           <TableRow>
             <TableHead>Aluno</TableHead>
+            <TableHead>Telefone</TableHead>
             <TableHead>CTR</TableHead>
+
             <TableHead>Polo</TableHead>
             <TableHead>Data da Prova</TableHead>
             <TableHead>Horário</TableHead>
