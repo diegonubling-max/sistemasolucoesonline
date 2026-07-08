@@ -242,14 +242,14 @@ function DocumentacaoTab() {
           <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[20%]">Aluno</TableHead>
-                <TableHead className="w-[12%]">Polo</TableHead>
-                <TableHead className="w-[12%]">Vendedora</TableHead>
-                <TableHead className="w-[13%]">Documentação</TableHead>
-                <TableHead className="w-[14%]">Certificadora</TableHead>
-                <TableHead className="w-[8%]">Lote</TableHead>
-                <TableHead className="w-[13%]">Declaração</TableHead>
-                <TableHead className="w-[8%] text-right">Ações</TableHead>
+                <TableHead className="w-[28%]">Aluno</TableHead>
+                <TableHead className="w-[10%]">Polo</TableHead>
+                <TableHead className="w-[10%]">Vendedora</TableHead>
+                <TableHead className="w-[9%]">Documentação</TableHead>
+                <TableHead className="w-[10%]">Certificadora</TableHead>
+                <TableHead className="w-[7%]">Lote</TableHead>
+                <TableHead className="w-[14%]">Declaração</TableHead>
+                <TableHead className="w-[12%] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
