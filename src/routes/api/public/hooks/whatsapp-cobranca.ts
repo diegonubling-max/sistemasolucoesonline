@@ -80,7 +80,9 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-cobranca")({
               "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(id, nome, telefone))",
             )
             .eq("data_vencimento", em3Dias)
-            .neq("status", "pago");
+            .neq("status", "pago")
+            .neq("status", "isento")
+            .gt("valor", 0);
           if (error) throw error;
           for (const p of vencendo ?? []) {
             const aluno = (p as any)?.matriculas?.alunos;
@@ -106,7 +108,9 @@ Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
               "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(id, nome, telefone))",
             )
             .lt("data_vencimento", ontem)
-            .neq("status", "pago");
+            .neq("status", "pago")
+            .neq("status", "isento")
+            .gt("valor", 0);
           if (error) throw error;
           for (const p of atrasadas ?? []) {
             const aluno = (p as any)?.matriculas?.alunos;
