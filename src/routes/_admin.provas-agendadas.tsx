@@ -311,7 +311,17 @@ function ProvasAgendadasPage() {
                     <Label>Telefone</Label>
                     <Input value={editing.telefone} onChange={(e) => setEditing({ ...editing, telefone: e.target.value })} />
                   </div>
-                  <div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Data da Prova</Label>
+                  <Input type="date" value={editing.data_prova} onChange={(e) => setEditing({ ...editing, data_prova: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Horário</Label>
+                  <Input type="time" value={editing.hora_prova} onChange={(e) => setEditing({ ...editing, hora_prova: e.target.value })} />
+                </div>
+              </div>
+              <div>
                     <Label>Polo</Label>
                     <Input value={editing.polo} onChange={(e) => setEditing({ ...editing, polo: e.target.value })} />
                   </div>
