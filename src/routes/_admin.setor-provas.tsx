@@ -255,22 +255,22 @@ function DocumentacaoTab() {
                 const ctrLabel = r.alunos?.ctr ?? r.ctr;
                 return (
                   <TableRow key={r.id}>
-                    <TableCell className="font-medium">
-                      {r.nome_aluno}
+                    <TableCell className="font-medium truncate">
+                      <span className="truncate">{r.nome_aluno}</span>
                       {r.aluno_id && ctrLabel ? <span className="text-xs text-muted-foreground ml-2">CTR {ctrLabel}</span> : null}
                     </TableCell>
-                    <TableCell>{r.alunos?.polos?.nome ?? r.polo ?? "-"}</TableCell>
-                    <TableCell>{r.quem_vendeu ?? "-"}</TableCell>
+                    <TableCell className="truncate">{r.alunos?.polos?.nome ?? r.polo ?? "-"}</TableCell>
+                    <TableCell className="truncate">{r.quem_vendeu ?? "-"}</TableCell>
                     <TableCell>
                       {status === "completa" ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✅ Completa</Badge>
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✅</Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">⚠️ Incompleta</Badge>
+                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">⚠️</Badge>
                       )}
                     </TableCell>
 
-                    <TableCell>{r.certificadoras?.nome ?? "-"}</TableCell>
-                    <TableCell>{r.lote ?? "-"}</TableCell>
+                    <TableCell className="truncate">{r.certificadoras?.nome ?? "-"}</TableCell>
+                    <TableCell className="truncate">{r.lote ?? "-"}</TableCell>
                     <TableCell>{r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
                     <TableCell>
                       {r.declaracao_gerada ? (
