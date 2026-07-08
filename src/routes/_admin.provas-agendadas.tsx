@@ -19,9 +19,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Loader2, Pencil, UserPlus, Copy } from "lucide-react";
+import { CheckCircle2, Loader2, Pencil, UserPlus, Copy, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { MateriasSelector, MATERIAS_PADRAO } from "@/components/prova/MateriasSelector";
 
 export const Route = createFileRoute("/_admin/provas-agendadas")({
   head: () => ({
@@ -48,12 +49,14 @@ function ProvasAgendadasPage() {
   const [externoOpen, setExternoOpen] = useState(false);
   const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string; whatsSent: boolean } | null>(null);
   const [gerarCtrFor, setGerarCtrFor] = useState<any | null>(null);
+  const [detalhesFor, setDetalhesFor] = useState<any | null>(null);
   const [extNome, setExtNome] = useState("");
   const [extTelefone, setExtTelefone] = useState("");
   const [extPoloId, setExtPoloId] = useState("");
   const [extData, setExtData] = useState("");
   const [extHora, setExtHora] = useState("");
   const [extSitFin, setExtSitFin] = useState<"ja_pago" | "boleto">("ja_pago");
+  const [extMaterias, setExtMaterias] = useState<string[]>([...MATERIAS_PADRAO]);
 
   const { data: polos } = useQuery({
     queryKey: ["polos-externo-select"],
@@ -130,6 +133,9 @@ Boa prova! 🍀`;
       if (!extNome.trim() || !extTelefone.trim() || !extPoloId || !extData || !extHora) {
         throw new Error("Preencha todos os campos");
       }
+      if (extMaterias.length === 0) {
+        throw new Error("Selecione pelo menos uma matéria");
+      }
       let quemAgendou = session?.user.email ?? "sistema";
       if (session?.user.id) {
         const { data: colab } = await supabase
@@ -144,7 +150,8 @@ Boa prova! 🍀`;
         p_hora_prova: extHora,
         p_situacao_financeira: extSitFin,
         p_quem_agendou: quemAgendou,
-      });
+        p_materias: extMaterias,
+      } as any);
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
       const r = row as { aluno_externo_id: string; ctr: string; senha: string };
@@ -162,6 +169,7 @@ Boa prova! 🍀`;
       setExternoResult({ ctr: row.ctr, senha: row.senha, data: row.dataUsed, hora: row.horaUsed, whatsSent: row.whatsSent });
       setExternoOpen(false);
       setExtNome(""); setExtTelefone(""); setExtData(""); setExtHora(""); setExtSitFin("ja_pago");
+      setExtMaterias([...MATERIAS_PADRAO]);
       qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
     },
     onError: (e: any) => toast.error("Erro ao cadastrar externo", { description: e.message }),
@@ -205,7 +213,7 @@ Boa prova! 🍀`;
         .select(`
           id, aluno_id, data_prova, hora_prova, status, docs_solicitados, docs_recebidos,
           is_externo, nome_aluno, telefone, polo, ctr, ultimo_heartbeat,
-          situacao_financeira, resultado, observacao
+          situacao_financeira, resultado, observacao, materias_selecionadas
         `)
         .order("data_prova", { ascending: true });
       if (dataInicio) q = q.gte("data_prova", dataInicio);
@@ -484,9 +492,14 @@ Boa prova! 🍀`;
                   </TableCell>
                 )}
                 <TableCell>
-                  <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => setDetalhesFor(r)} title="Ver detalhes">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(r)} title="Editar">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             );
@@ -635,7 +648,7 @@ Boa prova! 🍀`;
 
       {/* Dialog: Agendar Externo */}
       <Dialog open={externoOpen} onOpenChange={setExternoOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Agendar Aluno Externo</DialogTitle>
           </DialogHeader>
@@ -679,6 +692,7 @@ Boa prova! 🍀`;
                 </SelectContent>
               </Select>
             </div>
+            <MateriasSelector value={extMaterias} onChange={setExtMaterias} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setExternoOpen(false)}>Cancelar</Button>
@@ -744,6 +758,94 @@ Boa prova! 🍀`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DetalhesAgendamentoDialog agendamento={detalhesFor} onClose={() => setDetalhesFor(null)} />
     </div>
+  );
+}
+
+function DetalhesAgendamentoDialog({ agendamento, onClose }: { agendamento: any | null; onClose: () => void }) {
+  const { data: resultados, isLoading } = useQuery({
+    queryKey: ["prova-resultados-detalhes", agendamento?.id],
+    enabled: !!agendamento?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prova_resultados")
+        .select("materia, total_acertos, total_questoes, percentual, aprovado, finalizado_em, iniciado_em")
+        .eq("agendamento_id", agendamento.id);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const materias: string[] = (agendamento?.materias_selecionadas && agendamento.materias_selecionadas.length > 0)
+    ? agendamento.materias_selecionadas
+    : MATERIAS_PADRAO;
+
+  const resPorMateria = new Map<string, any>();
+  (resultados ?? []).forEach((r: any) => resPorMateria.set(r.materia, r));
+
+  return (
+    <Dialog open={!!agendamento} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Detalhes do Agendamento</DialogTitle>
+        </DialogHeader>
+        {agendamento && (
+          <div className="space-y-4">
+            <div className="rounded-lg border p-3 bg-muted/20 grid grid-cols-2 gap-2 text-sm">
+              <div><b>Nome:</b> {agendamento.nome}</div>
+              <div><b>CTR:</b> {agendamento.ctrDisplay ?? "—"}</div>
+              <div><b>Telefone:</b> {agendamento.telefoneDisplay ?? "—"}</div>
+              <div><b>Polo:</b> {agendamento.poloDisplay ?? "—"}</div>
+              <div><b>Data:</b> {agendamento.data_prova ? new Date(agendamento.data_prova + "T00:00:00").toLocaleDateString("pt-BR") : "—"}</div>
+              <div><b>Horário:</b> {agendamento.hora_prova?.slice(0, 5) ?? "—"}</div>
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold mb-2">Resultados por matéria</div>
+              {isLoading ? (
+                <div className="py-4 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {materias.map((m) => {
+                    const r = resPorMateria.get(m);
+                    let statusLabel = "Pendente";
+                    let cls = "bg-gray-50 border-gray-200 text-gray-600";
+                    if (r) {
+                      if (r.finalizado_em) {
+                        statusLabel = r.aprovado ? "✅ Aprovado" : "❌ Reprovado";
+                        cls = r.aprovado
+                          ? "bg-green-50 border-green-200 text-green-700"
+                          : "bg-red-50 border-red-200 text-red-700";
+                      } else {
+                        statusLabel = "Em andamento";
+                        cls = "bg-amber-50 border-amber-200 text-amber-700";
+                      }
+                    }
+                    return (
+                      <div key={m} className={`rounded-md border p-2 text-xs ${cls}`}>
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold">{m}</span>
+                          <span>{statusLabel}</span>
+                        </div>
+                        {r?.finalizado_em && (
+                          <div className="mt-1 text-[11px] opacity-80">
+                            {r.total_acertos}/{r.total_questoes} acertos ({Number(r.percentual ?? 0).toFixed(1)}%)
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button onClick={onClose}>Fechar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

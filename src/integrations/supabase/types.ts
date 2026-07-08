@@ -1840,6 +1840,7 @@ export type Database = {
           hora_prova: string
           id: string
           is_externo: boolean | null
+          materias_selecionadas: string[] | null
           nome_aluno: string | null
           observacao: string | null
           polo: string | null
@@ -1860,6 +1861,7 @@ export type Database = {
           hora_prova: string
           id?: string
           is_externo?: boolean | null
+          materias_selecionadas?: string[] | null
           nome_aluno?: string | null
           observacao?: string | null
           polo?: string | null
@@ -1880,6 +1882,7 @@ export type Database = {
           hora_prova?: string
           id?: string
           is_externo?: boolean | null
+          materias_selecionadas?: string[] | null
           nome_aluno?: string | null
           observacao?: string | null
           polo?: string | null
@@ -1991,13 +1994,6 @@ export type Database = {
             columns: ["agendamento_id"]
             isOneToOne: false
             referencedRelation: "prova_agendamentos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "prova_resultados_aluno_id_fkey"
-            columns: ["aluno_id"]
-            isOneToOne: false
-            referencedRelation: "alunos"
             referencedColumns: ["id"]
           },
         ]
@@ -2374,22 +2370,40 @@ export type Database = {
         Args: { p_ctr: number; p_email: string; p_senha: string }
         Returns: undefined
       }
-      criar_aluno_externo_com_prova: {
-        Args: {
-          p_data_prova: string
-          p_hora_prova: string
-          p_nome: string
-          p_polo_id: string
-          p_quem_agendou: string
-          p_situacao_financeira: string
-          p_telefone: string
-        }
-        Returns: {
-          aluno_externo_id: string
-          ctr: string
-          senha: string
-        }[]
-      }
+      criar_aluno_externo_com_prova:
+        | {
+            Args: {
+              p_data_prova: string
+              p_hora_prova: string
+              p_nome: string
+              p_polo_id: string
+              p_quem_agendou: string
+              p_situacao_financeira: string
+              p_telefone: string
+            }
+            Returns: {
+              aluno_externo_id: string
+              ctr: string
+              senha: string
+            }[]
+          }
+        | {
+            Args: {
+              p_data_prova: string
+              p_hora_prova: string
+              p_materias?: string[]
+              p_nome: string
+              p_polo_id: string
+              p_quem_agendou: string
+              p_situacao_financeira: string
+              p_telefone: string
+            }
+            Returns: {
+              aluno_externo_id: string
+              ctr: string
+              senha: string
+            }[]
+          }
       delete_aluno_completo: {
         Args: { p_aluno_id: string }
         Returns: undefined

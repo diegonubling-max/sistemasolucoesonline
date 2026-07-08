@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { sendAgendamentoProva } from "@/services/zApiService";
+import { MateriasSelector, MATERIAS_PADRAO } from "@/components/prova/MateriasSelector";
 
 
 
@@ -19,6 +20,7 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
   const qc = useQueryClient();
   const [dataProva, setDataProva] = useState(format(new Date(), "yyyy-MM-dd"));
   const [horaProva, setHoraProva] = useState("14:00");
+  const [materias, setMaterias] = useState<string[]>([...MATERIAS_PADRAO]);
 
   const { data: agendamentos, isLoading } = useQuery({
     queryKey: ["prova-agendamentos", alunoId],
@@ -35,12 +37,14 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
 
   const agendar = useMutation({
     mutationFn: async () => {
+      if (materias.length === 0) throw new Error("Selecione pelo menos uma matéria");
       const { error } = await supabase.from("prova_agendamentos").insert({
         aluno_id: alunoId,
         data_prova: dataProva,
         hora_prova: horaProva,
         status: "agendado",
-      });
+        materias_selecionadas: materias,
+      } as any);
       if (error) throw error;
 
       const { data: aluno } = await supabase
@@ -107,6 +111,7 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
               />
             </div>
           </div>
+          <MateriasSelector value={materias} onChange={setMaterias} />
           <Button
             onClick={() => agendar.mutate()}
             disabled={agendar.isPending}

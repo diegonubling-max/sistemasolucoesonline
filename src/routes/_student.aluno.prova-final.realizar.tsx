@@ -13,20 +13,21 @@ export const Route = createFileRoute("/_student/aluno/prova-final/realizar")({
   component: ProvaExecucaoPage,
 });
 
-const MATERIAS = [
-  "Geografia", "História", "Filosofia", "Sociologia", "Português", 
+const MATERIAS_DEFAULT = [
+  "Geografia", "História", "Filosofia", "Sociologia", "Português",
   "Inglês", "Biologia", "Química", "Física", "Matemática"
 ];
 
 function ProvaExecucaoPage() {
   const { session } = useAuth();
   const navigate = useNavigate();
-  
+
   const [currentMateriaIndex, setCurrentMateriaIndex] = useState(0);
   const [respostas, setRespostas] = useState<Record<string, string>>({}); // { questionId: "a" }
   const [timeLeft, setTimeLeft] = useState(4 * 60 * 60); // 4 horas em segundos
   const [isFinishing, setIsFinishing] = useState(false);
-
+  const [agendamentoMaterias, setAgendamentoMaterias] = useState<string[] | null>(null);
+  const MATERIAS = agendamentoMaterias && agendamentoMaterias.length > 0 ? agendamentoMaterias : MATERIAS_DEFAULT;
   const materiaAtual = MATERIAS[currentMateriaIndex];
 
   const { data: aluno } = useQuery({
@@ -59,6 +60,12 @@ function ProvaExecucaoPage() {
     },
     enabled: !!aluno?.id,
   });
+
+  useEffect(() => {
+    const ms = (agendamento as any)?.materias_selecionadas;
+    if (Array.isArray(ms) && ms.length > 0) setAgendamentoMaterias(ms);
+  }, [agendamento]);
+
 
   const { data: questoes, isLoading: loadingQuestoes } = useQuery({
     queryKey: ["questoes-materia", materiaAtual],
