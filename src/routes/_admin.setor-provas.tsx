@@ -1204,10 +1204,18 @@ function EnviosTab() {
     [rows]
   );
 
-  const lotes = useMemo(
-    () => Array.from(new Set((rows ?? []).map((r: any) => r.lote).filter(Boolean))).sort(),
-    [rows]
-  );
+  const lotesComContagem = useMemo(() => {
+    const map = new Map<string, number>();
+    (rows ?? []).forEach((r: any) => {
+      if (!r.lote) return;
+      map.set(r.lote, (map.get(r.lote) ?? 0) + 1);
+    });
+    return Array.from(map.entries())
+      .map(([lote, count]) => ({ lote, count }))
+      .sort((a, b) => a.lote.localeCompare(b.lote));
+  }, [rows]);
+
+  const lotes = useMemo(() => lotesComContagem.map((l) => l.lote), [lotesComContagem]);
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
@@ -1289,6 +1297,33 @@ function EnviosTab() {
           <Input type="date" value={dataIni} onChange={(e) => setDataIni(e.target.value)} className="w-[150px]" title="Data início" />
           <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} className="w-[150px]" title="Data fim" />
         </div>
+
+        {lotesComContagem.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {lotesComContagem.map(({ lote, count }) => {
+              const active = loteFilter === lote;
+              return (
+                <button
+                  key={lote}
+                  type="button"
+                  onClick={() => setLoteFilter(active ? "all" : lote)}
+                  className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card hover:bg-muted border-border"
+                  }`}
+                >
+                  <span className="font-medium">{lote}</span>
+                  <span className={`ml-2 ${active ? "opacity-90" : "text-muted-foreground"}`}>
+                    {count} {count === 1 ? "aluno" : "alunos"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+
 
 
         <Table>

@@ -170,7 +170,7 @@ function AdminLayout() {
           <h1 className="text-base font-bold truncate">Soluções Online</h1>
           <div className="w-9 h-9" />
         </header>
-        <div className="max-w-7xl mx-auto px-4 py-4 md:px-8 md:py-8">
+        <div className="w-full px-4 py-4 md:px-6 md:py-6">
           <Outlet />
         </div>
       </main>
