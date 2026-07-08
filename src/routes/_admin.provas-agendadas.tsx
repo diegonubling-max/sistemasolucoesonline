@@ -46,7 +46,7 @@ function ProvasAgendadasPage() {
   const [tipoFilter, setTipoFilter] = useState<TipoFilter>("todos");
   const [editing, setEditing] = useState<any | null>(null);
   const [externoOpen, setExternoOpen] = useState(false);
-  const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string } | null>(null);
+  const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string; whatsSent: boolean } | null>(null);
   const [gerarCtrFor, setGerarCtrFor] = useState<any | null>(null);
   const [extNome, setExtNome] = useState("");
   const [extTelefone, setExtTelefone] = useState("");
