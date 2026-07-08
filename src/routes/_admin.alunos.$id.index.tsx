@@ -933,25 +933,45 @@ function AlunoDetalhes() {
         </TabsContent>
 
         <TabsContent value="vitrine" className="space-y-6">
-          <Card>
-            <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
+          <Card className="bg-gradient-to-br from-[#1E3A5F] to-[#2D6ADF] text-white border-0">
+            <CardContent className="py-8 text-center space-y-2">
+              <Sparkles className="h-8 w-8 mx-auto" />
               {perfilVocacional?.perfil_identificado ? (
-                <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Perfil vocacional</p>
-                  <p className="font-semibold">{perfilVocacional.perfil_identificado}</p>
-                  {((perfilVocacional.segmentos_recomendados ?? []) as string[]).length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      {((perfilVocacional.segmentos_recomendados ?? []) as string[]).join(" · ")}
+                <>
+                  <p className="text-sm uppercase tracking-wider opacity-80">Perfil identificado</p>
+                  <h2 className="text-3xl font-bold">{perfilVocacional.perfil_identificado}</h2>
+                  {perfilVocacional.created_at && (
+                    <p className="text-xs opacity-70">
+                      Preenchido em {formatDate(perfilVocacional.created_at as string)}
                     </p>
                   )}
-                </div>
+                </>
               ) : (
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" /> Aluno ainda não realizou o teste vocacional
-                </p>
+                <p className="text-base opacity-90 pt-1">Aluno ainda não realizou o teste vocacional</p>
               )}
             </CardContent>
           </Card>
+          {((perfilVocacional?.segmentos_recomendados ?? []) as string[]).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Segmentos recomendados</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                {((perfilVocacional?.segmentos_recomendados ?? []) as string[]).map((s) => {
+                  const cores: Record<string, string> = {
+                    Administrativo: "bg-blue-100 text-blue-700 border-blue-200",
+                    Tecnologia: "bg-purple-100 text-purple-700 border-purple-200",
+                    "Saúde": "bg-green-100 text-green-700 border-green-200",
+                    Beleza: "bg-pink-100 text-pink-700 border-pink-200",
+                    Diversos: "bg-amber-100 text-amber-700 border-amber-200",
+                  };
+                  return (
+                    <Badge key={s} variant="outline" className={cores[s] ?? ""}>{s}</Badge>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
           <div className="flex justify-end"><Button onClick={() => setShowVitrineModal(true)}><Plus className="h-4 w-4 mr-2" /> Adicionar Curso</Button></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {vitrine?.map((item) => {
