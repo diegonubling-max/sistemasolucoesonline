@@ -651,6 +651,24 @@ function ProvasAgendadasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Dialog: Confirmação Gerar CTR */}
+      <Dialog open={!!gerarCtrFor} onOpenChange={(o) => !o && setGerarCtrFor(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Gerar acesso externo</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm">
+            Gerar acesso para <b>{gerarCtrFor?.nome}</b>?
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGerarCtrFor(null)}>Cancelar</Button>
+            <Button onClick={() => gerarCtr.mutate(gerarCtrFor)} disabled={gerarCtr.isPending}>
+              {gerarCtr.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
