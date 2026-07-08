@@ -459,8 +459,10 @@ function ProvaFinalPage() {
 
         <Button
           className="w-full h-14 text-lg font-bold bg-[#1E3A5F] hover:bg-[#2D6ADF] shadow-lg rounded-xl"
-          onClick={() => setEtapa('escolher_ordem')}
+          disabled={startProva.isPending}
+          onClick={() => startProva.mutate()}
         >
+          {startProva.isPending && <Loader2 className="animate-spin mr-2 h-5 w-5" />}
           Começar Prova Agora <ArrowRight className="ml-2 h-6 w-6" />
         </Button>
       </CardContent>
