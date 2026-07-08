@@ -230,11 +230,7 @@ function DocumentacaoTab() {
       </div>
 
 
-      <div className="flex justify-end">
-        <Button onClick={() => setNovoOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Novo Registro
-        </Button>
-      </div>
+
 
       <Card>
         <CardContent className="pt-6 overflow-x-auto">
