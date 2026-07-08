@@ -281,8 +281,11 @@ function DocumentacaoTab() {
                     <TableCell>
                       {r.declaracao_gerada ? (
                         <div className="flex items-center gap-1">
-                          <Badge variant="outline" className="bg-green-50 text-green-700">
-                            ✅ Gerada{r.declaracao_data ? ` em ${new Date(r.declaracao_data).toLocaleDateString("pt-BR")}` : ""}
+                          <Badge
+                            className="rounded-full bg-green-700 hover:bg-green-700 text-white text-xs px-2 py-0.5 cursor-default"
+                            title={r.declaracao_data ? `Gerada em ${new Date(r.declaracao_data).toLocaleDateString("pt-BR")}` : "Gerada"}
+                          >
+                            ✅ Gerada
                           </Badge>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
