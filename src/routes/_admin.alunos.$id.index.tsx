@@ -179,7 +179,7 @@ function AlunoDetalhes() {
     queryFn: async () => {
       const { data } = await supabase
         .from("aluno_perfil_vocacional")
-        .select("segmentos_recomendados, perfil_identificado")
+        .select("segmentos_recomendados, perfil_identificado, created_at")
         .eq("aluno_id", id)
         .maybeSingle();
       return data;
