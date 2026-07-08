@@ -49,12 +49,14 @@ function ProvasAgendadasPage() {
   const [externoOpen, setExternoOpen] = useState(false);
   const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string; whatsSent: boolean } | null>(null);
   const [gerarCtrFor, setGerarCtrFor] = useState<any | null>(null);
+  const [detalhesFor, setDetalhesFor] = useState<any | null>(null);
   const [extNome, setExtNome] = useState("");
   const [extTelefone, setExtTelefone] = useState("");
   const [extPoloId, setExtPoloId] = useState("");
   const [extData, setExtData] = useState("");
   const [extHora, setExtHora] = useState("");
   const [extSitFin, setExtSitFin] = useState<"ja_pago" | "boleto">("ja_pago");
+  const [extMaterias, setExtMaterias] = useState<string[]>([...MATERIAS_PADRAO]);
 
   const { data: polos } = useQuery({
     queryKey: ["polos-externo-select"],
