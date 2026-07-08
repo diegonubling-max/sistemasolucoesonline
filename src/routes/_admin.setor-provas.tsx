@@ -98,79 +98,56 @@ function DocumentacaoTab() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["sp-doc-rows", selectedPoloId],
     queryFn: async () => {
-      // alunos com prova_resultados aprovado=true OU presentes em aluno_documentos
-      const { data: aprovados } = await sb
-        .from("prova_resultados")
-        .select("aluno_id")
-        .eq("aprovado", true);
-      const { data: comDocs } = await sb
-        .from("aluno_documentos")
-        .select("aluno_id");
-      const ids = Array.from(new Set([
-        ...(aprovados ?? []).map((r: any) => r.aluno_id).filter(Boolean),
-        ...(comDocs ?? []).map((r: any) => r.aluno_id).filter(Boolean),
-      ]));
-      if (ids.length === 0) return [];
-
-      let q = sb
-        .from("alunos")
+      const { data, error } = await sb
+        .from("documentacao_alunos")
         .select(`
-          id, nome, telefone, cpf, vendedora, polo_id,
-          polos(nome),
-          aluno_documentos(*),
-          declaracoes_matricula(id),
-          lote_alunos(
-            lote_id,
-            lotes(id, mes_ano, data_envio, enviado, certificadoras(nome))
-          )
+          id, aluno_id, nome_aluno, polo, quem_vendeu, telefone, ctr,
+          documentacao_completa, certificadora_id, lote, data_envio,
+          declaracao_gerada, created_at,
+          certificadoras(nome),
+          alunos(id, ctr, polo_id, polos(nome))
         `)
-        .in("id", ids);
-      if (selectedPoloId !== "all") q = q.eq("polo_id", selectedPoloId);
-
-      const { data, error } = await q;
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      let list = data ?? [];
+      if (selectedPoloId !== "all") {
+        list = list.filter((r: any) => r.alunos?.polo_id === selectedPoloId);
+      }
+      return list;
     },
   });
 
   const { data: lotes } = useQuery({
-    queryKey: ["sp-lotes-filter"],
+    queryKey: ["sp-lotes-filter-doc"],
     queryFn: async () => {
-      const { data } = await sb.from("lotes").select("id, mes_ano").order("mes_ano", { ascending: false });
-      return data ?? [];
+      const { data } = await sb
+        .from("documentacao_alunos")
+        .select("lote")
+        .not("lote", "is", null);
+      const unique = Array.from(new Set((data ?? []).map((r: any) => r.lote).filter(Boolean)));
+      return unique.sort();
     },
   });
-
-  const getStatusDoc = (al: any) => {
-    const d = al.aluno_documentos?.[0];
-    if (!d) return "incompleta";
-    const ok = d.rg_cpf && d.historico_fundamental && d.historico_fund_medio && d.comprovante_residencia;
-    return ok ? "completa" : "incompleta";
-  };
 
   const filtered = useMemo(() => {
     if (!rows) return [];
     const s = search.trim().toLowerCase();
     return rows.filter((r: any) => {
-      if (s && !r.nome?.toLowerCase().includes(s) && !r.telefone?.includes(s)) return false;
-      if (statusDoc !== "all" && getStatusDoc(r) !== statusDoc) return false;
-      if (loteFilter !== "all") {
-        const has = r.lote_alunos?.some((la: any) => la.lote_id === loteFilter);
-        if (!has) return false;
-      }
+      if (s && !r.nome_aluno?.toLowerCase().includes(s) && !r.telefone?.includes(s)) return false;
+      if (statusDoc === "completa" && !r.documentacao_completa) return false;
+      if (statusDoc === "incompleta" && r.documentacao_completa) return false;
+      if (loteFilter !== "all" && r.lote !== loteFilter) return false;
       return true;
     });
   }, [rows, search, statusDoc, loteFilter]);
 
   const deleteMut = useMutation({
-    mutationFn: async (alunoId: string) => {
-      const { data: la } = await sb.from("lote_alunos").select("id").eq("aluno_id", alunoId);
-      if (la?.length) await sb.from("lote_alunos").delete().eq("aluno_id", alunoId);
-      await sb.from("aluno_documentos").delete().eq("aluno_id", alunoId);
-      await sb.from("aluno_documentos_arquivos").delete().eq("aluno_id", alunoId);
+    mutationFn: async (id: string) => {
+      const { error } = await sb.from("documentacao_alunos").delete().eq("id", id);
+      if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Registro removido do setor de provas");
+      toast.success("Registro removido");
       qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
     },
     onError: (e: any) => toast.error(e.message),
