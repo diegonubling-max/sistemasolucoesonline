@@ -111,6 +111,7 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
               />
             </div>
           </div>
+          <MateriasSelector value={materias} onChange={setMaterias} />
           <Button
             onClick={() => agendar.mutate()}
             disabled={agendar.isPending}
