@@ -210,7 +210,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
             return (
               <div
                 key={item.title}
-                className="flex items-center justify-between px-3 py-2.5 rounded-md text-sidebar-foreground/40 cursor-not-allowed"
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-sidebar-foreground/40 cursor-not-allowed"
               >
                 <span className="flex items-center gap-3">
                   <Icon className="h-4 w-4" />
