@@ -264,7 +264,9 @@ function DocumentacaoTab() {
 
       {editDocId && <EditarRegistroModal docId={editDocId} onClose={() => setEditDocId(null)} />}
       {encDocId && <EncaminharModal docId={encDocId} onClose={() => setEncDocId(null)} />}
+      {declDoc && <GerarDeclaracaoModal docId={declDoc.id} nomeInicial={declDoc.nome} onClose={() => setDeclDoc(null)} />}
       <NovoRegistroModal open={novoOpen} onClose={() => setNovoOpen(false)} />
+
     </div>
   );
 }
