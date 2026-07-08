@@ -23,6 +23,7 @@ import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
 import { Route as AdminMinhasComissoesRouteImport } from './routes/_admin.minhas-comissoes'
 import { Route as AdminMinhaEquipeRouteImport } from './routes/_admin.minha-equipe'
 import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
+import { Route as AdminDocumentacaoRouteImport } from './routes/_admin.documentacao'
 import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
 import { Route as AdminColaboradoresRouteImport } from './routes/_admin.colaboradores'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
@@ -110,6 +111,11 @@ const AdminMinhaEquipeRoute = AdminMinhaEquipeRouteImport.update({
 const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDocumentacaoRoute = AdminDocumentacaoRouteImport.update({
+  id: '/documentacao',
+  path: '/documentacao',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
@@ -223,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
+  '/documentacao': typeof AdminDocumentacaoRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/minha-equipe': typeof AdminMinhaEquipeRoute
   '/minhas-comissoes': typeof AdminMinhasComissoesRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
+  '/documentacao': typeof AdminDocumentacaoRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/minha-equipe': typeof AdminMinhaEquipeRoute
   '/minhas-comissoes': typeof AdminMinhasComissoesRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_admin/colaboradores': typeof AdminColaboradoresRoute
   '/_admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/_admin/documentacao': typeof AdminDocumentacaoRoute
   '/_admin/financeiro': typeof AdminFinanceiroRoute
   '/_admin/minha-equipe': typeof AdminMinhaEquipeRoute
   '/_admin/minhas-comissoes': typeof AdminMinhasComissoesRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/colaboradores'
     | '/configuracoes'
+    | '/documentacao'
     | '/financeiro'
     | '/minha-equipe'
     | '/minhas-comissoes'
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/colaboradores'
     | '/configuracoes'
+    | '/documentacao'
     | '/financeiro'
     | '/minha-equipe'
     | '/minhas-comissoes'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_admin/colaboradores'
     | '/_admin/configuracoes'
+    | '/_admin/documentacao'
     | '/_admin/financeiro'
     | '/_admin/minha-equipe'
     | '/_admin/minhas-comissoes'
@@ -539,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/financeiro'
       fullPath: '/financeiro'
       preLoaderRoute: typeof AdminFinanceiroRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/documentacao': {
+      id: '/_admin/documentacao'
+      path: '/documentacao'
+      fullPath: '/documentacao'
+      preLoaderRoute: typeof AdminDocumentacaoRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/configuracoes': {
@@ -687,6 +706,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminColaboradoresRoute: typeof AdminColaboradoresRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
+  AdminDocumentacaoRoute: typeof AdminDocumentacaoRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminMinhaEquipeRoute: typeof AdminMinhaEquipeRoute
   AdminMinhasComissoesRoute: typeof AdminMinhasComissoesRoute
@@ -709,6 +729,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminColaboradoresRoute: AdminColaboradoresRoute,
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
+  AdminDocumentacaoRoute: AdminDocumentacaoRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminMinhaEquipeRoute: AdminMinhaEquipeRoute,
   AdminMinhasComissoesRoute: AdminMinhasComissoesRoute,
