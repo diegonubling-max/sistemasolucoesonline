@@ -46,7 +46,7 @@ function ProvasAgendadasPage() {
   const [tipoFilter, setTipoFilter] = useState<TipoFilter>("todos");
   const [editing, setEditing] = useState<any | null>(null);
   const [externoOpen, setExternoOpen] = useState(false);
-  const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string } | null>(null);
+  const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string; whatsSent: boolean } | null>(null);
   const [gerarCtrFor, setGerarCtrFor] = useState<any | null>(null);
   const [extNome, setExtNome] = useState("");
   const [extTelefone, setExtTelefone] = useState("");
@@ -72,6 +72,59 @@ function ProvasAgendadasPage() {
     }
   }, [polos, extPoloId]);
 
+  const enviarWhatsProvaAgendada = async (
+    telefone: string,
+    nome: string,
+    ctr: string,
+    senha: string,
+    dataProva: string, // dd/mm/yyyy
+    horaProva: string, // HH:MM
+  ) => {
+    let tel = (telefone || "").replace(/\D/g, "");
+    if (!tel) return false;
+    if (!tel.startsWith("55")) tel = "55" + tel;
+    const primeiro = (nome || "").trim().split(/\s+/)[0] || "";
+    const mensagem = `Olá ${primeiro}! 👋
+
+Sua *prova online* está agendada! 📝
+
+📅 *Data:* ${dataProva}
+🕐 *Horário:* ${horaProva}
+🔑 *CTR:* ${ctr}
+🔒 *Senha:* ${senha}
+
+Para acessar, entre no link abaixo no dia da prova:
+👉 https://sistemasolucoesonline.lovable.app/aluno/login
+
+⚠️ *Importante:*
+- O acesso é liberado *somente no dia* da prova
+- Se não conseguir acessar, entre em contato para reagendar
+
+Boa prova! 🍀`;
+    try {
+      await fetch(
+        "https://api.z-api.io/instances/3F4CC1DC22AB31BDE17ECE717FF40C71/token/E55BC981D8AA6846EAFEAEE4/send-text",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Client-Token": "F2ffd89a74df2440aad10b65315696d0eS",
+          },
+          body: JSON.stringify({ phone: tel, message: mensagem }),
+        },
+      );
+      return true;
+    } catch (error) {
+      console.error("Erro ao enviar WhatsApp:", error);
+      return false;
+    }
+  };
+
+  const formatarDataBR = (iso: string) => {
+    const [y, m, d] = iso.split("-");
+    return `${d}/${m}/${y}`;
+  };
+
   const criarExterno = useMutation({
     mutationFn: async () => {
       if (!extNome.trim() || !extTelefone.trim() || !extPoloId || !extData || !extHora) {
@@ -94,10 +147,19 @@ function ProvasAgendadasPage() {
       });
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
-      return row as { aluno_externo_id: string; ctr: string; senha: string };
+      const r = row as { aluno_externo_id: string; ctr: string; senha: string };
+      const whatsSent = await enviarWhatsProvaAgendada(
+        extTelefone,
+        extNome,
+        r.ctr,
+        r.senha,
+        formatarDataBR(extData),
+        extHora.slice(0, 5),
+      );
+      return { ...r, whatsSent, dataUsed: extData, horaUsed: extHora };
     },
     onSuccess: (row) => {
-      setExternoResult({ ctr: row.ctr, senha: row.senha, data: extData, hora: extHora });
+      setExternoResult({ ctr: row.ctr, senha: row.senha, data: row.dataUsed, hora: row.horaUsed, whatsSent: row.whatsSent });
       setExternoOpen(false);
       setExtNome(""); setExtTelefone(""); setExtData(""); setExtHora(""); setExtSitFin("ja_pago");
       qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
@@ -112,11 +174,21 @@ function ProvasAgendadasPage() {
       });
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
-      return { ...(row as { ctr: string; senha: string }), ag };
+      const r = row as { ctr: string; senha: string };
+      const hora = (ag.hora_prova ?? "00:00").slice(0, 5);
+      const whatsSent = await enviarWhatsProvaAgendada(
+        ag.telefone ?? ag.telefoneDisplay ?? "",
+        ag.nome_aluno ?? ag.nome ?? "",
+        r.ctr,
+        r.senha,
+        formatarDataBR(ag.data_prova),
+        hora,
+      );
+      return { ...r, ag, whatsSent };
     },
-    onSuccess: ({ ctr, senha, ag }) => {
+    onSuccess: ({ ctr, senha, ag, whatsSent }) => {
       setGerarCtrFor(null);
-      setExternoResult({ ctr, senha, data: ag.data_prova, hora: ag.hora_prova ?? "00:00" });
+      setExternoResult({ ctr, senha, data: ag.data_prova, hora: ag.hora_prova ?? "00:00", whatsSent });
       qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
     },
     onError: (e: any) => toast.error("Erro ao gerar CTR", { description: e.message }),
@@ -632,6 +704,9 @@ function ProvasAgendadasPage() {
                 <div><b>CTR:</b> <span className="font-mono">{externoResult.ctr}</span></div>
                 <div><b>Senha:</b> <span className="font-mono">{externoResult.senha}</span></div>
                 <div><b>Data:</b> {new Date(externoResult.data + "T00:00:00").toLocaleDateString("pt-BR")} às {externoResult.hora.slice(0,5)}</div>
+                <div className={externoResult.whatsSent ? "text-green-600 font-medium" : "text-yellow-600 font-medium"}>
+                  {externoResult.whatsSent ? "✅ WhatsApp enviado" : "⚠️ WhatsApp não enviado"}
+                </div>
               </div>
               <Button
                 variant="outline"
