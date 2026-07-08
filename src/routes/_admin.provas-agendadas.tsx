@@ -256,7 +256,7 @@ function ProvasAgendadasPage() {
       const st = (r.status ?? "agendada") as string;
       if (st === "agendada" && r.data_prova && r.data_prova < HOJE) {
         c.reagendar++;
-      } else if (st === "agendada") {
+      } else if (st === "agendada" || st === "iniciado") {
         c.agendada++;
       } else if (st === "aprovado" || st === "reprovado") {
         c[st as TabKey]++;
@@ -264,6 +264,7 @@ function ProvasAgendadasPage() {
     });
     return c;
   }, [rows]);
+
 
   const toggleFlag = useMutation({
     mutationFn: async (v: { id: string; field: "docs_solicitados" | "docs_recebidos"; value: boolean }) => {
