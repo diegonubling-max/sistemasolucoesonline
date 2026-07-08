@@ -93,7 +93,9 @@ function DocumentacaoTab() {
   const [loteFilter, setLoteFilter] = useState<string>("all");
   const [editDocId, setEditDocId] = useState<string | null>(null);
   const [encDocId, setEncDocId] = useState<string | null>(null);
+  const [declDoc, setDeclDoc] = useState<{ id: string; nome: string } | null>(null);
   const [novoOpen, setNovoOpen] = useState(false);
+
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["sp-doc-rows", selectedPoloId],
@@ -238,18 +240,10 @@ function DocumentacaoTab() {
                       <Button size="sm" variant="ghost" onClick={() => setEncDocId(r.id)} title="Encaminhar para certificadora">
                         <Send className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" title="Gerar Declaração" onClick={async () => {
-                        toast.info("Funcionalidade em breve disponível");
-                        const { error } = await sb.from("documentacao_alunos").update({
-                          declaracao_gerada: true,
-                          declaracao_data: new Date().toISOString(),
-                          updated_at: new Date().toISOString(),
-                        }).eq("id", r.id);
-                        if (error) { toast.error(error.message); return; }
-                        qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
-                      }}>
+                      <Button size="sm" variant="ghost" title="Gerar Declaração" onClick={() => setDeclDoc({ id: r.id, nome: r.nome_aluno })}>
                         <FileText className="h-4 w-4" />
                       </Button>
+
 
                       <Button size="sm" variant="ghost" onClick={() => setEditDocId(r.id)} title="Editar">
                         <Pencil className="h-4 w-4" />
@@ -270,10 +264,77 @@ function DocumentacaoTab() {
 
       {editDocId && <EditarRegistroModal docId={editDocId} onClose={() => setEditDocId(null)} />}
       {encDocId && <EncaminharModal docId={encDocId} onClose={() => setEncDocId(null)} />}
+      {declDoc && <GerarDeclaracaoModal docId={declDoc.id} nomeInicial={declDoc.nome} onClose={() => setDeclDoc(null)} />}
       <NovoRegistroModal open={novoOpen} onClose={() => setNovoOpen(false)} />
+
     </div>
   );
 }
+
+const DECLARACAO_TEXTO_PADRAO = `Declaramos para os devidos fins que o aluno(a) acima citado, concluiu o Ensino Médio na modalidade de Supletivo EJA EaD, através da prova de proficiência junto à certificadora nossa parceira, estando apto a prosseguir seus estudos em nível Superior e/ou Técnico. Válido em todo território nacional.
+
+Esta Declaração tem validade de 90 dias a contar da data de sua expedição.
+
+O aluno está no aguardo do processo de certificação junto à certificadora, podendo levar de 60 a 90 dias.
+
+Por ser verdade, firmo o presente.`;
+
+function GerarDeclaracaoModal({ docId, nomeInicial, onClose }: { docId: string; nomeInicial: string; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [nome, setNome] = useState(nomeInicial);
+  const [texto, setTexto] = useState(DECLARACAO_TEXTO_PADRAO);
+  const [loading, setLoading] = useState(false);
+
+  const handleGerar = async () => {
+    setLoading(true);
+    try {
+      toast.info("Funcionalidade de geração de PDF em breve disponível");
+      const { error } = await sb.from("documentacao_alunos").update({
+        declaracao_gerada: true,
+        declaracao_data: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq("id", docId);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>📄 Gerar Declaração</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Nome do Aluno</Label>
+            <Input value={nome} onChange={(e) => setNome(e.target.value)} />
+          </div>
+          <div>
+            <Label>Texto da Declaração</Label>
+            <Textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={12} />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Cidade, data e assinatura serão adicionados automaticamente ao final do documento.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Fechar</Button>
+          <Button onClick={handleGerar} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+            Gerar PDF
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 /* ============================== GERAR DECLARAÇÃO ============================== */
 
