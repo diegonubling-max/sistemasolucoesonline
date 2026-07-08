@@ -670,8 +670,21 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
         data_envio: dataEnvio || null,
         observacao: observacao || null,
       };
-      const { error } = await sb.from("documentacao_alunos").insert(payload);
+      const { data: inserted, error } = await sb.from("documentacao_alunos").insert(payload).select("id").single();
       if (error) throw error;
+
+      if (arquivos.length > 0 && inserted?.id) {
+        const paths: string[] = [];
+        for (const file of arquivos) {
+          const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${inserted.id}/${Date.now()}_${safeName}`;
+          const { error: upErr } = await supabase.storage.from("documentos-alunos").upload(path, file, { upsert: false });
+          if (upErr) throw upErr;
+          paths.push(path);
+        }
+        const { error: updErr } = await sb.from("documentacao_alunos").update({ arquivos_paths: paths }).eq("id", inserted.id);
+        if (updErr) throw updErr;
+      }
     },
     onSuccess: () => {
       toast.success("Registro criado");
