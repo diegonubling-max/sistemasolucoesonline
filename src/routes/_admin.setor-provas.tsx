@@ -1422,6 +1422,7 @@ function EnviosTab() {
             ))}
           </TableBody>
         </Table>
+        <div className="mt-3 text-sm text-muted-foreground">Total: {filtered.length} alunos enviados</div>
       </CardContent>
       {declDoc && (
         <GerarDeclaracaoModal
