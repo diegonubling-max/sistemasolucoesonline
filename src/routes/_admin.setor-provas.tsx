@@ -224,10 +224,13 @@ function DocumentacaoTab() {
                     <TableCell>{r.alunos?.polos?.nome ?? r.polo ?? "-"}</TableCell>
                     <TableCell>{r.quem_vendeu ?? "-"}</TableCell>
                     <TableCell>
-                      <Badge variant={status === "completa" ? "default" : "secondary"}>
-                        {status === "completa" ? "Completa" : "Incompleta"}
-                      </Badge>
+                      {status === "completa" ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✅ Completa</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">⚠️ Incompleta</Badge>
+                      )}
                     </TableCell>
+
                     <TableCell>{r.certificadoras?.nome ?? "-"}</TableCell>
                     <TableCell>{r.lote ?? "-"}</TableCell>
                     <TableCell>{r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
