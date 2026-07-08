@@ -108,12 +108,13 @@ function ProvasAgendadasPage() {
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["provas-agendadas-list", dataInicio, dataFim],
+    refetchInterval: 30_000,
     queryFn: async () => {
       let q = supabase
         .from("prova_agendamentos")
         .select(`
           id, aluno_id, data_prova, hora_prova, status, docs_solicitados, docs_recebidos,
-          is_externo, nome_aluno, telefone, polo, ctr,
+          is_externo, nome_aluno, telefone, polo, ctr, ultimo_heartbeat,
           situacao_financeira, resultado, observacao
         `)
         .order("data_prova", { ascending: true });
