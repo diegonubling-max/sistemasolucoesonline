@@ -54,9 +54,16 @@ export function SetorProvasPage() {
         title="Setor de Provas"
         description="Documentação, envios para certificadoras e controle de certificados"
         actions={
-          <Button variant="outline" onClick={() => setCertOpen(true)}>
-            <Building2 className="h-4 w-4 mr-2" /> Certificadoras
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setCertOpen(true)}>
+              <Building2 className="h-4 w-4 mr-2" /> Certificadoras
+            </Button>
+            {tab === "documentacao" && (
+              <Button onClick={() => window.dispatchEvent(new Event("open-novo-registro"))}>
+                <Plus className="h-4 w-4 mr-2" /> Novo Registro
+              </Button>
+            )}
+          </div>
         }
       />
 
