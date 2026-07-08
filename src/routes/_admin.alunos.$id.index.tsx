@@ -29,7 +29,7 @@ import { generateAsaasCobrar, asaasRequest } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
-import { PerfilVocacionalTab } from "@/components/admin/alunos/PerfilVocacionalTab";
+
 import { MensagensTab } from "@/components/admin/alunos/MensagensTab";
 import { TrocarPacoteModal } from "@/components/admin/TrocarPacoteModal";
 
@@ -179,7 +179,7 @@ function AlunoDetalhes() {
     queryFn: async () => {
       const { data } = await supabase
         .from("aluno_perfil_vocacional")
-        .select("segmentos_recomendados")
+        .select("segmentos_recomendados, perfil_identificado")
         .eq("aluno_id", id)
         .maybeSingle();
       return data;
@@ -752,11 +752,10 @@ function AlunoDetalhes() {
       <Tabs defaultValue={initialTab || "geral"} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="geral">Dados Gerais</TabsTrigger>
-          <TabsTrigger value="perfil" className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" /> Perfil
-          </TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-          <TabsTrigger value="vitrine">Vitrine</TabsTrigger>
+          <TabsTrigger value="vitrine" className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4" /> Vitrine
+          </TabsTrigger>
           <TabsTrigger value="progresso">Progresso</TabsTrigger>
           <TabsTrigger value="historico" className="flex items-center gap-2">
             <History className="h-4 w-4" /> Histórico
@@ -857,9 +856,6 @@ function AlunoDetalhes() {
           </div>
         </TabsContent>
 
-        <TabsContent value="perfil">
-          <PerfilVocacionalTab alunoId={id} />
-        </TabsContent>
 
         <TabsContent value="financeiro" className="space-y-6">
           <div className="flex items-center justify-between gap-4">
@@ -937,7 +933,26 @@ function AlunoDetalhes() {
         </TabsContent>
 
         <TabsContent value="vitrine" className="space-y-6">
-          <div className="flex justify-end"><Button onClick={() => setShowVitrineModal(true)}><Plus className="h-4 w-4 mr-2" /> Adicionar</Button></div>
+          <Card>
+            <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
+              {perfilVocacional?.perfil_identificado ? (
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Perfil vocacional</p>
+                  <p className="font-semibold">{perfilVocacional.perfil_identificado}</p>
+                  {((perfilVocacional.segmentos_recomendados ?? []) as string[]).length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {((perfilVocacional.segmentos_recomendados ?? []) as string[]).join(" · ")}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" /> Aluno ainda não realizou o teste vocacional
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          <div className="flex justify-end"><Button onClick={() => setShowVitrineModal(true)}><Plus className="h-4 w-4 mr-2" /> Adicionar Curso</Button></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {vitrine?.map((item) => {
               const v = item as any;
