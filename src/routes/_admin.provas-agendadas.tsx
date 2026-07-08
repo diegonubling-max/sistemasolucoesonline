@@ -704,6 +704,9 @@ Boa prova! 🍀`;
                 <div><b>CTR:</b> <span className="font-mono">{externoResult.ctr}</span></div>
                 <div><b>Senha:</b> <span className="font-mono">{externoResult.senha}</span></div>
                 <div><b>Data:</b> {new Date(externoResult.data + "T00:00:00").toLocaleDateString("pt-BR")} às {externoResult.hora.slice(0,5)}</div>
+                <div className={externoResult.whatsSent ? "text-green-600 font-medium" : "text-yellow-600 font-medium"}>
+                  {externoResult.whatsSent ? "✅ WhatsApp enviado" : "⚠️ WhatsApp não enviado"}
+                </div>
               </div>
               <Button
                 variant="outline"
