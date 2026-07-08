@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { sendAgendamentoProva } from "@/services/zApiService";
+import { MateriasSelector, MATERIAS_PADRAO } from "@/components/prova/MateriasSelector";
 
 
 
