@@ -598,6 +598,10 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
   const [dataEnvio, setDataEnvio] = useState("");
   const [observacao, setObservacao] = useState("");
 
+  // Arquivos
+  const [arquivos, setArquivos] = useState<File[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+
   const reset = () => {
     setModo("sistema"); setSearch(""); setAlunoSel(null);
     setNome(""); setTelefone(""); setPolo(""); setQuemVendeu(""); setCtr("");
@@ -605,6 +609,7 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
     setDocOutros(false); setDocOutrosDesc("");
     setDocCompleta(false); setRecFirma(false); setDOficial(false); setVistoConfere(false);
     setCertificadoraId(""); setLote(""); setDataEnvio(""); setObservacao("");
+    setArquivos([]);
   };
 
   const { data: alunos } = useQuery({
