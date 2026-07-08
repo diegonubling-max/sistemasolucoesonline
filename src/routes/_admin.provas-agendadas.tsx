@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,9 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Loader2, Pencil } from "lucide-react";
+import { CheckCircle2, Loader2, Pencil, UserPlus, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_admin/provas-agendadas")({
   head: () => ({
@@ -37,12 +38,73 @@ const HOJE = new Date().toISOString().slice(0, 10);
 
 function ProvasAgendadasPage() {
   const qc = useQueryClient();
+  const { session } = useAuth();
   const [tab, setTab] = useState<TabKey>("agendada");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [sitFinFilter, setSitFinFilter] = useState<SitFinFilter>("todos");
   const [tipoFilter, setTipoFilter] = useState<TipoFilter>("todos");
   const [editing, setEditing] = useState<any | null>(null);
+  const [externoOpen, setExternoOpen] = useState(false);
+  const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string } | null>(null);
+  const [extNome, setExtNome] = useState("");
+  const [extTelefone, setExtTelefone] = useState("");
+  const [extPoloId, setExtPoloId] = useState("");
+  const [extData, setExtData] = useState("");
+  const [extHora, setExtHora] = useState("");
+  const [extSitFin, setExtSitFin] = useState<"ja_pago" | "boleto">("ja_pago");
+
+  const { data: polos } = useQuery({
+    queryKey: ["polos-externo-select"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("polos").select("id, nome").order("nome");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Default polo = Florianópolis
+  useEffect(() => {
+    if (!extPoloId && polos && polos.length > 0) {
+      const flori = polos.find((p: any) => (p.nome ?? "").toLowerCase().includes("florian"));
+      setExtPoloId(flori?.id ?? polos[0].id);
+    }
+  }, [polos, extPoloId]);
+
+  const criarExterno = useMutation({
+    mutationFn: async () => {
+      if (!extNome.trim() || !extTelefone.trim() || !extPoloId || !extData || !extHora) {
+        throw new Error("Preencha todos os campos");
+      }
+      let quemAgendou = session?.user.email ?? "sistema";
+      if (session?.user.id) {
+        const { data: colab } = await supabase
+          .from("colaboradores").select("nome").eq("user_id", session.user.id).maybeSingle();
+        if (colab?.nome) quemAgendou = colab.nome;
+      }
+      const { data, error } = await supabase.rpc("criar_aluno_externo_com_prova", {
+        p_nome: extNome.trim(),
+        p_telefone: extTelefone.trim(),
+        p_polo_id: extPoloId,
+        p_data_prova: extData,
+        p_hora_prova: extHora,
+        p_situacao_financeira: extSitFin,
+        p_quem_agendou: quemAgendou,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row as { aluno_externo_id: string; ctr: string; senha: string };
+    },
+    onSuccess: (row) => {
+      setExternoResult({ ctr: row.ctr, senha: row.senha, data: extData, hora: extHora });
+      setExternoOpen(false);
+      setExtNome(""); setExtTelefone(""); setExtData(""); setExtHora(""); setExtSitFin("ja_pago");
+      qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
+    },
+    onError: (e: any) => toast.error("Erro ao cadastrar externo", { description: e.message }),
+  });
+
+
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["provas-agendadas-list", dataInicio, dataFim],
@@ -323,7 +385,13 @@ function ProvasAgendadasPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Provas Agendadas" description="Acompanhe as provas agendadas dos alunos" />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <PageHeader title="Provas Agendadas" description="Acompanhe as provas agendadas dos alunos" />
+        <Button onClick={() => setExternoOpen(true)} className="bg-primary">
+          <UserPlus className="h-4 w-4 mr-2" /> Agendar Externo
+        </Button>
+      </div>
+
 
       <Card>
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -448,6 +516,97 @@ function ProvasAgendadasPage() {
               {saveEdit.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Salvar
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Agendar Externo */}
+      <Dialog open={externoOpen} onOpenChange={setExternoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Agendar Aluno Externo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome completo *</Label>
+              <Input value={extNome} onChange={(e) => setExtNome(e.target.value)} />
+            </div>
+            <div>
+              <Label>Telefone *</Label>
+              <Input value={extTelefone} onChange={(e) => setExtTelefone(e.target.value)} placeholder="(48) 99999-9999" />
+            </div>
+            <div>
+              <Label>Polo *</Label>
+              <Select value={extPoloId} onValueChange={setExtPoloId}>
+                <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                <SelectContent>
+                  {(polos ?? []).map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Data da prova *</Label>
+                <Input type="date" value={extData} onChange={(e) => setExtData(e.target.value)} />
+              </div>
+              <div>
+                <Label>Horário *</Label>
+                <Input type="time" value={extHora} onChange={(e) => setExtHora(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <Label>Situação financeira *</Label>
+              <Select value={extSitFin} onValueChange={(v) => setExtSitFin(v as any)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ja_pago">Já pago</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExternoOpen(false)}>Cancelar</Button>
+            <Button onClick={() => criarExterno.mutate()} disabled={criarExterno.isPending}>
+              {criarExterno.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Cadastrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Confirmação com CTR + senha */}
+      <Dialog open={!!externoResult} onOpenChange={(o) => !o && setExternoResult(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" /> Aluno externo cadastrado!
+            </DialogTitle>
+          </DialogHeader>
+          {externoResult && (
+            <div className="space-y-3 py-2">
+              <div className="rounded-lg border p-4 bg-muted/30 space-y-2 text-sm">
+                <div><b>CTR:</b> <span className="font-mono">{externoResult.ctr}</span></div>
+                <div><b>Senha:</b> <span className="font-mono">{externoResult.senha}</span></div>
+                <div><b>Data:</b> {new Date(externoResult.data + "T00:00:00").toLocaleDateString("pt-BR")} às {externoResult.hora.slice(0,5)}</div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  const txt = `CTR: ${externoResult.ctr} | Senha: ${externoResult.senha} | Prova: ${new Date(externoResult.data + "T00:00:00").toLocaleDateString("pt-BR")} às ${externoResult.hora.slice(0,5)}`;
+                  navigator.clipboard.writeText(txt);
+                  toast.success("Dados copiados!");
+                }}
+              >
+                <Copy className="h-4 w-4 mr-2" /> Copiar dados
+              </Button>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setExternoResult(null)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

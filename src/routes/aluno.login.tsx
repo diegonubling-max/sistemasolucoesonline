@@ -49,14 +49,35 @@ function AlunoLogin() {
     mutationFn: async () => {
       const ctrValue = ctr.trim();
       const passwordValue = password.trim();
-      const ctrInt = parseInt(ctrValue);
-      
-      if (isNaN(ctrInt)) {
-        throw new Error('CTR deve ser um número');
-      }
 
       if (!passwordValue) {
         throw new Error('A senha é obrigatória');
+      }
+
+      // Aluno externo: CTR começa com "P"
+      if (ctrValue.toUpperCase().startsWith('P')) {
+        const ctrUpper = ctrValue.toUpperCase();
+        const { data, error } = await supabase.rpc('login_aluno_externo', {
+          p_ctr: ctrUpper,
+          p_senha: passwordValue,
+        });
+        if (error) throw new Error('Erro ao autenticar: ' + error.message);
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          throw new Error('CTR ou senha incorretos');
+        }
+        const externo = Array.isArray(data) ? data[0] : data;
+        if (!externo.tem_acesso) {
+          throw new Error('Seu acesso está liberado apenas no dia da prova. Se a data já passou, procure a secretaria para reagendar.');
+        }
+        sessionStorage.setItem('externo_ctr', ctrUpper);
+        sessionStorage.setItem('externo_id', externo.id);
+        sessionStorage.setItem('externo_nome', externo.nome ?? '');
+        return { externo: true } as any;
+      }
+
+      const ctrInt = parseInt(ctrValue);
+      if (isNaN(ctrInt)) {
+        throw new Error('CTR deve ser um número');
       }
 
       // 1. Buscar email do aluno pelo CTR via RPC (anon não tem leitura na tabela alunos)
@@ -100,7 +121,13 @@ function AlunoLogin() {
 
       return data;
     },
-    onSuccess: async (data) => {
+    onSuccess: async (data: any) => {
+      if (data?.externo) {
+        toast.success('Bem-vindo! Sua prova está liberada.');
+        navigate({ to: '/externo/prova' });
+        return;
+      }
+
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')

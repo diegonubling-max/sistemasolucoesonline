@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as StudentRouteImport } from './routes/_student'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin.index'
+import { Route as ExternoProvaRouteImport } from './routes/externo.prova'
 import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
@@ -62,6 +63,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const ExternoProvaRoute = ExternoProvaRouteImport.update({
+  id: '/externo/prova',
+  path: '/externo/prova',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ContratoTokenRoute = ContratoTokenRouteImport.update({
   id: '/contrato/$token',
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
+  '/externo/prova': typeof ExternoProvaRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
@@ -275,6 +282,7 @@ export interface FileRoutesByTo {
   '/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
+  '/externo/prova': typeof ExternoProvaRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
@@ -312,6 +320,7 @@ export interface FileRoutesById {
   '/_admin/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
+  '/externo/prova': typeof ExternoProvaRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | '/setor-provas'
     | '/aluno/login'
     | '/contrato/$token'
+    | '/externo/prova'
     | '/alunos/novo'
     | '/cursos/novo'
     | '/aluno/dashboard'
@@ -385,6 +395,7 @@ export interface FileRouteTypes {
     | '/setor-provas'
     | '/aluno/login'
     | '/contrato/$token'
+    | '/externo/prova'
     | '/alunos/novo'
     | '/cursos/novo'
     | '/aluno/dashboard'
@@ -421,6 +432,7 @@ export interface FileRouteTypes {
     | '/_admin/setor-provas'
     | '/aluno/login'
     | '/contrato/$token'
+    | '/externo/prova'
     | '/_admin/'
     | '/_admin/alunos/novo'
     | '/_admin/cursos/novo'
@@ -448,6 +460,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   AlunoLoginRoute: typeof AlunoLoginRoute
   ContratoTokenRoute: typeof ContratoTokenRoute
+  ExternoProvaRoute: typeof ExternoProvaRoute
   ApiPublicHooksLembreteProvaRoute: typeof ApiPublicHooksLembreteProvaRoute
   ApiPublicHooksWhatsappCobrancaRoute: typeof ApiPublicHooksWhatsappCobrancaRoute
   ApiPublicHooksZapiJobsDiariosRoute: typeof ApiPublicHooksZapiJobsDiariosRoute
@@ -482,6 +495,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/externo/prova': {
+      id: '/externo/prova'
+      path: '/externo/prova'
+      fullPath: '/externo/prova'
+      preLoaderRoute: typeof ExternoProvaRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/contrato/$token': {
       id: '/contrato/$token'
@@ -792,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   AlunoLoginRoute: AlunoLoginRoute,
   ContratoTokenRoute: ContratoTokenRoute,
+  ExternoProvaRoute: ExternoProvaRoute,
   ApiPublicHooksLembreteProvaRoute: ApiPublicHooksLembreteProvaRoute,
   ApiPublicHooksWhatsappCobrancaRoute: ApiPublicHooksWhatsappCobrancaRoute,
   ApiPublicHooksZapiJobsDiariosRoute: ApiPublicHooksZapiJobsDiariosRoute,
