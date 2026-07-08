@@ -251,160 +251,28 @@ function ProvaFinalPage() {
 
   if (loadingAgendamento) return <div className="p-8 text-center">Carregando...</div>;
 
-  // Tela de Resultado (quando agendamento está concluído ou etapa é resultado)
+  // Se já iniciou/concluiu prova, ou o aluno clicou em começar → fluxo interativo
   const resultadosRecentes = resultados?.filter(r => r.agendamento_id === agendamento?.id);
-  const aprovadoEmTudo = resultadosRecentes && resultsAllPassed(resultadosRecentes, materiasParaRealizar);
+  const aprovadoEmTudo = resultadosRecentes && resultsAllPassed(resultadosRecentes, materiasDisponiveis);
 
-  if (aprovadoEmTudo || (agendamento?.status === 'concluido' && etapa === 'instrucoes')) {
-    if (aprovadoEmTudo) return <TelaFormatura width={width} height={height} whatsapp={aluno?.polos?.whatsapp} />;
-    if (resultadosRecentes && resultadosRecentes.length > 0) {
-      const materiasFeitas = resultadosRecentes.map(r => r.materia);
-      return <TelaResultados resultados={resultadosRecentes} materias={materiasFeitas} whatsapp={aluno?.polos?.whatsapp} />;
+  if (aprovadoEmTudo) {
+    return <TelaFormatura width={width} height={height} whatsapp={aluno?.polos?.whatsapp} />;
+  }
+
+  if (etapa === 'realizando' || agendamento?.status === 'iniciado' || agendamento?.status === 'concluido') {
+    if (!aluno?.id || !agendamento?.id) {
+      return <div className="p-8 text-center"><Loader2 className="animate-spin inline" /></div>;
     }
-  }
-
-  // Renderização condicional por Etapa
-  if (etapa === 'realizando') {
     return (
-      <div className="max-w-4xl mx-auto space-y-6 pb-20">
-        <div className="sticky top-20 z-10 bg-white border-b p-4 rounded-xl shadow-md flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold text-primary">{materiaAtual}</h2>
-            <p className="text-sm text-muted-foreground">Matéria {currentMateriaIndex + 1} de {materiasParaRealizar.length}</p>
-          </div>
-          <div className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-xl font-bold",
-            timeLeft < 600 ? "bg-red-100 text-red-600 animate-pulse" : "bg-primary/10 text-primary"
-          )}>
-            <Clock className="h-6 w-6" />
-            {formatTime(timeLeft)}
-          </div>
-        </div>
-
-        <div className="space-y-8">
-          {loadingQuestoes ? (
-            <div className="py-12 text-center"><Loader2 className="animate-spin h-8 w-8 mx-auto" /></div>
-          ) : (
-            questoes?.map((q, idx) => (
-              <Card key={q.id} className="overflow-hidden border-l-4 border-l-primary">
-                <CardHeader className="bg-muted/30">
-                  <CardTitle className="text-lg">Questão {q.numero || idx + 1}</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-6">
-                  <p className="text-lg leading-relaxed whitespace-pre-wrap">{q.enunciado}</p>
-                  <div className="space-y-3">
-                    {['a', 'b', 'c', 'd'].map((opt) => {
-                      const key = `opcao_${opt}` as keyof typeof q;
-                      const label = q[key];
-                      if (!label) return null;
-                      const isSelected = respostas[q.id] === opt;
-                      return (
-                        <button
-                          key={opt}
-                          onClick={() => handleResponder(q.id, opt)}
-                          className={cn(
-                            "w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 group",
-                            isSelected ? "border-primary bg-primary/5 shadow-inner" : "border-gray-100 hover:border-primary/50 hover:bg-gray-50"
-                          )}
-                        >
-                          <div className={cn(
-                            "h-8 w-8 rounded-full border-2 flex items-center justify-center font-bold shrink-0 transition-colors",
-                            isSelected ? "bg-primary border-primary text-white" : "border-gray-200 text-gray-400 group-hover:border-primary/50"
-                          )}>
-                            {opt.toUpperCase()}
-                          </div>
-                          <span className={cn("flex-1", isSelected ? "font-medium" : "text-gray-700")}>{label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-
-        <div className="flex justify-end pt-8">
-          <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl" onClick={handleProximaMateria} disabled={isFinishing}>
-            {isFinishing ? <Loader2 className="animate-spin mr-2" /> : currentMateriaIndex === materiasParaRealizar.length - 1 ? <CheckCircle2 className="mr-2" /> : <ArrowRight className="ml-2" />}
-            {currentMateriaIndex === materiasParaRealizar.length - 1 ? "Finalizar Prova" : "Próxima Matéria"}
-          </Button>
-        </div>
-      </div>
+      <ProvaFluxo
+        alunoId={aluno.id}
+        agendamentoId={agendamento.id}
+        materias={materiasDisponiveis}
+        whatsapp={aluno?.polos?.whatsapp}
+      />
     );
   }
 
-  if (etapa === 'resultado' && resultadosRecentes) {
-    const materiasFeitas = resultadosRecentes.map(r => r.materia);
-    return <TelaResultados resultados={resultadosRecentes} materias={materiasFeitas} />;
-  }
-
-  if (etapa === 'escolher_ordem') {
-    return (
-      <Card className="max-w-4xl mx-auto overflow-hidden">
-        <CardHeader className="bg-primary text-primary-foreground py-8 text-center">
-          <CardTitle className="text-2xl font-bold">Escolha a ordem das matérias</CardTitle>
-          <CardDescription className="text-primary-foreground/80">
-            Clique nos cards na sequência que deseja realizar a prova.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="py-8 space-y-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-            {materiasDisponiveis.map((m: string) => {
-              const indexOrdem = ordemSelecionada.indexOf(m);
-              const selecionada = indexOrdem !== -1;
-              return (
-                <div 
-                  key={m}
-                  onClick={() => {
-                    if (selecionada) {
-                      setOrdemSelecionada(prev => prev.filter(item => item !== m));
-                    } else {
-                      setOrdemSelecionada(prev => [...prev, m]);
-                    }
-                  }}
-                  className={cn(
-                    "relative p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center space-y-2 h-32",
-                    selecionada ? "border-primary bg-primary/5 ring-2 ring-primary ring-offset-2" : "border-gray-100 hover:border-primary/50 hover:bg-gray-50"
-                  )}
-                >
-                  {selecionada && (
-                    <div className="absolute -top-2 -right-2 bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-lg">
-                      {indexOrdem + 1}º
-                    </div>
-                  )}
-                  < GraduationCap className={cn("h-8 w-8", selecionada ? "text-primary" : "text-gray-400")} />
-                  <span className={cn("font-bold text-sm", selecionada ? "text-primary" : "text-gray-600")}>{m}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex gap-4">
-            <Button variant="outline" className="flex-1 h-12" onClick={() => {
-              setEtapa('instrucoes');
-              setOrdemSelecionada([]);
-            }}>
-              <ArrowLeft className="mr-2 h-5 w-5" /> Voltar
-            </Button>
-            <Button 
-              className="flex-[2] h-12 bg-[#1E3A5F] hover:bg-[#2D6ADF]" 
-              disabled={ordemSelecionada.length !== materiasDisponiveis.length}
-              onClick={() => startProva.mutate()}
-            >
-              Confirmar ordem e iniciar prova <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
-          
-          {ordemSelecionada.length > 0 && ordemSelecionada.length < materiasDisponiveis.length && (
-            <p className="text-center text-sm text-muted-foreground animate-pulse">
-              Selecione mais {materiasDisponiveis.length - ordemSelecionada.length} matérias para continuar
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    );
-  }
 
   const whatsappNumero = aluno?.polos?.whatsapp || "5551990010689";
 
