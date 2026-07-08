@@ -141,6 +141,8 @@ function ProvasAgendadasPage() {
         status: v.status || "agendada",
         resultado: v.status === "aprovado" ? "aprovado" : v.status === "reprovado" ? "reprovado" : null,
         observacao: v.observacao || null,
+        data_prova: v.data_prova || null,
+        hora_prova: v.hora_prova || null,
       };
       if (v.is_externo) {
         patch.nome_aluno = v.nome_aluno || null;
@@ -170,6 +172,8 @@ function ProvasAgendadasPage() {
     nome_aluno: r.nome_aluno ?? "",
     telefone: r.telefone ?? "",
     polo: r.polo ?? "",
+    data_prova: r.data_prova ?? "",
+    hora_prova: r.hora_prova ? r.hora_prova.slice(0, 5) : "",
     situacao_financeira: r.situacao_financeira ?? "",
     status: r.status ?? "agendada",
     observacao: r.observacao ?? "",
@@ -189,7 +193,7 @@ function ProvasAgendadasPage() {
             <TableHead>Data da Prova</TableHead>
             <TableHead>Horário</TableHead>
             <TableHead>Sit. Financeira</TableHead>
-            
+            {tab === "reagendar" && <TableHead>Observação</TableHead>}
             <TableHead>Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -212,6 +216,11 @@ function ProvasAgendadasPage() {
                 <TableCell>{new Date(r.data_prova + "T00:00:00").toLocaleDateString("pt-BR")}</TableCell>
                 <TableCell>{r.hora_prova?.slice(0, 5) ?? "—"}</TableCell>
                 <TableCell>{sitFinBadge(r.situacao_financeira)}</TableCell>
+                {tab === "reagendar" && (
+                  <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                    {r.observacao ?? "—"}
+                  </TableCell>
+                )}
                 <TableCell>
                   <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
                     <Pencil className="h-4 w-4" />
