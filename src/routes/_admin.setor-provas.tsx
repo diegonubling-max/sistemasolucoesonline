@@ -270,7 +270,7 @@ function DocumentacaoTab() {
                     <TableCell className="truncate">{r.quem_vendeu ?? "-"}</TableCell>
                     <TableCell>
                       {status === "completa" ? (
-                        <Badge className="rounded-full bg-green-700 hover:bg-green-700 text-white text-xs px-2 py-0.5">✅ Completa</Badge>
+                        <Badge className="rounded-full bg-[#14a011] hover:bg-[#14a011] text-white text-xs px-2 py-0.5">✅ Completa</Badge>
                       ) : (
                         <Badge className="rounded-full bg-red-500 hover:bg-red-500 text-white text-xs px-2 py-0.5">⚠️ Incompleta</Badge>
                       )}
