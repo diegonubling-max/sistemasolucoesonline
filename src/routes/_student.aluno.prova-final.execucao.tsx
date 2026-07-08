@@ -27,6 +27,8 @@ function ProvaExecucaoPage() {
   const [timeLeft, setTimeLeft] = useState(4 * 60 * 60); // 4 horas em segundos
   const [isFinishing, setIsFinishing] = useState(false);
 
+  const [agendamentoMaterias, setAgendamentoMaterias] = useState<string[] | null>(null);
+  const MATERIAS = agendamentoMaterias && agendamentoMaterias.length > 0 ? agendamentoMaterias : MATERIAS_DEFAULT;
   const materiaAtual = MATERIAS[currentMateriaIndex];
 
   const { data: aluno } = useQuery({
