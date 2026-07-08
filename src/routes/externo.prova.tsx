@@ -44,7 +44,7 @@ function ExternoProvaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("prova_agendamentos")
-        .select("id, status, data_prova, hora_prova")
+        .select("id, status, data_prova, hora_prova, materias_selecionadas")
         .eq("ctr", ctr!)
         .eq("data_prova", hojeStr)
         .is("resultado", null)
