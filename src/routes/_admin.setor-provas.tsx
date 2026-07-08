@@ -1160,11 +1160,14 @@ function EnviosTab() {
   const [declDoc, setDeclDoc] = useState<{ id: string; nome: string; texto?: string } | null>(null);
   const [search, setSearch] = useState("");
   const [certFilter, setCertFilter] = useState("all");
+  const [loteFilter, setLoteFilter] = useState("all");
   const [poloFilter, setPoloFilter] = useState("all");
   const [vendedorFilter, setVendedorFilter] = useState("all");
+  const [docFilter, setDocFilter] = useState("all");
+  const [declFilter, setDeclFilter] = useState("all");
   const [dataIni, setDataIni] = useState("");
   const [dataFim, setDataFim] = useState("");
-  const [ordem, setOrdem] = useState("data_desc");
+
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["sp-envios-rows"],
