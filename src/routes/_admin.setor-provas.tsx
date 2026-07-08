@@ -255,8 +255,8 @@ function DocumentacaoTab() {
         </CardContent>
       </Card>
 
-      {editAlunoId && <EditarRegistroModal alunoId={editAlunoId} onClose={() => setEditAlunoId(null)} />}
-      {encAlunoId && <EncaminharModal alunoId={encAlunoId} onClose={() => setEncAlunoId(null)} />}
+      {editDocId && <EditarRegistroModal docId={editDocId} onClose={() => setEditDocId(null)} />}
+      {encDocId && <EncaminharModal docId={encDocId} onClose={() => setEncDocId(null)} />}
       <NovoRegistroModal open={novoOpen} onClose={() => setNovoOpen(false)} />
     </div>
   );
