@@ -348,6 +348,7 @@ function DocumentacaoTab() {
               })}
             </TableBody>
           </Table>
+          <div className="mt-3 text-sm text-muted-foreground">Total: {filtered.length} registros</div>
         </CardContent>
       </Card>
 
@@ -1421,6 +1422,7 @@ function EnviosTab() {
             ))}
           </TableBody>
         </Table>
+        <div className="mt-3 text-sm text-muted-foreground">Total: {filtered.length} alunos enviados</div>
       </CardContent>
       {declDoc && (
         <GerarDeclaracaoModal
@@ -1723,6 +1725,7 @@ function CertificadosTab() {
             ))}
           </TableBody>
         </Table>
+        <div className="mt-3 text-sm text-muted-foreground">Total: {filtered.length} certificados</div>
       </CardContent>
 
       {enviarDigRow && <EnviarDigitalModal row={enviarDigRow} onClose={() => { setEnviarDigRow(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
