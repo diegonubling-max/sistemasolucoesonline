@@ -51,8 +51,8 @@ export function SetorProvasPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Setor de Provas"
-        description="Documentação, envios para certificadoras e controle de certificados"
+        title="Documentação e Certificação"
+        description="Controle de documentos, envio para certificadoras e certificados"
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setCertOpen(true)}>
