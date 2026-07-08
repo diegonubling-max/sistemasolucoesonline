@@ -177,7 +177,7 @@ function ProvasAgendadasPage() {
             <TableHead>Data da Prova</TableHead>
             <TableHead>Horário</TableHead>
             <TableHead>Sit. Financeira</TableHead>
-            {tab === "agendada" && <TableHead>Documentos</TableHead>}
+            
             <TableHead>Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -200,22 +200,6 @@ function ProvasAgendadasPage() {
                 <TableCell>{new Date(r.data_prova + "T00:00:00").toLocaleDateString("pt-BR")}</TableCell>
                 <TableCell>{r.hora_prova?.slice(0, 5) ?? "—"}</TableCell>
                 <TableCell>{sitFinBadge(r.situacao_financeira)}</TableCell>
-                {tab === "agendada" && (
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <Button size="sm" variant={r.docs_solicitados ? "default" : "outline"}
-                        onClick={() => toggleFlag.mutate({ id: r.id, field: "docs_solicitados", value: !r.docs_solicitados })}>
-                        {r.docs_solicitados && <CheckCircle2 className="h-3 w-3 mr-1" />}
-                        Solicitados
-                      </Button>
-                      <Button size="sm" variant={r.docs_recebidos ? "default" : "outline"}
-                        onClick={() => toggleFlag.mutate({ id: r.id, field: "docs_recebidos", value: !r.docs_recebidos })}>
-                        {r.docs_recebidos && <CheckCircle2 className="h-3 w-3 mr-1" />}
-                        Recebidos
-                      </Button>
-                    </div>
-                  </TableCell>
-                )}
                 <TableCell>
                   <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
                     <Pencil className="h-4 w-4" />
