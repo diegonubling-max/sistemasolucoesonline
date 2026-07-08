@@ -224,9 +224,11 @@ function ProvasAgendadasPage() {
       if (tab === "reagendar") {
         if (st !== "agendada") return false;
         if (!r.data_prova || r.data_prova >= HOJE) return false;
+      } else if (tab === "agendada") {
+        if (st !== "agendada" && st !== "iniciado") return false;
+        if (st === "agendada" && r.data_prova && r.data_prova < HOJE) return false;
       } else {
         if (st !== tab) return false;
-        if (tab === "agendada" && r.data_prova && r.data_prova < HOJE) return false;
       }
       if (tipoFilter !== "todos") {
         if (tipoFilter === "externo" && !r.is_externo) return false;
@@ -247,13 +249,14 @@ function ProvasAgendadasPage() {
     return base;
   }, [rows, tab, tipoFilter, sitFinFilter]);
 
+
   const counts = useMemo(() => {
     const c = { agendada: 0, aprovado: 0, reprovado: 0, reagendar: 0 } as Record<TabKey, number>;
     (rows ?? []).forEach((r: any) => {
       const st = (r.status ?? "agendada") as string;
       if (st === "agendada" && r.data_prova && r.data_prova < HOJE) {
         c.reagendar++;
-      } else if (st === "agendada") {
+      } else if (st === "agendada" || st === "iniciado") {
         c.agendada++;
       } else if (st === "aprovado" || st === "reprovado") {
         c[st as TabKey]++;
@@ -261,6 +264,7 @@ function ProvasAgendadasPage() {
     });
     return c;
   }, [rows]);
+
 
   const toggleFlag = useMutation({
     mutationFn: async (v: { id: string; field: "docs_solicitados" | "docs_recebidos"; value: boolean }) => {
@@ -355,6 +359,9 @@ function ProvasAgendadasPage() {
                       <Badge variant="secondary" className="text-[10px] bg-gray-200 text-gray-700">Externo</Badge>
                     )}
                     {isHoje && <Badge className="bg-red-500 text-white">PROVA HOJE</Badge>}
+                    {r.status === "iniciado" && (
+                      <Badge className="bg-green-600 text-white">🟢 Em Prova</Badge>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>{r.telefoneDisplay}</TableCell>
