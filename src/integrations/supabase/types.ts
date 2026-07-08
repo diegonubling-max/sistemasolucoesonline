@@ -963,6 +963,139 @@ export type Database = {
           },
         ]
       }
+      documentacao_alunos: {
+        Row: {
+          aluno_id: string | null
+          cert_digital_data: string | null
+          cert_digital_enviado: boolean
+          cert_fisico_data_envio: string | null
+          cert_fisico_data_recebimento: string | null
+          cert_fisico_enviado_aluno: boolean
+          cert_fisico_rastreio: string | null
+          cert_fisico_recebido: boolean
+          certificadora_id: string | null
+          created_at: string
+          ctr: string | null
+          data_envio: string | null
+          declaracao_data: string | null
+          declaracao_gerada: boolean
+          declaracao_historico: Json | null
+          doc_comprovante_residencia: boolean
+          doc_historico_fundamental: boolean
+          doc_historico_fundamental_medio: boolean
+          doc_outros: boolean
+          doc_outros_descricao: string | null
+          doc_rg_cpf: boolean
+          documentacao_completa: boolean
+          id: string
+          lote: string | null
+          necessita_diario_oficial: boolean
+          necessita_reconhecimento_firma: boolean
+          necessita_visto_confere: boolean
+          nome_aluno: string
+          observacao: string | null
+          polo: string | null
+          prova_agendamento_id: string | null
+          quem_vendeu: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id?: string | null
+          cert_digital_data?: string | null
+          cert_digital_enviado?: boolean
+          cert_fisico_data_envio?: string | null
+          cert_fisico_data_recebimento?: string | null
+          cert_fisico_enviado_aluno?: boolean
+          cert_fisico_rastreio?: string | null
+          cert_fisico_recebido?: boolean
+          certificadora_id?: string | null
+          created_at?: string
+          ctr?: string | null
+          data_envio?: string | null
+          declaracao_data?: string | null
+          declaracao_gerada?: boolean
+          declaracao_historico?: Json | null
+          doc_comprovante_residencia?: boolean
+          doc_historico_fundamental?: boolean
+          doc_historico_fundamental_medio?: boolean
+          doc_outros?: boolean
+          doc_outros_descricao?: string | null
+          doc_rg_cpf?: boolean
+          documentacao_completa?: boolean
+          id?: string
+          lote?: string | null
+          necessita_diario_oficial?: boolean
+          necessita_reconhecimento_firma?: boolean
+          necessita_visto_confere?: boolean
+          nome_aluno: string
+          observacao?: string | null
+          polo?: string | null
+          prova_agendamento_id?: string | null
+          quem_vendeu?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string | null
+          cert_digital_data?: string | null
+          cert_digital_enviado?: boolean
+          cert_fisico_data_envio?: string | null
+          cert_fisico_data_recebimento?: string | null
+          cert_fisico_enviado_aluno?: boolean
+          cert_fisico_rastreio?: string | null
+          cert_fisico_recebido?: boolean
+          certificadora_id?: string | null
+          created_at?: string
+          ctr?: string | null
+          data_envio?: string | null
+          declaracao_data?: string | null
+          declaracao_gerada?: boolean
+          declaracao_historico?: Json | null
+          doc_comprovante_residencia?: boolean
+          doc_historico_fundamental?: boolean
+          doc_historico_fundamental_medio?: boolean
+          doc_outros?: boolean
+          doc_outros_descricao?: string | null
+          doc_rg_cpf?: boolean
+          documentacao_completa?: boolean
+          id?: string
+          lote?: string | null
+          necessita_diario_oficial?: boolean
+          necessita_reconhecimento_firma?: boolean
+          necessita_visto_confere?: boolean
+          nome_aluno?: string
+          observacao?: string | null
+          polo?: string | null
+          prova_agendamento_id?: string | null
+          quem_vendeu?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentacao_alunos_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "alunos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentacao_alunos_certificadora_id_fkey"
+            columns: ["certificadora_id"]
+            isOneToOne: false
+            referencedRelation: "certificadoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentacao_alunos_prova_agendamento_id_fkey"
+            columns: ["prova_agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "prova_agendamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads_diarios: {
         Row: {
           created_at: string | null
