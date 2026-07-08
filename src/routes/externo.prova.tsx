@@ -12,9 +12,9 @@ export const Route = createFileRoute("/externo/prova")({
   component: ExternoProvaPage,
 });
 
-const MATERIAS = [
-  "Geografia", "História", "Filosofia", "Sociologia", "Português",
-  "Inglês", "Biologia", "Química", "Física", "Matemática",
+const MATERIAS_DEFAULT = [
+  "Biologia", "Filosofia", "Física", "Geografia", "História",
+  "Inglês", "Matemática", "Português", "Química", "Sociologia",
 ];
 
 function ExternoProvaPage() {
