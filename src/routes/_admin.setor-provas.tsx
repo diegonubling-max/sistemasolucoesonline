@@ -1204,10 +1204,18 @@ function EnviosTab() {
     [rows]
   );
 
-  const lotes = useMemo(
-    () => Array.from(new Set((rows ?? []).map((r: any) => r.lote).filter(Boolean))).sort(),
-    [rows]
-  );
+  const lotesComContagem = useMemo(() => {
+    const map = new Map<string, number>();
+    (rows ?? []).forEach((r: any) => {
+      if (!r.lote) return;
+      map.set(r.lote, (map.get(r.lote) ?? 0) + 1);
+    });
+    return Array.from(map.entries())
+      .map(([lote, count]) => ({ lote, count }))
+      .sort((a, b) => a.lote.localeCompare(b.lote));
+  }, [rows]);
+
+  const lotes = useMemo(() => lotesComContagem.map((l) => l.lote), [lotesComContagem]);
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
