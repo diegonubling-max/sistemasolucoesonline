@@ -263,11 +263,15 @@ function ProvaFinalPage() {
     if (!aluno?.id || !agendamento?.id) {
       return <div className="p-8 text-center"><Loader2 className="animate-spin inline" /></div>;
     }
+    const materiasAgendadas = (agendamento as any)?.materias_selecionadas;
+    const materiasProva = Array.isArray(materiasAgendadas) && materiasAgendadas.length > 0
+      ? materiasAgendadas
+      : materiasDisponiveis;
     return (
       <ProvaFluxo
         alunoId={aluno.id}
         agendamentoId={agendamento.id}
-        materias={materiasDisponiveis}
+        materias={materiasProva}
         whatsapp={aluno?.polos?.whatsapp}
       />
     );
