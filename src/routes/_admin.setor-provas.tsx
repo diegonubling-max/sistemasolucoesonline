@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import {
   Plus, Search, Pencil, Trash2, Loader2, Send, FileText,
-  Building2, CheckCircle2, AlertCircle, Eye, Upload, X, MoreHorizontal, RefreshCw, Mail, Package,
+  Building2, CheckCircle2, AlertCircle, Eye, Upload, X, MoreHorizontal, RefreshCw, Mail, Package, Check,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -270,7 +270,7 @@ function DocumentacaoTab() {
                     <TableCell className="truncate">{r.quem_vendeu ?? "-"}</TableCell>
                     <TableCell>
                       {status === "completa" ? (
-                        <Badge className="rounded-full bg-[#14a011] hover:bg-[#14a011] text-white text-xs px-2 py-0.5">✅ Completa</Badge>
+                        <Badge className="rounded-full bg-[#14a011] hover:bg-[#14a011] text-white text-xs px-2 py-0.5 inline-flex items-center gap-1"><Check className="h-3 w-3 text-white" strokeWidth={3} /> Completa</Badge>
                       ) : (
                         <Badge className="rounded-full bg-red-500 hover:bg-red-500 text-white text-xs px-2 py-0.5">⚠️ Incompleta</Badge>
                       )}
