@@ -163,7 +163,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
           aria-hidden
         />
       )}
-    <aside className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 w-56 h-screen md:h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border shadow-lg transition-transform duration-200 ease-in-out`}>
+    <aside className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 w-72 h-screen md:h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border shadow-lg transition-transform duration-200 ease-in-out`}>
       <div className="px-4 py-4 border-b border-sidebar-border">
         <h1 className="text-xl font-bold tracking-tight">
           <span className="text-white">{nomeEscola.split(' ')[0]}</span> <span className="text-[#2ECC71]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
