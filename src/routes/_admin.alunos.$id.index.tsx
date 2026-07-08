@@ -88,6 +88,8 @@ function AlunoDetalhes() {
   const [vitrineValorPixDesconto, setVitrineValorPixDesconto] = useState("");
   const [vitrineValorCartaoDesconto, setVitrineValorCartaoDesconto] = useState("");
   const [vitrinePontosDesconto, setVitrinePontosDesconto] = useState("");
+  const [vitrineFiltroSegmento, setVitrineFiltroSegmento] = useState<string>("todos");
+  const [vitrineFiltroSegmentoInit, setVitrineFiltroSegmentoInit] = useState(false);
   const [editVitrinePrecoPix, setEditVitrinePrecoPix] = useState("");
   const [editVitrinePrecoCartao, setEditVitrinePrecoCartao] = useState("");
   const [editVitrineValorPixDesconto, setEditVitrineValorPixDesconto] = useState("");
