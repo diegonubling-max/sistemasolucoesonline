@@ -1527,15 +1527,19 @@ function CertificadosTab() {
     return (rows ?? []).filter((r: any) => {
       if (search && !r.nome_aluno?.toLowerCase().includes(search.toLowerCase())) return false;
       if (loteFilter !== "all" && r.lote !== loteFilter) return false;
+      if (poloFilter !== "all") {
+        const p = r.alunos?.polos?.nome ?? r.polo;
+        if (p !== poloFilter) return false;
+      }
       if (certFilter !== "all" && r.certificadora_id !== certFilter) return false;
-      if (digFilter === "enviado" && !r.cert_digital_enviado) return false;
-      if (digFilter === "nao" && r.cert_digital_enviado) return false;
+      if (docFilter === "completa" && !r.documentacao_completa) return false;
+      if (docFilter === "incompleta" && r.documentacao_completa) return false;
       if (fisFilter === "aguardando" && r.cert_fisico_recebido) return false;
       if (fisFilter === "recebido" && !(r.cert_fisico_recebido && !r.cert_fisico_enviado_aluno)) return false;
       if (fisFilter === "enviado" && !r.cert_fisico_enviado_aluno) return false;
       return true;
     });
-  }, [rows, search, loteFilter, certFilter, digFilter, fisFilter]);
+  }, [rows, search, loteFilter, poloFilter, certFilter, docFilter, fisFilter]);
 
   return (
     <Card>
@@ -1548,35 +1552,44 @@ function CertificadosTab() {
           <Select value={loteFilter} onValueChange={setLoteFilter}>
             <SelectTrigger className="w-[160px]"><SelectValue placeholder="Lote" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os lotes</SelectItem>
+              <SelectItem value="all">Todos os Lotes</SelectItem>
               {lotesUnicos.map((l: any) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={certFilter} onValueChange={setCertFilter}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Certificadora" /></SelectTrigger>
+          <Select value={poloFilter} onValueChange={setPoloFilter}>
+            <SelectTrigger className="w-[170px]"><SelectValue placeholder="Polo" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas certificadoras</SelectItem>
+              <SelectItem value="all">Todos os Polos</SelectItem>
+              {POLOS_FIXOS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={certFilter} onValueChange={setCertFilter}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Certificadora" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as Certificadoras</SelectItem>
               {(certs ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={digFilter} onValueChange={setDigFilter}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Cert. Digital" /></SelectTrigger>
+          <Select value={docFilter} onValueChange={setDocFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Documentação" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="enviado">Enviado</SelectItem>
-              <SelectItem value="nao">Não enviado</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="completa">Completa</SelectItem>
+              <SelectItem value="incompleta">Incompleta</SelectItem>
             </SelectContent>
           </Select>
           <Select value={fisFilter} onValueChange={setFisFilter}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Cert. Físico" /></SelectTrigger>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Status Cert. Físico" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="aguardando">Aguardando</SelectItem>
-              <SelectItem value="recebido">Recebido</SelectItem>
+              <SelectItem value="aguardando">Aguardando chegada</SelectItem>
+              <SelectItem value="recebido">Recebido na escola</SelectItem>
               <SelectItem value="enviado">Enviado ao aluno</SelectItem>
             </SelectContent>
           </Select>
         </div>
+
+
 
         <Table>
           <TableHeader>
