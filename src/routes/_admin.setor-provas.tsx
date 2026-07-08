@@ -105,7 +105,7 @@ function DocumentacaoTab() {
         .select(`
           id, aluno_id, nome_aluno, polo, quem_vendeu, telefone, ctr,
           documentacao_completa, certificadora_id, lote, data_envio,
-          declaracao_gerada, created_at,
+          declaracao_gerada, declaracao_data, created_at,
           certificadoras(nome),
           alunos(id, ctr, polo_id, polos(nome))
         `)
