@@ -337,13 +337,11 @@ const VALID_FIELDS = [
 
 function EditarRegistroModal({ alunoId, onClose }: { alunoId: string; onClose: () => void }) {
   const qc = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<any>({
     rg_cpf: false, historico_fundamental: false, historico_fund_medio: false,
     comprovante_residencia: false, outros: false, outros_descricao: "",
     rec_firma: false, d_oficial: false, visto_confere: false,
   });
-  const [uploading, setUploading] = useState(false);
 
   const { data: aluno } = useQuery({
     queryKey: ["sp-aluno-edit", alunoId],
