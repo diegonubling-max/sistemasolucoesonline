@@ -1473,13 +1473,15 @@ function CertificadosTab() {
   const selectedPoloId = usePoloFilter();
   const [search, setSearch] = useState("");
   const [loteFilter, setLoteFilter] = useState("all");
+  const [poloFilter, setPoloFilter] = useState("all");
   const [certFilter, setCertFilter] = useState("all");
-  const [digFilter, setDigFilter] = useState("all");
+  const [docFilter, setDocFilter] = useState("all");
   const [fisFilter, setFisFilter] = useState("all");
   const [enviarDigRow, setEnviarDigRow] = useState<any>(null);
   const [receberFisRow, setReceberFisRow] = useState<any>(null);
   const [obsRow, setObsRow] = useState<any>(null);
   const [viewRow, setViewRow] = useState<any>(null);
+
 
 
   const { data: rows, isLoading } = useQuery({
