@@ -584,6 +584,24 @@ function EncaminharModal({ docId, onClose }: { docId: string; onClose: () => voi
     },
   });
 
+  useQuery({
+    queryKey: ["sp-doc-current", docId],
+    queryFn: async () => {
+      const { data } = await sb
+        .from("documentacao_alunos")
+        .select("certificadora_id, lote, data_envio")
+        .eq("id", docId)
+        .maybeSingle();
+      if (data) {
+        if (data.certificadora_id) setCertId(data.certificadora_id);
+        if (data.lote) setLote(data.lote);
+        if (data.data_envio) setDataEnvio(String(data.data_envio).slice(0, 10));
+      }
+      return data ?? null;
+    },
+  });
+
+
   const mut = useMutation({
     mutationFn: async () => {
       if (!certId) throw new Error("Selecione uma certificadora");
