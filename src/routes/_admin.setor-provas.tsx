@@ -105,7 +105,7 @@ function DocumentacaoTab() {
         .select(`
           id, aluno_id, nome_aluno, polo, quem_vendeu, telefone, ctr,
           documentacao_completa, certificadora_id, lote, data_envio,
-          declaracao_gerada, created_at,
+          declaracao_gerada, declaracao_data, created_at,
           certificadoras(nome),
           alunos(id, ctr, polo_id, polos(nome))
         `)
@@ -229,20 +229,20 @@ function DocumentacaoTab() {
                     <TableCell>{r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
                     <TableCell>
                       {r.declaracao_gerada ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700">Gerada</Badge>
-                      ) : r.aluno_id ? (
-                        <GerarDeclaracaoButton aluno={{ id: r.aluno_id, nome: r.nome_aluno, cpf: null, polo_id: r.alunos?.polo_id }} />
+                        <Badge variant="outline" className="bg-green-50 text-green-700">
+                          ✅ Gerada{r.declaracao_data ? ` em ${new Date(r.declaracao_data).toLocaleDateString("pt-BR")}` : ""}
+                        </Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <Button size="sm" variant="outline" onClick={() => setDeclDoc({ id: r.id, nome: r.nome_aluno })}>
+                          <FileText className="h-3 w-3 mr-1" /> Gerar Declaração
+                        </Button>
                       )}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button size="sm" variant="ghost" onClick={() => setEncDocId(r.id)} title="Encaminhar para certificadora">
                         <Send className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" title="Gerar Declaração" onClick={() => setDeclDoc({ id: r.id, nome: r.nome_aluno })}>
-                        <FileText className="h-4 w-4" />
-                      </Button>
+
 
 
                       <Button size="sm" variant="ghost" onClick={() => setEditDocId(r.id)} title="Editar">
