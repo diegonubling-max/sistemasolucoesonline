@@ -1199,28 +1199,35 @@ function EnviosTab() {
     [rows]
   );
 
+  const lotes = useMemo(
+    () => Array.from(new Set((rows ?? []).map((r: any) => r.lote).filter(Boolean))).sort(),
+    [rows]
+  );
+
   const filtered = useMemo(() => {
-    let list = (rows ?? []).filter((r: any) => {
-      if (search && !r.nome_aluno?.toLowerCase().includes(search.toLowerCase())) return false;
+    const s = search.trim().toLowerCase();
+    const list = (rows ?? []).filter((r: any) => {
+      if (s) {
+        const dateStr = r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "";
+        if (!r.nome_aluno?.toLowerCase().includes(s) && !dateStr.includes(s) && !(r.data_envio ?? "").includes(s)) return false;
+      }
       if (certFilter !== "all" && r.certificadora_id !== certFilter) return false;
+      if (loteFilter !== "all" && r.lote !== loteFilter) return false;
       if (poloFilter !== "all") {
         const p = r.alunos?.polos?.nome ?? r.polo;
         if (p !== poloFilter) return false;
       }
       if (vendedorFilter !== "all" && r.quem_vendeu !== vendedorFilter) return false;
+      if (docFilter === "completa" && !r.documentacao_completa) return false;
+      if (docFilter === "incompleta" && r.documentacao_completa) return false;
+      if (declFilter === "gerada" && !r.declaracao_gerada) return false;
+      if (declFilter === "nao" && r.declaracao_gerada) return false;
       if (dataIni && (!r.data_envio || r.data_envio < dataIni)) return false;
       if (dataFim && (!r.data_envio || r.data_envio > dataFim)) return false;
       return true;
     });
-    list = [...list].sort((a: any, b: any) => {
-      if (ordem === "nome_az") return (a.nome_aluno ?? "").localeCompare(b.nome_aluno ?? "");
-      if (ordem === "nome_za") return (b.nome_aluno ?? "").localeCompare(a.nome_aluno ?? "");
-      const da = a.data_envio ?? "";
-      const db = b.data_envio ?? "";
-      return ordem === "data_asc" ? da.localeCompare(db) : db.localeCompare(da);
-    });
-    return list;
-  }, [rows, search, certFilter, poloFilter, vendedorFilter, dataIni, dataFim, ordem]);
+    return [...list].sort((a: any, b: any) => (b.data_envio ?? "").localeCompare(a.data_envio ?? ""));
+  }, [rows, search, certFilter, loteFilter, poloFilter, vendedorFilter, docFilter, declFilter, dataIni, dataFim]);
 
   return (
     <Card>
@@ -1228,41 +1235,56 @@ function EnviosTab() {
         <div className="flex flex-wrap gap-2">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar aluno..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder="Buscar por nome ou data..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={certFilter} onValueChange={setCertFilter}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Certificadora" /></SelectTrigger>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Certificadora" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas certificadoras</SelectItem>
+              <SelectItem value="all">Todas as Certificadoras</SelectItem>
               {(certs ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={poloFilter} onValueChange={setPoloFilter}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Polo" /></SelectTrigger>
+          <Select value={loteFilter} onValueChange={setLoteFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Lote" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos polos</SelectItem>
+              <SelectItem value="all">Todos os Lotes</SelectItem>
+              {lotes.map((l: any) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={poloFilter} onValueChange={setPoloFilter}>
+            <SelectTrigger className="w-[170px]"><SelectValue placeholder="Polo" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Polos</SelectItem>
               {POLOS_FIXOS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={vendedorFilter} onValueChange={setVendedorFilter}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Vendedor" /></SelectTrigger>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Vendedor" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos vendedores</SelectItem>
+              <SelectItem value="all">Todos os Vendedores</SelectItem>
               {vendedores.map((v: any) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={docFilter} onValueChange={setDocFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Documentação" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="completa">Completa</SelectItem>
+              <SelectItem value="incompleta">Incompleta</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={declFilter} onValueChange={setDeclFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Declaração" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="gerada">Gerada</SelectItem>
+              <SelectItem value="nao">Não Gerada</SelectItem>
             </SelectContent>
           </Select>
           <Input type="date" value={dataIni} onChange={(e) => setDataIni(e.target.value)} className="w-[150px]" title="Data início" />
           <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} className="w-[150px]" title="Data fim" />
-          <Select value={ordem} onValueChange={setOrdem}>
-            <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="data_desc">Data de Envio (mais recente)</SelectItem>
-              <SelectItem value="data_asc">Data de Envio (mais antiga)</SelectItem>
-              <SelectItem value="nome_az">Nome A-Z</SelectItem>
-              <SelectItem value="nome_za">Nome Z-A</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
+
 
         <Table>
 
