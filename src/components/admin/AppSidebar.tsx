@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, Tags, Settings, ChevronDown, Check, KeyRound, ClipboardCheck, Crown, UsersRound, HeartHandshake, CalendarCheck } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, GraduationCap, Wallet, LogOut, ShieldPlus, Loader2, Tags, Settings, ChevronDown, Check, KeyRound, ClipboardCheck, Crown, UsersRound, HeartHandshake, CalendarCheck, FileText } from "lucide-react";
 import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ type SidebarItem = {
   vendedorOnly?: boolean;
   hideForVendedor?: boolean;
   posVendaOrAdmin?: boolean;
+  documentacaoAccess?: boolean;
 };
 
 const items: SidebarItem[] = [
@@ -39,6 +40,7 @@ const items: SidebarItem[] = [
   { title: "Colaboradores", url: "/colaboradores", icon: Users, enabled: true, adminOnly: true },
   { title: "Minha Equipe", url: "/minha-equipe", icon: UsersRound, enabled: true, responsavelOnly: true },
   { title: "Setor de Provas", url: "/setor-provas", icon: ClipboardCheck, enabled: true, anyPerm: ['ver_setor_provas', 'gerenciar_prova_final'] },
+  { title: "Documentação", url: "/documentacao", icon: FileText, enabled: true, documentacaoAccess: true },
   { title: "Provas Agendadas", url: "/provas-agendadas", icon: CalendarCheck, enabled: true, anyPerm: ['ver_provas_agendadas', 'gerenciar_prova_final'] },
   { title: "Pós-Venda", url: "/pos-venda", icon: HeartHandshake, enabled: true, posVendaOrAdmin: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet, enabled: true, perm: 'ver_financeiro', hideForVendedor: true },
@@ -193,6 +195,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
           if (item.vendedorOnly && !isVendedor) return null;
           if (item.hideForVendedor && isVendedor) return null;
           if (item.posVendaOrAdmin && !isAdmin && colaborador?.setor !== 'Pós-Venda' && !colaborador?.colaborador_permissoes?.[0]?.ver_pos_venda) return null;
+          if (item.documentacaoAccess && !isAdmin && colaborador?.setor !== 'Setor de Provas') return null;
 
           if (colaborador && !isResponsavel && (item.perm || item.anyPerm)) {
             const perms = colaborador.colaborador_permissoes?.[0];

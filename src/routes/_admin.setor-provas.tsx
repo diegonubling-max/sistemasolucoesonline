@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_admin/setor-provas")({
 
 const sb = supabase as any;
 
-function SetorProvasPage() {
+export function SetorProvasPage() {
   const { session } = useAuth();
   const [tab, setTab] = useState("documentacao");
   const [certOpen, setCertOpen] = useState(false);

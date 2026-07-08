@@ -85,6 +85,12 @@ function AdminLayout() {
     const isResponsavel = !!colaborador?.responsavel_polo;
     const isVendedor = colaborador?.setor === 'Vendedor';
     const isPosVenda = colaborador?.setor === 'Pós-Venda';
+    // Documentação: admin ou setor "Setor de Provas"
+    if (path === "/documentacao" || path.startsWith("/documentacao/")) {
+      if (colaborador?.setor !== 'Setor de Provas') navigate({ to: "/" });
+      return;
+    }
+
 
     // Pós-Venda: admin ou setor Pós-Venda
     if (path === "/pos-venda" || path.startsWith("/pos-venda/")) {
