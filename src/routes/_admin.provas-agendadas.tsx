@@ -758,6 +758,8 @@ Boa prova! 🍀`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DetalhesAgendamentoDialog agendamento={detalhesFor} onClose={() => setDetalhesFor(null)} />
     </div>
   );
 }
