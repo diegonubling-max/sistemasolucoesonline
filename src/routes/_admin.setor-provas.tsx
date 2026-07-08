@@ -1725,6 +1725,7 @@ function CertificadosTab() {
             ))}
           </TableBody>
         </Table>
+        <div className="mt-3 text-sm text-muted-foreground">Total: {filtered.length} certificados</div>
       </CardContent>
 
       {enviarDigRow && <EnviarDigitalModal row={enviarDigRow} onClose={() => { setEnviarDigRow(null); qc.invalidateQueries({ queryKey: ["sp-certificados"] }); }} />}
