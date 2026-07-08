@@ -330,9 +330,7 @@ function DocumentacaoTab() {
                       <Button size="sm" variant="ghost" onClick={() => setEditDocId(r.id)} title="Editar">
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        if (confirm(`Remover ${r.nome_aluno} do setor de provas?`)) deleteMut.mutate(r.id);
-                      }} title="Excluir">
+                      <Button size="sm" variant="ghost" onClick={() => setConfirmDelete({ id: r.id, nome: r.nome_aluno })} title="Excluir">
                         <Trash2 className="h-4 w-4 text-red-600" />
                       </Button>
                     </TableCell>
