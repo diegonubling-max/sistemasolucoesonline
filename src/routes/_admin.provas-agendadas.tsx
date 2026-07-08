@@ -64,14 +64,69 @@ function ProvasAgendadasPage() {
       const alunoIds = Array.from(
         new Set(agendamentos.filter((a) => !a.is_externo && a.aluno_id).map((a) => a.aluno_id))
       );
-      let alunosMap = new Map<string, any>();
+      const alunosMap = new Map<string, any>();
+      const poloMap = new Map<string, string>();
+      const sitFinAlunoMap = new Map<string, "ja_pago" | "aberto" | "atraso" | null>();
+      const notaAlunoMap = new Map<string, number | null>();
+
       if (alunoIds.length > 0) {
         const { data: alunosData, error: alunosErr } = await supabase
           .from("alunos")
-          .select("id, nome, ctr, telefone")
+          .select("id, nome, ctr, telefone, polo_id")
           .in("id", alunoIds);
         if (alunosErr) throw alunosErr;
         (alunosData ?? []).forEach((a: any) => alunosMap.set(a.id, a));
+
+        const poloIds = Array.from(
+          new Set((alunosData ?? []).map((a: any) => a.polo_id).filter(Boolean))
+        );
+        if (poloIds.length > 0) {
+          const { data: polosData } = await supabase
+            .from("polos").select("id, nome").in("id", poloIds);
+          (polosData ?? []).forEach((p: any) => poloMap.set(p.id, p.nome));
+        }
+
+        const { data: matriculasData } = await supabase
+          .from("matriculas").select("id, aluno_id").in("aluno_id", alunoIds);
+        const matToAluno = new Map<string, string>();
+        (matriculasData ?? []).forEach((m: any) => matToAluno.set(m.id, m.aluno_id));
+        const matIds = Array.from(matToAluno.keys());
+
+        if (matIds.length > 0) {
+          const { data: parcelasData } = await supabase
+            .from("parcelas")
+            .select("matricula_id, status, data_vencimento, tipo")
+            .in("matricula_id", matIds)
+            .eq("tipo", "parcela");
+          const agg = new Map<string, { total: number; abertas: number; atraso: number; pagas: number }>();
+          (parcelasData ?? []).forEach((p: any) => {
+            const alunoId = matToAluno.get(p.matricula_id);
+            if (!alunoId) return;
+            const a = agg.get(alunoId) ?? { total: 0, abertas: 0, atraso: 0, pagas: 0 };
+            a.total++;
+            if (p.status === "pago") a.pagas++;
+            else if (p.status === "aberto" || p.status === "parcial") {
+              a.abertas++;
+              if (p.status === "aberto" && p.data_vencimento && p.data_vencimento < HOJE) a.atraso++;
+            }
+            agg.set(alunoId, a);
+          });
+          agg.forEach((v, alunoId) => {
+            if (v.total === 0) sitFinAlunoMap.set(alunoId, null);
+            else if (v.atraso > 0) sitFinAlunoMap.set(alunoId, "atraso");
+            else if (v.abertas > 0) sitFinAlunoMap.set(alunoId, "aberto");
+            else sitFinAlunoMap.set(alunoId, "ja_pago");
+          });
+        }
+
+        const { data: resultadosData } = await supabase
+          .from("prova_resultados")
+          .select("aluno_id, percentual, finalizado_em")
+          .in("aluno_id", alunoIds)
+          .order("finalizado_em", { ascending: false });
+        (resultadosData ?? []).forEach((r: any) => {
+          if (!notaAlunoMap.has(r.aluno_id)) notaAlunoMap.set(r.aluno_id, r.percentual);
+        });
       }
 
       return agendamentos.map((a) => {
@@ -79,12 +134,22 @@ function ProvasAgendadasPage() {
         const nome = a.is_externo ? (a.nome_aluno ?? "—") : (aluno?.nome ?? "—");
         const ctr = a.is_externo ? (a.ctr ?? "—") : (aluno?.ctr ?? "—");
         const telefone = a.is_externo ? (a.telefone ?? "—") : (aluno?.telefone ?? "—");
+        const poloDisplay = a.is_externo
+          ? (a.polo ?? "—")
+          : (aluno?.polo_id ? (poloMap.get(aluno.polo_id) ?? "—") : "—");
+        const sitFinComputed = a.is_externo
+          ? (a.situacao_financeira ?? null)
+          : (a.aluno_id ? (sitFinAlunoMap.get(a.aluno_id) ?? null) : null);
+        const nota = a.is_externo ? null : (a.aluno_id ? (notaAlunoMap.get(a.aluno_id) ?? null) : null);
         return {
           ...a,
           aluno,
           nome,
           ctrDisplay: ctr,
           telefoneDisplay: telefone,
+          poloDisplay,
+          sitFinComputed,
+          notaDisplay: nota,
         };
       });
     },
@@ -105,7 +170,7 @@ function ProvasAgendadasPage() {
         if (tipoFilter === "externo" && !r.is_externo) return false;
         if (tipoFilter === "sistema" && r.is_externo) return false;
       }
-      if (sitFinFilter !== "todos" && r.situacao_financeira !== sitFinFilter) return false;
+      if (sitFinFilter !== "todos" && r.sitFinComputed !== sitFinFilter) return false;
       return true;
     });
     if (tab === "agendada" || tab === "reagendar") {
@@ -177,7 +242,8 @@ function ProvasAgendadasPage() {
 
   const sitFinBadge = (v: string | null) => {
     if (v === "ja_pago") return <Badge className="bg-blue-500">Já pago</Badge>;
-    if (v === "boleto") return <Badge className="bg-yellow-500">Boleto</Badge>;
+    if (v === "boleto" || v === "aberto") return <Badge className="bg-yellow-500">Boleto/Aberto</Badge>;
+    if (v === "atraso") return <Badge className="bg-red-500">Em atraso</Badge>;
     return <span className="text-muted-foreground">—</span>;
   };
 
@@ -210,6 +276,7 @@ function ProvasAgendadasPage() {
             <TableHead>Data da Prova</TableHead>
             <TableHead>Horário</TableHead>
             <TableHead>Sit. Financeira</TableHead>
+            <TableHead>Nota</TableHead>
             {tab === "reagendar" && <TableHead>Observação</TableHead>}
             <TableHead>Ações</TableHead>
           </TableRow>
@@ -231,10 +298,11 @@ function ProvasAgendadasPage() {
                 <TableCell>{r.telefoneDisplay}</TableCell>
                 <TableCell>{r.ctrDisplay}</TableCell>
 
-                <TableCell>{r.is_externo ? (r.polo ?? "—") : "—"}</TableCell>
+                <TableCell>{r.poloDisplay}</TableCell>
                 <TableCell>{new Date(r.data_prova + "T00:00:00").toLocaleDateString("pt-BR")}</TableCell>
                 <TableCell>{r.hora_prova?.slice(0, 5) ?? "—"}</TableCell>
-                <TableCell>{sitFinBadge(r.situacao_financeira)}</TableCell>
+                <TableCell>{sitFinBadge(r.sitFinComputed)}</TableCell>
+                <TableCell>{r.notaDisplay != null ? `${Number(r.notaDisplay).toFixed(1)}%` : "—"}</TableCell>
                 {tab === "reagendar" && (
                   <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
                     {r.observacao ?? "—"}
