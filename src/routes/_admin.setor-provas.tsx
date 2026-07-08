@@ -653,8 +653,45 @@ function EncaminharModal({ alunoId, onClose }: { alunoId: string; onClose: () =>
 
 function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
+  const [modo, setModo] = useState<"sistema" | "externo">("sistema");
   const [search, setSearch] = useState("");
   const [alunoSel, setAlunoSel] = useState<any>(null);
+
+  // Manual fields (modo externo OU preenchido a partir do aluno selecionado)
+  const [nome, setNome] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [polo, setPolo] = useState("");
+  const [quemVendeu, setQuemVendeu] = useState("");
+  const [ctr, setCtr] = useState("");
+
+  // Documentos
+  const [docRgCpf, setDocRgCpf] = useState(false);
+  const [docComp, setDocComp] = useState(false);
+  const [docHistF, setDocHistF] = useState(false);
+  const [docHistFM, setDocHistFM] = useState(false);
+  const [docOutros, setDocOutros] = useState(false);
+  const [docOutrosDesc, setDocOutrosDesc] = useState("");
+
+  // Controle
+  const [docCompleta, setDocCompleta] = useState(false);
+  const [recFirma, setRecFirma] = useState(false);
+  const [dOficial, setDOficial] = useState(false);
+  const [vistoConfere, setVistoConfere] = useState(false);
+
+  // Envio
+  const [certificadoraId, setCertificadoraId] = useState<string>("");
+  const [lote, setLote] = useState("");
+  const [dataEnvio, setDataEnvio] = useState("");
+  const [observacao, setObservacao] = useState("");
+
+  const reset = () => {
+    setModo("sistema"); setSearch(""); setAlunoSel(null);
+    setNome(""); setTelefone(""); setPolo(""); setQuemVendeu(""); setCtr("");
+    setDocRgCpf(false); setDocComp(false); setDocHistF(false); setDocHistFM(false);
+    setDocOutros(false); setDocOutrosDesc("");
+    setDocCompleta(false); setRecFirma(false); setDOficial(false); setVistoConfere(false);
+    setCertificadoraId(""); setLote(""); setDataEnvio(""); setObservacao("");
+  };
 
   const { data: alunos } = useQuery({
     queryKey: ["sp-search-alunos", search],
@@ -664,68 +701,218 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
       const ctrNum = parseInt(search, 10);
       const filterParts = [`nome.ilike.${t}`, `cpf.ilike.${t}`];
       if (!isNaN(ctrNum)) filterParts.push(`ctr.eq.${ctrNum}`);
-      const { data } = await sb.from("alunos").select("id, nome, cpf, ctr, polo_id, vendedora, polos(nome)").or(filterParts.join(",")).limit(10);
+      const { data } = await sb.from("alunos").select("id, nome, cpf, ctr, telefone, polo_id, vendedora, polos(nome)").or(filterParts.join(",")).limit(10);
       return data ?? [];
     },
-    enabled: search.length >= 2,
+    enabled: modo === "sistema" && search.length >= 2,
   });
+
+  const { data: certificadoras } = useQuery({
+    queryKey: ["sp-certificadoras-ativas"],
+    queryFn: async () => {
+      const { data } = await sb.from("certificadoras").select("id, nome").eq("ativo", true).order("nome");
+      return data ?? [];
+    },
+  });
+
+  const selectAluno = (a: any) => {
+    setAlunoSel(a);
+    setNome(a.nome ?? "");
+    setTelefone(a.telefone ?? "");
+    setPolo(a.polos?.nome ?? "");
+    setQuemVendeu(a.vendedora ?? "");
+    setCtr(a.ctr ? String(a.ctr) : "");
+  };
+
+  const podeAvancar = modo === "sistema" ? !!alunoSel : (nome.trim().length > 0 && telefone.trim().length > 0);
 
   const mut = useMutation({
     mutationFn: async () => {
-      if (!alunoSel) throw new Error("Selecione um aluno");
-      const { data: existing } = await sb.from("aluno_documentos").select("id").eq("aluno_id", alunoSel.id).maybeSingle();
-      if (existing) throw new Error("Aluno já cadastrado no setor de provas");
-      const { error } = await sb.from("aluno_documentos").insert({ aluno_id: alunoSel.id });
+      if (!podeAvancar) throw new Error("Preencha os dados do aluno");
+      const payload: any = {
+        aluno_id: modo === "sistema" ? alunoSel?.id : null,
+        nome_aluno: nome.trim(),
+        telefone: telefone.trim() || null,
+        polo: polo || null,
+        quem_vendeu: quemVendeu || null,
+        ctr: ctr || null,
+        doc_rg_cpf: docRgCpf,
+        doc_comprovante_residencia: docComp,
+        doc_historico_fundamental: docHistF,
+        doc_historico_fundamental_medio: docHistFM,
+        doc_outros: docOutros,
+        doc_outros_descricao: docOutros ? docOutrosDesc || null : null,
+        documentacao_completa: docCompleta,
+        necessita_reconhecimento_firma: recFirma,
+        necessita_diario_oficial: dOficial,
+        necessita_visto_confere: vistoConfere,
+        certificadora_id: certificadoraId || null,
+        lote: lote || null,
+        data_envio: dataEnvio || null,
+        observacao: observacao || null,
+      };
+      const { error } = await sb.from("documentacao_alunos").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Aluno adicionado ao setor de provas");
+      toast.success("Registro criado");
       qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
-      setAlunoSel(null);
-      setSearch("");
+      qc.invalidateQueries({ queryKey: ["documentacao-alunos"] });
+      reset();
       onClose();
     },
     onError: (e: any) => toast.error(e.message),
   });
 
+  const mostrarFormulario = podeAvancar;
+
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Novo Registro — Setor de Provas</DialogTitle>
-          <DialogDescription>Adicione um aluno do sistema antigo</DialogDescription>
+          <DialogTitle>Novo Registro — Documentação</DialogTitle>
+          <DialogDescription>Aluno do sistema ou cadastro manual</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Buscar aluno (nome, CPF ou CTR)</Label>
-            <Input value={search} onChange={(e) => { setSearch(e.target.value); setAlunoSel(null); }} placeholder="Digite ao menos 2 caracteres" />
+
+        <div className="space-y-4">
+          {/* Toggle de modo */}
+          <div className="flex gap-2">
+            <Button type="button" variant={modo === "sistema" ? "default" : "outline"} size="sm" onClick={() => { setModo("sistema"); setAlunoSel(null); }}>
+              Aluno do sistema
+            </Button>
+            <Button type="button" variant={modo === "externo" ? "default" : "outline"} size="sm" onClick={() => { setModo("externo"); setAlunoSel(null); setSearch(""); }}>
+              Cadastrar manualmente
+            </Button>
           </div>
-          {!alunoSel && alunos && alunos.length > 0 && (
-            <div className="border rounded max-h-60 overflow-y-auto">
-              {alunos.map((a: any) => (
-                <button key={a.id} type="button" onClick={() => setAlunoSel(a)} className="w-full text-left p-2 hover:bg-muted text-sm border-b last:border-0">
-                  <div className="font-medium">{a.nome}</div>
-                  <div className="text-xs text-muted-foreground">CPF: {a.cpf} · CTR: {a.ctr ?? "-"} · {a.polos?.nome ?? "—"}</div>
-                </button>
-              ))}
+
+          {/* Modo sistema */}
+          {modo === "sistema" && (
+            <div className="space-y-2">
+              <Label>Buscar aluno (nome, CPF ou CTR)</Label>
+              <Input value={search} onChange={(e) => { setSearch(e.target.value); setAlunoSel(null); }} placeholder="Digite ao menos 2 caracteres" />
+              {!alunoSel && alunos && alunos.length > 0 && (
+                <div className="border rounded max-h-60 overflow-y-auto">
+                  {alunos.map((a: any) => (
+                    <button key={a.id} type="button" onClick={() => selectAluno(a)} className="w-full text-left p-2 hover:bg-muted text-sm border-b last:border-0">
+                      <div className="font-medium">{a.nome}</div>
+                      <div className="text-xs text-muted-foreground">CPF: {a.cpf ?? "-"} · CTR: {a.ctr ?? "-"} · {a.polos?.nome ?? "—"}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {alunoSel && (
+                <div className="border rounded p-3 bg-muted/30 space-y-1">
+                  <div className="font-medium">{alunoSel.nome}</div>
+                  <div className="text-xs">Polo: {polo || "—"} · Vendedora: {quemVendeu || "—"} · Tel: {telefone || "—"}</div>
+                </div>
+              )}
             </div>
           )}
-          {alunoSel && (
-            <div className="border rounded p-3 bg-muted/30 space-y-1">
-              <div className="font-medium">{alunoSel.nome}</div>
-              <div className="text-xs">Polo: {alunoSel.polos?.nome ?? "—"}</div>
-              <div className="text-xs">Vendedora: {alunoSel.vendedora ?? "—"}</div>
+
+          {/* Modo externo */}
+          {modo === "externo" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label>Nome completo *</Label>
+                <Input value={nome} onChange={(e) => setNome(e.target.value)} />
+              </div>
+              <div>
+                <Label>Telefone com DDD *</Label>
+                <Input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(48) 99999-9999" />
+              </div>
+              <div>
+                <Label>Polo</Label>
+                <Select value={polo} onValueChange={setPolo}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Florianópolis">Florianópolis</SelectItem>
+                    <SelectItem value="Novo Hamburgo">Novo Hamburgo</SelectItem>
+                    <SelectItem value="Porto Alegre">Porto Alegre</SelectItem>
+                    <SelectItem value="Outros">Outros</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Quem fez a venda</Label>
+                <Input value={quemVendeu} onChange={(e) => setQuemVendeu(e.target.value)} />
+              </div>
+              <div>
+                <Label>CTR (opcional)</Label>
+                <Input value={ctr} onChange={(e) => setCtr(e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          {/* Formulário completo após seleção/preenchimento */}
+          {mostrarFormulario && (
+            <div className="space-y-4 border-t pt-4">
+              <div>
+                <Label className="mb-2 block">Documentos recebidos</Label>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <label className="flex items-center gap-2"><Checkbox checked={docRgCpf} onCheckedChange={(v) => setDocRgCpf(!!v)} /> RG e CPF</label>
+                  <label className="flex items-center gap-2"><Checkbox checked={docComp} onCheckedChange={(v) => setDocComp(!!v)} /> Comprovante de Residência</label>
+                  <label className="flex items-center gap-2"><Checkbox checked={docHistF} onCheckedChange={(v) => setDocHistF(!!v)} /> Histórico Ensino Fundamental</label>
+                  <label className="flex items-center gap-2"><Checkbox checked={docHistFM} onCheckedChange={(v) => setDocHistFM(!!v)} /> Histórico Ensino Fund. e Médio</label>
+                  <label className="flex items-center gap-2 col-span-2"><Checkbox checked={docOutros} onCheckedChange={(v) => setDocOutros(!!v)} /> Outros</label>
+                  {docOutros && (
+                    <div className="col-span-2">
+                      <Input value={docOutrosDesc} onChange={(e) => setDocOutrosDesc(e.target.value)} placeholder="Descrição de outros documentos" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Label className="mb-2 block">Controle</Label>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <label className="flex items-center gap-2"><Checkbox checked={docCompleta} onCheckedChange={(v) => setDocCompleta(!!v)} /> Documentação Completa</label>
+                  <label className="flex items-center gap-2"><Checkbox checked={recFirma} onCheckedChange={(v) => setRecFirma(!!v)} /> Rec. Firma</label>
+                  <label className="flex items-center gap-2"><Checkbox checked={dOficial} onCheckedChange={(v) => setDOficial(!!v)} /> Diário Oficial</label>
+                  <label className="flex items-center gap-2"><Checkbox checked={vistoConfere} onCheckedChange={(v) => setVistoConfere(!!v)} /> Visto Confere</label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Certificadora</Label>
+                  <Select value={certificadoraId} onValueChange={setCertificadoraId}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                      {(certificadoras ?? []).map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Lote (MM/YYYY)</Label>
+                  <Input value={lote} onChange={(e) => setLote(e.target.value)} placeholder="06/2026" />
+                </div>
+                <div className="col-span-2">
+                  <Label>Data de Envio</Label>
+                  <Input type="date" value={dataEnvio} onChange={(e) => setDataEnvio(e.target.value)} />
+                </div>
+                <div className="col-span-2">
+                  <Label>Observação</Label>
+                  <Textarea value={observacao} onChange={(e) => setObservacao(e.target.value)} rows={3} />
+                </div>
+              </div>
             </div>
           )}
         </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => mut.mutate()} disabled={!alunoSel || mut.isPending}>Adicionar</Button>
+          <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancelar</Button>
+          <Button onClick={() => mut.mutate()} disabled={!podeAvancar || mut.isPending}>
+            {mut.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Salvar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
 
 /* ============================== ABA 2: ENVIOS ============================== */
 
