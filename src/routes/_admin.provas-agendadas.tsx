@@ -224,9 +224,11 @@ function ProvasAgendadasPage() {
       if (tab === "reagendar") {
         if (st !== "agendada") return false;
         if (!r.data_prova || r.data_prova >= HOJE) return false;
+      } else if (tab === "agendada") {
+        if (st !== "agendada" && st !== "iniciado") return false;
+        if (st === "agendada" && r.data_prova && r.data_prova < HOJE) return false;
       } else {
         if (st !== tab) return false;
-        if (tab === "agendada" && r.data_prova && r.data_prova < HOJE) return false;
       }
       if (tipoFilter !== "todos") {
         if (tipoFilter === "externo" && !r.is_externo) return false;
@@ -246,6 +248,7 @@ function ProvasAgendadasPage() {
     }
     return base;
   }, [rows, tab, tipoFilter, sitFinFilter]);
+
 
   const counts = useMemo(() => {
     const c = { agendada: 0, aprovado: 0, reprovado: 0, reagendar: 0 } as Record<TabKey, number>;
