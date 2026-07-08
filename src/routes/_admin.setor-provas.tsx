@@ -172,7 +172,7 @@ function DocumentacaoTab() {
           <SelectTrigger><SelectValue placeholder="Lote" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os lotes</SelectItem>
-            {(lotes ?? []).map((l: string) => (
+            {((lotes ?? []) as string[]).map((l) => (
               <SelectItem key={l} value={l}>{l}</SelectItem>
             ))}
           </SelectContent>
