@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import { cn } from "@/lib/utils";
+import { ProvaFluxo } from "@/components/prova/ProvaFluxo";
 
 export const Route = createFileRoute("/_student/aluno/prova-final")({
   component: ProvaFinalPage,
