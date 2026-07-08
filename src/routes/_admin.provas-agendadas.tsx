@@ -519,6 +519,97 @@ function ProvasAgendadasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog: Agendar Externo */}
+      <Dialog open={externoOpen} onOpenChange={setExternoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Agendar Aluno Externo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome completo *</Label>
+              <Input value={extNome} onChange={(e) => setExtNome(e.target.value)} />
+            </div>
+            <div>
+              <Label>Telefone *</Label>
+              <Input value={extTelefone} onChange={(e) => setExtTelefone(e.target.value)} placeholder="(48) 99999-9999" />
+            </div>
+            <div>
+              <Label>Polo *</Label>
+              <Select value={extPoloId} onValueChange={setExtPoloId}>
+                <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                <SelectContent>
+                  {(polos ?? []).map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Data da prova *</Label>
+                <Input type="date" value={extData} onChange={(e) => setExtData(e.target.value)} />
+              </div>
+              <div>
+                <Label>Horário *</Label>
+                <Input type="time" value={extHora} onChange={(e) => setExtHora(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <Label>Situação financeira *</Label>
+              <Select value={extSitFin} onValueChange={(v) => setExtSitFin(v as any)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ja_pago">Já pago</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExternoOpen(false)}>Cancelar</Button>
+            <Button onClick={() => criarExterno.mutate()} disabled={criarExterno.isPending}>
+              {criarExterno.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Cadastrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Confirmação com CTR + senha */}
+      <Dialog open={!!externoResult} onOpenChange={(o) => !o && setExternoResult(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" /> Aluno externo cadastrado!
+            </DialogTitle>
+          </DialogHeader>
+          {externoResult && (
+            <div className="space-y-3 py-2">
+              <div className="rounded-lg border p-4 bg-muted/30 space-y-2 text-sm">
+                <div><b>CTR:</b> <span className="font-mono">{externoResult.ctr}</span></div>
+                <div><b>Senha:</b> <span className="font-mono">{externoResult.senha}</span></div>
+                <div><b>Data:</b> {new Date(externoResult.data + "T00:00:00").toLocaleDateString("pt-BR")} às {externoResult.hora.slice(0,5)}</div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  const txt = `CTR: ${externoResult.ctr} | Senha: ${externoResult.senha} | Prova: ${new Date(externoResult.data + "T00:00:00").toLocaleDateString("pt-BR")} às ${externoResult.hora.slice(0,5)}`;
+                  navigator.clipboard.writeText(txt);
+                  toast.success("Dados copiados!");
+                }}
+              >
+                <Copy className="h-4 w-4 mr-2" /> Copiar dados
+              </Button>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setExternoResult(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
