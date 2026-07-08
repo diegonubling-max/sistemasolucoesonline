@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import {
-  Plus, Search, Pencil, Trash2, Loader2, Send, FileText, Upload, Download,
+  Plus, Search, Pencil, Trash2, Loader2, Send, FileText,
   Building2, CheckCircle2, AlertCircle, Eye,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -337,13 +337,11 @@ const VALID_FIELDS = [
 
 function EditarRegistroModal({ alunoId, onClose }: { alunoId: string; onClose: () => void }) {
   const qc = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<any>({
     rg_cpf: false, historico_fundamental: false, historico_fund_medio: false,
     comprovante_residencia: false, outros: false, outros_descricao: "",
     rec_firma: false, d_oficial: false, visto_confere: false,
   });
-  const [uploading, setUploading] = useState(false);
 
   const { data: aluno } = useQuery({
     queryKey: ["sp-aluno-edit", alunoId],
@@ -357,13 +355,6 @@ function EditarRegistroModal({ alunoId, onClose }: { alunoId: string; onClose: (
     queryFn: async () => {
       const { data } = await sb.from("aluno_documentos").select("*").eq("aluno_id", alunoId).maybeSingle();
       return data;
-    },
-  });
-  const { data: arquivos, refetch: refetchArquivos } = useQuery({
-    queryKey: ["sp-aluno-arquivos", alunoId],
-    queryFn: async () => {
-      const { data } = await sb.from("aluno_documentos_arquivos").select("*").eq("aluno_id", alunoId).order("created_at", { ascending: false });
-      return data ?? [];
     },
   });
 
@@ -398,46 +389,6 @@ function EditarRegistroModal({ alunoId, onClose }: { alunoId: string; onClose: (
     onError: (e: any) => toast.error(e.message),
   });
 
-  const handleUpload = async (files: FileList | null) => {
-    if (!files?.length) return;
-    setUploading(true);
-    try {
-      for (const file of Array.from(files)) {
-        const path = `${alunoId}/${Date.now()}-${file.name}`;
-        const { error: upErr } = await supabase.storage.from("documentos-alunos").upload(path, file);
-        if (upErr) throw upErr;
-        const { error: dbErr } = await sb.from("aluno_documentos_arquivos").insert({
-          aluno_id: alunoId, nome_arquivo: file.name, url: path, tipo: file.type,
-        });
-        if (dbErr) throw dbErr;
-      }
-      toast.success("Arquivos enviados");
-      refetchArquivos();
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const downloadFile = async (path: string, nome: string) => {
-    const { data, error } = await supabase.storage.from("documentos-alunos").createSignedUrl(path, 60);
-    if (error) { toast.error(error.message); return; }
-    const a = document.createElement("a");
-    a.href = data.signedUrl;
-    a.download = nome;
-    a.target = "_blank";
-    a.click();
-  };
-
-  const deleteFile = async (id: string, path: string) => {
-    if (!confirm("Excluir arquivo?")) return;
-    await supabase.storage.from("documentos-alunos").remove([path]);
-    await sb.from("aluno_documentos_arquivos").delete().eq("id", id);
-    refetchArquivos();
-    toast.success("Arquivo excluído");
-  };
 
   return (
     <Dialog open onOpenChange={onClose}>
