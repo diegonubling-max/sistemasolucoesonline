@@ -240,18 +240,10 @@ function DocumentacaoTab() {
                       <Button size="sm" variant="ghost" onClick={() => setEncDocId(r.id)} title="Encaminhar para certificadora">
                         <Send className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" title="Gerar Declaração" onClick={async () => {
-                        toast.info("Funcionalidade em breve disponível");
-                        const { error } = await sb.from("documentacao_alunos").update({
-                          declaracao_gerada: true,
-                          declaracao_data: new Date().toISOString(),
-                          updated_at: new Date().toISOString(),
-                        }).eq("id", r.id);
-                        if (error) { toast.error(error.message); return; }
-                        qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
-                      }}>
+                      <Button size="sm" variant="ghost" title="Gerar Declaração" onClick={() => setDeclDoc({ id: r.id, nome: r.nome_aluno })}>
                         <FileText className="h-4 w-4" />
                       </Button>
+
 
                       <Button size="sm" variant="ghost" onClick={() => setEditDocId(r.id)} title="Editar">
                         <Pencil className="h-4 w-4" />
