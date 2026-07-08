@@ -1789,32 +1789,59 @@ export type Database = {
         Row: {
           aluno_id: string | null
           created_at: string | null
+          ctr: string | null
           data_prova: string
           docs_recebidos: boolean
           docs_solicitados: boolean
           hora_prova: string
           id: string
+          is_externo: boolean | null
+          nome_aluno: string | null
+          observacao: string | null
+          polo: string | null
+          quem_agendou: string | null
+          resultado: string | null
+          situacao_financeira: string | null
           status: string | null
+          telefone: string | null
         }
         Insert: {
           aluno_id?: string | null
           created_at?: string | null
+          ctr?: string | null
           data_prova: string
           docs_recebidos?: boolean
           docs_solicitados?: boolean
           hora_prova: string
           id?: string
+          is_externo?: boolean | null
+          nome_aluno?: string | null
+          observacao?: string | null
+          polo?: string | null
+          quem_agendou?: string | null
+          resultado?: string | null
+          situacao_financeira?: string | null
           status?: string | null
+          telefone?: string | null
         }
         Update: {
           aluno_id?: string | null
           created_at?: string | null
+          ctr?: string | null
           data_prova?: string
           docs_recebidos?: boolean
           docs_solicitados?: boolean
           hora_prova?: string
           id?: string
+          is_externo?: boolean | null
+          nome_aluno?: string | null
+          observacao?: string | null
+          polo?: string | null
+          quem_agendou?: string | null
+          resultado?: string | null
+          situacao_financeira?: string | null
           status?: string | null
+          telefone?: string | null
         }
         Relationships: [
           {
