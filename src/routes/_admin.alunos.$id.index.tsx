@@ -1109,13 +1109,39 @@ function AlunoDetalhes() {
       <Dialog open={showPasswordResult} onOpenChange={setShowPasswordResult}>
         <DialogContent><DialogHeader><DialogTitle>Senha Redefinida!</DialogTitle></DialogHeader><div className="bg-muted p-4 rounded text-sm"><p>Login: <b>{aluno.ctr}</b></p><p>Senha: <b>{passwordToDisplay}</b></p></div><Button onClick={() => setShowPasswordResult(false)}>Fechar</Button></DialogContent>
       </Dialog>
-      <Dialog open={showVitrineModal} onOpenChange={setShowVitrineModal}>
+      <Dialog open={showVitrineModal} onOpenChange={(open) => {
+        setShowVitrineModal(open);
+        if (open && !vitrineFiltroSegmentoInit) {
+          const recs = (perfilVocacional?.segmentos_recomendados ?? []) as string[];
+          const map: Record<string, string> = {
+            "Beleza": "Área da Beleza",
+            "Saúde": "Área da Saúde",
+            "Tecnologia": "Tecnologia",
+            "Administrativo": "Administrativo",
+            "Diversos": "Diversos",
+          };
+          const sugerido = recs.map(r => map[r]).find(Boolean);
+          if (sugerido) setVitrineFiltroSegmento(sugerido);
+          setVitrineFiltroSegmentoInit(true);
+        }
+      }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Adicionar à Vitrine</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">Filtrar por segmento</label>
+              <select className="w-full p-2 border rounded mt-1" value={vitrineFiltroSegmento} onChange={(e) => { setVitrineFiltroSegmento(e.target.value); setVitrineCursoId(""); }}>
+                <option value="todos">Todos</option>
+                <option value="Administrativo">Administrativo</option>
+                <option value="Área da Beleza">Área da Beleza</option>
+                <option value="Área da Saúde">Área da Saúde</option>
+                <option value="Diversos">Diversos</option>
+                <option value="Tecnologia">Tecnologia</option>
+              </select>
+            </div>
             <select className="w-full p-2 border rounded" value={vitrineCursoId} onChange={(e) => setVitrineCursoId(e.target.value)}>
               <option value="">Selecione...</option>
-              {allCourses?.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              {allCourses?.filter((c: any) => vitrineFiltroSegmento === "todos" || (c.segmentos as any)?.nome === vitrineFiltroSegmento).map((c: any) => <option key={c.id} value={c.id}>{c.nome}</option>)}
             </select>
             <div className="space-y-2">
               <p className="text-xs font-semibold text-muted-foreground">Valores sem desconto</p>
