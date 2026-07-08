@@ -240,7 +240,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
         })}
       </nav>
 
-      <div className="p-3 border-t border-sidebar-border space-y-1 bg-sidebar-accent/30">
+      <div className="p-2 border-t border-sidebar-border space-y-0.5 bg-sidebar-accent/30">
         {isSuperAdmin && (
           <Button
             variant="ghost"
