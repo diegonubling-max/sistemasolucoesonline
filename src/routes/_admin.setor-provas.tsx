@@ -1337,11 +1337,15 @@ function CertificadosTab() {
       const { data, error } = await sb
         .from("documentacao_alunos")
         .select(`
-          id, nome_aluno, polo, telefone, lote, data_envio, certificadora_id,
+          id, nome_aluno, polo, telefone, quem_vendeu, lote, data_envio, certificadora_id,
+          documentacao_completa, declaracao_gerada, declaracao_data, cert_observacao,
+          doc_rg_cpf, doc_comprovante_residencia, doc_historico_fundamental, doc_historico_fundamental_medio, doc_outros,
+          arquivos_paths,
           cert_digital_enviado, cert_fisico_recebido, cert_fisico_enviado_aluno, cert_fisico_rastreio,
           certificadoras(nome),
           alunos(polo_id, polos(nome))
         `)
+
         .not("data_envio", "is", null)
         .order("data_envio", { ascending: false });
       if (error) throw error;
