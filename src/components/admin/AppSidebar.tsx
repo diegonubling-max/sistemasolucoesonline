@@ -163,13 +163,14 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
           aria-hidden
         />
       )}
-    <aside className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 w-64 h-screen md:h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border shadow-lg transition-transform duration-200 ease-in-out`}>
-      <div className="px-6 py-6 border-b border-sidebar-border">
-        <h1 className="text-2xl font-bold tracking-tight">
+    <aside className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:sticky top-0 left-0 z-50 w-56 h-screen md:h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border shadow-lg transition-transform duration-200 ease-in-out`}>
+      <div className="px-4 py-4 border-b border-sidebar-border">
+        <h1 className="text-xl font-bold tracking-tight">
           <span className="text-white">{nomeEscola.split(' ')[0]}</span> <span className="text-[#2ECC71]">{nomeEscola.split(' ').slice(1).join(' ')}</span>
         </h1>
-        <p className="text-xs text-sidebar-foreground/60 mt-1 uppercase tracking-wider font-semibold">Painel Administrativo</p>
+        <p className="text-[10px] text-sidebar-foreground/60 mt-0.5 uppercase tracking-wider font-semibold">Painel Administrativo</p>
       </div>
+
 
       {isResponsavel && responsavelPoloNome && (
         <div className="px-6 py-2 border-b border-sidebar-border bg-amber-500/10 flex items-center gap-2">
@@ -185,7 +186,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
       )}
 
 
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
         {items.map((item) => {
           const isAdmin = session?.user?.email === 'admin@admin.com' || isSuperAdmin;
           const isVendedor = colaborador?.setor === 'Vendedor' && !isAdmin;
@@ -209,7 +210,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
             return (
               <div
                 key={item.title}
-                className="flex items-center justify-between px-3 py-2.5 rounded-md text-sidebar-foreground/40 cursor-not-allowed"
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-sidebar-foreground/40 cursor-not-allowed"
               >
                 <span className="flex items-center gap-3">
                   <Icon className="h-4 w-4" />
@@ -226,7 +227,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
               key={item.title}
               to={item.url}
               onClick={() => onClose?.()}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-200 ${
+              className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-all duration-200 ${
                 active
                   ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold shadow-md scale-[1.02]"
                   : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -239,7 +240,7 @@ export function AppSidebar({ colaborador, mobileOpen = false, onClose }: { colab
         })}
       </nav>
 
-      <div className="p-3 border-t border-sidebar-border space-y-1 bg-sidebar-accent/30">
+      <div className="p-2 border-t border-sidebar-border space-y-0.5 bg-sidebar-accent/30">
         {isSuperAdmin && (
           <Button
             variant="ghost"
