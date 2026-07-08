@@ -37,12 +37,14 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
 
   const agendar = useMutation({
     mutationFn: async () => {
+      if (materias.length === 0) throw new Error("Selecione pelo menos uma matéria");
       const { error } = await supabase.from("prova_agendamentos").insert({
         aluno_id: alunoId,
         data_prova: dataProva,
         hora_prova: horaProva,
         status: "agendado",
-      });
+        materias_selecionadas: materias,
+      } as any);
       if (error) throw error;
 
       const { data: aluno } = await supabase
