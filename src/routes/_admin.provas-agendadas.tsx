@@ -386,6 +386,16 @@ function ProvasAgendadasPage() {
                     {r.status === "iniciado" && !isOnline && (
                       <Badge className="bg-yellow-500 text-white">🟡 Iniciou</Badge>
                     )}
+                    {r.is_externo && !r.ctr && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 px-2 text-[11px]"
+                        onClick={() => setGerarCtrFor(r)}
+                      >
+                        Gerar CTR
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>{r.telefoneDisplay}</TableCell>
