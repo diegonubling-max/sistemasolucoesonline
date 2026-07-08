@@ -105,6 +105,23 @@ function ProvasAgendadasPage() {
     onError: (e: any) => toast.error("Erro ao cadastrar externo", { description: e.message }),
   });
 
+  const gerarCtr = useMutation({
+    mutationFn: async (ag: any) => {
+      const { data, error } = await supabase.rpc("gerar_ctr_externo_existente", {
+        p_agendamento_id: ag.id,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return { ...(row as { ctr: string; senha: string }), ag };
+    },
+    onSuccess: ({ ctr, senha, ag }) => {
+      setGerarCtrFor(null);
+      setExternoResult({ ctr, senha, data: ag.data_prova, hora: ag.hora_prova ?? "00:00" });
+      qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
+    },
+    onError: (e: any) => toast.error("Erro ao gerar CTR", { description: e.message }),
+  });
+
 
 
   const { data: rows, isLoading } = useQuery({
