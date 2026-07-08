@@ -1271,6 +1271,34 @@ function EnviosTab() {
   return (
     <Card>
       <CardContent className="pt-6 space-y-4 overflow-x-auto">
+        {lotesComContagem.length > 0 && (
+          <div className="pb-6 mb-2 border-b border-border">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Lotes</h3>
+            <div className="flex flex-wrap gap-2">
+              {lotesComContagem.map(({ lote, count }) => {
+                const active = loteFilter === lote;
+                return (
+                  <button
+                    key={lote}
+                    type="button"
+                    onClick={() => setLoteFilter(active ? "all" : lote)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                      active
+                        ? "bg-blue-700 text-white hover:bg-blue-800"
+                        : "bg-blue-100 text-blue-900 hover:bg-blue-200 dark:bg-blue-950 dark:text-blue-100 dark:hover:bg-blue-900"
+                    }`}
+                  >
+                    {lote}
+                    <span className={`ml-2 font-normal ${active ? "text-blue-100" : "text-blue-700 dark:text-blue-300"}`}>
+                      {count} {count === 1 ? "aluno" : "alunos"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1324,35 +1352,9 @@ function EnviosTab() {
           <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} className="w-[150px]" title="Data fim" />
         </div>
 
-        {lotesComContagem.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {lotesComContagem.map(({ lote, count }) => {
-              const active = loteFilter === lote;
-              return (
-                <button
-                  key={lote}
-                  type="button"
-                  onClick={() => setLoteFilter(active ? "all" : lote)}
-                  className={`rounded-md border px-3 py-2 text-sm transition-colors ${
-                    active
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card hover:bg-muted border-border"
-                  }`}
-                >
-                  <span className="font-medium">{lote}</span>
-                  <span className={`ml-2 ${active ? "opacity-90" : "text-muted-foreground"}`}>
-                    {count} {count === 1 ? "aluno" : "alunos"}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-
-
-
         <Table>
+
+
 
           <TableHeader>
             <TableRow>
