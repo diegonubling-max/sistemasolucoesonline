@@ -966,6 +966,7 @@ export type Database = {
       documentacao_alunos: {
         Row: {
           aluno_id: string | null
+          arquivos_paths: Json
           cert_digital_data: string | null
           cert_digital_enviado: boolean
           cert_fisico_data_envio: string | null
@@ -1002,6 +1003,7 @@ export type Database = {
         }
         Insert: {
           aluno_id?: string | null
+          arquivos_paths?: Json
           cert_digital_data?: string | null
           cert_digital_enviado?: boolean
           cert_fisico_data_envio?: string | null
@@ -1038,6 +1040,7 @@ export type Database = {
         }
         Update: {
           aluno_id?: string | null
+          arquivos_paths?: Json
           cert_digital_data?: string | null
           cert_digital_enviado?: boolean
           cert_fisico_data_envio?: string | null

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import {
   Plus, Search, Pencil, Trash2, Loader2, Send, FileText,
-  Building2, CheckCircle2, AlertCircle, Eye,
+  Building2, CheckCircle2, AlertCircle, Eye, Upload, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -598,6 +598,10 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
   const [dataEnvio, setDataEnvio] = useState("");
   const [observacao, setObservacao] = useState("");
 
+  // Arquivos
+  const [arquivos, setArquivos] = useState<File[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+
   const reset = () => {
     setModo("sistema"); setSearch(""); setAlunoSel(null);
     setNome(""); setTelefone(""); setPolo(""); setQuemVendeu(""); setCtr("");
@@ -605,6 +609,7 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
     setDocOutros(false); setDocOutrosDesc("");
     setDocCompleta(false); setRecFirma(false); setDOficial(false); setVistoConfere(false);
     setCertificadoraId(""); setLote(""); setDataEnvio(""); setObservacao("");
+    setArquivos([]);
   };
 
   const { data: alunos } = useQuery({
@@ -665,8 +670,21 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
         data_envio: dataEnvio || null,
         observacao: observacao || null,
       };
-      const { error } = await sb.from("documentacao_alunos").insert(payload);
+      const { data: inserted, error } = await sb.from("documentacao_alunos").insert(payload).select("id").single();
       if (error) throw error;
+
+      if (arquivos.length > 0 && inserted?.id) {
+        const paths: string[] = [];
+        for (const file of arquivos) {
+          const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${inserted.id}/${Date.now()}_${safeName}`;
+          const { error: upErr } = await supabase.storage.from("documentos-alunos").upload(path, file, { upsert: false });
+          if (upErr) throw upErr;
+          paths.push(path);
+        }
+        const { error: updErr } = await sb.from("documentacao_alunos").update({ arquivos_paths: paths }).eq("id", inserted.id);
+        if (updErr) throw updErr;
+      }
     },
     onSuccess: () => {
       toast.success("Registro criado");
@@ -776,6 +794,51 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
                   )}
                 </div>
               </div>
+
+              <div>
+                <Label className="mb-2 block">Anexar arquivos (PDF, JPG, PNG)</Label>
+                <label
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault(); setDragOver(false);
+                    const files = Array.from(e.dataTransfer.files).filter((f) =>
+                      /\.(pdf|jpe?g|png)$/i.test(f.name)
+                    );
+                    setArquivos((prev) => [...prev, ...files]);
+                  }}
+                  className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition ${dragOver ? "border-primary bg-muted/50" : "border-muted-foreground/30 hover:bg-muted/30"}`}
+                >
+                  <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                  <div className="text-sm text-muted-foreground">
+                    Arraste arquivos aqui ou <span className="text-primary underline">clique para selecionar</span>
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files ?? []);
+                      setArquivos((prev) => [...prev, ...files]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {arquivos.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {arquivos.map((f, i) => (
+                      <li key={i} className="flex items-center justify-between text-sm border rounded px-2 py-1">
+                        <span className="truncate">{f.name}</span>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setArquivos((prev) => prev.filter((_, j) => j !== i))}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
 
               <div>
                 <Label className="mb-2 block">Controle</Label>
