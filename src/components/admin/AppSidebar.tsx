@@ -28,6 +28,7 @@ type SidebarItem = {
   vendedorOnly?: boolean;
   hideForVendedor?: boolean;
   posVendaOrAdmin?: boolean;
+  documentacaoAccess?: boolean;
 };
 
 const items: SidebarItem[] = [
