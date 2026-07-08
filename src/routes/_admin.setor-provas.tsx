@@ -28,6 +28,13 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+
+const normalizePolo = (s: any) =>
+  String(s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -174,7 +181,7 @@ function DocumentacaoTab() {
       if (loteFilter !== "all" && r.lote !== loteFilter) return false;
       if (poloFilter !== "all") {
         const p = r.alunos?.polos?.nome ?? r.polo;
-        if (p !== poloFilter) return false;
+        if (normalizePolo(p) !== normalizePolo(poloFilter)) return false;
       }
       if (certFilter !== "all" && r.certificadora_id !== certFilter) return false;
       return true;
@@ -1264,7 +1271,7 @@ function EnviosTab() {
       if (loteFilter !== "all" && r.lote !== loteFilter) return false;
       if (poloFilter !== "all") {
         const p = r.alunos?.polos?.nome ?? r.polo;
-        if (p !== poloFilter) return false;
+        if (normalizePolo(p) !== normalizePolo(poloFilter)) return false;
       }
       if (vendedorFilter !== "all" && r.quem_vendeu !== vendedorFilter) return false;
       if (docFilter === "completa" && !r.documentacao_completa) return false;
@@ -1603,7 +1610,7 @@ function CertificadosTab() {
       if (loteFilter !== "all" && r.lote !== loteFilter) return false;
       if (poloFilter !== "all") {
         const p = r.alunos?.polos?.nome ?? r.polo;
-        if (p !== poloFilter) return false;
+        if (normalizePolo(p) !== normalizePolo(poloFilter)) return false;
       }
       if (certFilter !== "all" && r.certificadora_id !== certFilter) return false;
       if (docFilter === "completa" && !r.documentacao_completa) return false;
