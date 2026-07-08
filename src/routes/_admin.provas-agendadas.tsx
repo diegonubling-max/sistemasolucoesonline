@@ -359,6 +359,9 @@ function ProvasAgendadasPage() {
                       <Badge variant="secondary" className="text-[10px] bg-gray-200 text-gray-700">Externo</Badge>
                     )}
                     {isHoje && <Badge className="bg-red-500 text-white">PROVA HOJE</Badge>}
+                    {r.status === "iniciado" && (
+                      <Badge className="bg-green-600 text-white">🟢 Em Prova</Badge>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>{r.telefoneDisplay}</TableCell>
