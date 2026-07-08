@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import {
   Plus, Search, Pencil, Trash2, Loader2, Send, FileText,
-  Building2, CheckCircle2, AlertCircle, Eye, Upload, X,
+  Building2, CheckCircle2, AlertCircle, Eye, Upload, X, MoreHorizontal, RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,6 +16,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+
 import { PageHeader } from "@/components/admin/PageHeader";
 import {
   Tabs, TabsContent, TabsList, TabsTrigger,
@@ -93,7 +95,7 @@ function DocumentacaoTab() {
   const [loteFilter, setLoteFilter] = useState<string>("all");
   const [editDocId, setEditDocId] = useState<string | null>(null);
   const [encDocId, setEncDocId] = useState<string | null>(null);
-  const [declDoc, setDeclDoc] = useState<{ id: string; nome: string } | null>(null);
+  const [declDoc, setDeclDoc] = useState<{ id: string; nome: string; texto?: string } | null>(null);
   const [novoOpen, setNovoOpen] = useState(false);
 
 
@@ -229,15 +231,52 @@ function DocumentacaoTab() {
                     <TableCell>{r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
                     <TableCell>
                       {r.declaracao_gerada ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700">
-                          ✅ Gerada{r.declaracao_data ? ` em ${new Date(r.declaracao_data).toLocaleDateString("pt-BR")}` : ""}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline" className="bg-green-50 text-green-700">
+                            ✅ Gerada{r.declaracao_data ? ` em ${new Date(r.declaracao_data).toLocaleDateString("pt-BR")}` : ""}
+                          </Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => toast.info("Funcionalidade em breve disponível")}>
+                                <Eye className="h-4 w-4 mr-2" /> Visualizar PDF
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setDeclDoc({ id: r.id, nome: r.nome_aluno, texto: DECLARACAO_TEXTO_PADRAO })}>
+                                <Pencil className="h-4 w-4 mr-2" /> Editar declaração
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setDeclDoc({ id: r.id, nome: r.nome_aluno })}>
+                                <RefreshCw className="h-4 w-4 mr-2" /> Gerar nova versão
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600"
+                                onClick={async () => {
+                                  if (!confirm("Excluir declaração deste aluno?")) return;
+                                  const { error } = await sb.from("documentacao_alunos").update({
+                                    declaracao_gerada: false,
+                                    declaracao_data: null,
+                                    updated_at: new Date().toISOString(),
+                                  }).eq("id", r.id);
+                                  if (error) { toast.error(error.message); return; }
+                                  toast.success("Declaração excluída");
+                                  qc.invalidateQueries({ queryKey: ["sp-doc-rows"] });
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" /> Excluir declaração
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       ) : (
                         <Button size="sm" variant="outline" onClick={() => setDeclDoc({ id: r.id, nome: r.nome_aluno })}>
                           <FileText className="h-3 w-3 mr-1" /> Gerar Declaração
                         </Button>
                       )}
                     </TableCell>
+
                     <TableCell className="text-right space-x-1">
                       <Button size="sm" variant="ghost" onClick={() => setEncDocId(r.id)} title="Encaminhar para certificadora">
                         <Send className="h-4 w-4" />
@@ -264,7 +303,7 @@ function DocumentacaoTab() {
 
       {editDocId && <EditarRegistroModal docId={editDocId} onClose={() => setEditDocId(null)} />}
       {encDocId && <EncaminharModal docId={encDocId} onClose={() => setEncDocId(null)} />}
-      {declDoc && <GerarDeclaracaoModal docId={declDoc.id} nomeInicial={declDoc.nome} onClose={() => setDeclDoc(null)} />}
+      {declDoc && <GerarDeclaracaoModal docId={declDoc.id} nomeInicial={declDoc.nome} textoInicial={declDoc.texto} onClose={() => setDeclDoc(null)} />}
       <NovoRegistroModal open={novoOpen} onClose={() => setNovoOpen(false)} />
 
     </div>
@@ -279,10 +318,11 @@ O aluno está no aguardo do processo de certificação junto à certificadora, p
 
 Por ser verdade, firmo o presente.`;
 
-function GerarDeclaracaoModal({ docId, nomeInicial, onClose }: { docId: string; nomeInicial: string; onClose: () => void }) {
+function GerarDeclaracaoModal({ docId, nomeInicial, textoInicial, onClose }: { docId: string; nomeInicial: string; textoInicial?: string; onClose: () => void }) {
   const qc = useQueryClient();
   const [nome, setNome] = useState(nomeInicial);
-  const [texto, setTexto] = useState(DECLARACAO_TEXTO_PADRAO);
+  const [texto, setTexto] = useState(textoInicial ?? DECLARACAO_TEXTO_PADRAO);
+
   const [loading, setLoading] = useState(false);
 
   const handleGerar = async () => {
