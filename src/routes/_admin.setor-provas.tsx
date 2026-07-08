@@ -1118,14 +1118,17 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
 /* ============================== ABA 2: ENVIOS ============================== */
 
 function EnviosTab() {
+  const qc = useQueryClient();
   const selectedPoloId = usePoloFilter();
+  const [declDoc, setDeclDoc] = useState<{ id: string; nome: string; texto?: string } | null>(null);
   const { data: rows, isLoading } = useQuery({
     queryKey: ["sp-envios-rows", selectedPoloId],
     queryFn: async () => {
       const { data, error } = await sb
         .from("documentacao_alunos")
         .select(`
-          id, nome_aluno, polo, lote, data_envio,
+          id, nome_aluno, polo, quem_vendeu, lote, data_envio,
+          documentacao_completa, declaracao_gerada, declaracao_data,
           certificadoras(nome),
           alunos(polo_id, polos(nome))
         `)
@@ -1148,31 +1151,67 @@ function EnviosTab() {
             <TableRow>
               <TableHead>Aluno</TableHead>
               <TableHead>Polo</TableHead>
+              <TableHead>Vendedor</TableHead>
               <TableHead>Certificadora</TableHead>
-              <TableHead>Lote</TableHead>
               <TableHead>Data Envio</TableHead>
+              <TableHead>Lote</TableHead>
+              <TableHead>Documentação</TableHead>
+              <TableHead>Declaração</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
             ) : rows?.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum envio registrado.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum envio registrado.</TableCell></TableRow>
             ) : rows?.map((r: any) => (
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.nome_aluno}</TableCell>
                 <TableCell>{r.alunos?.polos?.nome ?? r.polo ?? "-"}</TableCell>
+                <TableCell>{r.quem_vendeu ?? "-"}</TableCell>
                 <TableCell>{r.certificadoras?.nome ?? "-"}</TableCell>
-                <TableCell>{r.lote ?? "-"}</TableCell>
                 <TableCell>{r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
+                <TableCell>{r.lote ?? "-"}</TableCell>
+                <TableCell>
+                  {r.documentacao_completa ? (
+                    <Badge variant="outline" className="bg-green-50 text-green-700">✅ Completa</Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700">⚠️ Incompleta</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {r.declaracao_gerada ? (
+                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                      ✅ Gerada{r.declaracao_data ? ` em ${new Date(r.declaracao_data).toLocaleDateString("pt-BR")}` : ""}
+                    </Badge>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => setDeclDoc({ id: r.id, nome: r.nome_aluno })}>
+                      <FileText className="h-3 w-3 mr-1" /> Gerar Declaração
+                    </Button>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">—</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </CardContent>
+      {declDoc && (
+        <GerarDeclaracaoModal
+          docId={declDoc.id}
+          nomeInicial={declDoc.nome}
+          textoInicial={declDoc.texto}
+          onClose={() => {
+            setDeclDoc(null);
+            qc.invalidateQueries({ queryKey: ["sp-envios-rows"] });
+          }}
+        />
+      )}
     </Card>
   );
 }
+
 
 function _UnusedNovoLoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
