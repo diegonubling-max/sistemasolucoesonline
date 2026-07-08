@@ -1339,7 +1339,12 @@ function EnviosTab() {
                     </Button>
                   )}
                 </TableCell>
-                <TableCell className="text-right">—</TableCell>
+                <TableCell className="text-right">
+                  <Button size="sm" variant="ghost" title="Ver Detalhes" onClick={() => setViewRow(r)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+
               </TableRow>
             ))}
           </TableBody>
