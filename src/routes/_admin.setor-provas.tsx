@@ -207,38 +207,46 @@ function DocumentacaoTab() {
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum aluno encontrado.</TableCell></TableRow>
               ) : filtered.map((r: any) => {
-                const status = getStatusDoc(r);
-                const la = r.lote_alunos?.[0];
-                const lote = la?.lotes;
+                const status = r.documentacao_completa ? "completa" : "incompleta";
+                const ctrLabel = r.alunos?.ctr ?? r.ctr;
                 return (
                   <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.nome}</TableCell>
-                    <TableCell>{r.polos?.nome ?? "-"}</TableCell>
-                    <TableCell>{r.vendedora ?? "-"}</TableCell>
+                    <TableCell className="font-medium">
+                      {r.nome_aluno}
+                      {r.aluno_id && ctrLabel ? <span className="text-xs text-muted-foreground ml-2">CTR {ctrLabel}</span> : null}
+                    </TableCell>
+                    <TableCell>{r.alunos?.polos?.nome ?? r.polo ?? "-"}</TableCell>
+                    <TableCell>{r.quem_vendeu ?? "-"}</TableCell>
                     <TableCell>
                       <Badge variant={status === "completa" ? "default" : "secondary"}>
                         {status === "completa" ? "Completa" : "Incompleta"}
                       </Badge>
                     </TableCell>
-                    <TableCell>{lote?.certificadoras?.nome ?? "-"}</TableCell>
-                    <TableCell>{lote?.mes_ano ?? "-"}</TableCell>
-                    <TableCell>{lote?.data_envio ? new Date(lote.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
+                    <TableCell>{r.certificadoras?.nome ?? "-"}</TableCell>
+                    <TableCell>{r.lote ?? "-"}</TableCell>
+                    <TableCell>{r.data_envio ? new Date(r.data_envio).toLocaleDateString("pt-BR") : "-"}</TableCell>
                     <TableCell>
-                      {r.declaracoes_matricula?.length > 0 ? (
+                      {r.declaracao_gerada ? (
                         <Badge variant="outline" className="bg-green-50 text-green-700">Gerada</Badge>
+                      ) : r.aluno_id ? (
+                        <GerarDeclaracaoButton aluno={{ id: r.aluno_id, nome: r.nome_aluno, cpf: null, polo_id: r.alunos?.polo_id }} />
                       ) : (
-                        <GerarDeclaracaoButton aluno={r} />
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
-                      <Button size="sm" variant="ghost" onClick={() => setEncAlunoId(r.id)} title="Encaminhar para certificadora">
-                        <Send className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setEditAlunoId(r.id)} title="Editar">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      {r.aluno_id && (
+                        <Button size="sm" variant="ghost" onClick={() => setEncAlunoId(r.aluno_id)} title="Encaminhar para certificadora">
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {r.aluno_id && (
+                        <Button size="sm" variant="ghost" onClick={() => setEditAlunoId(r.aluno_id)} title="Editar">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button size="sm" variant="ghost" onClick={() => {
-                        if (confirm(`Remover ${r.nome} do setor de provas?`)) deleteMut.mutate(r.id);
+                        if (confirm(`Remover ${r.nome_aluno} do setor de provas?`)) deleteMut.mutate(r.id);
                       }} title="Excluir">
                         <Trash2 className="h-4 w-4 text-red-600" />
                       </Button>
