@@ -796,6 +796,51 @@ function NovoRegistroModal({ open, onClose }: { open: boolean; onClose: () => vo
               </div>
 
               <div>
+                <Label className="mb-2 block">Anexar arquivos (PDF, JPG, PNG)</Label>
+                <label
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault(); setDragOver(false);
+                    const files = Array.from(e.dataTransfer.files).filter((f) =>
+                      /\.(pdf|jpe?g|png)$/i.test(f.name)
+                    );
+                    setArquivos((prev) => [...prev, ...files]);
+                  }}
+                  className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition ${dragOver ? "border-primary bg-muted/50" : "border-muted-foreground/30 hover:bg-muted/30"}`}
+                >
+                  <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                  <div className="text-sm text-muted-foreground">
+                    Arraste arquivos aqui ou <span className="text-primary underline">clique para selecionar</span>
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files ?? []);
+                      setArquivos((prev) => [...prev, ...files]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {arquivos.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {arquivos.map((f, i) => (
+                      <li key={i} className="flex items-center justify-between text-sm border rounded px-2 py-1">
+                        <span className="truncate">{f.name}</span>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setArquivos((prev) => prev.filter((_, j) => j !== i))}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+
+              <div>
                 <Label className="mb-2 block">Controle</Label>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <label className="flex items-center gap-2"><Checkbox checked={docCompleta} onCheckedChange={(v) => setDocCompleta(!!v)} /> Documentação Completa</label>
