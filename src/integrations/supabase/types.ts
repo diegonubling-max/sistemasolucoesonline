@@ -1848,6 +1848,7 @@ export type Database = {
           situacao_financeira: string | null
           status: string | null
           telefone: string | null
+          ultimo_heartbeat: string | null
         }
         Insert: {
           aluno_id?: string | null
@@ -1867,6 +1868,7 @@ export type Database = {
           situacao_financeira?: string | null
           status?: string | null
           telefone?: string | null
+          ultimo_heartbeat?: string | null
         }
         Update: {
           aluno_id?: string | null
@@ -1886,6 +1888,7 @@ export type Database = {
           situacao_financeira?: string | null
           status?: string | null
           telefone?: string | null
+          ultimo_heartbeat?: string | null
         }
         Relationships: [
           {
@@ -2398,6 +2401,19 @@ export type Database = {
       delete_pacote: { Args: { p_pacote_id: string }; Returns: undefined }
       delete_user_auth: { Args: { user_email: string }; Returns: undefined }
       externo_tem_acesso_hoje: { Args: { p_ctr: string }; Returns: boolean }
+      finalizar_materia_prova: {
+        Args: {
+          p_agendamento_id: string
+          p_aluno_id: string
+          p_materia: string
+        }
+        Returns: {
+          acertos: number
+          foi_aprovado: boolean
+          perc: number
+          total_q: number
+        }[]
+      }
       get_contrato_publico: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
@@ -2443,6 +2459,16 @@ export type Database = {
         Returns: Json
       }
       resgatar_curso_vitrine: { Args: { p_vitrine_id: string }; Returns: Json }
+      salvar_resposta_prova: {
+        Args: {
+          p_agendamento_id: string
+          p_aluno_id: string
+          p_materia: string
+          p_questao_id: string
+          p_resposta: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "aluno"
