@@ -451,7 +451,7 @@ Boa prova! 🍀`;
                     {r.is_externo && (
                       <Badge className="text-[10px] bg-blue-500 text-white">🔷 Externo</Badge>
                     )}
-                    {isHoje && <Badge className="bg-red-500 text-white">PROVA HOJE</Badge>}
+                    
                     {r.status === "iniciado" && isOnline && (
                       <Badge className="bg-green-600 text-white">🟢 Em Prova</Badge>
                     )}
