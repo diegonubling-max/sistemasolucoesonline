@@ -1178,10 +1178,11 @@ function EnviosTab() {
                 <TableCell>{r.lote ?? "-"}</TableCell>
                 <TableCell>
                   {r.documentacao_completa ? (
-                    <Badge variant="outline" className="bg-green-50 text-green-700">✅ Completa</Badge>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">✅ Completa</Badge>
                   ) : (
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700">⚠️ Incompleta</Badge>
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">⚠️ Incompleta</Badge>
                   )}
+
                 </TableCell>
                 <TableCell>
                   {r.declaracao_gerada ? (
