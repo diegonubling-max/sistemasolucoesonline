@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -28,19 +29,17 @@ export const Route = createFileRoute("/_admin/provas-agendadas")({
   component: ProvasAgendadasPage,
 });
 
-type ProvaStatusFilter = "todos" | "agendada" | "aprovado" | "reprovado";
-type FinStatusFilter = "todos" | "pago" | "aberto" | "atraso";
-type ResultadoFilter = "todos" | "pendente" | "aprovado" | "reprovado";
 type SitFinFilter = "todos" | "ja_pago" | "boleto";
 type TipoFilter = "todos" | "sistema" | "externo";
+type TabKey = "agendada" | "aprovado" | "reprovado";
+
+const HOJE = new Date().toISOString().slice(0, 10);
 
 function ProvasAgendadasPage() {
   const qc = useQueryClient();
+  const [tab, setTab] = useState<TabKey>("agendada");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
-  const [provaStatus, setProvaStatus] = useState<ProvaStatusFilter>("todos");
-  const [finStatus, setFinStatus] = useState<FinStatusFilter>("todos");
-  const [resultadoFilter, setResultadoFilter] = useState<ResultadoFilter>("todos");
   const [sitFinFilter, setSitFinFilter] = useState<SitFinFilter>("todos");
   const [tipoFilter, setTipoFilter] = useState<TipoFilter>("todos");
   const [editing, setEditing] = useState<any | null>(null);
@@ -63,63 +62,7 @@ function ProvasAgendadasPage() {
       if (error) throw error;
       const agendamentos = (data ?? []) as any[];
 
-      const alunoIds = Array.from(new Set(agendamentos.map(a => a.aluno?.id).filter(Boolean)));
-      const agIds = agendamentos.map(a => a.id);
-
-      const { data: resultados } = agIds.length ? await supabase
-        .from("prova_resultados")
-        .select("agendamento_id, aprovado, percentual")
-        .in("agendamento_id", agIds) : { data: [] as any[] };
-
-      const notaByAg = new Map<string, { total: number; count: number; aprovadoAll: boolean; hasAny: boolean }>();
-      (resultados ?? []).forEach((r: any) => {
-        const cur = notaByAg.get(r.agendamento_id) ?? { total: 0, count: 0, aprovadoAll: true, hasAny: false };
-        cur.total += Number(r.percentual ?? 0);
-        cur.count += 1;
-        cur.aprovadoAll = cur.aprovadoAll && !!r.aprovado;
-        cur.hasAny = true;
-        notaByAg.set(r.agendamento_id, cur);
-      });
-
-      const parcelasByAluno = new Map<string, { pago: number; abertoFut: number; atraso: number }>();
-      if (alunoIds.length) {
-        const { data: matriculas } = await supabase
-          .from("matriculas")
-          .select("id, aluno_id")
-          .in("aluno_id", alunoIds);
-        const matIds = (matriculas ?? []).map((m: any) => m.id);
-        const matToAluno = new Map<string, string>();
-        (matriculas ?? []).forEach((m: any) => matToAluno.set(m.id, m.aluno_id));
-
-        if (matIds.length) {
-          const { data: parcelas } = await supabase
-            .from("parcelas")
-            .select("matricula_id, status, data_vencimento")
-            .in("matricula_id", matIds);
-          const hoje = new Date().toISOString().slice(0, 10);
-          (parcelas ?? []).forEach((p: any) => {
-            const aid = matToAluno.get(p.matricula_id);
-            if (!aid) return;
-            const cur = parcelasByAluno.get(aid) ?? { pago: 0, abertoFut: 0, atraso: 0 };
-            if (p.status === "pago") cur.pago += 1;
-            else if (p.status === "aberto" || p.status === "pendente") {
-              if (p.data_vencimento && p.data_vencimento < hoje) cur.atraso += 1;
-              else cur.abertoFut += 1;
-            }
-            parcelasByAluno.set(aid, cur);
-          });
-        }
-      }
-
       return agendamentos.map((a) => {
-        const res = notaByAg.get(a.id);
-        const finStat = (() => {
-          const p = parcelasByAluno.get(a.aluno?.id) ?? { pago: 0, abertoFut: 0, atraso: 0 };
-          if (p.atraso > 0) return "atraso";
-          if (p.abertoFut > 0) return "aberto";
-          return "pago";
-        })();
-        // Nome/telefone/ctr/polo unificados
         const nome = a.is_externo ? (a.nome_aluno ?? "—") : (a.aluno?.nome ?? "—");
         const ctr = a.is_externo ? (a.ctr ?? "—") : (a.aluno?.ctr ?? "—");
         const telefone = a.is_externo ? (a.telefone ?? "—") : (a.aluno?.telefone ?? "—");
@@ -128,44 +71,48 @@ function ProvasAgendadasPage() {
           nome,
           ctrDisplay: ctr,
           telefoneDisplay: telefone,
-          nota: res && res.count > 0 ? res.total / res.count : null,
-          aprovado: res?.hasAny ? res.aprovadoAll : null,
-          finStat,
         };
       });
     },
   });
 
   const filtered = useMemo(() => {
-    return (rows ?? []).filter((r: any) => {
-      if (provaStatus !== "todos") {
-        if (provaStatus === "agendada" && (r.aprovado !== null)) return false;
-        if (provaStatus === "aprovado" && r.aprovado !== true) return false;
-        if (provaStatus === "reprovado" && r.aprovado !== false) return false;
-      }
-      if (finStatus !== "todos" && r.finStat !== finStatus) return false;
+    const base = (rows ?? []).filter((r: any) => {
+      const st = (r.status ?? "agendada") as string;
+      if (st !== tab) return false;
       if (tipoFilter !== "todos") {
         if (tipoFilter === "externo" && !r.is_externo) return false;
         if (tipoFilter === "sistema" && r.is_externo) return false;
       }
       if (sitFinFilter !== "todos" && r.situacao_financeira !== sitFinFilter) return false;
-      if (resultadoFilter !== "todos") {
-        const res = r.resultado ?? "pendente";
-        const norm = res === "" ? "pendente" : res;
-        if (norm !== resultadoFilter) return false;
-      }
       return true;
     });
-  }, [rows, provaStatus, finStatus, tipoFilter, sitFinFilter, resultadoFilter]);
+    if (tab === "agendada") {
+      base.sort((a: any, b: any) => {
+        const d = (a.data_prova ?? "").localeCompare(b.data_prova ?? "");
+        if (d !== 0) return d;
+        return (a.hora_prova ?? "").localeCompare(b.hora_prova ?? "");
+      });
+    } else {
+      base.sort((a: any, b: any) => (b.data_prova ?? "").localeCompare(a.data_prova ?? ""));
+    }
+    return base;
+  }, [rows, tab, tipoFilter, sitFinFilter]);
+
+  const counts = useMemo(() => {
+    const c = { agendada: 0, aprovado: 0, reprovado: 0 } as Record<TabKey, number>;
+    (rows ?? []).forEach((r: any) => {
+      const st = (r.status ?? "agendada") as TabKey;
+      if (st in c) c[st]++;
+    });
+    return c;
+  }, [rows]);
 
   const toggleFlag = useMutation({
     mutationFn: async (v: { id: string; field: "docs_solicitados" | "docs_recebidos"; value: boolean }) => {
-      const patch: { docs_solicitados?: boolean; docs_recebidos?: boolean } = {};
+      const patch: any = {};
       patch[v.field] = v.value;
-      const { error } = await supabase
-        .from("prova_agendamentos")
-        .update(patch)
-        .eq("id", v.id);
+      const { error } = await supabase.from("prova_agendamentos").update(patch).eq("id", v.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -179,7 +126,8 @@ function ProvasAgendadasPage() {
     mutationFn: async (v: any) => {
       const patch: any = {
         situacao_financeira: v.situacao_financeira || null,
-        resultado: v.resultado || null,
+        status: v.status || "agendada",
+        resultado: v.status === "aprovado" ? "aprovado" : v.status === "reprovado" ? "reprovado" : null,
         observacao: v.observacao || null,
       };
       if (v.is_externo) {
@@ -187,10 +135,7 @@ function ProvasAgendadasPage() {
         patch.telefone = v.telefone || null;
         patch.polo = v.polo || null;
       }
-      const { error } = await supabase
-        .from("prova_agendamentos")
-        .update(patch)
-        .eq("id", v.id);
+      const { error } = await supabase.from("prova_agendamentos").update(patch).eq("id", v.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -207,10 +152,81 @@ function ProvasAgendadasPage() {
     return <span className="text-muted-foreground">—</span>;
   };
 
-  const resultadoBadge = (v: string | null) => {
-    if (v === "aprovado") return <Badge className="bg-green-500">Aprovado</Badge>;
-    if (v === "reprovado") return <Badge className="bg-red-500">Reprovado</Badge>;
-    return <Badge variant="secondary" className="bg-gray-200 text-gray-700">Pendente</Badge>;
+  const openEdit = (r: any) => setEditing({
+    id: r.id,
+    is_externo: !!r.is_externo,
+    nome_aluno: r.nome_aluno ?? "",
+    telefone: r.telefone ?? "",
+    polo: r.polo ?? "",
+    situacao_financeira: r.situacao_financeira ?? "",
+    status: r.status ?? "agendada",
+    observacao: r.observacao ?? "",
+  });
+
+  const renderTable = () => {
+    if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="animate-spin" /></div>;
+    if (filtered.length === 0) return <div className="text-center text-muted-foreground py-8">Nenhum registro</div>;
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Aluno</TableHead>
+            <TableHead>CTR</TableHead>
+            <TableHead>Polo</TableHead>
+            <TableHead>Data da Prova</TableHead>
+            <TableHead>Horário</TableHead>
+            <TableHead>Sit. Financeira</TableHead>
+            {tab === "agendada" && <TableHead>Documentos</TableHead>}
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filtered.map((r: any) => {
+            const isHoje = tab === "agendada" && r.data_prova === HOJE;
+            return (
+              <TableRow key={r.id} className={isHoje ? "bg-yellow-50 dark:bg-yellow-950/30" : ""}>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span>{r.nome}</span>
+                    {r.is_externo && (
+                      <Badge variant="secondary" className="text-[10px] bg-gray-200 text-gray-700">Externo</Badge>
+                    )}
+                    {isHoje && <Badge className="bg-red-500 text-white">PROVA HOJE</Badge>}
+                  </div>
+                </TableCell>
+                <TableCell>{r.ctrDisplay}</TableCell>
+                <TableCell>{r.is_externo ? (r.polo ?? "—") : "—"}</TableCell>
+                <TableCell>{new Date(r.data_prova + "T00:00:00").toLocaleDateString("pt-BR")}</TableCell>
+                <TableCell>{r.hora_prova?.slice(0, 5) ?? "—"}</TableCell>
+                <TableCell>{sitFinBadge(r.situacao_financeira)}</TableCell>
+                {tab === "agendada" && (
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <Button size="sm" variant={r.docs_solicitados ? "default" : "outline"}
+                        onClick={() => toggleFlag.mutate({ id: r.id, field: "docs_solicitados", value: !r.docs_solicitados })}>
+                        {r.docs_solicitados && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                        Solicitados
+                      </Button>
+                      <Button size="sm" variant={r.docs_recebidos ? "default" : "outline"}
+                        onClick={() => toggleFlag.mutate({ id: r.id, field: "docs_recebidos", value: !r.docs_recebidos })}>
+                        {r.docs_recebidos && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                        Recebidos
+                      </Button>
+                    </div>
+                  </TableCell>
+                )}
+                <TableCell>
+                  <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    );
   };
 
   return (
@@ -219,51 +235,13 @@ function ProvasAgendadasPage() {
 
       <Card>
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="grid grid-cols-2 gap-2 md:col-span-2">
-            <div>
-              <Label>Data início</Label>
-              <Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
-            </div>
-            <div>
-              <Label>Data fim</Label>
-              <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
-            </div>
+          <div>
+            <Label>Data início</Label>
+            <Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
           </div>
           <div>
-            <Label>Status da Prova</Label>
-            <Select value={provaStatus} onValueChange={(v) => setProvaStatus(v as ProvaStatusFilter)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="agendada">🟡 Agendada</SelectItem>
-                <SelectItem value="aprovado">🟢 Aprovado</SelectItem>
-                <SelectItem value="reprovado">🔴 Reprovado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Status Financeiro</Label>
-            <Select value={finStatus} onValueChange={(v) => setFinStatus(v as FinStatusFilter)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="pago">✅ Tudo pago</SelectItem>
-                <SelectItem value="aberto">🟡 Em aberto</SelectItem>
-                <SelectItem value="atraso">🔴 Em atraso</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Resultado</Label>
-            <Select value={resultadoFilter} onValueChange={(v) => setResultadoFilter(v as ResultadoFilter)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="aprovado">Aprovado</SelectItem>
-                <SelectItem value="reprovado">Reprovado</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Data fim</Label>
+            <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
           </div>
           <div>
             <Label>Sit. Financeira</Label>
@@ -290,106 +268,22 @@ function ProvasAgendadasPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-6 overflow-x-auto">
-          {isLoading ? (
-            <div className="flex justify-center py-10"><Loader2 className="animate-spin" /></div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aluno</TableHead>
-                  <TableHead>CTR</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Polo</TableHead>
-                  <TableHead>Sit. Financeira</TableHead>
-                  <TableHead>Resultado</TableHead>
-                  <TableHead>Data da Prova</TableHead>
-                  <TableHead>Status da Prova</TableHead>
-                  <TableHead>Nota</TableHead>
-                  <TableHead>Financeiro</TableHead>
-                  <TableHead>Documentos</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.length === 0 && (
-                  <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground py-8">Nenhum agendamento encontrado</TableCell></TableRow>
-                )}
-                {filtered.map((r: any) => {
-                  const provaBadge = r.aprovado === true
-                    ? <Badge className="bg-green-500">🟢 Aprovado</Badge>
-                    : r.aprovado === false
-                      ? <Badge className="bg-red-500">🔴 Reprovado</Badge>
-                      : <Badge className="bg-yellow-500">🟡 Agendada</Badge>;
-                  const finBadge = r.finStat === "pago"
-                    ? <Badge className="bg-green-500">✅ Tudo pago</Badge>
-                    : r.finStat === "atraso"
-                      ? <Badge className="bg-red-500">🔴 Em atraso</Badge>
-                      : <Badge className="bg-yellow-500">🟡 Em aberto</Badge>;
-                  return (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <span>{r.nome}</span>
-                          {r.is_externo && (
-                            <Badge variant="secondary" className="text-[10px] bg-gray-200 text-gray-700">Externo</Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{r.ctrDisplay}</TableCell>
-                      <TableCell>{r.telefoneDisplay}</TableCell>
-                      <TableCell>{r.is_externo ? (r.polo ?? "—") : "—"}</TableCell>
-                      <TableCell>{sitFinBadge(r.situacao_financeira)}</TableCell>
-                      <TableCell>{resultadoBadge(r.resultado)}</TableCell>
-                      <TableCell>
-                        {new Date(r.data_prova + "T00:00:00").toLocaleDateString("pt-BR")} {r.hora_prova?.slice(0, 5)}
-                      </TableCell>
-                      <TableCell>{provaBadge}</TableCell>
-                      <TableCell>{r.nota != null ? Number(r.nota).toFixed(1) + "%" : "—"}</TableCell>
-                      <TableCell>{finBadge}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Button
-                            size="sm"
-                            variant={r.docs_solicitados ? "default" : "outline"}
-                            onClick={() => toggleFlag.mutate({ id: r.id, field: "docs_solicitados", value: !r.docs_solicitados })}
-                          >
-                            {r.docs_solicitados && <CheckCircle2 className="h-3 w-3 mr-1" />}
-                            Solicitados
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={r.docs_recebidos ? "default" : "outline"}
-                            onClick={() => toggleFlag.mutate({ id: r.id, field: "docs_recebidos", value: !r.docs_recebidos })}
-                          >
-                            {r.docs_recebidos && <CheckCircle2 className="h-3 w-3 mr-1" />}
-                            Recebidos
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button size="icon" variant="ghost" onClick={() => setEditing({
-                          id: r.id,
-                          is_externo: !!r.is_externo,
-                          nome_aluno: r.nome_aluno ?? "",
-                          telefone: r.telefone ?? "",
-                          polo: r.polo ?? "",
-                          situacao_financeira: r.situacao_financeira ?? "",
-                          resultado: r.resultado ?? "",
-                          observacao: r.observacao ?? "",
-                        })}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)}>
+        <TabsList>
+          <TabsTrigger value="agendada">🟡 Agendadas ({counts.agendada})</TabsTrigger>
+          <TabsTrigger value="aprovado">🟢 Aprovados ({counts.aprovado})</TabsTrigger>
+          <TabsTrigger value="reprovado">🔴 Reprovados ({counts.reprovado})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="agendada">
+          <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
+        </TabsContent>
+        <TabsContent value="aprovado">
+          <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
+        </TabsContent>
+        <TabsContent value="reprovado">
+          <Card><CardContent className="pt-6 overflow-x-auto">{renderTable()}</CardContent></Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
@@ -426,13 +320,13 @@ function ProvasAgendadasPage() {
                 </Select>
               </div>
               <div>
-                <Label>Resultado</Label>
-                <Select value={editing.resultado || "none"} onValueChange={(v) => setEditing({ ...editing, resultado: v === "none" ? "" : v })}>
+                <Label>Status da Prova</Label>
+                <Select value={editing.status || "agendada"} onValueChange={(v) => setEditing({ ...editing, status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Pendente</SelectItem>
-                    <SelectItem value="aprovado">Aprovado</SelectItem>
-                    <SelectItem value="reprovado">Reprovado</SelectItem>
+                    <SelectItem value="agendada">🟡 Agendada</SelectItem>
+                    <SelectItem value="aprovado">🟢 Aprovado</SelectItem>
+                    <SelectItem value="reprovado">🔴 Reprovado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
