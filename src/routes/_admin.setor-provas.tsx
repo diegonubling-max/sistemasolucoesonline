@@ -155,9 +155,15 @@ function DocumentacaoTab() {
       if (statusDoc === "completa" && !r.documentacao_completa) return false;
       if (statusDoc === "incompleta" && r.documentacao_completa) return false;
       if (loteFilter !== "all" && r.lote !== loteFilter) return false;
+      if (poloFilter !== "all") {
+        const p = r.alunos?.polos?.nome ?? r.polo;
+        if (p !== poloFilter) return false;
+      }
+      if (certFilter !== "all" && r.certificadora_id !== certFilter) return false;
       return true;
     });
-  }, [rows, search, statusDoc, loteFilter]);
+  }, [rows, search, statusDoc, loteFilter, poloFilter, certFilter]);
+
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
