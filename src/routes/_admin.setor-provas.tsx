@@ -477,45 +477,8 @@ function EditarRegistroModal({ alunoId, onClose }: { alunoId: string; onClose: (
           )}
         </div>
 
-        <div className="space-y-3 border-t pt-4">
-          <h4 className="font-semibold">Anexar Arquivos dos Documentos</h4>
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); handleUpload(e.dataTransfer.files); }}
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50"
-          >
-            <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              {uploading ? "Enviando..." : "Arraste arquivos aqui ou clique para selecionar (PDF, JPG, PNG)"}
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="application/pdf,image/jpeg,image/png"
-              className="hidden"
-              onChange={(e) => handleUpload(e.target.files)}
-            />
-          </div>
-          {arquivos && arquivos.length > 0 && (
-            <div className="space-y-2">
-              {arquivos.map((a: any) => (
-                <div key={a.id} className="flex items-center justify-between border rounded p-2">
-                  <span className="text-sm truncate flex-1">{a.nome_arquivo}</span>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => downloadFile(a.url, a.nome_arquivo)}>
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => deleteFile(a.id, a.url)}>
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+
+
 
         <div className="space-y-3 border-t pt-4">
           <h4 className="font-semibold">Validações</h4>
