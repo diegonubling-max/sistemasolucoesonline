@@ -1249,6 +1249,67 @@ function AlunoDetalhes() {
           </Button>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showInativarDialog} onOpenChange={(o) => { setShowInativarDialog(o); if (!o) setMotivoInativo(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Inativar aluno?</DialogTitle>
+            <DialogDescription>
+              O aluno perderá o acesso ao sistema. Você poderá reativar a qualquer momento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Motivo (opcional)</Label>
+            <Textarea
+              value={motivoInativo}
+              onChange={(e) => setMotivoInativo(e.target.value)}
+              placeholder="Ex.: desistência, transferência..."
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowInativarDialog(false)}>Cancelar</Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={updateStatus.isPending}
+              onClick={() => {
+                updateStatus.mutate(
+                  { novo: "inativo", motivo: motivoInativo },
+                  { onSuccess: () => { setShowInativarDialog(false); setMotivoInativo(""); } }
+                );
+              }}
+            >
+              Confirmar inativação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showReativarDialog} onOpenChange={setShowReativarDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reativar aluno?</DialogTitle>
+            <DialogDescription>
+              O aluno voltará a ter acesso ao sistema.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReativarDialog(false)}>Cancelar</Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={updateStatus.isPending}
+              onClick={() => {
+                updateStatus.mutate(
+                  { novo: "ativo" },
+                  { onSuccess: () => setShowReativarDialog(false) }
+                );
+              }}
+            >
+              Confirmar reativação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
