@@ -10,7 +10,7 @@ export const STATUS_CONFIG: Record<AlunoStatus, { label: string; className: stri
   inadimplente:  { label: "Inadimplente",  className: "bg-red-500 text-white hover:bg-red-600" },
   trancado:      { label: "Trancado",      className: "bg-yellow-500 text-white hover:bg-yellow-600" },
   formado:       { label: "Formado 🎓",    className: "bg-blue-500 text-white hover:bg-blue-600" },
-  inativo:       { label: "Inativo",       className: "bg-gray-400 text-white hover:bg-gray-500" },
+  inativo:       { label: "Inativo",       className: "bg-red-100 text-red-700 hover:bg-red-200 border border-red-200" },
 };
 
 export function StatusAlunoBadge({ status }: { status?: string | null }) {
