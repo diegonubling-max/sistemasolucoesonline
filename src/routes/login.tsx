@@ -50,12 +50,27 @@ function LoginPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+    const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      setLoading(false);
       toast.error("Falha no login", { description: error.message });
       return;
     }
+    const userId = signIn?.user?.id;
+    if (userId) {
+      const { data: colab } = await supabase
+        .from("colaboradores")
+        .select("ativo")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (colab && colab.ativo === false) {
+        await supabase.auth.signOut();
+        setLoading(false);
+        toast.error("Seu acesso foi desativado. Entre em contato com o administrador.");
+        return;
+      }
+    }
+    setLoading(false);
     toast.success("Bem-vindo ao Soluções Online!");
     navigate({ to: "/" });
   };
