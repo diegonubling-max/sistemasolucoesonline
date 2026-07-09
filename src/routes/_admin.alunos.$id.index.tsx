@@ -711,6 +711,21 @@ function AlunoDetalhes() {
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
               </Link>
             </Button>
+            <Button
+              size="lg"
+              onClick={() =>
+                statusAtual === "inativo" ? setShowReativarDialog(true) : setShowInativarDialog(true)
+              }
+              className={cn(
+                "rounded-full px-6 font-semibold text-white shadow-md",
+                statusAtual === "inativo"
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-green-600 hover:bg-green-700"
+              )}
+              disabled={updateStatus.isPending}
+            >
+              {statusAtual === "inativo" ? "⛔ Aluno Inativo" : "✅ Aluno Ativo"}
+            </Button>
             <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleResendAccess} disabled={sendingAccess}>
               {sendingAccess ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageSquare className="h-4 w-4 mr-2" />}
               {sendingAccess ? "Enviando..." : "Reenviar acesso"}
@@ -734,24 +749,14 @@ function AlunoDetalhes() {
                   <FileText className="h-4 w-4 mr-2" /> Gerar Declaração
                 </DropdownMenuItem>
                 {statusAtual !== "trancado" && statusAtual !== "formado" && statusAtual !== "inativo" && (
-                  <DropdownMenuItem onClick={() => updateStatus.mutate("trancado")} disabled={updateStatus.isPending}>
+                  <DropdownMenuItem onClick={() => updateStatus.mutate({ novo: "trancado" })} disabled={updateStatus.isPending}>
                     <Lock className="h-4 w-4 mr-2" /> Trancar Matrícula
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
-                {statusAtual !== "ativo" && (
-                  <DropdownMenuItem onClick={() => updateStatus.mutate("ativo")} disabled={updateStatus.isPending}>
-                    <CheckCircle2 className="h-4 w-4 mr-2" /> Reativar
-                  </DropdownMenuItem>
-                )}
                 {statusAtual !== "formado" && (
-                  <DropdownMenuItem onClick={() => updateStatus.mutate("formado")} disabled={updateStatus.isPending}>
+                  <DropdownMenuItem onClick={() => updateStatus.mutate({ novo: "formado" })} disabled={updateStatus.isPending}>
                     <GraduationCap className="h-4 w-4 mr-2" /> Marcar como Formado
-                  </DropdownMenuItem>
-                )}
-                {statusAtual !== "inativo" && (
-                  <DropdownMenuItem onClick={() => updateStatus.mutate("inativo")} disabled={updateStatus.isPending}>
-                    <AlertCircle className="h-4 w-4 mr-2" /> Inativar
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
