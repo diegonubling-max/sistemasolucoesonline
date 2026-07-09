@@ -50,6 +50,7 @@ function AlunosList() {
   const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [origemFilter, setOrigemFilter] = useState<string>("all");
+  const [ativoFilter, setAtivoFilter] = useState<string>("all");
   const ORIGENS = ["Google", "Meta", "Indicação", "Outros"];
 
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
@@ -109,7 +110,7 @@ function AlunosList() {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["alunos", search, page, selectedPoloId, userRole, statusFilter, origemFilter],
+    queryKey: ["alunos", search, page, selectedPoloId, userRole, statusFilter, origemFilter, ativoFilter],
     queryFn: async () => {
       const userId = session?.user?.id;
       let colabPoloId = null;
@@ -138,6 +139,9 @@ function AlunosList() {
       }
       if (origemFilter !== "all") {
         q = q.eq('origem', origemFilter as any);
+      }
+      if (ativoFilter !== "all") {
+        q = q.eq('ativo', ativoFilter === "ativo");
       }
       
       if (isSuperAdmin) {
@@ -247,6 +251,16 @@ function AlunosList() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={ativoFilter} onValueChange={(v) => { setAtivoFilter(v); setPage(0); }}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Situação" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="ativo">✅ Ativos</SelectItem>
+                <SelectItem value="inativo">⛔ Inativos</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={origemFilter} onValueChange={(v) => { setOrigemFilter(v); setPage(0); }}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filtrar por origem" />
@@ -290,6 +304,11 @@ function AlunosList() {
                   </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${a.ativo ? "bg-green-500" : "bg-red-500"}`}
+                        title={a.ativo ? "Ativo" : "Inativo"}
+                        aria-label={a.ativo ? "Ativo" : "Inativo"}
+                      />
                       <span>{a.nome}</span>
                       {Array.isArray((a as any).cursos_vitrine) && (a as any).cursos_vitrine.length > 0 && (
                         <ShoppingBag className="h-3.5 w-3.5 text-green-600" aria-label="Possui cursos na vitrine">

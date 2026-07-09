@@ -20,6 +20,7 @@ import { formatDate } from "@/lib/format";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { HistoricoPagamentosModal } from "@/components/admin/HistoricoPagamentosModal";
@@ -623,22 +624,32 @@ function AlunoDetalhes() {
   };
 
   const updateStatus = useMutation({
-    mutationFn: async (novo: AlunoStatus) => {
+    mutationFn: async (args: { novo: AlunoStatus; motivo?: string }) => {
+      const { novo, motivo } = args;
       const patch: any = { status: novo };
       if (novo === "trancado") patch.trancado_em = new Date().toISOString();
       if (novo === "formado") patch.formado_em = new Date().toISOString();
       if (novo === "inativo") patch.ativo = false;
       if (novo === "ativo") patch.ativo = true;
+      if (novo === "inativo" && motivo && motivo.trim()) {
+        const prev = (aluno as any)?.observacao ?? "";
+        const stamp = new Date().toLocaleString("pt-BR");
+        patch.observacao = `${prev ? prev + "\n" : ""}[Inativado em ${stamp}] ${motivo.trim()}`;
+      }
       const { error } = await supabase.from("alunos").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_d, novo) => {
-      toast.success(`Status atualizado para ${novo}`);
+    onSuccess: (_d, args) => {
+      toast.success(`Status atualizado para ${args.novo}`);
       qc.invalidateQueries({ queryKey: ["aluno", id] });
       qc.invalidateQueries({ queryKey: ["alunos"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const [showInativarDialog, setShowInativarDialog] = useState(false);
+  const [showReativarDialog, setShowReativarDialog] = useState(false);
+  const [motivoInativo, setMotivoInativo] = useState("");
 
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!aluno) return <p className="text-muted-foreground">Aluno não encontrado.</p>;
@@ -700,6 +711,21 @@ function AlunoDetalhes() {
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
               </Link>
             </Button>
+            <Button
+              size="lg"
+              onClick={() =>
+                statusAtual === "inativo" ? setShowReativarDialog(true) : setShowInativarDialog(true)
+              }
+              className={cn(
+                "rounded-full px-6 font-semibold text-white shadow-md",
+                statusAtual === "inativo"
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-green-600 hover:bg-green-700"
+              )}
+              disabled={updateStatus.isPending}
+            >
+              {statusAtual === "inativo" ? "⛔ Aluno Inativo" : "✅ Aluno Ativo"}
+            </Button>
             <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleResendAccess} disabled={sendingAccess}>
               {sendingAccess ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageSquare className="h-4 w-4 mr-2" />}
               {sendingAccess ? "Enviando..." : "Reenviar acesso"}
@@ -723,24 +749,14 @@ function AlunoDetalhes() {
                   <FileText className="h-4 w-4 mr-2" /> Gerar Declaração
                 </DropdownMenuItem>
                 {statusAtual !== "trancado" && statusAtual !== "formado" && statusAtual !== "inativo" && (
-                  <DropdownMenuItem onClick={() => updateStatus.mutate("trancado")} disabled={updateStatus.isPending}>
+                  <DropdownMenuItem onClick={() => updateStatus.mutate({ novo: "trancado" })} disabled={updateStatus.isPending}>
                     <Lock className="h-4 w-4 mr-2" /> Trancar Matrícula
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
-                {statusAtual !== "ativo" && (
-                  <DropdownMenuItem onClick={() => updateStatus.mutate("ativo")} disabled={updateStatus.isPending}>
-                    <CheckCircle2 className="h-4 w-4 mr-2" /> Reativar
-                  </DropdownMenuItem>
-                )}
                 {statusAtual !== "formado" && (
-                  <DropdownMenuItem onClick={() => updateStatus.mutate("formado")} disabled={updateStatus.isPending}>
+                  <DropdownMenuItem onClick={() => updateStatus.mutate({ novo: "formado" })} disabled={updateStatus.isPending}>
                     <GraduationCap className="h-4 w-4 mr-2" /> Marcar como Formado
-                  </DropdownMenuItem>
-                )}
-                {statusAtual !== "inativo" && (
-                  <DropdownMenuItem onClick={() => updateStatus.mutate("inativo")} disabled={updateStatus.isPending}>
-                    <AlertCircle className="h-4 w-4 mr-2" /> Inativar
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -1231,6 +1247,67 @@ function AlunoDetalhes() {
           <Button onClick={() => updateVitrine.mutate()} disabled={updateVitrine.isPending}>
             {updateVitrine.isPending ? "Salvando..." : "Salvar alterações"}
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showInativarDialog} onOpenChange={(o) => { setShowInativarDialog(o); if (!o) setMotivoInativo(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Inativar aluno?</DialogTitle>
+            <DialogDescription>
+              O aluno perderá o acesso ao sistema. Você poderá reativar a qualquer momento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Motivo (opcional)</Label>
+            <Textarea
+              value={motivoInativo}
+              onChange={(e) => setMotivoInativo(e.target.value)}
+              placeholder="Ex.: desistência, transferência..."
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowInativarDialog(false)}>Cancelar</Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={updateStatus.isPending}
+              onClick={() => {
+                updateStatus.mutate(
+                  { novo: "inativo", motivo: motivoInativo },
+                  { onSuccess: () => { setShowInativarDialog(false); setMotivoInativo(""); } }
+                );
+              }}
+            >
+              Confirmar inativação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showReativarDialog} onOpenChange={setShowReativarDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reativar aluno?</DialogTitle>
+            <DialogDescription>
+              O aluno voltará a ter acesso ao sistema.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReativarDialog(false)}>Cancelar</Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={updateStatus.isPending}
+              onClick={() => {
+                updateStatus.mutate(
+                  { novo: "ativo" },
+                  { onSuccess: () => setShowReativarDialog(false) }
+                );
+              }}
+            >
+              Confirmar reativação
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
