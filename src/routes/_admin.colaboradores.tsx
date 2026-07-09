@@ -548,6 +548,16 @@ function ColaboradoresList() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <Select value={ativoFilter} onValueChange={(v) => setAtivoFilter(v as any)}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ativos">Ativos</SelectItem>
+            <SelectItem value="inativos">Inativos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
