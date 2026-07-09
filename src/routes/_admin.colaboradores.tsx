@@ -87,6 +87,7 @@ function ColaboradoresList() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingColab, setEditingColab] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [ativoFilter, setAtivoFilter] = useState<"ativos" | "inativos" | "todos">("ativos");
   const [comissoesVendedora, setComissoesVendedora] = useState<string | null>(null);
   const [isResponsavel, setIsResponsavel] = useState(false);
 
