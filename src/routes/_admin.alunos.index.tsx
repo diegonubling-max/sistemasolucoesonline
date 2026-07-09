@@ -50,6 +50,7 @@ function AlunosList() {
   const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [origemFilter, setOrigemFilter] = useState<string>("all");
+  const [ativoFilter, setAtivoFilter] = useState<string>("all");
   const ORIGENS = ["Google", "Meta", "Indicação", "Outros"];
 
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
