@@ -331,8 +331,10 @@ function ColaboradoresList() {
   const filteredColaboradores = colaboradores
     ?.filter(
       (c) =>
-        c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase()),
+        (c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (ativoFilter === "todos" ||
+          (ativoFilter === "ativos" ? c.ativo === true : c.ativo === false)),
     )
     .slice()
     .sort((a: any, b: any) => Number(!!b.responsavel_polo) - Number(!!a.responsavel_polo));
