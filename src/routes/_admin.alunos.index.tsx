@@ -304,6 +304,11 @@ function AlunosList() {
                   </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${a.ativo ? "bg-green-500" : "bg-red-500"}`}
+                        title={a.ativo ? "Ativo" : "Inativo"}
+                        aria-label={a.ativo ? "Ativo" : "Inativo"}
+                      />
                       <span>{a.nome}</span>
                       {Array.isArray((a as any).cursos_vitrine) && (a as any).cursos_vitrine.length > 0 && (
                         <ShoppingBag className="h-3.5 w-3.5 text-green-600" aria-label="Possui cursos na vitrine">
