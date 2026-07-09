@@ -251,6 +251,16 @@ function AlunosList() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={ativoFilter} onValueChange={(v) => { setAtivoFilter(v); setPage(0); }}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Situação" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="ativo">✅ Ativos</SelectItem>
+                <SelectItem value="inativo">⛔ Inativos</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={origemFilter} onValueChange={(v) => { setOrigemFilter(v); setPage(0); }}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filtrar por origem" />
