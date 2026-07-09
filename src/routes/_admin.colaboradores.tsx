@@ -87,6 +87,7 @@ function ColaboradoresList() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingColab, setEditingColab] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [ativoFilter, setAtivoFilter] = useState<"ativos" | "inativos" | "todos">("ativos");
   const [comissoesVendedora, setComissoesVendedora] = useState<string | null>(null);
   const [isResponsavel, setIsResponsavel] = useState(false);
 
@@ -330,8 +331,10 @@ function ColaboradoresList() {
   const filteredColaboradores = colaboradores
     ?.filter(
       (c) =>
-        c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase()),
+        (c.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          c.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (ativoFilter === "todos" ||
+          (ativoFilter === "ativos" ? c.ativo === true : c.ativo === false)),
     )
     .slice()
     .sort((a: any, b: any) => Number(!!b.responsavel_polo) - Number(!!a.responsavel_polo));
@@ -356,8 +359,38 @@ function ColaboradoresList() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingColab ? "Editar Colaborador" : "Cadastrar Colaborador"}</DialogTitle>
-                <DialogDescription>Preencha as informações do colaborador e defina suas permissões.</DialogDescription>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <DialogTitle>{editingColab ? "Editar Colaborador" : "Cadastrar Colaborador"}</DialogTitle>
+                    <DialogDescription>Preencha as informações do colaborador e defina suas permissões.</DialogDescription>
+                  </div>
+                  {editingColab && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nome = editingColab.nome;
+                        if (editingColab.ativo) {
+                          if (confirm(`Deseja inativar ${nome}? Ela perderá o acesso ao sistema.`)) {
+                            statusMutation.mutate({ id: editingColab.id, ativo: false });
+                            setEditingColab({ ...editingColab, ativo: false });
+                          }
+                        } else {
+                          if (confirm(`Deseja reativar ${nome}?`)) {
+                            statusMutation.mutate({ id: editingColab.id, ativo: true });
+                            setEditingColab({ ...editingColab, ativo: true });
+                          }
+                        }
+                      }}
+                      className={
+                        editingColab.ativo
+                          ? "px-4 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-800 border border-green-200 hover:bg-green-200 transition"
+                          : "px-4 py-2 rounded-full text-sm font-semibold bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 transition"
+                      }
+                    >
+                      {editingColab.ativo ? "✅ Ativo" : "⛔ Inativo"}
+                    </button>
+                  )}
+                </div>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit((v) => manageMutation.mutate(v))} className="space-y-6">
@@ -545,6 +578,16 @@ function ColaboradoresList() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <Select value={ativoFilter} onValueChange={(v) => setAtivoFilter(v as any)}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ativos">Ativos</SelectItem>
+            <SelectItem value="inativos">Inativos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
