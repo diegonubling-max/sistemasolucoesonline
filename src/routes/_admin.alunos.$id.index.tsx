@@ -624,22 +624,32 @@ function AlunoDetalhes() {
   };
 
   const updateStatus = useMutation({
-    mutationFn: async (novo: AlunoStatus) => {
+    mutationFn: async (args: { novo: AlunoStatus; motivo?: string }) => {
+      const { novo, motivo } = args;
       const patch: any = { status: novo };
       if (novo === "trancado") patch.trancado_em = new Date().toISOString();
       if (novo === "formado") patch.formado_em = new Date().toISOString();
       if (novo === "inativo") patch.ativo = false;
       if (novo === "ativo") patch.ativo = true;
+      if (novo === "inativo" && motivo && motivo.trim()) {
+        const prev = (aluno as any)?.observacao ?? "";
+        const stamp = new Date().toLocaleString("pt-BR");
+        patch.observacao = `${prev ? prev + "\n" : ""}[Inativado em ${stamp}] ${motivo.trim()}`;
+      }
       const { error } = await supabase.from("alunos").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_d, novo) => {
-      toast.success(`Status atualizado para ${novo}`);
+    onSuccess: (_d, args) => {
+      toast.success(`Status atualizado para ${args.novo}`);
       qc.invalidateQueries({ queryKey: ["aluno", id] });
       qc.invalidateQueries({ queryKey: ["alunos"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const [showInativarDialog, setShowInativarDialog] = useState(false);
+  const [showReativarDialog, setShowReativarDialog] = useState(false);
+  const [motivoInativo, setMotivoInativo] = useState("");
 
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
   if (!aluno) return <p className="text-muted-foreground">Aluno não encontrado.</p>;
