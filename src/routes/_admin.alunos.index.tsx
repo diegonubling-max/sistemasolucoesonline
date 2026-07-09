@@ -173,7 +173,11 @@ function AlunosList() {
 
   const toggle = useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
-      const { error } = await supabase.from("alunos").update({ ativo: !ativo }).eq("id", id);
+      const novoAtivo = !ativo;
+      const { error } = await supabase
+        .from("alunos")
+        .update({ ativo: novoAtivo, status: novoAtivo ? "ativo" : "inativo" })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
