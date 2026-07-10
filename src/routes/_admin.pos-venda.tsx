@@ -62,11 +62,13 @@ function PosVendaPage() {
     queryFn: async () => {
       let q = supabase
         .from("pos_vendas")
-        .select("id, etapa, data_agendada, data_confirmacao, observacao, status, matricula_id, aluno:alunos(id, nome, ctr, telefone, vendedora), matricula:matriculas(id, created_at)")
+        .select("id, etapa, data_agendada, data_confirmacao, observacao, status, matricula_id, aluno:alunos!inner(id, nome, ctr, telefone, vendedora, ativo), matricula:matriculas(id, created_at)")
+        .eq("aluno.ativo", true)
         .order("data_agendada", { ascending: true });
       const { data, error } = await q;
       if (error) throw error;
       let list = (data ?? []) as any[];
+      list = list.filter((r) => r.aluno && r.aluno.ativo !== false);
       if (dataIni) list = list.filter((r) => (r.matricula?.created_at ?? "") >= dataIni);
       if (dataFim) list = list.filter((r) => (r.matricula?.created_at ?? "").slice(0, 10) <= dataFim);
       if (vendedora !== "all") list = list.filter((r) => r.aluno?.vendedora === vendedora);
