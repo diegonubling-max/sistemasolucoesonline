@@ -870,3 +870,166 @@ function DetalhesAgendamentoDialog({ agendamento, onClose }: { agendamento: any 
     </Dialog>
   );
 }
+
+function ReagendarReprovadasDialog({
+  agendamento,
+  onClose,
+  onDone,
+}: {
+  agendamento: any | null;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const amanha = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const [novaData, setNovaData] = useState("");
+  const [novoHora, setNovoHora] = useState("14:00");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (agendamento) {
+      setNovaData(amanha);
+      setNovoHora("14:00");
+    }
+  }, [agendamento?.id]);
+
+  const { data: reprovadas } = useQuery({
+    queryKey: ["reprovadas-materias", agendamento?.id],
+    enabled: !!agendamento?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prova_resultados")
+        .select("materia")
+        .eq("agendamento_id", agendamento.id)
+        .eq("aprovado", false)
+        .not("finalizado_em", "is", null);
+      if (error) throw error;
+      return (data ?? []).map((r: any) => r.materia as string);
+    },
+  });
+
+  const handleConfirm = async () => {
+    if (!agendamento || !novaData || !novoHora) {
+      toast.error("Preencha data e horário");
+      return;
+    }
+    if (novaData <= new Date().toISOString().slice(0, 10)) {
+      toast.error("A data deve ser a partir de amanhã");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase.rpc("reagendar_materias_reprovadas", {
+        p_agendamento_id: agendamento.id,
+        p_data_prova: novaData,
+        p_hora_prova: novoHora,
+      });
+      if (error) throw error;
+
+      // WhatsApp
+      try {
+        const ctr = agendamento.ctrDisplay ?? agendamento.ctr ?? "";
+        let senha = "";
+        if (ctr) {
+          const { data: ext } = await supabase
+            .from("alunos_externos")
+            .select("senha")
+            .eq("ctr", ctr)
+            .maybeSingle();
+          senha = (ext as any)?.senha ?? "";
+        }
+        let tel = (agendamento.telefoneDisplay || agendamento.telefone || "").replace(/\D/g, "");
+        if (tel) {
+          if (!tel.startsWith("55")) tel = "55" + tel;
+          const primeiro = (agendamento.nome || "").trim().split(/\s+/)[0] || "";
+          const [y, m, d] = novaData.split("-");
+          const dataBR = `${d}/${m}/${y}`;
+          const listaMat = (reprovadas ?? []).join(", ");
+          const mensagem = `Olá ${primeiro}! 👋
+
+Sua *prova de recuperação* está agendada! 📝
+
+📅 *Data:* ${dataBR}
+🕐 *Horário:* ${novoHora}
+📚 *Matérias:* ${listaMat}
+🔑 *CTR:* ${ctr}
+🔒 *Senha:* ${senha}
+
+Acesse no dia da prova:
+👉 https://sistemasolucoesonline.lovable.app/aluno/login
+
+Boa prova! 🍀`;
+          await fetch(
+            "https://api.z-api.io/instances/3F4CC1DC22AB31BDE17ECE717FF40C71/token/E55BC981D8AA6846EAFEAEE4/send-text",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Client-Token": "F2ffd89a74df2440aad10b65315696d0eS",
+              },
+              body: JSON.stringify({ phone: tel, message: mensagem }),
+            },
+          );
+        }
+      } catch (e) {
+        console.error("WhatsApp reagendamento erro:", e);
+      }
+
+      const [y, m, d] = novaData.split("-");
+      toast.success(`✅ Prova reagendada! ${(reprovadas ?? []).join(", ")} liberadas para ${d}/${m}/${y}`);
+      onDone();
+    } catch (e: any) {
+      toast.error("Erro ao reagendar", { description: e.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={!!agendamento} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reagendar matérias reprovadas — {agendamento?.nome}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div>
+            <Label className="text-sm font-semibold">Matérias reprovadas</Label>
+            {reprovadas === undefined ? (
+              <div className="text-xs text-muted-foreground py-2">Carregando…</div>
+            ) : reprovadas.length === 0 ? (
+              <div className="text-xs text-muted-foreground py-2">Nenhuma matéria reprovada encontrada.</div>
+            ) : (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {reprovadas.map((m) => (
+                  <Badge key={m} className="bg-red-500 text-white">{m}</Badge>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Nova data</Label>
+              <Input type="date" min={amanha} value={novaData} onChange={(e) => setNovaData(e.target.value)} />
+            </div>
+            <div>
+              <Label>Novo horário</Label>
+              <Input type="time" value={novoHora} onChange={(e) => setNovoHora(e.target.value)} />
+            </div>
+          </div>
+          <div className="rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-xs p-2">
+            ℹ️ As matérias aprovadas serão mantidas. O aluno refará apenas as reprovadas.
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={saving || !reprovadas || reprovadas.length === 0}
+          >
+            {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Confirmar reagendamento
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
