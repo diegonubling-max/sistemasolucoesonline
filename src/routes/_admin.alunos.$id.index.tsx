@@ -638,6 +638,24 @@ function AlunoDetalhes() {
       }
       const { error } = await supabase.from("alunos").update(patch).eq("id", id);
       if (error) throw error;
+
+      // Cascata ao inativar: cancelar parcelas em aberto e pós-vendas pendentes
+      if (novo === "inativo") {
+        const { data: mats } = await supabase.from("matriculas").select("id").eq("aluno_id", id);
+        const matIds = (mats ?? []).map((m: any) => m.id);
+        if (matIds.length) {
+          await supabase
+            .from("parcelas")
+            .update({ status: "cancelado" as any })
+            .in("matricula_id", matIds)
+            .not("status", "in", "(pago,isento,cancelado)");
+          await supabase
+            .from("pos_vendas")
+            .update({ status: "arquivado" })
+            .in("matricula_id", matIds)
+            .eq("status", "pendente");
+        }
+      }
     },
     onSuccess: (_d, args) => {
       toast.success(`Status atualizado para ${args.novo}`);
@@ -1253,9 +1271,19 @@ function AlunoDetalhes() {
       <Dialog open={showInativarDialog} onOpenChange={(o) => { setShowInativarDialog(o); if (!o) setMotivoInativo(""); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Inativar aluno?</DialogTitle>
-            <DialogDescription>
-              O aluno perderá o acesso ao sistema. Você poderá reativar a qualquer momento.
+           <DialogTitle>Inativar aluno?</DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Ao inativar <strong>{(aluno as any)?.nome ?? "este aluno"}</strong>, as seguintes ações serão realizadas automaticamente:
+                </p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Todas as parcelas em aberto serão canceladas</li>
+                  <li>Os pós-vendas pendentes serão cancelados</li>
+                  <li>O aluno perderá acesso ao sistema</li>
+                </ul>
+                <p>Deseja continuar?</p>
+              </div>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -1268,7 +1296,7 @@ function AlunoDetalhes() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowInativarDialog(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setShowInativarDialog(false)}>Voltar</Button>
             <Button
               className="bg-red-600 hover:bg-red-700 text-white"
               disabled={updateStatus.isPending}
@@ -1279,7 +1307,7 @@ function AlunoDetalhes() {
                 );
               }}
             >
-              Confirmar inativação
+              Sim, inativar
             </Button>
           </DialogFooter>
         </DialogContent>
