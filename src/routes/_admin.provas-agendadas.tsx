@@ -771,6 +771,15 @@ Boa prova! 🍀`;
         </DialogContent>
       </Dialog>
 
+      <ReagendarReprovadasDialog
+        agendamento={reagendarFor}
+        onClose={() => setReagendarFor(null)}
+        onDone={() => {
+          setReagendarFor(null);
+          qc.invalidateQueries({ queryKey: ["provas-agendadas-list"] });
+        }}
+      />
+
       <DetalhesAgendamentoDialog agendamento={detalhesFor} onClose={() => setDetalhesFor(null)} />
     </div>
   );
