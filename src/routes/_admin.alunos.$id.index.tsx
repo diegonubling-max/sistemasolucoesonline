@@ -646,7 +646,7 @@ function AlunoDetalhes() {
         if (matIds.length) {
           await supabase
             .from("parcelas")
-            .update({ status: "cancelado" })
+            .update({ status: "cancelado" as any })
             .in("matricula_id", matIds)
             .not("status", "in", "(pago,isento,cancelado)");
           await supabase
