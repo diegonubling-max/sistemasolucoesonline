@@ -500,6 +500,17 @@ Boa prova! 🍀`;
                     <Button size="icon" variant="ghost" onClick={() => openEdit(r)} title="Editar">
                       <Pencil className="h-4 w-4" />
                     </Button>
+                    {tab === "reprovado" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2 text-xs"
+                        onClick={() => setReagendarFor(r)}
+                        title="Reagendar reprovadas"
+                      >
+                        🔄 Reagendar
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
