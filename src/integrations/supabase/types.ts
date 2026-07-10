@@ -2458,6 +2458,14 @@ export type Database = {
         }[]
       }
       next_business_day: { Args: { p_date: string }; Returns: string }
+      reagendar_materias_reprovadas: {
+        Args: {
+          p_agendamento_id: string
+          p_data_prova: string
+          p_hora_prova: string
+        }
+        Returns: string
+      }
       redefinir_senha_aluno: {
         Args: { p_email: string; p_nova_senha: string }
         Returns: undefined
