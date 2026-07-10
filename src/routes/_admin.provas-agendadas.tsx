@@ -50,6 +50,7 @@ function ProvasAgendadasPage() {
   const [externoResult, setExternoResult] = useState<{ ctr: string; senha: string; data: string; hora: string; whatsSent: boolean } | null>(null);
   const [gerarCtrFor, setGerarCtrFor] = useState<any | null>(null);
   const [detalhesFor, setDetalhesFor] = useState<any | null>(null);
+  const [reagendarFor, setReagendarFor] = useState<any | null>(null);
   const [extNome, setExtNome] = useState("");
   const [extTelefone, setExtTelefone] = useState("");
   const [extPoloId, setExtPoloId] = useState("");
