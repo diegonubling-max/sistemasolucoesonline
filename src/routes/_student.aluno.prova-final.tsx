@@ -52,6 +52,25 @@ function ProvaFinalPage() {
     enabled: !!session?.user.email,
   });
 
+  const { data: isAcelerado } = useQuery({
+    queryKey: ["aluno-is-acelerado", aluno?.id],
+    enabled: !!aluno?.id,
+    queryFn: async () => {
+      const { data: ms } = await supabase.from("matriculas").select("id").eq("aluno_id", aluno!.id);
+      const ids = (ms ?? []).map((m: any) => m.id);
+      if (!ids.length) return false;
+      const { data } = await supabase
+        .from("parcelas")
+        .select("tipo_pacote")
+        .in("matricula_id", ids)
+        .eq("numero", 1)
+        .eq("tipo", "parcela")
+        .limit(1)
+        .maybeSingle();
+      return !!(data as any)?.tipo_pacote?.toString().toLowerCase().includes("acelerado");
+    },
+  });
+
   const materiasDisponiveis = aluno?.materias_prova && aluno.materias_prova.length > 0 
     ? aluno.materias_prova 
     : MATERIAS_BASE;
