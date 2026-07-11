@@ -172,7 +172,8 @@ export function SalesReport() {
         const parcelas = (m.parcelas as any[] || []);
         
         let pacoteNome = "";
-        const valorTotal = parcelas.reduce((acc, p) => acc + Number(p.valor), 0);
+        const parcelasAtivas = parcelas.filter(p => p.status !== 'cancelado');
+        const valorTotal = parcelasAtivas.reduce((acc, p) => acc + Number(p.valor), 0);
 
         if (isPersonalizado) {
           pacoteNome = "Negociação Personalizada";
