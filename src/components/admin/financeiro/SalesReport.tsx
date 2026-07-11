@@ -148,7 +148,6 @@ export function SalesReport() {
         `)
         .gte("created_at", `${filters.startDate}T00:00:00`)
         .lte("created_at", `${filters.endDate}T23:59:59`)
-        .eq("alunos.ativo", true)
         .order("created_at", { ascending: false });
 
       if (filters.vendedora !== "todas") {
@@ -237,6 +236,7 @@ export function SalesReport() {
         return {
           id: m.id,
           alunoNome: aluno?.nome,
+          alunoAtivo: aluno?.ativo !== false,
           alunoCtr: aluno?.ctr,
           alunoTelefone: aluno?.telefone || "",
           vendedora: aluno?.vendedora || "Não informada",
@@ -278,14 +278,15 @@ export function SalesReport() {
 
   const vendedorasStats = useMemo(() => {
     if (!reportData) return [];
-    const map: Record<string, { nome: string; total: number; valor: number; valorRecebido: number; valorEmAberto: number }> = {};
+    const map: Record<string, { nome: string; total: number; ativas: number; inativas: number; valor: number; valorRecebido: number; valorEmAberto: number }> = {};
 
     reportData.forEach(r => {
       // Agrupar por colaborador_id; ignorar matrículas sem colaborador vinculado
       if (!r.colaboradorId || !r.colaboradorNome) return;
       const key = r.colaboradorId;
-      if (!map[key]) map[key] = { nome: r.colaboradorNome, total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
+      if (!map[key]) map[key] = { nome: r.colaboradorNome, total: 0, ativas: 0, inativas: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
       map[key].total += 1;
+      if (r.alunoAtivo) map[key].ativas += 1; else map[key].inativas += 1;
       map[key].valor += r.valorTotal;
       map[key].valorRecebido += r.valorRecebido;
       map[key].valorEmAberto += r.valorEmAberto;
@@ -525,6 +526,11 @@ export function SalesReport() {
                   <div>
                     <p className="font-black text-base">{v.nome}</p>
                     <p className="text-xs text-muted-foreground">{v.total} matrículas</p>
+                    <p className="text-xs mt-0.5">
+                      <span className="text-green-600">🟢 {v.ativas} ativa{v.ativas === 1 ? '' : 's'}</span>
+                      <span className="text-muted-foreground"> | </span>
+                      <span className="text-red-600">🔴 {v.inativas} inativa{v.inativas === 1 ? '' : 's'}</span>
+                    </p>
                   </div>
                   <Progress value={v.percent} className="h-2 w-24" />
                 </div>
@@ -678,7 +684,10 @@ export function SalesReport() {
                   return (
                     <TableRow key={r.id}>
                       <TableCell>{formatDate(r.dataMatricula)}</TableCell>
-                      <TableCell className="font-medium">{r.alunoNome}</TableCell>
+                      <TableCell className="font-medium">
+                        <span className="mr-2">{r.alunoAtivo ? '🟢' : '🔴'}</span>
+                        {r.alunoNome}
+                      </TableCell>
                       <TableCell>{r.alunoCtr ?? "—"}</TableCell>
                       <TableCell>
                         <Badge className={`${formaClass} border-none`}>{r.formaPagamentoLabel}</Badge>
