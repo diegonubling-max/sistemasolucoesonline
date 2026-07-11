@@ -278,14 +278,15 @@ export function SalesReport() {
 
   const vendedorasStats = useMemo(() => {
     if (!reportData) return [];
-    const map: Record<string, { nome: string; total: number; valor: number; valorRecebido: number; valorEmAberto: number }> = {};
+    const map: Record<string, { nome: string; total: number; ativas: number; inativas: number; valor: number; valorRecebido: number; valorEmAberto: number }> = {};
 
     reportData.forEach(r => {
       // Agrupar por colaborador_id; ignorar matrículas sem colaborador vinculado
       if (!r.colaboradorId || !r.colaboradorNome) return;
       const key = r.colaboradorId;
-      if (!map[key]) map[key] = { nome: r.colaboradorNome, total: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
+      if (!map[key]) map[key] = { nome: r.colaboradorNome, total: 0, ativas: 0, inativas: 0, valor: 0, valorRecebido: 0, valorEmAberto: 0 };
       map[key].total += 1;
+      if (r.alunoAtivo) map[key].ativas += 1; else map[key].inativas += 1;
       map[key].valor += r.valorTotal;
       map[key].valorRecebido += r.valorRecebido;
       map[key].valorEmAberto += r.valorEmAberto;
