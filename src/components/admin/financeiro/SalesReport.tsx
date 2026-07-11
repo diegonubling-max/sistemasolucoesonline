@@ -236,6 +236,7 @@ export function SalesReport() {
         return {
           id: m.id,
           alunoNome: aluno?.nome,
+          alunoAtivo: aluno?.ativo !== false,
           alunoCtr: aluno?.ctr,
           alunoTelefone: aluno?.telefone || "",
           vendedora: aluno?.vendedora || "Não informada",
