@@ -743,8 +743,10 @@ function Financeiro() {
 
             {selectedVendedora === "todas" && matriculasVendedora && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                {(vendedorasList ?? []).map(({ nome: v }) => {
-                  const filtered = matriculasVendedora.filter(m => m.vendedora === v);
+                {(vendedorasList ?? [])
+                  .map(({ nome: v }) => ({ v, filtered: matriculasVendedora.filter(m => m.vendedora === v) }))
+                  .filter(({ filtered }) => filtered.length > 0)
+                  .map(({ v, filtered }) => {
                   const totalVal = filtered.reduce((acc, curr) => acc + curr.valorTotal, 0);
                   return (
                     <Card key={v} className="bg-slate-50 border-none shadow-none">
