@@ -526,6 +526,11 @@ export function SalesReport() {
                   <div>
                     <p className="font-black text-base">{v.nome}</p>
                     <p className="text-xs text-muted-foreground">{v.total} matrículas</p>
+                    <p className="text-xs mt-0.5">
+                      <span className="text-green-600">🟢 {v.ativas} ativa{v.ativas === 1 ? '' : 's'}</span>
+                      <span className="text-muted-foreground"> | </span>
+                      <span className="text-red-600">🔴 {v.inativas} inativa{v.inativas === 1 ? '' : 's'}</span>
+                    </p>
                   </div>
                   <Progress value={v.percent} className="h-2 w-24" />
                 </div>
