@@ -394,7 +394,7 @@ export function SalesReport() {
                 <SelectContent>
                   <SelectItem value="todas">Todas</SelectItem>
                   {vendedorasList?.map(v => (
-                    <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                    <SelectItem key={v.id} value={v.id}>{v.nome}{v.ativo === false ? " (inativa)" : ""}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
