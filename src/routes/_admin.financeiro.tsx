@@ -750,20 +750,19 @@ function Financeiro() {
                   .filter(({ filtered }) => filtered.length > 0)
                   .map(({ v, filtered }) => {
                   const totalVal = filtered.reduce((acc, curr) => acc + curr.valorTotal, 0);
+                  const ativas = filtered.filter((f: any) => f.alunoAtivo).length;
+                  const inativas = filtered.length - ativas;
                   return (
                     <Card key={v} className="bg-slate-50 border-none shadow-none">
                       <CardContent className="pt-6">
                         <p className="text-sm font-semibold text-slate-500">{v}</p>
-                        <div className="flex items-end justify-between mt-1">
-                          <div>
-                            <p className="text-2xl font-bold">{filtered.length}</p>
-                            <p className="text-xs text-slate-400">matrículas</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-indigo-600">{formatCurrency(totalVal)}</p>
-                            <p className="text-xs text-slate-400">gerado</p>
-                          </div>
-                        </div>
+                        <p className="text-2xl font-bold mt-1">{filtered.length} <span className="text-xs font-normal text-slate-400">matrículas</span></p>
+                        <p className="text-xs mt-1">
+                          <span className="text-green-600">🟢 {ativas} ativa{ativas === 1 ? '' : 's'}</span>
+                          <span className="text-slate-400"> | </span>
+                          <span className="text-red-600">🔴 {inativas} inativa{inativas === 1 ? '' : 's'}</span>
+                        </p>
+                        <p className="text-lg font-bold text-indigo-600 mt-2">{formatCurrency(totalVal)} <span className="text-xs font-normal text-slate-400">gerado</span></p>
                       </CardContent>
                     </Card>
                   );
