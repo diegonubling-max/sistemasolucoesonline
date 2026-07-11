@@ -331,13 +331,7 @@ function EditarAluno() {
 
 function ConfigurarProvaFinal({ aluno, matriculaId, onSuccess }: any) {
   const [dias, setDias] = useState(aluno.dias_prova_final || 60);
-  const [materias, setMaterias] = useState<string[]>(aluno.materias_prova || []);
   const [saving, setSaving] = useState(false);
-
-  const MATERIAS_LIST = [
-    "Geografia", "História", "Filosofia", "Sociologia", "Português", 
-    "Inglês", "Biologia", "Química", "Física", "Matemática"
-  ];
 
   const dataMatricula = new Date(aluno.created_at);
   const dataLiberacao = new Date(dataMatricula);
@@ -348,13 +342,7 @@ function ConfigurarProvaFinal({ aluno, matriculaId, onSuccess }: any) {
   const diffTime = dataLiberacao.getTime() - today.getTime();
   const diasRestantes = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
-  const handleToggleMateria = (materia: string) => {
-    setMaterias(prev => 
-      prev.includes(materia) 
-        ? prev.filter(m => m !== materia) 
-        : [...prev, materia]
-    );
-  };
+
 
   const handleSave = async () => {
     setSaving(true);
@@ -367,8 +355,8 @@ function ConfigurarProvaFinal({ aluno, matriculaId, onSuccess }: any) {
         .update({
           dias_prova_final: Number(dias),
           data_liberacao_prova: dataLiberacaoStr,
-          materias_prova: materias
         })
+
         .eq("id", aluno.id);
       
       if (errA) throw errA;
@@ -442,28 +430,6 @@ function ConfigurarProvaFinal({ aluno, matriculaId, onSuccess }: any) {
           </div>
         </div>
 
-        <div className="space-y-4">
-          <Label className="text-base font-semibold text-primary">Matérias da Prova Final</Label>
-          <p className="text-sm text-muted-foreground">Selecione as matérias que estarão disponíveis. Se nenhuma for marcada, todas as 10 serão liberadas.</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {MATERIAS_LIST.map((m) => (
-              <div 
-                key={m} 
-                className={cn(
-                  "flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-muted/50",
-                  materias.includes(m) && "bg-primary/5 border-primary"
-                )}
-                onClick={() => handleToggleMateria(m)}
-              >
-                <Checkbox 
-                  checked={materias.includes(m)} 
-                  onCheckedChange={() => {}} 
-                />
-                <span className="text-sm font-medium">{m}</span>
-              </div>
-            ))}
-          </div>
-        </div>
 
         <div className="pt-4">
           <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">

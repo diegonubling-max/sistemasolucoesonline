@@ -493,36 +493,6 @@ export function AlunoForm({
             </div>
           </div>
 
-          <div className="space-y-4">
-            <Label className="text-sm font-semibold">Matérias Disponíveis</Label>
-            <p className="text-xs text-muted-foreground">Se nenhuma for marcada, todas as 10 serão liberadas automaticamente.</p>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {[
-                "Geografia", "História", "Filosofia", "Sociologia", "Português", 
-                "Inglês", "Biologia", "Química", "Física", "Matemática"
-              ].map((m) => {
-                const currentMaterias = form.watch("materias_prova") || [];
-                const isSelected = currentMaterias.includes(m);
-                return (
-                  <div 
-                    key={m} 
-                    className={cn(
-                      "flex items-center space-x-2 p-2 rounded border cursor-pointer transition-colors bg-white",
-                      isSelected && "bg-blue-50 border-blue-300"
-                    )}
-                    onClick={() => {
-                      const prev = form.getValues("materias_prova") || [];
-                      const next = prev.includes(m) ? prev.filter((i: string) => i !== m) : [...prev, m];
-                      form.setValue("materias_prova", next, { shouldDirty: true });
-                    }}
-                  >
-                    <Checkbox checked={isSelected} onCheckedChange={() => {}} />
-                    <span className="text-xs font-medium">{m}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </CardContent>
       </Card>
       )}
