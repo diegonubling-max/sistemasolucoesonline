@@ -684,7 +684,10 @@ export function SalesReport() {
                   return (
                     <TableRow key={r.id}>
                       <TableCell>{formatDate(r.dataMatricula)}</TableCell>
-                      <TableCell className="font-medium">{r.alunoNome}</TableCell>
+                      <TableCell className="font-medium">
+                        <span className="mr-2">{r.alunoAtivo ? '🟢' : '🔴'}</span>
+                        {r.alunoNome}
+                      </TableCell>
                       <TableCell>{r.alunoCtr ?? "—"}</TableCell>
                       <TableCell>
                         <Badge className={`${formaClass} border-none`}>{r.formaPagamentoLabel}</Badge>
