@@ -75,7 +75,20 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
           });
         }
 
-        const alunosGrupo = (alunos ?? []).filter((a) => alunoNoGrupo(a.ctr, grupo));
+        // Excluir alunos que já finalizaram a prova (aprovado/reprovado)
+        const { data: alunosComResultado } = await supabaseAdmin
+          .from("prova_agendamentos")
+          .select("ctr")
+          .in("resultado", ["aprovado", "reprovado"]);
+        const ctrsFinalizados = new Set(
+          (alunosComResultado ?? [])
+            .map((a: any) => (a.ctr == null ? null : Number(a.ctr)))
+            .filter((v: number | null) => v != null),
+        );
+
+        const alunosGrupo = (alunos ?? [])
+          .filter((a) => alunoNoGrupo(a.ctr, grupo))
+          .filter((a) => !ctrsFinalizados.has(Number(a.ctr)));
 
         // Disparos já registrados deste grupo
         const ids = alunosGrupo.map((a) => a.id);
