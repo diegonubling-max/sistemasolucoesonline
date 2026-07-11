@@ -792,7 +792,10 @@ function Financeiro() {
                   return (
                     <TableRow key={m.id}>
                       <TableCell>{formatDate(m.dataMatricula)}</TableCell>
-                      <TableCell className="font-medium">{m.alunoNome}</TableCell>
+                      <TableCell className="font-medium">
+                        <span className="mr-2">{m.alunoAtivo ? '🟢' : '🔴'}</span>
+                        {m.alunoNome}
+                      </TableCell>
                       <TableCell>{m.alunoCtr ?? '—'}</TableCell>
                       <TableCell>
                         {badge ? (
