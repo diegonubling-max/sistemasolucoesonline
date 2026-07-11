@@ -282,7 +282,7 @@ function ProvaFinalPage() {
   if (liberacao && !liberacao.liberada && liberacao.dataLiberacao) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
-    const dataLiberacao = parseISO(aluno.data_liberacao_prova);
+    const dataLiberacao = new Date(liberacao.dataLiberacao);
     dataLiberacao.setHours(0, 0, 0, 0);
 
     if (hoje.getTime() < dataLiberacao.getTime()) {
