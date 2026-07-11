@@ -86,39 +86,17 @@ function ProvaFinalPage() {
     if (aluno) console.log("[ProvaFinal] aluno encontrado em public.alunos:", { aluno_id: aluno.id, ctr: aluno.ctr });
   }, [aluno]);
 
-  const { data: agendamento, isLoading: loadingAgendamento, refetch: refetchAgendamento } = useQuery({
-    queryKey: ["current-prova-agendamento", session?.user.email],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("[ProvaFinal] Auth user:", { user_id: user?.id, email: user?.email });
-
-      if (!user?.email) throw new Error("Usuário logado não encontrado");
-
-      const { data: alunoAgendamento, error: alunoError } = await supabase
-        .from("alunos")
-        .select("id")
-        .eq("email", user.email)
-        .single();
-
-      console.log("[ProvaFinal] aluno_id encontrado na tabela alunos:", { aluno_id: alunoAgendamento?.id, error: alunoError });
-      if (alunoError) throw alunoError;
-
-      const hojeStr = new Date().toISOString().slice(0, 10);
-      const { data, error } = await supabase
-        .from("prova_agendamentos")
-        .select("*")
-        .eq("aluno_id", alunoAgendamento.id)
-        .eq("status", "agendada")
-        .eq("data_prova", hojeStr)
-        .maybeSingle();
-
-      console.log("[ProvaFinal] resultado da query de agendamentos:", { aluno_id: alunoAgendamento.id, data, error });
-      if (error?.code === "PGRST116") return null;
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!session?.user.email,
+  const { data: liberacao, isLoading: loadingAgendamento, refetch: refetchAgendamento } = useQuery({
+    queryKey: ["prova-liberacao", aluno?.id],
+    queryFn: async () =>
+      verificarLiberacaoProva({
+        alunoId: aluno!.id,
+        alunoCtr: aluno?.ctr,
+        dataLiberacaoProva: aluno?.data_liberacao_prova,
+      }),
+    enabled: !!aluno?.id,
   });
+  const agendamento = liberacao?.agendamento ?? null;
 
 
 
