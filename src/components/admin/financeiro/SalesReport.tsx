@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect } from "react";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate, maskPhone } from "@/lib/format";
 import { FileDown, Users, Package, MapPin, TrendingUp, BarChart3, PieChart as PieChartIcon } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
+import { useVendedoras } from "@/hooks/use-vendedoras";
 
 interface Origin {
   name: string;
@@ -29,7 +31,8 @@ export function SalesReport() {
     endDate: format(endOfMonth(today), "yyyy-MM-dd"),
     vendedora: "todas",
     pacote: "todos",
-    origem: "todas"
+    origem: "todas",
+    formaPagamento: "todas"
   });
 
   useEffect(() => {
@@ -87,6 +90,9 @@ export function SalesReport() {
     }
   });
 
+  const { data: vendedorasList } = useVendedoras(selectedPoloId);
+
+
   const { data: reportData, isLoading } = useQuery({
     queryKey: ["sales-report-data", filters, selectedPoloId, userRole, colabData],
     queryFn: async () => {
@@ -103,7 +109,9 @@ export function SalesReport() {
             nome,
             vendedora,
             origem,
-            ctr
+            ctr,
+            telefone,
+            ativo
           ),
           matricula_pacotes (
             pacote_id,
@@ -124,10 +132,12 @@ export function SalesReport() {
           )
         `)
         .gte("created_at", `${filters.startDate}T00:00:00`)
-        .lte("created_at", `${filters.endDate}T23:59:59`);
+        .lte("created_at", `${filters.endDate}T23:59:59`)
+        .eq("alunos.ativo", true)
+        .order("created_at", { ascending: false });
 
       if (filters.vendedora !== "todas") {
-        query = query.eq("alunos.vendedora", filters.vendedora);
+        query = query.eq("colaborador_id", filters.vendedora);
       }
       
       if (filters.origem !== "todas") {
@@ -166,20 +176,35 @@ export function SalesReport() {
 
         // Enriquecer com info de forma de pagamento da 1ª parcela
         const primeira = parcelas.find(p => p.tipo === 'parcela' && Number(p.numero) === 1);
+        let formaPagamentoKey: 'pix' | 'boleto' | 'cartao' | 'outro' = 'outro';
+        let formaPagamentoLabel = '—';
         if (primeira) {
           const tipoPac = (primeira.tipo_pacote || '').toString();
-          const forma = (primeira.forma_pagamento || '').toString();
+          const forma = (primeira.forma_pagamento || '').toString().toLowerCase();
           const cartaoParc = Number(primeira.cartao_parcelas || 0);
           const valorParc = Number(primeira.valor || 0);
           let sufixo = "";
           if (tipoPac === 'cartao_acelerado' && cartaoParc > 0) {
             sufixo = `Cartão Acelerado (Cartão - ${cartaoParc}x de ${formatCurrency(valorParc)})`;
+            formaPagamentoKey = 'cartao';
+            formaPagamentoLabel = `Cartão ${cartaoParc}x`;
           } else if (forma === 'cartao' && cartaoParc > 0) {
             sufixo = `Cartão (${cartaoParc}x de ${formatCurrency(valorParc)})`;
+            formaPagamentoKey = 'cartao';
+            formaPagamentoLabel = `Cartão ${cartaoParc}x`;
+          } else if (forma === 'cartao') {
+            formaPagamentoKey = 'cartao';
+            formaPagamentoLabel = 'Cartão';
           } else if (forma === 'pix') {
             sufixo = 'PIX';
+            formaPagamentoKey = 'pix';
+            formaPagamentoLabel = 'PIX';
+          } else if (forma === 'boleto') {
+            formaPagamentoKey = 'boleto';
+            formaPagamentoLabel = 'Boleto';
           } else if (forma === 'avista') {
             sufixo = 'À Vista';
+            formaPagamentoLabel = 'À Vista';
           } else if (tipoPac) {
             sufixo = tipoPac;
           }
@@ -196,6 +221,7 @@ export function SalesReport() {
           id: m.id,
           alunoNome: aluno?.nome,
           alunoCtr: aluno?.ctr,
+          alunoTelefone: aluno?.telefone || "",
           vendedora: aluno?.vendedora || "Não informada",
           colaboradorId: (m as any).colaborador_id as string | null,
           colaboradorNome: colaborador?.nome ?? null,
@@ -203,6 +229,8 @@ export function SalesReport() {
           dataMatricula: m.created_at,
           pacoteNome,
           pacoteIds: matriculaPacotes.map(mp => mp.pacote_id),
+          formaPagamentoKey,
+          formaPagamentoLabel,
           valorTotal,
           valorRecebido,
           valorEmAberto
@@ -211,6 +239,10 @@ export function SalesReport() {
 
       if (filters.pacote !== "todos") {
         filtered = filtered.filter(f => f.pacoteIds.includes(filters.pacote));
+      }
+
+      if (filters.formaPagamento !== "todas") {
+        filtered = filtered.filter(f => f.formaPagamentoKey === filters.formaPagamento);
       }
 
       return filtered;
@@ -346,10 +378,9 @@ export function SalesReport() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todas">Todas</SelectItem>
-                  <SelectItem value="Gislaine">Gislaine</SelectItem>
-                  <SelectItem value="Vera">Vera</SelectItem>
-                  <SelectItem value="Gabrielly">Gabrielly</SelectItem>
-                  <SelectItem value="Maria Eduarda">Maria Eduarda</SelectItem>
+                  {vendedorasList?.map(v => (
+                    <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -379,6 +410,20 @@ export function SalesReport() {
                   <SelectItem value="Meta">Meta</SelectItem>
                   <SelectItem value="Indicação">Indicação</SelectItem>
                   <SelectItem value="Outros">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase text-muted-foreground">Forma de Pagamento</label>
+              <Select value={filters.formaPagamento} onValueChange={(v) => setFilters(prev => ({ ...prev, formaPagamento: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                  <SelectItem value="cartao">Cartão</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -588,7 +633,7 @@ export function SalesReport() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Tabela Detalhada de Vendas</CardTitle>
+          <CardTitle className="text-lg">Matrículas por Vendedora</CardTitle>
           <Button variant="outline" size="sm" onClick={exportToCSV}>
             <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
@@ -598,43 +643,49 @@ export function SalesReport() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome do Aluno</TableHead>
                   <TableHead>Data</TableHead>
+                  <TableHead>Aluno</TableHead>
+                  <TableHead>CTR</TableHead>
+                  <TableHead>Forma de Pagamento</TableHead>
+                  <TableHead>Telefone</TableHead>
                   <TableHead>Vendedora</TableHead>
-                  <TableHead>Pacote</TableHead>
-                  <TableHead>Origem</TableHead>
-                  <TableHead className="text-right">Valor Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reportData?.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.alunoNome}</TableCell>
-                    <TableCell>{formatDate(r.dataMatricula)}</TableCell>
-                    <TableCell>{r.vendedora}</TableCell>
-                    <TableCell>
-                      <span className="text-xs">{r.pacoteNome}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="capitalize text-xs px-2 py-1 bg-muted rounded-full">
-                        {r.origem}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right font-bold">
-                      {formatCurrency(r.valorTotal)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {reportData?.map((r) => {
+                  const formaClass =
+                    r.formaPagamentoKey === 'pix' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' :
+                    r.formaPagamentoKey === 'boleto' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' :
+                    r.formaPagamentoKey === 'cartao' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' :
+                    'bg-gray-100 text-gray-700 hover:bg-gray-200';
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell>{formatDate(r.dataMatricula)}</TableCell>
+                      <TableCell className="font-medium">{r.alunoNome}</TableCell>
+                      <TableCell>{r.alunoCtr ?? "—"}</TableCell>
+                      <TableCell>
+                        <Badge className={`${formaClass} border-none`}>{r.formaPagamentoLabel}</Badge>
+                      </TableCell>
+                      <TableCell>{r.alunoTelefone ? maskPhone(r.alunoTelefone) : "—"}</TableCell>
+                      <TableCell>{r.colaboradorNome ?? "—"}</TableCell>
+                    </TableRow>
+                  );
+                })}
                 {(!reportData || reportData.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                      Nenhuma venda encontrada no período selecionado.
+                      Nenhuma matrícula encontrada no período selecionado.
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </div>
+          {reportData && reportData.length > 0 && (
+            <div className="mt-3 text-sm text-muted-foreground text-right">
+              Total de matrículas: <span className="font-bold text-foreground">{reportData.length}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
