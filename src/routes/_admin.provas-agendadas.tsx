@@ -337,7 +337,7 @@ Boa prova! 🍀`;
       if (sitFinFilter !== "todos" && r.sitFinComputed !== sitFinFilter) return false;
       return true;
     });
-    if (tab === "agendada" || tab === "reagendar") {
+    if (tab === "agendada") {
       base.sort((a: any, b: any) => {
         const d = (a.data_prova ?? "").localeCompare(b.data_prova ?? "");
         if (d !== 0) return d;
