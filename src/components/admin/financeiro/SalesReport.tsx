@@ -109,7 +109,9 @@ export function SalesReport() {
             nome,
             vendedora,
             origem,
-            ctr
+            ctr,
+            telefone,
+            ativo
           ),
           matricula_pacotes (
             pacote_id,
