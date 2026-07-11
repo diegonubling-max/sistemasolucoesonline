@@ -172,7 +172,8 @@ export function SalesReport() {
         const parcelas = (m.parcelas as any[] || []);
         
         let pacoteNome = "";
-        const valorTotal = parcelas.reduce((acc, p) => acc + Number(p.valor), 0);
+        const parcelasAtivas = parcelas.filter(p => p.status !== 'cancelado');
+        const valorTotal = parcelasAtivas.reduce((acc, p) => acc + Number(p.valor), 0);
 
         if (isPersonalizado) {
           pacoteNome = "Negociação Personalizada";
@@ -229,8 +230,9 @@ export function SalesReport() {
         }
         if (!pacoteNome) pacoteNome = "—";
 
-        const valorRecebido = parcelas.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0);
-        const valorEmAberto = parcelas.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0);
+        const valorRecebido = parcelasAtivas.filter(p => p.status === 'pago').reduce((acc, p) => acc + Number(p.valor), 0);
+        const valorEmAberto = parcelasAtivas.filter(p => p.status === 'aberto').reduce((acc, p) => acc + Number(p.valor), 0);
+
 
         return {
           id: m.id,

@@ -260,8 +260,9 @@ function Financeiro() {
           matricula_pacotes (
             pacotes ( nome )
           ),
-          parcelas ( valor, tipo, numero, forma_pagamento )
+          parcelas ( valor, tipo, numero, forma_pagamento, status )
         `)
+        .eq("alunos.ativo", true)
         .gte("created_at", `${vendedoraPeriod.start}T00:00:00`)
         .lte("created_at", `${vendedoraPeriod.end}T23:59:59`);
 
@@ -283,7 +284,7 @@ function Financeiro() {
         // Valor total = SOMA das parcelas (independente de forma_pagamento)
         const parcelas = (m.parcelas as any[]) ?? [];
         const valorTotal = parcelas
-          .filter((p: any) => !p.tipo || p.tipo === 'parcela')
+          .filter((p: any) => (!p.tipo || p.tipo === 'parcela') && p.status !== 'cancelado')
           .reduce((acc: number, p: any) => acc + Number(p.valor || 0), 0);
 
         const cursosNomes = Array.from(new Set(
