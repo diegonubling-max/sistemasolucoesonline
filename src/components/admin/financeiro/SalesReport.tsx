@@ -31,7 +31,8 @@ export function SalesReport() {
     endDate: format(endOfMonth(today), "yyyy-MM-dd"),
     vendedora: "todas",
     pacote: "todos",
-    origem: "todas"
+    origem: "todas",
+    formaPagamento: "todas"
   });
 
   useEffect(() => {
