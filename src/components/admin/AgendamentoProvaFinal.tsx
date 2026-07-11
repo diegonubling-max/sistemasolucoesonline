@@ -35,6 +35,28 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
     },
   });
 
+  const { data: pacoteInfo } = useQuery({
+    queryKey: ["aluno-pacote-info", alunoId],
+    queryFn: async () => {
+      const { data: ms } = await supabase.from("matriculas").select("id, created_at").eq("aluno_id", alunoId).order("created_at", { ascending: true }).limit(1);
+      const mat = ms?.[0];
+      if (!mat) return { acelerado: false, prazo60: null as string | null };
+      const { data: p1 } = await supabase
+        .from("parcelas")
+        .select("tipo_pacote")
+        .eq("matricula_id", mat.id)
+        .eq("numero", 1)
+        .eq("tipo", "parcela")
+        .maybeSingle();
+      const acelerado = !!(p1 as any)?.tipo_pacote?.toString().toLowerCase().includes("acelerado");
+      const d = new Date(mat.created_at);
+      d.setDate(d.getDate() + 60);
+      return { acelerado, prazo60: format(d, "yyyy-MM-dd") };
+    },
+  });
+
+  const antesDoPrazo = !!(pacoteInfo?.prazo60 && !pacoteInfo.acelerado && dataProva < pacoteInfo.prazo60);
+
   const agendar = useMutation({
     mutationFn: async () => {
       if (materias.length === 0) throw new Error("Selecione pelo menos uma matéria");
