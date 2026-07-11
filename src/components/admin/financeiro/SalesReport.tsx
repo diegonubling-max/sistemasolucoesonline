@@ -90,7 +90,22 @@ export function SalesReport() {
     }
   });
 
-  const { data: vendedorasList } = useVendedoras(selectedPoloId);
+  const { data: vendedorasList } = useQuery({
+    queryKey: ["vendedoras-all-report", selectedPoloId],
+    queryFn: async () => {
+      let q = supabase
+        .from("colaboradores")
+        .select("id, nome, ativo")
+        .eq("setor", "Vendedor")
+        .order("ativo", { ascending: false })
+        .order("nome", { ascending: true });
+      if (selectedPoloId && selectedPoloId !== "all") q = q.eq("polo_id", selectedPoloId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as { id: string; nome: string; ativo: boolean }[];
+    },
+    staleTime: 60_000,
+  });
 
 
   const { data: reportData, isLoading } = useQuery({
@@ -379,7 +394,7 @@ export function SalesReport() {
                 <SelectContent>
                   <SelectItem value="todas">Todas</SelectItem>
                   {vendedorasList?.map(v => (
-                    <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                    <SelectItem key={v.id} value={v.id}>{v.nome}{v.ativo === false ? " (inativa)" : ""}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
