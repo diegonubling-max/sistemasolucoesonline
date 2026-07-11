@@ -312,7 +312,7 @@ function EditarAluno() {
         </TabsContent>
 
         <TabsContent value="prova-final" className="animate-in fade-in-50 duration-300">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
             <ConfigurarProvaFinal 
               aluno={aluno}
               matriculaId={matricula?.id}
