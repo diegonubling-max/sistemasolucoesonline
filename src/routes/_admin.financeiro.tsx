@@ -250,6 +250,8 @@ function Financeiro() {
           polo_id,
           alunos!inner (
             nome,
+            ctr,
+            telefone,
             vendedora
           ),
           matricula_cursos (
@@ -258,7 +260,7 @@ function Financeiro() {
           matricula_pacotes (
             pacotes ( nome )
           ),
-          parcelas ( valor, tipo )
+          parcelas ( valor, tipo, numero, forma_pagamento )
         `)
         .gte("created_at", `${vendedoraPeriod.start}T00:00:00`)
         .lte("created_at", `${vendedoraPeriod.end}T23:59:59`);
@@ -296,13 +298,19 @@ function Financeiro() {
         ));
         const cursos = (cursosNomes.length ? cursosNomes : pacoteNomes).join(", ");
 
+        const primeiraParcela = parcelas.find((p: any) => (p.tipo === 'parcela' || !p.tipo) && Number(p.numero) === 1);
+        const formaPagamento = primeiraParcela?.forma_pagamento ?? null;
+
         byMatricula.set(m.id, {
           id: m.id,
           alunoNome: aluno?.nome,
+          alunoCtr: aluno?.ctr,
+          alunoTelefone: aluno?.telefone,
           vendedora: aluno?.vendedora || "Não informada",
           dataMatricula: m.created_at,
           cursos,
           valorTotal,
+          formaPagamento,
         });
       }
       return Array.from(byMatricula.values());
@@ -761,23 +769,39 @@ function Financeiro() {
 
             <Table>
               <TableHeader><TableRow>
+                <TableHead>Data</TableHead>
                 <TableHead>Aluno</TableHead>
-                <TableHead>Data Matrícula</TableHead>
-                <TableHead>Curso(s)</TableHead>
+                <TableHead>CTR</TableHead>
+                <TableHead>Forma Pgto</TableHead>
+                <TableHead>Telefone</TableHead>
                 <TableHead>Vendedora</TableHead>
-                <TableHead className="text-right">Valor Total</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {(matriculasVendedora ?? []).map((m: any) => (
-                  <TableRow key={m.id}>
-                    <TableCell className="font-medium">{m.alunoNome}</TableCell>
-                    <TableCell>{formatDate(m.dataMatricula)}</TableCell>
-                    <TableCell>{m.cursos}</TableCell>
-                    <TableCell>{m.vendedora}</TableCell>
-                    <TableCell className="text-right font-bold">{formatCurrency(m.valorTotal)}</TableCell>
-                  </TableRow>
-                ))}
-                {matriculasVendedora?.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma matrícula encontrada para o período/vendedora.</TableCell></TableRow>}
+                {(matriculasVendedora ?? []).map((m: any) => {
+                  const fp = (m.formaPagamento || '').toLowerCase();
+                  const badge = fp === 'pix'
+                    ? { cls: 'bg-green-100 text-green-700', label: 'PIX' }
+                    : fp === 'boleto'
+                    ? { cls: 'bg-yellow-100 text-yellow-700', label: 'Boleto' }
+                    : fp === 'cartao' || fp === 'cartão'
+                    ? { cls: 'bg-blue-100 text-blue-700', label: 'Cartão' }
+                    : null;
+                  return (
+                    <TableRow key={m.id}>
+                      <TableCell>{formatDate(m.dataMatricula)}</TableCell>
+                      <TableCell className="font-medium">{m.alunoNome}</TableCell>
+                      <TableCell>{m.alunoCtr ?? '—'}</TableCell>
+                      <TableCell>
+                        {badge ? (
+                          <span className={`px-2 py-1 rounded-full text-xs ${badge.cls}`}>{badge.label}</span>
+                        ) : '—'}
+                      </TableCell>
+                      <TableCell>{m.alunoTelefone ?? '—'}</TableCell>
+                      <TableCell>{m.vendedora}</TableCell>
+                    </TableRow>
+                  );
+                })}
+                {matriculasVendedora?.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma matrícula encontrada para o período/vendedora.</TableCell></TableRow>}
               </TableBody>
             </Table>
 
