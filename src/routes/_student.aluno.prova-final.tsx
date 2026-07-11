@@ -278,8 +278,8 @@ function ProvaFinalPage() {
 
   const whatsappNumero = aluno?.polos?.whatsapp || "5551990010689";
 
-  // ESTADO 1 — Prova ainda não liberada (hoje < data_liberacao_prova)
-  if (aluno?.data_liberacao_prova && !agendamento && !isAcelerado) {
+  // ESTADO 1 — Prova ainda não liberada (verificação centralizada)
+  if (liberacao && !liberacao.liberada && liberacao.dataLiberacao) {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     const dataLiberacao = parseISO(aluno.data_liberacao_prova);
