@@ -13,6 +13,7 @@ import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import { cn } from "@/lib/utils";
 import { ProvaFluxo } from "@/components/prova/ProvaFluxo";
+import { verificarLiberacaoProva } from "@/lib/prova-liberacao";
 
 export const Route = createFileRoute("/_student/aluno/prova-final")({
   component: ProvaFinalPage,
