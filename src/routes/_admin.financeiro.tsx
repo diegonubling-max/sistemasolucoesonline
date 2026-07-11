@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { startOfMonth, endOfMonth, format, isBefore, parseISO, startOfDay, differenceInDays } from "date-fns";
-import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, Calendar, Hash, UserX, BarChart3 } from "lucide-react";
+import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, UserX, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_admin/financeiro")({
   component: Financeiro,
 });
 
-type FilterType = "recebimentos" | "a_receber" | "primeiras" | "ultimas" | "atraso" | "vendedora" | "vendas" | "comissoes" | null;
+type FilterType = "recebimentos" | "a_receber" | "atraso" | "vendedora" | "vendas" | "comissoes" | null;
 
 
 function Financeiro() {
