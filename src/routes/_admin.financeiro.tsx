@@ -260,8 +260,9 @@ function Financeiro() {
           matricula_pacotes (
             pacotes ( nome )
           ),
-          parcelas ( valor, tipo, numero, forma_pagamento )
+          parcelas ( valor, tipo, numero, forma_pagamento, status )
         `)
+        .eq("alunos.ativo", true)
         .gte("created_at", `${vendedoraPeriod.start}T00:00:00`)
         .lte("created_at", `${vendedoraPeriod.end}T23:59:59`);
 
