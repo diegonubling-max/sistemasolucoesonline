@@ -378,10 +378,9 @@ export function SalesReport() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todas">Todas</SelectItem>
-                  <SelectItem value="Gislaine">Gislaine</SelectItem>
-                  <SelectItem value="Vera">Vera</SelectItem>
-                  <SelectItem value="Gabrielly">Gabrielly</SelectItem>
-                  <SelectItem value="Maria Eduarda">Maria Eduarda</SelectItem>
+                  {vendedorasList?.map(v => (
+                    <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -411,6 +410,20 @@ export function SalesReport() {
                   <SelectItem value="Meta">Meta</SelectItem>
                   <SelectItem value="Indicação">Indicação</SelectItem>
                   <SelectItem value="Outros">Outros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase text-muted-foreground">Forma de Pagamento</label>
+              <Select value={filters.formaPagamento} onValueChange={(v) => setFilters(prev => ({ ...prev, formaPagamento: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="boleto">Boleto</SelectItem>
+                  <SelectItem value="cartao">Cartão</SelectItem>
                 </SelectContent>
               </Select>
             </div>
