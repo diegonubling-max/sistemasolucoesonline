@@ -307,6 +307,7 @@ function Financeiro() {
           alunoNome: aluno?.nome,
           alunoCtr: aluno?.ctr,
           alunoTelefone: aluno?.telefone,
+          alunoAtivo: aluno?.ativo !== false,
           vendedora: aluno?.vendedora || "Não informada",
           dataMatricula: m.created_at,
           cursos,
