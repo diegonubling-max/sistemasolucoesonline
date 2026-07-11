@@ -58,10 +58,8 @@ function Financeiro() {
     start: format(startOfMonth(today), "yyyy-MM-dd"), 
     end: format(endOfMonth(today), "yyyy-MM-dd") 
   });
-  const [primeirasMonth, setPrimeirasMonth] = useState(format(today, "yyyy-MM"));
-  const [primeirasStatus, setPrimeirasStatus] = useState<"todas" | "pago" | "aberto">("todas");
 
-  const [ultimasMonth, setUltimasMonth] = useState(format(today, "yyyy-MM"));
+
   const [atrasoPeriod, setAtrasoPeriod] = useState({
     start: format(startOfMonth(today), "yyyy-MM-dd"),
     end: format(today, "yyyy-MM-dd")
@@ -214,66 +212,8 @@ function Financeiro() {
     enabled: activeFilter === "a_receber"
   });
 
-  const { data: primeiras, refetch: refetchPrimeiras } = useQuery({
-    queryKey: ["financeiro-primeiras", primeirasMonth, primeirasStatus, selectedPoloId, userRole, colabData],
-    queryFn: async () => {
-      const [year, month] = primeirasMonth.split("-");
-      const start = format(new Date(Number(year), Number(month) - 1, 1), "yyyy-MM-dd");
-      const end = format(endOfMonth(new Date(Number(year), Number(month) - 1, 1)), "yyyy-MM-dd");
-      
-      let q = supabase
-        .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
-        .eq("numero", 1)
-        .gte("data_vencimento", start)
-        .lte("data_vencimento", end)
-        .order("data_vencimento", { ascending: true });
-
-      if (primeirasStatus !== "todas") q = q.eq("status", primeirasStatus);
-
-      const { data, error } = await filterByPolo(q);
-      if (error) throw error;
-      return data;
-    },
-    enabled: activeFilter === "primeiras"
-  });
 
 
-  const { data: ultimas, refetch: refetchUltimas } = useQuery({
-    queryKey: ["financeiro-ultimas", ultimasMonth, selectedPoloId, userRole, colabData],
-    queryFn: async () => {
-      const [year, month] = ultimasMonth.split("-");
-      const start = format(new Date(Number(year), Number(month) - 1, 1), "yyyy-MM-dd");
-      const end = format(endOfMonth(new Date(Number(year), Number(month) - 1, 1)), "yyyy-MM-dd");
-
-      const { data: allParcelas, error: pError } = await supabase
-        .from("parcelas")
-        .select("matricula_id, numero")
-        .order("numero", { ascending: false });
-      
-      if (pError) throw pError;
-      
-      const maxNums: Record<string, number> = {};
-      allParcelas.forEach(p => {
-        if (!maxNums[p.matricula_id] || p.numero > maxNums[p.matricula_id]) {
-          maxNums[p.matricula_id] = p.numero;
-        }
-      });
-
-      let q = supabase
-        .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
-        .gte("data_vencimento", start)
-        .lte("data_vencimento", end)
-        .order("data_vencimento", { ascending: true });
-      
-      const { data, error } = await filterByPolo(q);
-      if (error) throw error;
-
-      return data.filter((p: any) => p.numero === maxNums[p.matricula_id]);
-    },
-    enabled: activeFilter === "ultimas"
-  });
 
   const { data: atraso, refetch: refetchAtraso } = useQuery({
     queryKey: ["financeiro-atraso", atrasoPeriod, selectedPoloId, userRole, colabData],
@@ -409,8 +349,6 @@ function Financeiro() {
       queryClient.invalidateQueries({ queryKey: ["financeiro-global-stats"] });
       queryClient.invalidateQueries({ queryKey: ["financeiro-recebimentos"] });
       queryClient.invalidateQueries({ queryKey: ["financeiro-a-receber"] });
-      queryClient.invalidateQueries({ queryKey: ["financeiro-primeiras"] });
-      queryClient.invalidateQueries({ queryKey: ["financeiro-ultimas"] });
       queryClient.invalidateQueries({ queryKey: ["financeiro-atraso"] });
     },
     onError: (e) => {
@@ -506,8 +444,6 @@ function Financeiro() {
   const filterButtons = [
     { id: "recebimentos", label: "Recebimentos", sub: "por período", icon: TrendingUp },
     { id: "a_receber", label: "A Receber", sub: "por período", icon: Landmark },
-    { id: "primeiras", label: "Primeiras", sub: "Parcelas", icon: Hash },
-    { id: "ultimas", label: "Últimas", sub: "Parcelas", icon: Calendar },
     { id: "atraso", label: "Alunos em", sub: "Atraso", icon: UserX },
     { id: "vendedora", label: "Matrículas por", sub: "Vendedora", icon: Wallet },
     { id: "vendas", label: "Relatório de", sub: "Vendas", icon: BarChart3 },
@@ -713,124 +649,8 @@ function Financeiro() {
         </Card>
       )}
 
-      {activeFilter === "primeiras" && (
-        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Hash className="h-5 w-5 text-orange-500" />
-                Primeiras Parcelas
-              </h3>
-              <div className="flex flex-wrap items-center gap-2">
-                <Input type="month" className="w-48 pr-10" value={primeirasMonth} onChange={(e) => setPrimeirasMonth(e.target.value)} />
-                <Select value={primeirasStatus} onValueChange={(v) => setPrimeirasStatus(v as any)}>
-                  <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todas">Todas</SelectItem>
-                    <SelectItem value="pago">Somente pagas</SelectItem>
-                    <SelectItem value="aberto">Somente em aberto</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button size="sm" onClick={() => refetchPrimeiras()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
-              </div>
 
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">{primeiras?.length || 0} primeiras parcelas encontradas</p>
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
-                {(primeiras ?? []).map((p: any) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      {p.matriculas?.alunos?.ctr}
-                      {p.asaas_id ? (
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-1 h-4">Asaas</Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1 h-4">Carnê</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
-                    <TableCell>{formatDate(p.data_vencimento)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
-                    <TableCell>{getStatusBadge(p)}</TableCell>
-                    <TableCell className="text-right">
-                      {p.status === 'aberto' && (
-                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
-                          <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <p className="font-bold">Total: {formatCurrency((primeiras ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
-              <Button variant="outline" size="sm" onClick={() => exportCSV(primeiras || [], "primeiras-parcelas")}>
-                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {activeFilter === "ultimas" && (
-        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-purple-500" />
-                Últimas Parcelas
-              </h3>
-              <div className="flex flex-wrap items-center gap-2">
-                <Input type="month" className="w-48 pr-10" value={ultimasMonth} onChange={(e) => setUltimasMonth(e.target.value)} />
-                <Button size="sm" onClick={() => refetchUltimas()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">{ultimas?.length || 0} últimas parcelas encontradas</p>
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
-                {(ultimas ?? []).map((p: any) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      {p.matriculas?.alunos?.ctr}
-                      {p.asaas_id ? (
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-1 h-4">Asaas</Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-1 h-4">Carnê</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
-                    <TableCell>{formatDate(p.data_vencimento)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
-                    <TableCell>{getStatusBadge(p)}</TableCell>
-                    <TableCell className="text-right">
-                      {p.status === 'aberto' && (
-                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
-                          <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <p className="font-bold">Total: {formatCurrency((ultimas ?? []).reduce((acc: number, p: any) => acc + Number(p.valor), 0))}</p>
-              <Button variant="outline" size="sm" onClick={() => exportCSV(ultimas || [], "ultimas-parcelas")}>
-                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {activeFilter === "atraso" && (
         <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
