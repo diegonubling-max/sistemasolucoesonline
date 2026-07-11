@@ -355,8 +355,8 @@ function ConfigurarProvaFinal({ aluno, matriculaId, onSuccess }: any) {
         .update({
           dias_prova_final: Number(dias),
           data_liberacao_prova: dataLiberacaoStr,
-          materias_prova: materias
         })
+
         .eq("id", aluno.id);
       
       if (errA) throw errA;
