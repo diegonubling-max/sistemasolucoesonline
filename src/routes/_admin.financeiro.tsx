@@ -47,7 +47,7 @@ function Financeiro() {
 
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
-  const { data: vendedorasList } = useVendedoras(selectedPoloId);
+  const { data: vendedorasList } = useVendedoras(selectedPoloId, { includeInactive: true });
 
   // States for filters
   const [recPeriod, setRecPeriod] = useState({ 
@@ -900,7 +900,9 @@ function Financeiro() {
                   <SelectContent>
                     <SelectItem value="todas">Todas as vendedoras</SelectItem>
                     {(vendedorasList ?? []).map((v) => (
-                      <SelectItem key={v.id} value={v.nome}>{v.nome}</SelectItem>
+                      <SelectItem key={v.id} value={v.nome}>
+                        {v.nome}{v.ativo === false ? " (inativa)" : ""}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
