@@ -284,7 +284,7 @@ function Financeiro() {
         // Valor total = SOMA das parcelas (independente de forma_pagamento)
         const parcelas = (m.parcelas as any[]) ?? [];
         const valorTotal = parcelas
-          .filter((p: any) => !p.tipo || p.tipo === 'parcela')
+          .filter((p: any) => (!p.tipo || p.tipo === 'parcela') && p.status !== 'cancelado')
           .reduce((acc: number, p: any) => acc + Number(p.valor || 0), 0);
 
         const cursosNomes = Array.from(new Set(
