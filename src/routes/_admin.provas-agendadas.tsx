@@ -458,7 +458,7 @@ Boa prova! 🍀`;
                   <div className="flex items-center gap-2 flex-wrap">
                     <span>{r.nome}</span>
                     {r.is_externo && (
-                      <Badge className="text-[10px] bg-blue-500 text-white">🔷 Externo</Badge>
+                      <Badge className="text-[10px] bg-blue-900 text-white hover:bg-blue-900">🔷 Externo</Badge>
                     )}
                     
                     {r.status === "iniciado" && isOnline && (
