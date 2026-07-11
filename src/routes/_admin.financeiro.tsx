@@ -280,8 +280,9 @@ function Financeiro() {
     queryFn: async () => {
       let q = supabase
         .from("parcelas")
-        .select("*, matriculas(alunos(nome, ctr, telefone), matricula_pacotes(pacotes(tipo)))")
+        .select("*, matriculas!inner(alunos!inner(nome, ctr, telefone, ativo), matricula_pacotes(pacotes(tipo)))")
         .in("status", ["aberto", "parcial"])
+        .eq("matriculas.alunos.ativo", true)
         .lt("data_vencimento", format(today, "yyyy-MM-dd"))
         .gte("data_vencimento", atrasoPeriod.start)
         .lte("data_vencimento", atrasoPeriod.end)
