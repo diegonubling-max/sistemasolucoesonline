@@ -90,6 +90,9 @@ export function SalesReport() {
     }
   });
 
+  const { data: vendedorasList } = useVendedoras(selectedPoloId);
+
+
   const { data: reportData, isLoading } = useQuery({
     queryKey: ["sales-report-data", filters, selectedPoloId, userRole, colabData],
     queryFn: async () => {
