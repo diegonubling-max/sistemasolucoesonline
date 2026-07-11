@@ -298,13 +298,19 @@ function Financeiro() {
         ));
         const cursos = (cursosNomes.length ? cursosNomes : pacoteNomes).join(", ");
 
+        const primeiraParcela = parcelas.find((p: any) => (p.tipo === 'parcela' || !p.tipo) && Number(p.numero) === 1);
+        const formaPagamento = primeiraParcela?.forma_pagamento ?? null;
+
         byMatricula.set(m.id, {
           id: m.id,
           alunoNome: aluno?.nome,
+          alunoCtr: aluno?.ctr,
+          alunoTelefone: aluno?.telefone,
           vendedora: aluno?.vendedora || "Não informada",
           dataMatricula: m.created_at,
           cursos,
           valorTotal,
+          formaPagamento,
         });
       }
       return Array.from(byMatricula.values());
