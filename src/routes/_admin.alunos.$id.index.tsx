@@ -591,6 +591,17 @@ function AlunoDetalhes() {
   }, 0) || 0;
   const totalGeral = parcelas?.filter(p => p.status !== 'isento').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
 
+  const pacoteAluno = (() => {
+    const p1 = parcelas?.find((p: any) => p.numero === 1 && p.tipo === 'parcela');
+    const tipo = (p1 as any)?.tipo_pacote?.toString().toLowerCase() || '';
+    if (!tipo) return null;
+    if (tipo.includes('acelerado')) return { label: '🚀 Plano Acelerado', className: 'bg-orange-100 text-orange-800 border-orange-300' };
+    if (tipo.includes('cart')) return { label: '💳 Cartão 12x', className: 'bg-blue-100 text-blue-800 border-blue-300' };
+    if (tipo.includes('boleto')) return { label: '📄 Boleto', className: 'bg-yellow-100 text-yellow-800 border-yellow-300' };
+    if (tipo.includes('vista') || tipo.includes('avista') || tipo.includes('pix')) return { label: '💰 Avista', className: 'bg-green-100 text-green-800 border-green-300' };
+    return { label: `📦 ${(p1 as any)?.tipo_pacote}`, className: 'bg-gray-100 text-gray-800 border-gray-300' };
+  })();
+
   const [sendingAccess, setSendingAccess] = useState(false);
 
   const handleResendAccess = async () => {
@@ -898,9 +909,16 @@ function AlunoDetalhes() {
               <Card className="bg-yellow-50"><CardContent className="pt-6"><p className="text-xs text-yellow-700">Aberto</p><p className="text-xl font-bold">R$ {totalAberto.toLocaleString("pt-BR")}</p></CardContent></Card>
               <Card className="bg-primary/5"><CardContent className="pt-6"><p className="text-xs text-primary">Geral</p><p className="text-xl font-bold">R$ {totalGeral.toLocaleString("pt-BR")}</p></CardContent></Card>
             </div>
-            <Button variant="outline" onClick={() => setShowTrocarPacote(true)}>
-              Trocar Pacote
-            </Button>
+            <div className="flex items-center gap-3">
+              {pacoteAluno && (
+                <span className={cn("px-4 py-2 rounded-lg border-2 font-bold text-sm", pacoteAluno.className)}>
+                  {pacoteAluno.label}
+                </span>
+              )}
+              <Button variant="outline" onClick={() => setShowTrocarPacote(true)}>
+                Trocar Pacote
+              </Button>
+            </div>
           </div>
           <Card>
             <CardContent className="pt-6">
