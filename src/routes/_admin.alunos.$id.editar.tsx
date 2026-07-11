@@ -331,13 +331,7 @@ function EditarAluno() {
 
 function ConfigurarProvaFinal({ aluno, matriculaId, onSuccess }: any) {
   const [dias, setDias] = useState(aluno.dias_prova_final || 60);
-  const [materias, setMaterias] = useState<string[]>(aluno.materias_prova || []);
   const [saving, setSaving] = useState(false);
-
-  const MATERIAS_LIST = [
-    "Geografia", "História", "Filosofia", "Sociologia", "Português", 
-    "Inglês", "Biologia", "Química", "Física", "Matemática"
-  ];
 
   const dataMatricula = new Date(aluno.created_at);
   const dataLiberacao = new Date(dataMatricula);
@@ -348,13 +342,7 @@ function ConfigurarProvaFinal({ aluno, matriculaId, onSuccess }: any) {
   const diffTime = dataLiberacao.getTime() - today.getTime();
   const diasRestantes = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
-  const handleToggleMateria = (materia: string) => {
-    setMaterias(prev => 
-      prev.includes(materia) 
-        ? prev.filter(m => m !== materia) 
-        : [...prev, materia]
-    );
-  };
+
 
   const handleSave = async () => {
     setSaving(true);
