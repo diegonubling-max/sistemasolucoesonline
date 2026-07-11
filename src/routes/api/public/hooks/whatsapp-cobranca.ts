@@ -77,11 +77,11 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-cobranca")({
           const { data: vencendo, error } = await supabaseAdmin
             .from("parcelas")
             .select(
-              "id, valor, data_vencimento, status, matriculas:matricula_id(alunos:aluno_id(id, nome, telefone))",
+              "id, valor, data_vencimento, status, matriculas:matricula_id!inner(alunos:aluno_id!inner(id, nome, telefone, ativo))",
             )
             .eq("data_vencimento", em3Dias)
-            .neq("status", "pago")
-            .neq("status", "isento")
+            .in("status", ["aberto", "parcial"])
+            .eq("matriculas.alunos.ativo", true)
             .gt("valor", 0);
           if (error) throw error;
           for (const p of vencendo ?? []) {
