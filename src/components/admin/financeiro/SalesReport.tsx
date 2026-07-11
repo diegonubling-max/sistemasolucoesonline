@@ -633,7 +633,7 @@ export function SalesReport() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Tabela Detalhada de Vendas</CardTitle>
+          <CardTitle className="text-lg">Matrículas por Vendedora</CardTitle>
           <Button variant="outline" size="sm" onClick={exportToCSV}>
             <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
@@ -643,43 +643,49 @@ export function SalesReport() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome do Aluno</TableHead>
                   <TableHead>Data</TableHead>
+                  <TableHead>Aluno</TableHead>
+                  <TableHead>CTR</TableHead>
+                  <TableHead>Forma de Pagamento</TableHead>
+                  <TableHead>Telefone</TableHead>
                   <TableHead>Vendedora</TableHead>
-                  <TableHead>Pacote</TableHead>
-                  <TableHead>Origem</TableHead>
-                  <TableHead className="text-right">Valor Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reportData?.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.alunoNome}</TableCell>
-                    <TableCell>{formatDate(r.dataMatricula)}</TableCell>
-                    <TableCell>{r.vendedora}</TableCell>
-                    <TableCell>
-                      <span className="text-xs">{r.pacoteNome}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="capitalize text-xs px-2 py-1 bg-muted rounded-full">
-                        {r.origem}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right font-bold">
-                      {formatCurrency(r.valorTotal)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {reportData?.map((r) => {
+                  const formaClass =
+                    r.formaPagamentoKey === 'pix' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' :
+                    r.formaPagamentoKey === 'boleto' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' :
+                    r.formaPagamentoKey === 'cartao' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' :
+                    'bg-gray-100 text-gray-700 hover:bg-gray-200';
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell>{formatDate(r.dataMatricula)}</TableCell>
+                      <TableCell className="font-medium">{r.alunoNome}</TableCell>
+                      <TableCell>{r.alunoCtr ?? "—"}</TableCell>
+                      <TableCell>
+                        <Badge className={`${formaClass} border-none`}>{r.formaPagamentoLabel}</Badge>
+                      </TableCell>
+                      <TableCell>{r.alunoTelefone ? maskPhone(r.alunoTelefone) : "—"}</TableCell>
+                      <TableCell>{r.colaboradorNome ?? "—"}</TableCell>
+                    </TableRow>
+                  );
+                })}
                 {(!reportData || reportData.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                      Nenhuma venda encontrada no período selecionado.
+                      Nenhuma matrícula encontrada no período selecionado.
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </div>
+          {reportData && reportData.length > 0 && (
+            <div className="mt-3 text-sm text-muted-foreground text-right">
+              Total de matrículas: <span className="font-bold text-foreground">{reportData.length}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
