@@ -134,6 +134,11 @@ export function AgendamentoProvaFinal({ alunoId }: { alunoId: string }) {
             </div>
           </div>
           <MateriasSelector value={materias} onChange={setMaterias} />
+          {antesDoPrazo && (
+            <div className="p-3 rounded-md bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+              ⚠️ Este aluno ainda está no prazo de 60 dias (liberação padrão em {format(new Date(pacoteInfo!.prazo60 + 'T00:00:00'), 'dd/MM/yyyy')}). Ao agendar, a prova será liberada na data escolhida.
+            </div>
+          )}
           <Button
             onClick={() => agendar.mutate()}
             disabled={agendar.isPending}
