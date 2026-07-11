@@ -176,20 +176,35 @@ export function SalesReport() {
 
         // Enriquecer com info de forma de pagamento da 1ª parcela
         const primeira = parcelas.find(p => p.tipo === 'parcela' && Number(p.numero) === 1);
+        let formaPagamentoKey: 'pix' | 'boleto' | 'cartao' | 'outro' = 'outro';
+        let formaPagamentoLabel = '—';
         if (primeira) {
           const tipoPac = (primeira.tipo_pacote || '').toString();
-          const forma = (primeira.forma_pagamento || '').toString();
+          const forma = (primeira.forma_pagamento || '').toString().toLowerCase();
           const cartaoParc = Number(primeira.cartao_parcelas || 0);
           const valorParc = Number(primeira.valor || 0);
           let sufixo = "";
           if (tipoPac === 'cartao_acelerado' && cartaoParc > 0) {
             sufixo = `Cartão Acelerado (Cartão - ${cartaoParc}x de ${formatCurrency(valorParc)})`;
+            formaPagamentoKey = 'cartao';
+            formaPagamentoLabel = `Cartão ${cartaoParc}x`;
           } else if (forma === 'cartao' && cartaoParc > 0) {
             sufixo = `Cartão (${cartaoParc}x de ${formatCurrency(valorParc)})`;
+            formaPagamentoKey = 'cartao';
+            formaPagamentoLabel = `Cartão ${cartaoParc}x`;
+          } else if (forma === 'cartao') {
+            formaPagamentoKey = 'cartao';
+            formaPagamentoLabel = 'Cartão';
           } else if (forma === 'pix') {
             sufixo = 'PIX';
+            formaPagamentoKey = 'pix';
+            formaPagamentoLabel = 'PIX';
+          } else if (forma === 'boleto') {
+            formaPagamentoKey = 'boleto';
+            formaPagamentoLabel = 'Boleto';
           } else if (forma === 'avista') {
             sufixo = 'À Vista';
+            formaPagamentoLabel = 'À Vista';
           } else if (tipoPac) {
             sufixo = tipoPac;
           }
@@ -206,6 +221,7 @@ export function SalesReport() {
           id: m.id,
           alunoNome: aluno?.nome,
           alunoCtr: aluno?.ctr,
+          alunoTelefone: aluno?.telefone || "",
           vendedora: aluno?.vendedora || "Não informada",
           colaboradorId: (m as any).colaborador_id as string | null,
           colaboradorNome: colaborador?.nome ?? null,
@@ -213,6 +229,8 @@ export function SalesReport() {
           dataMatricula: m.created_at,
           pacoteNome,
           pacoteIds: matriculaPacotes.map(mp => mp.pacote_id),
+          formaPagamentoKey,
+          formaPagamentoLabel,
           valorTotal,
           valorRecebido,
           valorEmAberto
@@ -221,6 +239,10 @@ export function SalesReport() {
 
       if (filters.pacote !== "todos") {
         filtered = filtered.filter(f => f.pacoteIds.includes(filters.pacote));
+      }
+
+      if (filters.formaPagamento !== "todas") {
+        filtered = filtered.filter(f => f.formaPagamentoKey === filters.formaPagamento);
       }
 
       return filtered;
