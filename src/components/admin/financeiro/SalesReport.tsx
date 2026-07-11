@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useEffect } from "react";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate, maskPhone } from "@/lib/format";
 import { FileDown, Users, Package, MapPin, TrendingUp, BarChart3, PieChart as PieChartIcon } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
+import { useVendedoras } from "@/hooks/use-vendedoras";
 
 interface Origin {
   name: string;
