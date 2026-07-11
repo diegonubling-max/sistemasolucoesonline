@@ -670,8 +670,8 @@ export function SalesReport() {
                 {reportData?.map((r) => {
                   const formaClass =
                     r.formaPagamentoKey === 'pix' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' :
-                    r.formaPagamentoKey === 'boleto' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' :
-                    r.formaPagamentoKey === 'cartao' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' :
+                    r.formaPagamentoKey === 'boleto' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
+                    r.formaPagamentoKey === 'cartao' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' :
                     'bg-gray-100 text-gray-700 hover:bg-gray-200';
                   return (
                     <TableRow key={r.id}>
