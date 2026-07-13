@@ -75,11 +75,11 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
           });
         }
 
-        // Excluir alunos que já finalizaram a prova (aprovado/reprovado)
+        // Excluir alunos que já finalizaram a prova (qualquer resultado não-nulo)
         const { data: alunosComResultado } = await supabaseAdmin
           .from("prova_agendamentos")
           .select("ctr")
-          .in("resultado", ["aprovado", "reprovado"]);
+          .not("resultado", "is", null);
         const ctrsFinalizados = new Set(
           (alunosComResultado ?? [])
             .map((a: any) => (a.ctr == null ? null : Number(a.ctr)))
