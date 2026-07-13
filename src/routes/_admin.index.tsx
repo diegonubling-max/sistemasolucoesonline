@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { VitrineInteresse } from "@/components/admin/VitrineInteresse";
+import { Input } from "@/components/ui/input";
 
 
 export const Route = createFileRoute("/_admin/")({
