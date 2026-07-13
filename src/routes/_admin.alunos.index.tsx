@@ -159,9 +159,9 @@ function AlunosList() {
       if (search) {
         const isNumeric = /^\d+$/.test(search);
         if (isNumeric) {
-          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%,ctr.eq.${search}`);
+          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%,ctr.eq.${search},telefone.ilike.%${search}%`);
         } else {
-          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`);
         }
       }
       q = q.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
@@ -235,7 +235,7 @@ function AlunosList() {
             <div className="relative max-w-sm flex-1 min-w-[220px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome, e-mail ou CTR..."
+                placeholder="Buscar por nome, CTR ou telefone..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);

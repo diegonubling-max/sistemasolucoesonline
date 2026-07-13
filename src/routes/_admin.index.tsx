@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { VitrineInteresse } from "@/components/admin/VitrineInteresse";
+import { Input } from "@/components/ui/input";
 
 
 export const Route = createFileRoute("/_admin/")({
@@ -285,6 +286,10 @@ function Dashboard() {
         title="Dashboard" 
         description={selectedPoloId === 'all' ? "Visão geral de todos os polos" : `Visão geral: ${polos?.find(p => p.id === selectedPoloId)?.nome || 'Polo selecionado'}`} 
       />
+
+      <DashboardAlunoSearch onNavigate={(id) => navigate({ to: "/alunos/$id", params: { id } })} />
+
+
 
       {isResponsavel && !isSuperAdmin && (
         <Card className="mb-6 border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50">
@@ -582,6 +587,83 @@ function Dashboard() {
           </Table>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function DashboardAlunoSearch({ onNavigate }: { onNavigate: (id: string) => void }) {
+  const [term, setTerm] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(term.trim()), 500);
+    return () => clearTimeout(t);
+  }, [term]);
+
+  const { data: results, isFetching } = useQuery({
+    queryKey: ["dashboard-aluno-search", debounced],
+    queryFn: async () => {
+      if (debounced.length < 2) return [];
+      const isNumeric = /^\d+$/.test(debounced);
+      const or = isNumeric
+        ? `nome.ilike.%${debounced}%,ctr.eq.${debounced},telefone.ilike.%${debounced}%`
+        : `nome.ilike.%${debounced}%,telefone.ilike.%${debounced}%`;
+      const { data, error } = await supabase
+        .from("alunos")
+        .select("id, nome, ctr, telefone, ativo")
+        .or(or)
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: debounced.length >= 2,
+  });
+
+  return (
+    <div className="relative mb-6 max-w-2xl">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={term}
+          onChange={(e) => { setTerm(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 200)}
+          placeholder="Buscar aluno por nome, CTR ou telefone..."
+          className="pl-9"
+        />
+      </div>
+      {open && debounced.length >= 2 && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg max-h-80 overflow-auto">
+          {isFetching && (
+            <div className="p-3 text-sm text-muted-foreground flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
+            </div>
+          )}
+          {!isFetching && (results?.length ?? 0) === 0 && (
+            <div className="p-3 text-sm text-muted-foreground">Nenhum aluno encontrado.</div>
+          )}
+          {results?.map((a: any) => (
+            <button
+              key={a.id}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { setOpen(false); setTerm(""); onNavigate(a.id); }}
+              className="w-full text-left px-3 py-2 hover:bg-accent border-b last:border-0 flex items-center justify-between gap-3"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="font-medium truncate">{a.nome}</div>
+                <div className="text-xs text-muted-foreground">
+                  CTR: {a.ctr ?? "—"} · {a.telefone ?? "—"}
+                </div>
+              </div>
+              <Badge variant={a.ativo ? "default" : "destructive"}>
+                {a.ativo ? "Ativo" : "Inativo"}
+              </Badge>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
