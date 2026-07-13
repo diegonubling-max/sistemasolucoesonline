@@ -37,7 +37,7 @@ export function InadimplenciaAlerts({ alunoId, nomeAluno }: Props) {
         .from("parcelas")
         .select("data_vencimento, status")
         .in("matricula_id", matriculaIds)
-        .neq("status", "pago")
+        .eq("status", "aberto")
         .lt("data_vencimento", hojeStr);
 
       if (!parcelas || parcelas.length === 0) return;
