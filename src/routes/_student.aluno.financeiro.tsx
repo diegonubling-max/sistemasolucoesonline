@@ -119,6 +119,9 @@ function StudentFinance() {
       return { parcelas: parcelas || [], aluno };
     },
     enabled: !!session?.user.email,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const formatCurrency = (value: number) => {
