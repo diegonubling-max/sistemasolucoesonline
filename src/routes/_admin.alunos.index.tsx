@@ -159,9 +159,9 @@ function AlunosList() {
       if (search) {
         const isNumeric = /^\d+$/.test(search);
         if (isNumeric) {
-          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%,ctr.eq.${search}`);
+          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%,ctr.eq.${search},telefone.ilike.%${search}%`);
         } else {
-          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
+          q = q.or(`nome.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`);
         }
       }
       q = q.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
