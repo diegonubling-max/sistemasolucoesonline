@@ -287,6 +287,10 @@ function Dashboard() {
         description={selectedPoloId === 'all' ? "Visão geral de todos os polos" : `Visão geral: ${polos?.find(p => p.id === selectedPoloId)?.nome || 'Polo selecionado'}`} 
       />
 
+      <DashboardAlunoSearch onNavigate={(id) => navigate({ to: "/alunos/$id", params: { id } })} />
+
+
+
       {isResponsavel && !isSuperAdmin && (
         <Card className="mb-6 border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50">
           <CardContent className="pt-6">
