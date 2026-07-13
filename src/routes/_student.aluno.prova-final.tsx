@@ -97,7 +97,31 @@ function ProvaFinalPage() {
       }),
     enabled: !!aluno?.id,
   });
-  const agendamento = liberacao?.agendamento ?? null;
+  // Busca QUALQUER agendamento pendente (resultado NULL), mesmo com data futura.
+  // A liberação (verificarLiberacaoProva) só retorna agendamento quando a data já chegou,
+  // por isso precisamos desta query para exibir "prova agendada para X" antes do dia.
+  const { data: agendamentoPendente } = useQuery({
+    queryKey: ["agendamento-pendente", aluno?.id, aluno?.ctr],
+    enabled: !!aluno?.id,
+    queryFn: async () => {
+      let q = supabase
+        .from("prova_agendamentos")
+        .select("*")
+        .is("resultado", null)
+        .order("data_prova", { ascending: false })
+        .limit(1);
+      if (aluno?.ctr) {
+        q = q.or(`aluno_id.eq.${aluno.id},ctr.eq.${aluno.ctr}`);
+      } else {
+        q = q.eq("aluno_id", aluno!.id);
+      }
+      const { data } = await q.maybeSingle();
+      return data;
+    },
+  });
+
+  const agendamento = liberacao?.agendamento ?? agendamentoPendente ?? null;
+
 
 
 
