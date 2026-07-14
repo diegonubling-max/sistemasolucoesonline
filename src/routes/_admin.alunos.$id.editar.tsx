@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { confirmarPagamentoAsaas } from "@/services/asaas";
 import { AgendamentoProvaFinal } from "@/components/admin/AgendamentoProvaFinal";
 import { formatCurrency } from "@/lib/format";
 import { notifyPagamentoRecebido } from "@/lib/notify";
