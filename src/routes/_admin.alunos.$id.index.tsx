@@ -989,6 +989,53 @@ function AlunoDetalhes() {
                             <Badge variant="secondary">{p.status}</Badge>
                           )}
                         </td>
+          {statusAtual === "ativo" && !temAberto && (
+            <Card className="border-2 border-yellow-300 bg-yellow-50">
+              <CardContent className="pt-6 flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-yellow-900">Este aluno não tem parcelas ativas.</p>
+                  <p className="text-sm text-yellow-800">Deseja criar um novo pacote para este aluno?</p>
+                </div>
+                <Button className="bg-yellow-600 hover:bg-yellow-700 text-white" onClick={irParaNovoPacote}>
+                  <Plus className="h-4 w-4 mr-2" /> Criar Novo Pacote
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b"><th className="text-left py-2">Nº</th><th className="text-left py-2">Parcela</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Status</th><th className="text-left py-2">Pago em</th><th className="text-right py-2">Ações</th></tr></thead>
+                  <tbody>
+                    {parcelasAtivas.map((p) => {
+                      const pagoTot = Number((p as any).valor_pago_total || 0);
+                      const restante = Number(p.valor) - pagoTot;
+                      const isParcial = p.status === 'parcial';
+                      return (
+                      <tr
+                        key={p.id}
+                        className={cn("border-b", isParcial && "cursor-pointer hover:bg-muted/30")}
+                        onClick={() => isParcial && setHistoricoParcelaId(p.id)}
+                      >
+                        <td className="py-3 text-muted-foreground font-mono">{p.numero_parcela_id ?? '—'}</td>
+                        <td className="py-3">{p.tipo === 'taxa_matricula' ? 'Matrícula' : `Parcela ${p.numero}`}</td>
+                        <td className="py-3">{formatDate(p.data_vencimento)}</td>
+                        <td className="py-3">
+                          <div className="font-bold">{formatCurrency(p.valor)}</div>
+                          {isParcial && (
+                            <div className="text-[10px] text-muted-foreground">Pago: {formatCurrency(pagoTot)} · Restante: {formatCurrency(restante)}</div>
+                          )}
+                        </td>
+                        <td className="py-3">
+                          {p.status === 'pago' ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700">pago</Badge>
+                          ) : p.status === 'parcial' ? (
+                            <Badge className="bg-yellow-400 text-yellow-950">🟡 Parcial</Badge>
+                          ) : (
+                            <Badge variant="secondary">{p.status}</Badge>
+                          )}
+                        </td>
                         <td className="py-3">{(p as any).data_pagamento ? formatDate((p as any).data_pagamento) : '—'}</td>
                         <td className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
                           {(p.status === 'aberto' || p.status === 'parcial') && (
@@ -1017,6 +1064,46 @@ function AlunoDetalhes() {
               </div>
             </CardContent>
           </Card>
+
+          {parcelasCanceladas.length > 0 && (
+            <Card className="bg-gray-50 border-gray-200">
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <CardTitle className="text-base text-gray-600">📋 Histórico de Condições Anteriores</CardTitle>
+                {statusAtual === "ativo" && !temAberto && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={reativarCanceladas.isPending}
+                    onClick={() => {
+                      if (window.confirm("Deseja reativar as condições anteriores? As parcelas canceladas voltarão para status 'aberto'.")) {
+                        reativarCanceladas.mutate();
+                      }
+                    }}
+                  >
+                    🔄 Reativar
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-gray-500">
+                    <thead><tr className="border-b border-gray-200"><th className="text-left py-2">Descrição</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Forma Pgto</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Status</th></tr></thead>
+                    <tbody>
+                      {parcelasCanceladas.map((p) => (
+                        <tr key={p.id} className="border-b border-gray-200">
+                          <td className="py-3">{p.tipo === 'taxa_matricula' ? 'Matrícula' : `Parcela ${p.numero}`}</td>
+                          <td className="py-3">{formatCurrency(p.valor)}</td>
+                          <td className="py-3">{(p as any).forma_pagamento ?? '—'}</td>
+                          <td className="py-3">{formatDate(p.data_vencimento)}</td>
+                          <td className="py-3"><Badge variant="secondary" className="bg-gray-200 text-gray-600">Cancelado</Badge></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="vitrine" className="space-y-6">
