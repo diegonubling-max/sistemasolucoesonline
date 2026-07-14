@@ -952,17 +952,11 @@ Acesse no dia da prova:
 👉 https://sistemasolucoesonline.lovable.app/aluno/login
 
 Boa prova! 🍀`;
-          await fetch(
-            "https://api.z-api.io/instances/3F4CC1DC22AB31BDE17ECE717FF40C71/token/E55BC981D8AA6846EAFEAEE4/send-text",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Client-Token": "F2ffd89a74df2440aad10b65315696d0eS",
-              },
-              body: JSON.stringify({ phone: tel, message: mensagem }),
-            },
-          );
+          await fetch("/api/public/hooks/zapi-send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: tel, message: mensagem }),
+          });
         }
       } catch (e) {
         console.error("WhatsApp reagendamento erro:", e);

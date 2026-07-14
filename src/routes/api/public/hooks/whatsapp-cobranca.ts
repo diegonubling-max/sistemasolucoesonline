@@ -1,8 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const Z_API_BASE =
-  "https://api.z-api.io/instances/3F4CC1DC22AB31BDE17ECE717FF40C71/token/E55BC981D8AA6846EAFEAEE4";
-const Z_API_CLIENT_TOKEN = "F2ffd89a74df2440aad10b65315696d0eS";
+function getZapiCreds() {
+  const instanceId = process.env.ZAPI_INSTANCE_ID;
+  const token = process.env.ZAPI_TOKEN;
+  const clientToken = process.env.ZAPI_CLIENT_TOKEN;
+  if (!instanceId || !token || !clientToken) throw new Error("Z-API não configurada");
+  return {
+    base: `https://api.z-api.io/instances/${instanceId}/token/${token}`,
+    clientToken,
+  };
+}
 
 function formatPhone(telefone: string) {
   const numero = (telefone || "").replace(/\D/g, "");
@@ -28,9 +35,10 @@ async function sendWhatsApp(
   const tipo = log?.tipo ?? "outro";
   const alunoId = log?.alunoId ?? null;
   try {
-    const res = await fetch(`${Z_API_BASE}/send-text`, {
+    const { base, clientToken } = getZapiCreds();
+    const res = await fetch(`${base}/send-text`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Client-Token": Z_API_CLIENT_TOKEN },
+      headers: { "Content-Type": "application/json", "Client-Token": clientToken },
       body: JSON.stringify({ phone: formatPhone(telefone), message: mensagem }),
     });
     const body = await res.text().catch(() => "");
