@@ -330,6 +330,10 @@ function AlunoDetalhes() {
       if (resObj?.status === "pago") {
         notifyPagamentoRecebido(selectedParcelaId, selectedParcelaValor, data.forma_pagamento);
 
+        // Confirmar no Asaas para parar cobranças automáticas
+        confirmarPagamentoAsaas(selectedParcelaId, data.valor_pago, data.data_pagamento);
+
+
         // Gera comissão automaticamente apenas na baixa TOTAL da Parcela 1
         try {
           const { data: parcela } = await supabase
