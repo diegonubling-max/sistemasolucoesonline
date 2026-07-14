@@ -955,40 +955,6 @@ function AlunoDetalhes() {
               </Button>
             </div>
           </div>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr className="border-b"><th className="text-left py-2">Nº</th><th className="text-left py-2">Parcela</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Status</th><th className="text-left py-2">Pago em</th><th className="text-right py-2">Ações</th></tr></thead>
-                  <tbody>
-                    {parcelas?.map((p) => {
-                      const pagoTot = Number((p as any).valor_pago_total || 0);
-                      const restante = Number(p.valor) - pagoTot;
-                      const isParcial = p.status === 'parcial';
-                      return (
-                      <tr
-                        key={p.id}
-                        className={cn("border-b", isParcial && "cursor-pointer hover:bg-muted/30")}
-                        onClick={() => isParcial && setHistoricoParcelaId(p.id)}
-                      >
-                        <td className="py-3 text-muted-foreground font-mono">{p.numero_parcela_id ?? '—'}</td>
-                        <td className="py-3">{p.tipo === 'taxa_matricula' ? 'Matrícula' : `Parcela ${p.numero}`}</td>
-                        <td className="py-3">{formatDate(p.data_vencimento)}</td>
-                        <td className="py-3">
-                          <div className="font-bold">{formatCurrency(p.valor)}</div>
-                          {isParcial && (
-                            <div className="text-[10px] text-muted-foreground">Pago: {formatCurrency(pagoTot)} · Restante: {formatCurrency(restante)}</div>
-                          )}
-                        </td>
-                        <td className="py-3">
-                          {p.status === 'pago' ? (
-                            <Badge variant="outline" className="bg-green-50 text-green-700">pago</Badge>
-                          ) : p.status === 'parcial' ? (
-                            <Badge className="bg-yellow-400 text-yellow-950">🟡 Parcial</Badge>
-                          ) : (
-                            <Badge variant="secondary">{p.status}</Badge>
-                          )}
-                        </td>
           {statusAtual === "ativo" && !temAberto && (
             <Card className="border-2 border-yellow-300 bg-yellow-50">
               <CardContent className="pt-6 flex items-center justify-between gap-4">
