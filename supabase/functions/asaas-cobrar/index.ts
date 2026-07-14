@@ -63,6 +63,45 @@ serve(async (req) => {
       ? "https://www.asaas.com/api/v3" 
       : "https://sandbox.asaas.com/api/v3";
 
+    // SE AÇÃO FOR CONFIRMAR PAGAMENTO EM DINHEIRO (para o Asaas parar de cobrar)
+    if (action === 'receive_in_cash') {
+      if (!parcela.asaas_id) {
+        console.log(`Parcela ${parcela_id} sem asaas_id — nada a confirmar.`);
+        return new Response(JSON.stringify({ success: true, skipped: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      const paymentDate = body.paymentDate || new Date().toISOString().split("T")[0];
+      const value = body.value != null ? Number(body.value) : Number(parcela.valor);
+
+      const receiveResponse = await fetch(`${asaasBaseUrl}/payments/${parcela.asaas_id}/receiveInCash`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "access_token": asaas_api_key },
+        body: JSON.stringify({ paymentDate, value }),
+      });
+      const receiveData = await receiveResponse.json();
+      console.log("RETORNO ASAAS (RECEIVE_IN_CASH):", JSON.stringify(receiveData));
+
+      if (!receiveResponse.ok) {
+        // 400 quando já está confirmado — tratar como sucesso silencioso
+        const desc = receiveData.errors?.[0]?.description || "";
+        if (receiveResponse.status === 400 && /confirmad|receb/i.test(desc)) {
+          return new Response(JSON.stringify({ success: true, already: true, payment: receiveData }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+        throw new Error(`Erro ao confirmar pagamento no Asaas: ${desc || receiveResponse.statusText}`);
+      }
+
+      return new Response(JSON.stringify({ success: true, payment: receiveData }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     // SE AÇÃO FOR BUSCAR COBRANÇA EXISTENTE
     if (action === 'fetch' || (parcela.asaas_id && action !== 'create')) {
       console.log(`Buscando cobrança existente no Asaas para parcela ${parcela_id} (Asaas ID: ${parcela.asaas_id})`);
