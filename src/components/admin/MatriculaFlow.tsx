@@ -274,7 +274,7 @@ export function MatriculaFlow({
       // Deriva forma_pagamento (nunca pode ficar NULL)
       const derivarFormaPagamento = (): string => {
         if (isNegociacaoPersonalizada) {
-          return (negociacao.formaPagamento || "carnê").toLowerCase();
+          return (negociacao.formaPagamento || "boleto").toLowerCase();
         }
         const tipo = ((currentPacote as any)?.tipo || "").toLowerCase();
         const nome = ((currentPacote as any)?.nome || "").toLowerCase();
