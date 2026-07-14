@@ -700,6 +700,8 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
       
       if (error) throw error;
       notifyPagamentoRecebido(baixaData.id, baixaData.valor, data.forma_pagamento);
+      confirmarPagamentoAsaas(baixaData.id, data.valor_pago ?? baixaData.valor, data.data_pagamento);
+      
       
       
       if (data.forma_pagamento === 'cartao') {
