@@ -55,7 +55,7 @@ export function MatriculaFlow({
   const [selectedPacote, setSelectedPacote] = useState<string | null>(null);
   const [isNegociacaoPersonalizada, setIsNegociacaoPersonalizada] = useState(false);
   const [negociacao, setNegociacao] = useState({
-    formaPagamento: "carnê",
+    formaPagamento: "boleto",
     valorEntrada: 0,
     numeroParcelas: 1,
     valorParcela: 0,
