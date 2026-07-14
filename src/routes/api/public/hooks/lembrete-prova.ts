@@ -117,11 +117,12 @@ Boa sorte! 🍀`;
             }
 
             try {
-              const res = await fetch(`${Z_API_BASE}/send-text`, {
+              const { base, clientToken } = getZapiCreds();
+              const res = await fetch(`${base}/send-text`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  "Client-Token": Z_API_CLIENT_TOKEN,
+                  "Client-Token": clientToken,
                 },
                 body: JSON.stringify({ phone: formatPhone(telefone), message: mensagem }),
               });
