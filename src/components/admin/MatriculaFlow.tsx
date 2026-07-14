@@ -271,6 +271,20 @@ export function MatriculaFlow({
       const currentPacote = !isNegociacaoPersonalizada ? pacotes?.find(p => p.id === selectedPacote) : null;
       if (!isNegociacaoPersonalizada && !currentPacote) throw new Error("Pacote não encontrado");
 
+      // Deriva forma_pagamento (nunca pode ficar NULL)
+      const derivarFormaPagamento = (): string => {
+        if (isNegociacaoPersonalizada) {
+          return (negociacao.formaPagamento || "carnê").toLowerCase();
+        }
+        const tipo = ((currentPacote as any)?.tipo || "").toLowerCase();
+        const nome = ((currentPacote as any)?.nome || "").toLowerCase();
+        if (tipo === "pix" || nome.includes("avista") || nome.includes("à vista") || nome.includes("a vista")) return "pix";
+        if (tipo === "boleto" || nome.includes("boleto")) return "boleto";
+        if (tipo === "cartao" || tipo === "cartão" || nome.includes("cartão") || nome.includes("cartao")) return "cartao";
+        return tipo || "boleto";
+      };
+      const formaPagamentoPadrao = derivarFormaPagamento();
+
       // 1. Salvar Parcelas
       const allParcelas: any[] = [];
       const sortedItems = getSortedParcelas();
@@ -284,6 +298,7 @@ export function MatriculaFlow({
           valor: p.valor,
           data_vencimento: format(p.vencimento, 'yyyy-MM-dd'),
           status: p.status,
+          forma_pagamento: formaPagamentoPadrao,
           descricao: p.descricao || (p.tipo === 'taxa_matricula' ? 'Taxa de Matrícula' : 'Parcela')
         });
       });
