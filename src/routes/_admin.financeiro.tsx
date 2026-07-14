@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { confirmarPagamentoAsaas } from "@/services/asaas";
 import { SalesReport } from "@/components/admin/financeiro/SalesReport";
 import { ComissoesReport } from "@/components/admin/financeiro/ComissoesReport";
 import { useAuth } from "@/hooks/use-auth";
