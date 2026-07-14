@@ -593,7 +593,38 @@ function AlunoDetalhes() {
     if (p.status === 'parcial') return acc + (Number(p.valor) - Number((p as any).valor_pago_total || 0));
     return acc;
   }, 0) || 0;
-  const totalGeral = parcelas?.filter(p => p.status !== 'isento').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
+  const totalGeral = parcelas?.filter(p => p.status !== 'isento' && p.status !== 'cancelado').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
+
+  const parcelasAtivas = parcelas?.filter(p => p.status !== 'cancelado') ?? [];
+  const parcelasCanceladas = parcelas?.filter(p => p.status === 'cancelado') ?? [];
+  const temAberto = (parcelas ?? []).some(p => p.status === 'aberto' || p.status === 'parcial');
+
+  const reativarCanceladas = useMutation({
+    mutationFn: async () => {
+      const { data: ms } = await supabase.from("matriculas").select("id").eq("aluno_id", id);
+      const matIds = (ms ?? []).map((m: any) => m.id);
+      if (!matIds.length) return;
+      const { error } = await supabase
+        .from("parcelas")
+        .update({ status: "aberto" as any })
+        .in("matricula_id", matIds)
+        .eq("status", "cancelado");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Condições anteriores reativadas.");
+      qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const irParaNovoPacote = async () => {
+    const { data: ms } = await supabase
+      .from("matriculas").select("id").eq("aluno_id", id)
+      .order("created_at", { ascending: false }).limit(1);
+    const matricula = ms && ms[0];
+    navigate({ to: "/alunos/novo", search: { aluno: id, matricula: matricula?.id, step: 2 } as any });
+  };
 
   const pacoteAluno = (() => {
     const p1 = parcelas?.find((p: any) => p.numero === 1 && p.tipo === 'parcela');
@@ -924,13 +955,26 @@ function AlunoDetalhes() {
               </Button>
             </div>
           </div>
+          {statusAtual === "ativo" && !temAberto && (
+            <Card className="border-2 border-yellow-300 bg-yellow-50">
+              <CardContent className="pt-6 flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-yellow-900">Este aluno não tem parcelas ativas.</p>
+                  <p className="text-sm text-yellow-800">Deseja criar um novo pacote para este aluno?</p>
+                </div>
+                <Button className="bg-yellow-600 hover:bg-yellow-700 text-white" onClick={irParaNovoPacote}>
+                  <Plus className="h-4 w-4 mr-2" /> Criar Novo Pacote
+                </Button>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="pt-6">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead><tr className="border-b"><th className="text-left py-2">Nº</th><th className="text-left py-2">Parcela</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Status</th><th className="text-left py-2">Pago em</th><th className="text-right py-2">Ações</th></tr></thead>
                   <tbody>
-                    {parcelas?.map((p) => {
+                    {parcelasAtivas.map((p) => {
                       const pagoTot = Number((p as any).valor_pago_total || 0);
                       const restante = Number(p.valor) - pagoTot;
                       const isParcial = p.status === 'parcial';
@@ -986,6 +1030,46 @@ function AlunoDetalhes() {
               </div>
             </CardContent>
           </Card>
+
+          {parcelasCanceladas.length > 0 && (
+            <Card className="bg-gray-50 border-gray-200">
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <CardTitle className="text-base text-gray-600">📋 Histórico de Condições Anteriores</CardTitle>
+                {statusAtual === "ativo" && !temAberto && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={reativarCanceladas.isPending}
+                    onClick={() => {
+                      if (window.confirm("Deseja reativar as condições anteriores? As parcelas canceladas voltarão para status 'aberto'.")) {
+                        reativarCanceladas.mutate();
+                      }
+                    }}
+                  >
+                    🔄 Reativar
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-gray-500">
+                    <thead><tr className="border-b border-gray-200"><th className="text-left py-2">Descrição</th><th className="text-left py-2">Valor</th><th className="text-left py-2">Forma Pgto</th><th className="text-left py-2">Vencimento</th><th className="text-left py-2">Status</th></tr></thead>
+                    <tbody>
+                      {parcelasCanceladas.map((p) => (
+                        <tr key={p.id} className="border-b border-gray-200">
+                          <td className="py-3">{p.tipo === 'taxa_matricula' ? 'Matrícula' : `Parcela ${p.numero}`}</td>
+                          <td className="py-3">{formatCurrency(p.valor)}</td>
+                          <td className="py-3">{(p as any).forma_pagamento ?? '—'}</td>
+                          <td className="py-3">{formatDate(p.data_vencimento)}</td>
+                          <td className="py-3"><Badge variant="secondary" className="bg-gray-200 text-gray-600">Cancelado</Badge></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="vitrine" className="space-y-6">
