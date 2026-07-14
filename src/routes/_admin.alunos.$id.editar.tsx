@@ -668,13 +668,19 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
     
     const maxNum = Math.max(0, ...localParcelas.filter(p => p.tipo === 'parcela').map(p => p.numero || 0));
     
+    const formaExistente =
+      localParcelas.find((p: any) => p.tipo === 'parcela' && p.forma_pagamento)?.forma_pagamento
+      || localParcelas.find((p: any) => p.forma_pagamento)?.forma_pagamento
+      || 'boleto';
+
     const newParcela = {
       matricula_id: matriculaId,
       tipo: 'parcela' as const,
       numero: maxNum + 1,
       valor: 0,
       data_vencimento: format(new Date(), 'yyyy-MM-dd'),
-      status: 'aberto' as const
+      status: 'aberto' as const,
+      forma_pagamento: formaExistente
     };
 
     const { data, error } = await supabase.from("parcelas").insert(newParcela).select().single();
