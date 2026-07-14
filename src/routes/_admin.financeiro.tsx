@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { BaixaModal } from "@/components/admin/BaixaModal";
 import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
+import { confirmarPagamentoAsaas } from "@/services/asaas";
 import { SalesReport } from "@/components/admin/financeiro/SalesReport";
 import { ComissoesReport } from "@/components/admin/financeiro/ComissoesReport";
 import { useAuth } from "@/hooks/use-auth";
@@ -336,6 +337,7 @@ function Financeiro() {
       const resObj = res as { status: string; restante: number } | null;
       if (resObj?.status === "pago") {
         notifyPagamentoRecebido(id, baixaModal?.valor || 0, data.forma_pagamento);
+        confirmarPagamentoAsaas(id, data.valor_pago, data.data_pagamento);
       }
       return { ...data, _result: resObj };
     },

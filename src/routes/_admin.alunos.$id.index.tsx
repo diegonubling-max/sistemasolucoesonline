@@ -26,7 +26,7 @@ import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { HistoricoPagamentosModal } from "@/components/admin/HistoricoPagamentosModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
-import { generateAsaasCobrar, asaasRequest } from "@/services/asaas";
+import { generateAsaasCobrar, asaasRequest, confirmarPagamentoAsaas } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
@@ -329,6 +329,10 @@ function AlunoDetalhes() {
       const resObj = res as { status: string; restante: number } | null;
       if (resObj?.status === "pago") {
         notifyPagamentoRecebido(selectedParcelaId, selectedParcelaValor, data.forma_pagamento);
+
+        // Confirmar no Asaas para parar cobranças automáticas
+        confirmarPagamentoAsaas(selectedParcelaId, data.valor_pago, data.data_pagamento);
+
 
         // Gera comissão automaticamente apenas na baixa TOTAL da Parcela 1
         try {
