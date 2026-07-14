@@ -13,6 +13,36 @@ export const generateAsaasCobrar = async (parcelaId: string, tipo: 'PIX' | 'BOLE
   return data;
 };
 
+/**
+ * Confirma no Asaas que a parcela foi paga em dinheiro/manualmente,
+ * fazendo o Asaas parar de enviar cobranças por email/SMS.
+ * Seguro chamar sempre após uma baixa: a edge function pula se não houver asaas_id.
+ */
+export const confirmarPagamentoAsaas = async (
+  parcelaId: string,
+  valor: number,
+  dataPagamento: string
+) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('asaas-cobrar', {
+      body: {
+        parcela_id: parcelaId,
+        action: 'receive_in_cash',
+        value: valor,
+        paymentDate: dataPagamento,
+      },
+    });
+    if (error) {
+      console.error('Erro ao confirmar pagamento no Asaas:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('Falha ao confirmar pagamento no Asaas:', err);
+    return null;
+  }
+};
+
 // Mantendo para compatibilidade ou se necessário para outras partes do sistema
 // Mas recomendando o uso da Edge Function asaas-cobrar
 export const asaasRequest = async (path: string, options: any = {}) => {
