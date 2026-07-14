@@ -593,7 +593,38 @@ function AlunoDetalhes() {
     if (p.status === 'parcial') return acc + (Number(p.valor) - Number((p as any).valor_pago_total || 0));
     return acc;
   }, 0) || 0;
-  const totalGeral = parcelas?.filter(p => p.status !== 'isento').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
+  const totalGeral = parcelas?.filter(p => p.status !== 'isento' && p.status !== 'cancelado').reduce((acc, p) => acc + Number(p.valor), 0) || 0;
+
+  const parcelasAtivas = parcelas?.filter(p => p.status !== 'cancelado') ?? [];
+  const parcelasCanceladas = parcelas?.filter(p => p.status === 'cancelado') ?? [];
+  const temAberto = (parcelas ?? []).some(p => p.status === 'aberto' || p.status === 'parcial');
+
+  const reativarCanceladas = useMutation({
+    mutationFn: async () => {
+      const { data: ms } = await supabase.from("matriculas").select("id").eq("aluno_id", id);
+      const matIds = (ms ?? []).map((m: any) => m.id);
+      if (!matIds.length) return;
+      const { error } = await supabase
+        .from("parcelas")
+        .update({ status: "aberto" as any })
+        .in("matricula_id", matIds)
+        .eq("status", "cancelado");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Condições anteriores reativadas.");
+      qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const irParaNovoPacote = async () => {
+    const { data: ms } = await supabase
+      .from("matriculas").select("id").eq("aluno_id", id)
+      .order("created_at", { ascending: false }).limit(1);
+    const matricula = ms && ms[0];
+    navigate({ to: "/alunos/novo", search: { aluno: id, matricula: matricula?.id, step: 2 } as any });
+  };
 
   const pacoteAluno = (() => {
     const p1 = parcelas?.find((p: any) => p.numero === 1 && p.tipo === 'parcela');
