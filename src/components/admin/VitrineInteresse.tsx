@@ -66,17 +66,11 @@ Responda essa mensagem que te explicamos tudo! 🚀`;
 async function enviarWhatsVitrine(telefone: string, mensagem: string) {
   let tel = (telefone || "").replace(/\D/g, "");
   if (!tel.startsWith("55")) tel = "55" + tel;
-  const response = await fetch(
-    "https://api.z-api.io/instances/3F4CC1DC22AB31BDE17ECE717FF40C71/token/E55BC981D8AA6846EAFEAEE4/send-text",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Client-Token": "F2ffd89a74df2440aad10b65315696d0eS",
-      },
-      body: JSON.stringify({ phone: tel, message: mensagem }),
-    },
-  );
+  const response = await fetch("/api/public/hooks/zapi-send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone: tel, message: mensagem }),
+  });
   return response.ok;
 }
 

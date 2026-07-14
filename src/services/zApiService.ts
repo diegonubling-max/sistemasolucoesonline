@@ -1,8 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const Z_API_BASE =
-  "https://api.z-api.io/instances/3F4CC1DC22AB31BDE17ECE717FF40C71/token/E55BC981D8AA6846EAFEAEE4";
-const Z_API_CLIENT_TOKEN = "F2ffd89a74df2440aad10b65315696d0eS";
+const ZAPI_SEND_ENDPOINT = "/api/public/hooks/zapi-send";
 
 export type ZapiTipoDisparo =
   | "boas_vindas"
@@ -111,15 +109,11 @@ export async function sendWhatsApp(
     return;
   }
   const phone = formatPhone(telefone);
-  const url = `${Z_API_BASE}/send-text`;
   const payload = { phone, message: mensagem };
   try {
-    const res = await fetch(url, {
+    const res = await fetch(ZAPI_SEND_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Client-Token": Z_API_CLIENT_TOKEN,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
     const text = await res.text();

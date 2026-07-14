@@ -36,6 +36,7 @@ import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.alu
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
+import { Route as ApiPublicHooksZapiSendRouteImport } from './routes/api/public/hooks/zapi-send'
 import { Route as ApiPublicHooksZapiJobsDiariosRouteImport } from './routes/api/public/hooks/zapi-jobs-diarios'
 import { Route as ApiPublicHooksWhatsappCobrancaRouteImport } from './routes/api/public/hooks/whatsapp-cobranca'
 import { Route as ApiPublicHooksLembreteProvaRouteImport } from './routes/api/public/hooks/lembrete-prova'
@@ -179,6 +180,11 @@ const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
   path: '/alunos/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksZapiSendRoute = ApiPublicHooksZapiSendRouteImport.update({
+  id: '/api/public/hooks/zapi-send',
+  path: '/api/public/hooks/zapi-send',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksZapiJobsDiariosRoute =
   ApiPublicHooksZapiJobsDiariosRouteImport.update({
     id: '/api/public/hooks/zapi-jobs-diarios',
@@ -264,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
+  '/api/public/hooks/zapi-send': typeof ApiPublicHooksZapiSendRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -300,6 +307,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
+  '/api/public/hooks/zapi-send': typeof ApiPublicHooksZapiSendRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRoutesById {
@@ -339,6 +347,7 @@ export interface FileRoutesById {
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
+  '/api/public/hooks/zapi-send': typeof ApiPublicHooksZapiSendRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -377,6 +386,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lembrete-prova'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
+    | '/api/public/hooks/zapi-send'
     | '/alunos/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lembrete-prova'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
+    | '/api/public/hooks/zapi-send'
     | '/alunos/$id'
   id:
     | '__root__'
@@ -451,6 +462,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/lembrete-prova'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
+    | '/api/public/hooks/zapi-send'
     | '/_admin/alunos/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   ApiPublicHooksLembreteProvaRoute: typeof ApiPublicHooksLembreteProvaRoute
   ApiPublicHooksWhatsappCobrancaRoute: typeof ApiPublicHooksWhatsappCobrancaRoute
   ApiPublicHooksZapiJobsDiariosRoute: typeof ApiPublicHooksZapiJobsDiariosRoute
+  ApiPublicHooksZapiSendRoute: typeof ApiPublicHooksZapiSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -657,6 +670,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/zapi-send': {
+      id: '/api/public/hooks/zapi-send'
+      path: '/api/public/hooks/zapi-send'
+      fullPath: '/api/public/hooks/zapi-send'
+      preLoaderRoute: typeof ApiPublicHooksZapiSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/zapi-jobs-diarios': {
       id: '/api/public/hooks/zapi-jobs-diarios'
       path: '/api/public/hooks/zapi-jobs-diarios'
@@ -816,6 +836,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksLembreteProvaRoute: ApiPublicHooksLembreteProvaRoute,
   ApiPublicHooksWhatsappCobrancaRoute: ApiPublicHooksWhatsappCobrancaRoute,
   ApiPublicHooksZapiJobsDiariosRoute: ApiPublicHooksZapiJobsDiariosRoute,
+  ApiPublicHooksZapiSendRoute: ApiPublicHooksZapiSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
