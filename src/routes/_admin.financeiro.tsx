@@ -337,6 +337,7 @@ function Financeiro() {
       const resObj = res as { status: string; restante: number } | null;
       if (resObj?.status === "pago") {
         notifyPagamentoRecebido(id, baixaModal?.valor || 0, data.forma_pagamento);
+        confirmarPagamentoAsaas(id, data.valor_pago, data.data_pagamento);
       }
       return { ...data, _result: resObj };
     },
