@@ -55,7 +55,7 @@ export function MatriculaFlow({
   const [selectedPacote, setSelectedPacote] = useState<string | null>(null);
   const [isNegociacaoPersonalizada, setIsNegociacaoPersonalizada] = useState(false);
   const [negociacao, setNegociacao] = useState({
-    formaPagamento: "carnê",
+    formaPagamento: "boleto",
     valorEntrada: 0,
     numeroParcelas: 1,
     valorParcela: 0,
@@ -274,7 +274,7 @@ export function MatriculaFlow({
       // Deriva forma_pagamento (nunca pode ficar NULL)
       const derivarFormaPagamento = (): string => {
         if (isNegociacaoPersonalizada) {
-          return (negociacao.formaPagamento || "carnê").toLowerCase();
+          return (negociacao.formaPagamento || "boleto").toLowerCase();
         }
         const tipo = ((currentPacote as any)?.tipo || "").toLowerCase();
         const nome = ((currentPacote as any)?.nome || "").toLowerCase();
