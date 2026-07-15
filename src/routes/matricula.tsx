@@ -147,7 +147,9 @@ function MatriculaPublicaPage() {
     if (dados.telefone.replace(/\D/g, "").length < 10) return "Telefone inválido";
     if (!isValidCPF(dados.cpf)) return "CPF inválido";
     if (!parseDateBR(dados.data_nascimento)) return "Data de nascimento inválida (use dd/mm/aaaa)";
+    if (dados.sexo !== "Masculino" && dados.sexo !== "Feminino") return "Selecione o sexo";
     return null;
+
   }
 
   const handleAvancar1 = () => {
