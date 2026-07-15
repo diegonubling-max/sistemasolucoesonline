@@ -81,7 +81,7 @@ export function MatriculaFlow({
   const [showEditor, setShowEditor] = useState(false);
   const [contractContent, setContractContent] = useState("");
   const [contractLink, setContractLink] = useState<string | null>(null);
-  const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
+  const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: string | number; nome?: string } | null>(null);
 
 
   const { data: modelos } = useQuery({
