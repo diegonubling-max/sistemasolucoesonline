@@ -210,15 +210,15 @@ function AlunoLogin() {
       return;
     }
 
-    const ctrInt = parseInt(ctr.trim());
-    if (isNaN(ctrInt)) {
+    const ctrKey = ctr.trim().toUpperCase();
+    if (!ctrKey) {
       toast.error("CTR inválido");
       return;
     }
 
     const { data: email, error: alunoError } = await supabase.rpc('buscar_email_por_ctr', {
-      p_ctr: ctrInt,
-    });
+      p_ctr: ctrKey,
+    } as any);
 
     if (alunoError || !email) {
       toast.error("CTR não encontrado");
