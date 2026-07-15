@@ -44,9 +44,16 @@ function PublicContractPage() {
 
     const aluno = contrato.alunos;
     
-    // Normalize values for comparison
-    const normInputNome = valNome.trim().toLowerCase();
-    const normDbNome = aluno.nome?.trim().toLowerCase();
+    // Normalize values for comparison (remove accents + collapse spaces)
+    const normalizeName = (name: string) =>
+      name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+    const normInputNome = normalizeName(valNome);
+    const normDbNome = normalizeName(aluno.nome || "");
     
     const normInputTel = valTelefone.replace(/\D/g, "");
     const normDbTel = (aluno.telefone || "").replace(/\D/g, "");
