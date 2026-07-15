@@ -75,14 +75,18 @@ function AlunoLogin() {
         return { externo: true } as any;
       }
 
-      const ctrKey = ctrValue.toUpperCase();
+      // CTR interno: apenas números
+      if (!/^\d+$/.test(ctrValue)) {
+        throw new Error('CTR inválido');
+      }
+      const ctrNum = parseInt(ctrValue, 10);
 
-      // 1. Buscar email do aluno pelo CTR (aceita texto: A0501, L0501 ou numérico)
+      // 1. Buscar email do aluno pelo CTR numérico
       const { data: email, error: alunoError } = await supabase.rpc('buscar_email_por_ctr', {
-        p_ctr: ctrKey,
-      } as any);
+        p_ctr: ctrNum,
+      });
 
-      console.log('[login aluno] CTR:', ctrKey, '→ email:', email, 'err:', alunoError);
+      console.log('[login aluno] CTR:', ctrNum, '→ email:', email, 'err:', alunoError);
 
       if (alunoError) throw new Error('Erro ao buscar aluno: ' + alunoError.message);
 
@@ -90,8 +94,7 @@ function AlunoLogin() {
         throw new Error('CTR inválido');
       }
 
-      // 2. Garantir que o usuário existe no Supabase Auth. p_ctr é metadata; usa 0 se não numérico.
-      const ctrNum = /^\d+$/.test(ctrKey) ? parseInt(ctrKey, 10) : 0;
+      // 2. Garantir que o usuário existe no Supabase Auth
       const { error: rpcError } = await supabase.rpc('criar_acesso_aluno', {
         p_email: email,
         p_senha: passwordValue,
