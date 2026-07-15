@@ -34,7 +34,9 @@ interface DadosAluno {
   telefone: string;
   cpf: string;
   data_nascimento: string; // dd/mm/aaaa
+  sexo: "" | "Masculino" | "Feminino";
 }
+
 
 interface Sucesso {
   ctr: string;
@@ -81,8 +83,9 @@ const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; valorParc: st
 function MatriculaPublicaPage() {
   const [step, setStep] = useState<Step>(1);
   const [dados, setDados] = useState<DadosAluno>({
-    nome: "", email: "", telefone: "", cpf: "", data_nascimento: "",
+    nome: "", email: "", telefone: "", cpf: "", data_nascimento: "", sexo: "",
   });
+
   const [forma, setForma] = useState<FormaPag | null>(null);
   const [aceito, setAceito] = useState(false);
   const [assinatura, setAssinatura] = useState("");
@@ -144,7 +147,9 @@ function MatriculaPublicaPage() {
     if (dados.telefone.replace(/\D/g, "").length < 10) return "Telefone inválido";
     if (!isValidCPF(dados.cpf)) return "CPF inválido";
     if (!parseDateBR(dados.data_nascimento)) return "Data de nascimento inválida (use dd/mm/aaaa)";
+    if (dados.sexo !== "Masculino" && dados.sexo !== "Feminino") return "Selecione o sexo";
     return null;
+
   }
 
   const handleAvancar1 = () => {
@@ -183,7 +188,9 @@ function MatriculaPublicaPage() {
         p_utm_content: utm.utm_content,
         p_contrato_html: contratoHtml || null,
         p_assinatura_nome: assinatura.trim() || null,
+        p_sexo: dados.sexo,
       });
+
 
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
@@ -328,6 +335,19 @@ function MatriculaPublicaPage() {
                       inputMode="numeric"
                     />
                   </div>
+                  <div>
+                    <Label>Sexo *</Label>
+                    <select
+                      value={dados.sexo}
+                      onChange={(e) => setDados({ ...dados, sexo: e.target.value as DadosAluno["sexo"] })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Feminino">Feminino</option>
+                    </select>
+                  </div>
+
                 </div>
                 <Button className="w-full" onClick={handleAvancar1}>Avançar</Button>
               </>
