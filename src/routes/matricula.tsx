@@ -188,7 +188,9 @@ function MatriculaPublicaPage() {
         p_utm_content: utm.utm_content,
         p_contrato_html: contratoHtml || null,
         p_assinatura_nome: assinatura.trim() || null,
+        p_sexo: dados.sexo,
       });
+
 
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
