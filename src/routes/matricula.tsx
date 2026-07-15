@@ -164,6 +164,8 @@ function MatriculaPublicaPage() {
         p_utm_medium: utm.utm_medium,
         p_utm_campaign: utm.utm_campaign,
         p_utm_content: utm.utm_content,
+        p_contrato_html: contratoHtml || null,
+        p_assinatura_nome: assinatura.trim() || null,
       });
 
       if (error) throw error;
@@ -178,17 +180,6 @@ function MatriculaPublicaPage() {
         return;
       }
 
-      // Registra contrato assinado
-      if (row.matricula_id && contratoHtml) {
-        await supabase.from("contratos").insert({
-          aluno_id: row.aluno_id,
-          matricula_id: row.matricula_id,
-          conteudo_html: contratoHtml,
-          status: "assinado",
-          data_assinatura: new Date().toISOString(),
-          nome_confirmacao: assinatura.trim(),
-        } as any);
-      }
 
       // Notifica equipe via Z-API
       const mensagem = `Nova matrícula de Aulão! 🎉🟠\n👤 Nome: ${dados.nome}\n📱 Telefone: ${dados.telefone}\n💳 Preferência: ${forma === "boleto" ? "Boleto" : "Cartão"}\n🔑 CTR: ${row.ctr}\n🔒 Senha: ${row.senha}\nEntrar em contato para alinhar pagamento.`;
