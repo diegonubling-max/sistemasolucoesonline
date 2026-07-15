@@ -741,7 +741,7 @@ export function MatriculaFlow({
                 const { error: erroAcesso } = await supabase.rpc('criar_acesso_aluno', {
                   p_email: finalEmail,
                   p_senha: senhaGerada,
-                  p_ctr: studentData.ctr
+                  p_ctr: Number(studentData.ctr)
                 });
 
                 if (erroAcesso) {
