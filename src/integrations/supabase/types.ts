@@ -2497,6 +2497,7 @@ export type Database = {
           senha: string
         }[]
       }
+      gerar_ctr_lancamento: { Args: never; Returns: string }
       get_contrato_publico: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
