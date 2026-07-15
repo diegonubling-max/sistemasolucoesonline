@@ -2419,28 +2419,53 @@ export type Database = {
               senha: string
             }[]
           }
-      criar_matricula_lancamento: {
-        Args: {
-          p_cpf: string
-          p_data_nascimento: string
-          p_email: string
-          p_forma_pagamento: string
-          p_nome: string
-          p_polo_id: string
-          p_telefone: string
-          p_utm_campaign?: string
-          p_utm_content?: string
-          p_utm_medium?: string
-          p_utm_source?: string
-        }
-        Returns: {
-          aluno_id: string
-          ctr: string
-          ja_existia: boolean
-          matricula_id: string
-          senha: string
-        }[]
-      }
+      criar_matricula_lancamento:
+        | {
+            Args: {
+              p_cpf: string
+              p_data_nascimento: string
+              p_email: string
+              p_forma_pagamento: string
+              p_nome: string
+              p_polo_id: string
+              p_telefone: string
+              p_utm_campaign?: string
+              p_utm_content?: string
+              p_utm_medium?: string
+              p_utm_source?: string
+            }
+            Returns: {
+              aluno_id: string
+              ctr: string
+              ja_existia: boolean
+              matricula_id: string
+              senha: string
+            }[]
+          }
+        | {
+            Args: {
+              p_assinatura_nome?: string
+              p_contrato_html?: string
+              p_cpf: string
+              p_data_nascimento: string
+              p_email: string
+              p_forma_pagamento: string
+              p_nome: string
+              p_polo_id: string
+              p_telefone: string
+              p_utm_campaign?: string
+              p_utm_content?: string
+              p_utm_medium?: string
+              p_utm_source?: string
+            }
+            Returns: {
+              aluno_id: string
+              ctr: string
+              ja_existia: boolean
+              matricula_id: string
+              senha: string
+            }[]
+          }
       delete_aluno_completo: {
         Args: { p_aluno_id: string }
         Returns: undefined
