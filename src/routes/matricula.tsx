@@ -26,14 +26,14 @@ export const Route = createFileRoute("/matricula")({
 });
 
 type Step = 1 | 2 | 3;
-type FormaPag = "boleto" | "cartao";
+type FormaPag = "boleto" | "cartao" | "pix";
 
 interface DadosAluno {
   nome: string;
   email: string;
   telefone: string;
   cpf: string;
-  data_nascimento: string;
+  data_nascimento: string; // dd/mm/aaaa
 }
 
 interface Sucesso {
@@ -53,14 +53,35 @@ function getUtm() {
   };
 }
 
+function maskDate(value: string) {
+  const d = value.replace(/\D/g, "").slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
+
+function parseDateBR(value: string): string | null {
+  const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  const [, dd, mm, yyyy] = m;
+  const day = Number(dd), month = Number(mm), year = Number(yyyy);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  if (year < 1900 || year > new Date().getFullYear()) return null;
+  const d = new Date(year, month - 1, day);
+  if (d.getDate() !== day || d.getMonth() !== month - 1) return null;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; valorParc: string; total: string }> = {
+  boleto: { entrada: "69,90", qtdParc: "10", valorParc: "159,90", total: "1.668,90" },
+  cartao: { entrada: "69,90", qtdParc: "12", valorParc: "119,90", total: "1.508,70" },
+  pix:    { entrada: "69,90", qtdParc: "0",  valorParc: "1.198,00", total: "1.267,90" },
+};
+
 function MatriculaPublicaPage() {
   const [step, setStep] = useState<Step>(1);
   const [dados, setDados] = useState<DadosAluno>({
-    nome: "",
-    email: "",
-    telefone: "",
-    cpf: "",
-    data_nascimento: "",
+    nome: "", email: "", telefone: "", cpf: "", data_nascimento: "",
   });
   const [forma, setForma] = useState<FormaPag | null>(null);
   const [aceito, setAceito] = useState(false);
@@ -83,23 +104,25 @@ function MatriculaPublicaPage() {
     enabled: step === 3,
   });
 
+  const dataISO = useMemo(() => parseDateBR(dados.data_nascimento), [dados.data_nascimento]);
+
   const contratoHtml = useMemo(() => {
-    if (!modelo?.conteudo_html) return "";
+    if (!modelo?.conteudo_html || !forma) return "";
+    const plano = PLANOS[forma];
+    const formaLabel = forma === "boleto" ? "Boleto Bancário" : forma === "cartao" ? "Cartão de Crédito" : "À Vista (PIX)";
     let html = modelo.conteudo_html;
     const variables: Record<string, string> = {
       "[NOME_ALUNO]": dados.nome,
       "[CPF_ALUNO]": dados.cpf,
       "[EMAIL_ALUNO]": dados.email,
       "[TELEFONE_ALUNO]": dados.telefone,
-      "[DATA_NASCIMENTO]": dados.data_nascimento
-        ? format(new Date(dados.data_nascimento + "T00:00:00"), "dd/MM/yyyy")
-        : "",
+      "[DATA_NASCIMENTO]": dataISO ? format(new Date(dataISO + "T00:00:00"), "dd/MM/yyyy") : dados.data_nascimento,
       "[PACOTE_NOME]": "Aulão - Lançamento",
-      "[FORMA_PAGAMENTO]": forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito",
-      "[VALOR_ENTRADA]": forma === "boleto" ? "R$ 199,90" : "R$ 0,00",
-      "[VALOR_PARCELA]": forma === "boleto" ? "R$ 159,90" : "R$ 99,90",
-      "[NUMERO_PARCELAS]": forma === "boleto" ? "9" : "12",
-      "[VALOR_TOTAL]": forma === "boleto" ? "R$ 1.638,00" : "R$ 1.198,80",
+      "[FORMA_PAGAMENTO]": formaLabel,
+      "[VALOR_ENTRADA]": `R$ ${plano.entrada}`,
+      "[VALOR_PARCELA]": `R$ ${plano.valorParc}`,
+      "[NUMERO_PARCELAS]": plano.qtdParc,
+      "[VALOR_TOTAL]": `R$ ${plano.total}`,
       "[DATA_MATRICULA]": format(new Date(), "dd/MM/yyyy"),
       "[NOME_ESCOLA]": "Soluções Online",
       "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy"),
@@ -109,8 +132,10 @@ function MatriculaPublicaPage() {
     Object.entries(variables).forEach(([k, v]) => {
       html = html.replaceAll(k, v);
     });
+    // remove eventual "R$ R$" duplicado do template
+    html = html.replace(/R\$\s*R\$\s*/g, "R$ ");
     return html;
-  }, [modelo, dados, forma]);
+  }, [modelo, dados, forma, dataISO]);
 
   function validarStep1(): string | null {
     if (!dados.nome.trim() || dados.nome.trim().split(/\s+/).length < 2)
@@ -118,36 +143,28 @@ function MatriculaPublicaPage() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dados.email)) return "E-mail inválido";
     if (dados.telefone.replace(/\D/g, "").length < 10) return "Telefone inválido";
     if (!isValidCPF(dados.cpf)) return "CPF inválido";
-    if (!dados.data_nascimento) return "Data de nascimento obrigatória";
+    if (!parseDateBR(dados.data_nascimento)) return "Data de nascimento inválida (use dd/mm/aaaa)";
     return null;
   }
 
   const handleAvancar1 = () => {
     const err = validarStep1();
-    if (err) {
-      toast.error(err);
-      return;
-    }
+    if (err) { toast.error(err); return; }
     setStep(2);
   };
 
   const handleAvancar2 = () => {
-    if (!forma) {
-      toast.error("Selecione uma forma de pagamento");
-      return;
-    }
+    if (!forma) { toast.error("Selecione uma forma de pagamento"); return; }
     setStep(3);
   };
 
   const handleSubmit = async () => {
-    if (!aceito) {
-      toast.error("Aceite o contrato para continuar");
-      return;
-    }
+    if (!aceito) { toast.error("Aceite o contrato para continuar"); return; }
     if (assinatura.trim().toLowerCase() !== dados.nome.trim().toLowerCase()) {
       toast.error("Digite seu nome completo exatamente como no cadastro");
       return;
     }
+    if (!dataISO) { toast.error("Data de nascimento inválida"); return; }
 
     setEnviando(true);
     try {
@@ -157,7 +174,7 @@ function MatriculaPublicaPage() {
         p_email: dados.email.trim().toLowerCase(),
         p_telefone: dados.telefone,
         p_cpf: dados.cpf,
-        p_data_nascimento: dados.data_nascimento,
+        p_data_nascimento: dataISO,
         p_forma_pagamento: forma,
         p_polo_id: POLO_ID_FLORIPA,
         p_utm_source: utm.utm_source,
@@ -173,16 +190,13 @@ function MatriculaPublicaPage() {
       if (!row) throw new Error("Resposta vazia do servidor");
 
       if (row.ja_existia) {
-        toast.error("Você já possui matrícula! Use seu CTR e senha para acessar.", {
-          duration: 8000,
-        });
+        toast.error("Você já possui matrícula! Use seu CTR e senha para acessar.", { duration: 8000 });
         setEnviando(false);
         return;
       }
 
-
-      // Notifica equipe via Z-API
-      const mensagem = `Nova matrícula de Aulão! 🎉🟠\n👤 Nome: ${dados.nome}\n📱 Telefone: ${dados.telefone}\n💳 Preferência: ${forma === "boleto" ? "Boleto" : "Cartão"}\n🔑 CTR: ${row.ctr}\n🔒 Senha: ${row.senha}\nEntrar em contato para alinhar pagamento.`;
+      const formaTxt = forma === "boleto" ? "Boleto" : forma === "cartao" ? "Cartão" : "À Vista (PIX)";
+      const mensagem = `Nova matrícula de Aulão! 🎉🟠\n👤 Nome: ${dados.nome}\n📱 Telefone: ${dados.telefone}\n💳 Preferência: ${formaTxt}\n🔑 CTR: ${row.ctr}\n🔒 Senha: ${row.senha}\nEntrar em contato para alinhar pagamento.`;
       try {
         await fetch("/api/public/hooks/zapi-send", {
           method: "POST",
@@ -219,12 +233,8 @@ function MatriculaPublicaPage() {
             <h1 className="text-2xl font-bold">Matrícula realizada com sucesso!</h1>
             <p className="text-muted-foreground">Seus dados de acesso:</p>
             <div className="bg-gray-50 border rounded-lg p-4 text-left space-y-1">
-              <p>
-                <strong>CTR:</strong> {sucesso.ctr}
-              </p>
-              <p>
-                <strong>Senha:</strong> {sucesso.senha}
-              </p>
+              <p><strong>CTR:</strong> {sucesso.ctr}</p>
+              <p><strong>Senha:</strong> {sucesso.senha}</p>
             </div>
             <p className="text-sm text-muted-foreground">
               Nossa equipe entrará em contato pelo WhatsApp para alinhar o pagamento.
@@ -249,17 +259,21 @@ function MatriculaPublicaPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white px-4 py-6 md:py-10">
       <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Soluções Online</h1>
-          <p className="text-muted-foreground mt-1">Matrícula do Aulão</p>
+        {/* Banner container — substituir por imagem depois */}
+        <div
+          id="matricula-banner"
+          className="mb-6 rounded-lg border-2 border-dashed border-orange-300 bg-white/60 flex items-center justify-center text-center px-4 py-8"
+          style={{ minHeight: 120 }}
+        >
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Soluções Online</h1>
+            <p className="text-muted-foreground mt-1">Matrícula do Aulão</p>
+          </div>
         </div>
 
         <div className="flex justify-center gap-2 mb-6">
           {[1, 2, 3].map((n) => (
-            <div
-              key={n}
-              className={`h-2 w-16 rounded-full ${step >= n ? "bg-orange-500" : "bg-gray-200"}`}
-            />
+            <div key={n} className={`h-2 w-16 rounded-full ${step >= n ? "bg-orange-500" : "bg-gray-200"}`} />
           ))}
         </div>
 
@@ -291,9 +305,7 @@ function MatriculaPublicaPage() {
                     <Label>Telefone (com DDD) *</Label>
                     <Input
                       value={dados.telefone}
-                      onChange={(e) =>
-                        setDados({ ...dados, telefone: maskPhone(e.target.value) })
-                      }
+                      onChange={(e) => setDados({ ...dados, telefone: maskPhone(e.target.value) })}
                       placeholder="(48) 99999-9999"
                       inputMode="tel"
                     />
@@ -308,19 +320,16 @@ function MatriculaPublicaPage() {
                     />
                   </div>
                   <div>
-                    <Label>Data de nascimento *</Label>
+                    <Label>Data de nascimento (dd/mm/aaaa) *</Label>
                     <Input
-                      type="date"
                       value={dados.data_nascimento}
-                      onChange={(e) =>
-                        setDados({ ...dados, data_nascimento: e.target.value })
-                      }
+                      onChange={(e) => setDados({ ...dados, data_nascimento: maskDate(e.target.value) })}
+                      placeholder="15/03/1990"
+                      inputMode="numeric"
                     />
                   </div>
                 </div>
-                <Button className="w-full" onClick={handleAvancar1}>
-                  Avançar
-                </Button>
+                <Button className="w-full" onClick={handleAvancar1}>Avançar</Button>
               </>
             )}
 
@@ -328,10 +337,9 @@ function MatriculaPublicaPage() {
               <>
                 <h2 className="text-xl font-semibold">Forma de pagamento</h2>
                 <p className="text-sm text-muted-foreground">
-                  Como prefere pagar? Nossa equipe entrará em contato para alinhar as
-                  condições.
+                  Como prefere pagar? Nossa equipe entrará em contato para alinhar as condições.
                 </p>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className="grid gap-3">
                   <button
                     type="button"
                     onClick={() => setForma("boleto")}
@@ -339,7 +347,7 @@ function MatriculaPublicaPage() {
                   >
                     <div className="text-3xl mb-1">📄</div>
                     <div className="font-semibold">Boleto Bancário</div>
-                    <div className="text-sm text-muted-foreground">Parcelado em até 10x</div>
+                    <div className="text-sm text-muted-foreground">1 + 9 parcelas de R$ 159,90</div>
                   </button>
                   <button
                     type="button"
@@ -348,16 +356,21 @@ function MatriculaPublicaPage() {
                   >
                     <div className="text-3xl mb-1">💳</div>
                     <div className="font-semibold">Cartão de Crédito</div>
-                    <div className="text-sm text-muted-foreground">Parcelado em até 12x</div>
+                    <div className="text-sm text-muted-foreground">12x de R$ 119,90</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForma("pix")}
+                    className={`border rounded-lg p-4 text-left transition ${forma === "pix" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <div className="text-3xl mb-1">💰</div>
+                    <div className="font-semibold">À Vista (PIX)</div>
+                    <div className="text-sm text-muted-foreground">R$ 1.198,00</div>
                   </button>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                    Voltar
-                  </Button>
-                  <Button onClick={handleAvancar2} className="flex-1">
-                    Avançar
-                  </Button>
+                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Voltar</Button>
+                  <Button onClick={handleAvancar2} className="flex-1">Avançar</Button>
                 </div>
               </>
             )}
@@ -367,16 +380,10 @@ function MatriculaPublicaPage() {
                 <h2 className="text-xl font-semibold">Contrato de Matrícula</h2>
                 <div
                   className="border rounded max-h-80 overflow-y-auto p-4 text-sm bg-gray-50 prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html: contratoHtml || "<p>Carregando contrato...</p>",
-                  }}
+                  dangerouslySetInnerHTML={{ __html: contratoHtml || "<p>Carregando contrato...</p>" }}
                 />
                 <div className="flex items-start gap-2">
-                  <Checkbox
-                    id="aceito"
-                    checked={aceito}
-                    onCheckedChange={(v) => setAceito(!!v)}
-                  />
+                  <Checkbox id="aceito" checked={aceito} onCheckedChange={(v) => setAceito(!!v)} />
                   <Label htmlFor="aceito" className="text-sm leading-tight">
                     Li e aceito todas as cláusulas do contrato
                   </Label>
@@ -390,26 +397,13 @@ function MatriculaPublicaPage() {
                   />
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep(2)}
-                    className="flex-1"
-                    disabled={enviando}
-                  >
-                    Voltar
-                  </Button>
+                  <Button variant="outline" onClick={() => setStep(2)} className="flex-1" disabled={enviando}>Voltar</Button>
                   <Button
                     onClick={handleSubmit}
                     disabled={enviando}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                   >
-                    {enviando ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...
-                      </>
-                    ) : (
-                      <>✅ Realizar Matrícula</>
-                    )}
+                    {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>✅ Realizar Matrícula</>)}
                   </Button>
                 </div>
               </>
