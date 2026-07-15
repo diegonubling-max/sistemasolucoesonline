@@ -315,6 +315,8 @@ function AlunosList() {
                         aria-label={a.ativo ? "Ativo" : "Inativo"}
                       />
                       <span>{a.nome}</span>
+                      <OrigemBadge origem={(a as any).origem} />
+
                       {Array.isArray((a as any).cursos_vitrine) && (a as any).cursos_vitrine.length > 0 && (
                         <ShoppingBag className="h-3.5 w-3.5 text-green-600" aria-label="Possui cursos na vitrine">
                           <title>Possui cursos na vitrine</title>
