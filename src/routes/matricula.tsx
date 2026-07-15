@@ -266,16 +266,13 @@ function MatriculaPublicaPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white px-4 py-6 md:py-10">
       <div className="max-w-2xl mx-auto">
-        {/* Banner container — substituir por imagem depois */}
+        {/* Banner container — substituir por imagem depois (1080x600) */}
         <div
           id="matricula-banner"
-          className="mb-6 rounded-lg border-2 border-dashed border-orange-300 bg-white/60 flex items-center justify-center text-center px-4 py-8"
-          style={{ minHeight: 120 }}
+          className="mb-6 w-full rounded-lg border-2 border-dashed border-gray-400 flex items-center justify-center text-center px-4 h-[200px] md:h-[300px]"
+          style={{ backgroundColor: "#f0f0f0" }}
         >
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Soluções Online</h1>
-            <p className="text-muted-foreground mt-1">Matrícula do Aulão</p>
-          </div>
+          <span className="text-gray-600 font-medium">Banner do Aulão (1080x600)</span>
         </div>
 
         <div className="flex justify-center gap-2 mb-6">
