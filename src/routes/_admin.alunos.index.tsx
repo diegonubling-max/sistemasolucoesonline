@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusAlunoBadge, STATUS_LIST, STATUS_CONFIG } from "@/lib/aluno-status";
+import { OrigemBadge } from "@/components/OrigemBadge";
 
 
 export const Route = createFileRoute("/_admin/alunos/")({
@@ -51,7 +52,7 @@ function AlunosList() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [origemFilter, setOrigemFilter] = useState<string>("all");
   const [ativoFilter, setAtivoFilter] = useState<string>("all");
-  const ORIGENS = ["Google", "Meta", "Indicação", "Outros"];
+  const ORIGENS = ["Google", "Meta", "Indicação", "Outros", "Lançamento"];
 
   const [selectedPoloId, setSelectedPoloId] = useState<string>(() => sessionStorage.getItem("selected_polo_id") || "all");
 
@@ -131,7 +132,7 @@ function AlunosList() {
 
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, cadastro_completo, matriculas(id), contratos(id, status), cursos_vitrine(id)", { count: "exact" })
+        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, origem, cadastro_completo, matriculas(id), contratos(id, status), cursos_vitrine(id)", { count: "exact" })
         .order("created_at", { ascending: false });
 
       if (statusFilter !== "all") {
@@ -314,6 +315,8 @@ function AlunosList() {
                         aria-label={a.ativo ? "Ativo" : "Inativo"}
                       />
                       <span>{a.nome}</span>
+                      <OrigemBadge origem={(a as any).origem} />
+
                       {Array.isArray((a as any).cursos_vitrine) && (a as any).cursos_vitrine.length > 0 && (
                         <ShoppingBag className="h-3.5 w-3.5 text-green-600" aria-label="Possui cursos na vitrine">
                           <title>Possui cursos na vitrine</title>

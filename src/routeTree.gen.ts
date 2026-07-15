@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MatriculaRouteImport } from './routes/matricula'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as StudentRouteImport } from './routes/_student'
 import { Route as AdminRouteImport } from './routes/_admin'
@@ -47,6 +48,11 @@ import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.
 import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
 import { Route as AdminAlunosIdEditarRouteImport } from './routes/_admin.alunos.$id.editar'
 
+const MatriculaRoute = MatriculaRouteImport.update({
+  id: '/matricula',
+  path: '/matricula',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -239,6 +245,7 @@ const AdminAlunosIdEditarRoute = AdminAlunosIdEditarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/matricula': typeof MatriculaRoute
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/documentacao': typeof AdminDocumentacaoRoute
@@ -276,6 +283,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/matricula': typeof MatriculaRoute
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/documentacao': typeof AdminDocumentacaoRoute
@@ -315,6 +323,7 @@ export interface FileRoutesById {
   '/_admin': typeof AdminRouteWithChildren
   '/_student': typeof StudentRouteWithChildren
   '/login': typeof LoginRoute
+  '/matricula': typeof MatriculaRoute
   '/_admin/colaboradores': typeof AdminColaboradoresRoute
   '/_admin/configuracoes': typeof AdminConfiguracoesRoute
   '/_admin/documentacao': typeof AdminDocumentacaoRoute
@@ -355,6 +364,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/matricula'
     | '/colaboradores'
     | '/configuracoes'
     | '/documentacao'
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/matricula'
     | '/colaboradores'
     | '/configuracoes'
     | '/documentacao'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/_admin'
     | '/_student'
     | '/login'
+    | '/matricula'
     | '/_admin/colaboradores'
     | '/_admin/configuracoes'
     | '/_admin/documentacao'
@@ -470,6 +482,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   StudentRoute: typeof StudentRouteWithChildren
   LoginRoute: typeof LoginRoute
+  MatriculaRoute: typeof MatriculaRoute
   AlunoLoginRoute: typeof AlunoLoginRoute
   ContratoTokenRoute: typeof ContratoTokenRoute
   ExternoProvaRoute: typeof ExternoProvaRoute
@@ -481,6 +494,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/matricula': {
+      id: '/matricula'
+      path: '/matricula'
+      fullPath: '/matricula'
+      preLoaderRoute: typeof MatriculaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -830,6 +850,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   StudentRoute: StudentRouteWithChildren,
   LoginRoute: LoginRoute,
+  MatriculaRoute: MatriculaRoute,
   AlunoLoginRoute: AlunoLoginRoute,
   ContratoTokenRoute: ContratoTokenRoute,
   ExternoProvaRoute: ExternoProvaRoute,
@@ -841,13 +862,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

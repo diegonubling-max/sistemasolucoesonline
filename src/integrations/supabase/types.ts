@@ -250,6 +250,7 @@ export type Database = {
           cpf: string
           created_at: string
           ctr: number
+          ctr_lancamento: string | null
           data_liberacao_prova: string | null
           data_nascimento: string | null
           dias_prova_final: number | null
@@ -286,6 +287,7 @@ export type Database = {
           cpf: string
           created_at?: string
           ctr?: number
+          ctr_lancamento?: string | null
           data_liberacao_prova?: string | null
           data_nascimento?: string | null
           dias_prova_final?: number | null
@@ -322,6 +324,7 @@ export type Database = {
           cpf?: string
           created_at?: string
           ctr?: number
+          ctr_lancamento?: string | null
           data_liberacao_prova?: string | null
           data_nascimento?: string | null
           dias_prova_final?: number | null
@@ -1324,6 +1327,10 @@ export type Database = {
           id: string
           observacao: string | null
           polo_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
         }
         Insert: {
           aluno_id: string
@@ -1332,6 +1339,10 @@ export type Database = {
           id?: string
           observacao?: string | null
           polo_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Update: {
           aluno_id?: string
@@ -1340,6 +1351,10 @@ export type Database = {
           id?: string
           observacao?: string | null
           polo_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Relationships: [
           {
@@ -2404,6 +2419,53 @@ export type Database = {
               senha: string
             }[]
           }
+      criar_matricula_lancamento:
+        | {
+            Args: {
+              p_cpf: string
+              p_data_nascimento: string
+              p_email: string
+              p_forma_pagamento: string
+              p_nome: string
+              p_polo_id: string
+              p_telefone: string
+              p_utm_campaign?: string
+              p_utm_content?: string
+              p_utm_medium?: string
+              p_utm_source?: string
+            }
+            Returns: {
+              aluno_id: string
+              ctr: string
+              ja_existia: boolean
+              matricula_id: string
+              senha: string
+            }[]
+          }
+        | {
+            Args: {
+              p_assinatura_nome?: string
+              p_contrato_html?: string
+              p_cpf: string
+              p_data_nascimento: string
+              p_email: string
+              p_forma_pagamento: string
+              p_nome: string
+              p_polo_id: string
+              p_telefone: string
+              p_utm_campaign?: string
+              p_utm_content?: string
+              p_utm_medium?: string
+              p_utm_source?: string
+            }
+            Returns: {
+              aluno_id: string
+              ctr: string
+              ja_existia: boolean
+              matricula_id: string
+              senha: string
+            }[]
+          }
       delete_aluno_completo: {
         Args: { p_aluno_id: string }
         Returns: undefined
@@ -2501,7 +2563,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "aluno"
-      origem_aluno: "Google" | "Meta" | "Indicação" | "Outros"
+      origem_aluno: "Google" | "Meta" | "Indicação" | "Outros" | "Lançamento"
       payment_status: "aberto" | "pago" | "isento" | "parcial" | "cancelado"
       payment_type: "taxa_matricula" | "parcela"
       sexo_aluno: "Masculino" | "Feminino"
@@ -2634,7 +2696,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "aluno"],
-      origem_aluno: ["Google", "Meta", "Indicação", "Outros"],
+      origem_aluno: ["Google", "Meta", "Indicação", "Outros", "Lançamento"],
       payment_status: ["aberto", "pago", "isento", "parcial", "cancelado"],
       payment_type: ["taxa_matricula", "parcela"],
       sexo_aluno: ["Masculino", "Feminino"],
