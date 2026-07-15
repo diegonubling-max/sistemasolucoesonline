@@ -34,7 +34,9 @@ interface DadosAluno {
   telefone: string;
   cpf: string;
   data_nascimento: string; // dd/mm/aaaa
+  sexo: "" | "Masculino" | "Feminino";
 }
+
 
 interface Sucesso {
   ctr: string;
