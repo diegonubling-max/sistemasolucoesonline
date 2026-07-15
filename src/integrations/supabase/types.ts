@@ -249,7 +249,7 @@ export type Database = {
           colaborador_id: string | null
           cpf: string
           created_at: string
-          ctr: number
+          ctr: string
           ctr_lancamento: string | null
           data_liberacao_prova: string | null
           data_nascimento: string | null
@@ -286,7 +286,7 @@ export type Database = {
           colaborador_id?: string | null
           cpf: string
           created_at?: string
-          ctr?: number
+          ctr?: string
           ctr_lancamento?: string | null
           data_liberacao_prova?: string | null
           data_nascimento?: string | null
@@ -323,7 +323,7 @@ export type Database = {
           colaborador_id?: string | null
           cpf?: string
           created_at?: string
-          ctr?: number
+          ctr?: string
           ctr_lancamento?: string | null
           data_liberacao_prova?: string | null
           data_nascimento?: string | null
@@ -2337,7 +2337,7 @@ export type Database = {
         Row: {
           aluno_id: string | null
           aluno_nome: string | null
-          ctr: number | null
+          ctr: string | null
           data_pagamento: string | null
           descricao: string | null
           forma_pagamento: string | null

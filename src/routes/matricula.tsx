@@ -77,7 +77,7 @@ function parseDateBR(value: string): string | null {
 const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; valorParc: string; total: string }> = {
   boleto: { entrada: "69,90", qtdParc: "10", valorParc: "159,90", total: "1.668,90" },
   cartao: { entrada: "69,90", qtdParc: "12", valorParc: "119,90", total: "1.508,70" },
-  pix:    { entrada: "69,90", qtdParc: "0",  valorParc: "1.198,00", total: "1.267,90" },
+  pix:    { entrada: "69,90", qtdParc: "1",  valorParc: "1.198,00", total: "1.267,90" },
 };
 
 function MatriculaPublicaPage() {

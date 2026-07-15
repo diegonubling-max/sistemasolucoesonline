@@ -81,7 +81,7 @@ export function MatriculaFlow({
   const [showEditor, setShowEditor] = useState(false);
   const [contractContent, setContractContent] = useState("");
   const [contractLink, setContractLink] = useState<string | null>(null);
-  const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: number; nome?: string } | null>(null);
+  const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: string | number; nome?: string } | null>(null);
 
 
   const { data: modelos } = useQuery({
@@ -741,7 +741,7 @@ export function MatriculaFlow({
                 const { error: erroAcesso } = await supabase.rpc('criar_acesso_aluno', {
                   p_email: finalEmail,
                   p_senha: senhaGerada,
-                  p_ctr: studentData.ctr
+                  p_ctr: Number(studentData.ctr)
                 });
 
                 if (erroAcesso) {

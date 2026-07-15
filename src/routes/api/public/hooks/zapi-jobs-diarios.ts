@@ -87,7 +87,7 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
         );
 
         const alunosGrupo = (alunos ?? [])
-          .filter((a) => alunoNoGrupo(a.ctr, grupo))
+          .filter((a) => alunoNoGrupo(a.ctr == null ? null : Number(a.ctr), grupo))
           .filter((a) => !ctrsFinalizados.has(Number(a.ctr)));
 
         // Disparos já registrados deste grupo
