@@ -1,0 +1,1 @@
+GRANT SELECT ON public.modelos_contrato TO anon;
