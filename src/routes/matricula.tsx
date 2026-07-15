@@ -83,8 +83,9 @@ const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; valorParc: st
 function MatriculaPublicaPage() {
   const [step, setStep] = useState<Step>(1);
   const [dados, setDados] = useState<DadosAluno>({
-    nome: "", email: "", telefone: "", cpf: "", data_nascimento: "",
+    nome: "", email: "", telefone: "", cpf: "", data_nascimento: "", sexo: "",
   });
+
   const [forma, setForma] = useState<FormaPag | null>(null);
   const [aceito, setAceito] = useState(false);
   const [assinatura, setAssinatura] = useState("");
