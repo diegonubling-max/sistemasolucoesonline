@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusAlunoBadge, STATUS_LIST, STATUS_CONFIG } from "@/lib/aluno-status";
+import { OrigemBadge } from "@/components/OrigemBadge";
 
 
 export const Route = createFileRoute("/_admin/alunos/")({
