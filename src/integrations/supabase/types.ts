@@ -2375,7 +2375,19 @@ export type Database = {
         Args: { p_ip: string; p_nome: string; p_token: string }
         Returns: undefined
       }
-      buscar_email_por_ctr: { Args: { p_ctr: number }; Returns: string }
+      buscar_email_por_ctr:
+        | {
+            Args: { p_ctr: number }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.buscar_email_por_ctr(p_ctr => int4), public.buscar_email_por_ctr(p_ctr => text). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+        | {
+            Args: { p_ctr: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.buscar_email_por_ctr(p_ctr => int4), public.buscar_email_por_ctr(p_ctr => text). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
       calc_nivel_milhas: { Args: { p_pontos: number }; Returns: string }
       check_7_dias_login_milhas: {
         Args: { p_aluno_id: string }
