@@ -335,6 +335,19 @@ function MatriculaPublicaPage() {
                       inputMode="numeric"
                     />
                   </div>
+                  <div>
+                    <Label>Sexo *</Label>
+                    <select
+                      value={dados.sexo}
+                      onChange={(e) => setDados({ ...dados, sexo: e.target.value as DadosAluno["sexo"] })}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Feminino">Feminino</option>
+                    </select>
+                  </div>
+
                 </div>
                 <Button className="w-full" onClick={handleAvancar1}>Avançar</Button>
               </>
