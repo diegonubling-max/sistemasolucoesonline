@@ -1,0 +1,461 @@
+# 03 — DATABASE
+
+## Supabase Project
+- **Project ID:** qohvseedougwymxjhbgi
+- **URL:** https://qohvseedougwymxjhbgi.supabase.co
+- **Região:** East US (North Virginia) — us-east-1
+- **Plano:** Free
+
+## Enums
+
+### payment_status
+```sql
+'aberto' | 'pago' | 'isento' | 'parcial' | 'cancelado'
+```
+
+### sexo_aluno
+```sql
+'Masculino' | 'Feminino'
+```
+
+### origem_aluno
+```sql
+'Google' | 'Meta' | 'Indicação' | 'Outros' | 'Lançamento'
+```
+
+## Sequences
+
+| Sequence | Start | Uso |
+|----------|-------|-----|
+| alunos_ctr_seq | 1745 | CTR dos alunos regulares |
+| ctr_externo_seq | 1 | CTR dos alunos externos (P001, P002...) |
+| ctr_lancamento_seq | 501 | Reservado (não usado atualmente — aulão usa CTR normal) |
+| parcelas_numero_seq | 5080 | Numeração sequencial das parcelas |
+
+## Tabelas
+
+---
+
+### polos
+**Objetivo:** Unidades/filiais da escola
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| nome | text | Nome do polo |
+| ativo | boolean | Se está ativo |
+| created_at | timestamptz | Data de criação |
+
+**Polo Matriz:** Florianópolis — ID fixo: `32671c78-9076-4f88-8161-bfd5ee8e866b`
+
+---
+
+### segmentos
+**Objetivo:** Categorias dos cursos vitrine
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| nome | text | Nome (Saúde, Tecnologia, Gestão, Beleza, Construção, Diversos) |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### colaboradores
+**Objetivo:** Funcionários (vendedoras, administrativo, setor de provas)
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| nome | text | Nome completo |
+| email | text | Email |
+| telefone | text | Telefone |
+| setor | text | Vendedor, Administrativo, Setor de Provas |
+| polo_id | uuid FK→polos | Polo vinculado |
+| ativo | boolean | Se está ativo (false = bloqueia login) |
+| senha | text | Senha de acesso |
+| comissao_avista | decimal(10,2) | Valor comissão avista (default 120) |
+| comissao_parcelado | decimal(10,2) | Valor comissão parcelado (default 50) |
+| created_at | timestamptz | Data de criação |
+
+**Regra:** Colaboradores inativos não aparecem nos selects de vendedora ao criar matrícula, mas aparecem em filtros históricos com "(inativa)".
+
+---
+
+### alunos
+**Objetivo:** Alunos matriculados (regulares e de aulão)
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| nome | text | Nome completo |
+| email | text | Email |
+| telefone | text | Telefone com DDD |
+| cpf | text | CPF com máscara |
+| data_nascimento | date | Data de nascimento |
+| sexo | sexo_aluno | Masculino ou Feminino |
+| ctr | integer | Código do aluno (gerado por sequence + trigger) |
+| senha | text | Senha (1234 + primeiro nome) |
+| polo_id | uuid FK→polos | Polo vinculado |
+| ativo | boolean | Se está ativo |
+| status | text | 'ativo' ou 'inativo' (sincronizado com `ativo`) |
+| origem | origem_aluno | Canal de aquisição |
+| foto_url | text | URL da foto |
+| created_at | timestamptz | Data de criação |
+
+**Triggers:** `trg_ajustar_ctr` (pula CTRs terminados em 13), `trg_ao_inativar_aluno` (cancela parcelas e pós-vendas ao inativar)
+
+**Regras:**
+- Campos `ativo` e `status` devem ser atualizados JUNTOS
+- Alunos de aulão: `origem = 'Lançamento'`, badge 🟠 Aulão
+- Alunos inativos: badge 🔴 vermelho suave
+
+---
+
+### matriculas
+**Objetivo:** Vínculo aluno-escola com dados do contrato
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| aluno_id | uuid FK→alunos | Aluno |
+| polo_id | uuid FK→polos | Polo |
+| colaborador_id | uuid FK→colaboradores | Vendedora (NULL se matrícula online) |
+| status | text | 'incompleta', 'completa', etc |
+| contrato_assinado | boolean | Se o contrato foi assinado |
+| contrato_data | timestamptz | Data da assinatura |
+| contrato_assinatura | text | Nome digitado na assinatura |
+| utm_source | text | UTM source (rastreamento) |
+| utm_medium | text | UTM medium |
+| utm_campaign | text | UTM campaign |
+| utm_content | text | UTM content |
+| created_at | timestamptz | Data da matrícula |
+
+---
+
+### parcelas
+**Objetivo:** Parcelas financeiras de cada matrícula
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| matricula_id | uuid FK→matriculas | Matrícula vinculada |
+| numero | integer | Número sequencial (5001+) |
+| descricao | text | "Taxa de Matrícula", "Parcela 1/10", etc |
+| valor | decimal(10,2) | Valor da parcela |
+| status | payment_status | aberto/pago/isento/parcial/cancelado |
+| forma_pagamento | text | pix, boleto, cartao |
+| tipo | text | 'parcela', 'matricula' |
+| tipo_pacote | text | Nome do pacote |
+| data_vencimento | date | Data de vencimento |
+| data_pagamento | date | Data efetiva do pagamento |
+| valor_pago_total | decimal(10,2) | Total pago (para pagamento parcial) |
+| asaas_id | text | ID da cobrança no Asaas |
+| asaas_url | text | URL da cobrança no Asaas |
+| asaas_barcode | text | Código de barras do boleto |
+| asaas_pix_chave | text | Chave PIX |
+| asaas_pix_qrcode | text | QR Code PIX |
+| created_at | timestamptz | Data de criação |
+
+**Triggers:** `trg_gerar_numero_parcela` (gera número sequencial), `trg_gerar_comissao_pagamento` (gera comissão ao pagar Parcela 1)
+
+---
+
+### parcelas_pagamentos
+**Objetivo:** Pagamentos parciais de uma parcela
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| parcela_id | uuid FK→parcelas | Parcela |
+| valor_pago | decimal(10,2) | Valor pago |
+| forma_pagamento | text | Forma do pagamento parcial |
+| data_pagamento | date | Data |
+| observacao | text | Observação |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### comissoes
+**Objetivo:** Comissões das vendedoras
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| aluno_id | uuid FK→alunos | Aluno da venda |
+| matricula_id | uuid FK→matriculas | Matrícula |
+| vendedora | text | Nome da vendedora |
+| valor | decimal(10,2) | Valor da comissão |
+| status | text | 'pendente', 'paga' |
+| competencia | date | Data de competência (data_pagamento da parcela) |
+| tipo_pagamento | text | 'avista' ou 'boleto' |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### cursos
+**Objetivo:** Cursos EJA e Vitrine
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| nome | text | Nome do curso |
+| descricao | text | Descrição |
+| ativo | boolean | Se está ativo |
+| thumbnail_url | text | Imagem do curso |
+| segmento_id | uuid FK→segmentos | Segmento (para vitrine) |
+| is_prova_final | boolean | Se é curso EJA (tem prova final) |
+| material_pdf_url | text | Material de apoio |
+| destaque_perfil | text | Perfil vocacional sugerido |
+| created_at | timestamptz | Data de criação |
+
+**Cursos EJA (is_prova_final = true):** Biologia, Filosofia, Física, Geografia, História, Inglês, Matemática, Português, Química, Sociologia
+
+---
+
+### aulas
+**Objetivo:** Aulas em vídeo de cada curso
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| curso_id | uuid FK→cursos | Curso |
+| titulo | text | Título da aula |
+| descricao | text | Descrição |
+| url_video | text | URL do player Panda Video |
+| ordem | integer | Ordem dentro do curso |
+| ativo | boolean | Se está ativa |
+| thumbnail_url | text | Thumbnail |
+| duracao_segundos | integer | Duração em segundos |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### aluno_aulas_assistidas
+**Objetivo:** Progresso do aluno nas aulas
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| aluno_id | uuid FK→alunos | Aluno |
+| aula_id | uuid FK→aulas | Aula |
+| percentual_assistido | decimal(5,2) | Percentual assistido (0-100) |
+| tempo_assistido | integer | Tempo em segundos |
+| created_at | timestamptz | Data de criação |
+
+**Constraint:** UNIQUE(aluno_id, aula_id)
+**Regra:** Aula concluída quando percentual_assistido >= 70%
+
+---
+
+### pos_vendas
+**Objetivo:** Follow-up pós-matrícula (D+1, D+5, D+15)
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| matricula_id | uuid FK→matriculas | Matrícula |
+| aluno_id | uuid FK→alunos | Aluno |
+| etapa | integer | 1, 2 ou 3 |
+| data_agendada | date | Data prevista |
+| data_confirmacao | date | Data realizada |
+| colaborador_id | uuid FK→colaboradores | Quem realizou |
+| observacao | text | Observação |
+| status | text | 'pendente', 'concluido', 'cancelado' |
+| created_at | timestamptz | Data de criação |
+
+**Constraint:** UNIQUE(matricula_id, etapa)
+**Regra:** Ao concluir uma etapa, o sistema cria automaticamente a próxima
+
+---
+
+### prova_agendamentos
+**Objetivo:** Agendamentos de prova final
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| aluno_id | uuid | Aluno (NULL para externos) |
+| data_prova | date | Data da prova |
+| hora_prova | time | Horário |
+| status | text | agendada, iniciado, aprovado, reprovado |
+| docs_solicitados | boolean | Documentos solicitados |
+| docs_recebidos | boolean | Documentos recebidos |
+| nome_aluno | text | Nome (para externos sem aluno_id) |
+| telefone | text | Telefone |
+| polo | text | Nome do polo |
+| ctr | text | CTR do aluno |
+| quem_agendou | text | Nome de quem agendou |
+| situacao_financeira | text | 'ja_pago' ou 'boleto' |
+| resultado | text | 'aprovado' ou 'reprovado' |
+| observacao | text | Observação |
+| is_externo | boolean | Se é aluno externo |
+| materias_selecionadas | text[] | Array de matérias para a prova |
+| ultimo_heartbeat | timestamptz | Último ping de presença |
+| created_at | timestamptz | Data de criação |
+
+**4 guias no admin:** Agendadas (inclui status 'iniciado'), Aprovados, Reprovados, Reagendar (data passada + resultado NULL)
+
+---
+
+### prova_questoes
+**Objetivo:** Banco de questões das provas
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| materia | text | Nome da matéria |
+| numero | integer | Número da questão |
+| enunciado | text | Texto da questão |
+| alternativa_a | text | Alternativa A |
+| alternativa_b | text | Alternativa B |
+| alternativa_c | text | Alternativa C |
+| alternativa_d | text | Alternativa D |
+| resposta_correta | text | A, B, C ou D (maiúsculo) |
+| ativo | boolean | Se está ativa |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### prova_resultados
+**Objetivo:** Resultados das provas por matéria
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| aluno_id | uuid (nullable) | Aluno (NULL para externos) |
+| agendamento_id | uuid FK→prova_agendamentos | Agendamento |
+| materia | text | Matéria |
+| total_questoes | integer | Total de questões |
+| total_acertos | integer | Total de acertos |
+| percentual | decimal(5,1) | Percentual de acertos |
+| aprovado | boolean | Se aprovado (>= 60%) |
+| respostas | jsonb | {"questao_id": "resposta", ...} |
+| iniciado_em | timestamptz | Quando iniciou a matéria |
+| finalizado_em | timestamptz | Quando finalizou |
+| created_at | timestamptz | Data de criação |
+
+**Trigger:** `trg_prova_completa` — ao atualizar `finalizado_em`, verifica se todas as matérias selecionadas foram finalizadas e atualiza o agendamento automaticamente
+
+---
+
+### alunos_externos
+**Objetivo:** Alunos que fazem apenas a prova (sem matrícula completa)
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| ctr | text UNIQUE | CTR série P (P001, P002...) |
+| nome | text | Nome completo |
+| telefone | text | Telefone |
+| cpf | text | CPF |
+| polo_id | uuid FK→polos | Polo |
+| senha | text | Senha de acesso |
+| quem_cadastrou | text | Quem cadastrou |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### certificadoras
+**Objetivo:** Instituições que emitem certificados
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| nome | text | CECO, Educa Nexus, Ifope, Nobel, Referencial, Santa Rita |
+| ativo | boolean | Se está ativa |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### documentacao_alunos
+**Objetivo:** Controle de documentação e certificação do aluno
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| aluno_id | uuid FK→alunos | Aluno |
+| matricula_id | uuid FK→matriculas | Matrícula |
+| rg_cpf | boolean | RG/CPF recebido |
+| comp_residencia | boolean | Comprovante de residência |
+| hist_fundamental | boolean | Histórico do fundamental |
+| hist_fund_medio | boolean | Histórico fund + médio |
+| outros | boolean | Outros documentos |
+| doc_completa | boolean | Documentação completa |
+| rec_firma | boolean | Reconhecimento de firma |
+| diario_oficial | boolean | D.O. |
+| visto_confere | boolean | Visto confere |
+| certificadora_id | uuid FK→certificadoras | Certificadora |
+| data_envio | date | Data de envio para certificadora |
+| lote | text | Número do lote |
+| cert_digital | boolean | Certificado digital emitido |
+| cert_fisico | boolean | Certificado físico recebido |
+| cert_digital_data | date | Data emissão digital |
+| cert_fisico_data | date | Data recebimento físico |
+| observacao | text | Observação |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### zapi_mensagens_log
+**Objetivo:** Log de mensagens WhatsApp enviadas
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| aluno_id | uuid | Aluno |
+| tipo | text | Tipo da mensagem |
+| mensagem | text | Conteúdo |
+| telefone | text | Telefone destino |
+| status | text | Status do envio |
+| created_at | timestamptz | Data de envio |
+
+---
+
+### zapi_mensagens_fds
+**Objetivo:** Templates de mensagens de fim de semana (6 ciclos)
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| ciclo | integer | 1 a 6 |
+| dia_semana | text | 'sabado' ou 'domingo' |
+| tipo | text | 'assistiu' ou 'nao_assistiu' |
+| mensagem | text | Template com {nome} |
+| ativo | boolean | Se está ativo |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### pacotes
+**Objetivo:** Pacotes de matrícula disponíveis
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| nome | text | Nome do pacote |
+| tipo | text | pix, boleto, cartao |
+| valor_parcela | decimal(10,2) | Valor de cada parcela |
+| total_parcelas | integer | Número de parcelas |
+| valor_total | decimal(10,2) | Valor total |
+| taxa_matricula | decimal(10,2) | Taxa de matrícula (default 69.90) |
+| ativo | boolean | Se está disponível |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### banners
+**Objetivo:** Banners da área do aluno por polo
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| polo_id | uuid FK→polos | Polo |
+| titulo | text | Título |
+| imagem_url | text | URL da imagem (1080x500px) |
+| ativo | boolean | Se está ativo |
+| ordem | integer | Ordem de exibição |
+| created_at | timestamptz | Data de criação |
+
+---
+
+### contratos
+**Objetivo:** Modelos de contrato
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| nome | text | Nome do modelo |
+| conteudo | text | Texto completo do contrato |
+| ativo | boolean | Se está ativo |
+| created_at | timestamptz | Data de criação |
+
+---
+
+## Views
+
+### view_recebimentos_periodo
+Combina parcelas pagas (pagamento total) com parcelas_pagamentos (pagamento parcial) em uma única view para o relatório de recebimentos.
+
+## Buckets (Storage)
+- **documentos-alunos** (Private) — Documentos de matrícula dos alunos
+
+## RLS
+**Desativado** em todas as tabelas. Grants concedidos para `anon` e `authenticated` em todas as tabelas e sequences.
