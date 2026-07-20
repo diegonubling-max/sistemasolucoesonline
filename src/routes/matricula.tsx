@@ -330,7 +330,8 @@ function MatriculaPublicaPage() {
     try {
       const body: any = { matricula_id: sucesso.matriculaId, billing_type: billingType };
       if (billingType === "CREDIT_CARD" && ccData) {
-        body.credit_card = ccData;
+        body.credit_card = ccData.card;
+        body.installment_count = ccData.parcelas;
         body.credit_card_holder_info = {
           name: dados.nome,
           cpfCnpj: dados.cpf.replace(/\D/g, ""),
@@ -354,8 +355,11 @@ function MatriculaPublicaPage() {
     }
   };
 
+  const [cartaoParcelas, setCartaoParcelas] = useState(12);
+
   if (sucesso) {
     const isBoleto = sucesso.formaPagamento === "boleto";
+    const valorCartaoTotal = 1438.80;
 
     // Se já tem resultado de pagamento
     if (pagResult) {
@@ -405,12 +409,12 @@ function MatriculaPublicaPage() {
                 <>
                   <h1 className="text-2xl font-bold">
                     {pagResult.credit_card_status === "CONFIRMED" || pagResult.credit_card_status === "RECEIVED"
-                      ? "Pagamento aprovado!"
+                      ? "Pagamento aprovado! 🎉"
                       : "Pagamento em processamento"}
                   </h1>
                   <p className="text-muted-foreground">
                     {pagResult.credit_card_status === "CONFIRMED" || pagResult.credit_card_status === "RECEIVED"
-                      ? "Sua taxa de matrícula de R$ 69,90 foi paga. Nossa equipe entrará em contato pelo WhatsApp para liberar seu acesso."
+                      ? "Seu pagamento foi aprovado com sucesso. Nossa equipe entrará em contato pelo WhatsApp para liberar seu acesso às aulas."
                       : "O pagamento está sendo processado. Você receberá a confirmação em breve pelo WhatsApp."}
                   </p>
                 </>
@@ -434,9 +438,6 @@ function MatriculaPublicaPage() {
               <CheckCircle2 className="h-10 w-10 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold text-center">Matrícula realizada com sucesso!</h1>
-            <p className="text-muted-foreground text-center text-sm">
-              Para garantir sua vaga, efetue o pagamento da taxa de matrícula de <strong>R$ 69,90</strong>.
-            </p>
 
             {pagErro && (
               <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">{pagErro}</div>
@@ -444,9 +445,11 @@ function MatriculaPublicaPage() {
 
             {isBoleto ? (
               <div className="space-y-3">
-                <p className="text-sm font-medium text-center">Pague via PIX — rápido e seguro:</p>
+                <p className="text-muted-foreground text-center text-sm">
+                  Para garantir sua vaga, efetue o pagamento da taxa de matrícula de <strong>R$ 69,90</strong> via PIX.
+                </p>
                 <Button
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
                   onClick={() => gerarPagamento("PIX")}
                   disabled={pagLoading}
                 >
@@ -459,7 +462,32 @@ function MatriculaPublicaPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-sm font-medium text-center">Pague com cartão de crédito:</p>
+                <p className="text-muted-foreground text-center text-sm">
+                  Efetue o pagamento do curso completo no cartão de crédito.
+                </p>
+
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-orange-800">Valor total: <strong>R$ {valorCartaoTotal.toFixed(2).replace(".", ",")}</strong></p>
+                  <p className="text-lg font-bold text-orange-700">
+                    {cartaoParcelas}x de R$ {(valorCartaoTotal / cartaoParcelas).toFixed(2).replace(".", ",")}
+                  </p>
+                </div>
+
+                <div>
+                  <Label>Parcelas</Label>
+                  <select
+                    value={cartaoParcelas}
+                    onChange={(e) => setCartaoParcelas(Number(e.target.value))}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => (
+                      <option key={n} value={n}>
+                        {n}x de R$ {(valorCartaoTotal / n).toFixed(2).replace(".", ",")} {n === 1 ? "(à vista)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="space-y-2">
                   <div>
                     <Label>Nome no cartão</Label>
@@ -509,14 +537,14 @@ function MatriculaPublicaPage() {
                   </div>
                 </div>
                 <Button
-                  className="w-full"
-                  onClick={() => gerarPagamento("CREDIT_CARD", cartao)}
+                  className="w-full text-lg py-6"
+                  onClick={() => gerarPagamento("CREDIT_CARD", { card: cartao, parcelas: cartaoParcelas })}
                   disabled={pagLoading || !cartao.holderName || !cartao.number || !cartao.expiryMonth || !cartao.expiryYear || !cartao.ccv}
                 >
                   {pagLoading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processando...</>
                   ) : (
-                    "💳 Pagar R$ 69,90"
+                    `💳 Pagar ${cartaoParcelas}x de R$ ${(valorCartaoTotal / cartaoParcelas).toFixed(2).replace(".", ",")}`
                   )}
                 </Button>
               </div>

@@ -22,6 +22,7 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
         let payload: {
           matricula_id?: string;
           billing_type?: "PIX" | "CREDIT_CARD";
+          installment_count?: number;
           credit_card?: {
             holderName: string;
             number: string;
@@ -133,7 +134,8 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
           }
 
           // 4. Criar cobrança
-          const valor = 69.90; // taxa de matrícula fixa
+          // PIX = taxa de matrícula R$69,90 | Cartão = curso completo R$1.438,80
+          const valor = billing_type === "PIX" ? 69.90 : 1438.80;
           const dueDate = new Date();
           dueDate.setDate(dueDate.getDate() + 1);
 
@@ -142,11 +144,13 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
             billingType: billing_type,
             value: valor,
             dueDate: dueDate.toISOString().split("T")[0],
-            description: "Taxa de Matrícula - Aulão Soluções Online",
+            description: billing_type === "PIX"
+              ? "Taxa de Matrícula - Aulão Soluções Online"
+              : "Curso Completo - Aulão Soluções Online",
             externalReference: matricula.id,
           };
 
-          // Se for cartão, adicionar dados do cartão
+          // Se for cartão, adicionar dados do cartão e parcelamento
           if (billing_type === "CREDIT_CARD" && payload.credit_card) {
             paymentBody.creditCard = {
               holderName: payload.credit_card.holderName,
@@ -162,6 +166,12 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
               postalCode: "88058512",
               addressNumber: "65",
             };
+            // Parcelamento (2-12x)
+            const parcelas = payload.installment_count || 12;
+            if (parcelas > 1) {
+              paymentBody.installmentCount = parcelas;
+              paymentBody.installmentValue = Math.round((valor / parcelas) * 100) / 100;
+            }
           }
 
           const payRes = await fetch(`${baseUrl}/payments`, {
