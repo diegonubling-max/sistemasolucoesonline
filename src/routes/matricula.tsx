@@ -26,15 +26,13 @@ export const Route = createFileRoute("/matricula")({
 });
 
 type Step = 1 | 2 | 3;
-type FormaPag = "boleto" | "cartao" | "pix";
+type FormaPag = "boleto" | "cartao";
 
 interface DadosAluno {
   nome: string;
-  email: string;
   telefone: string;
   cpf: string;
   data_nascimento: string; // dd/mm/aaaa
-  sexo: "" | "Masculino" | "Feminino";
 }
 
 
@@ -75,18 +73,18 @@ function parseDateBR(value: string): string | null {
 const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; valorParc: string; total: string }> = {
   boleto: { entrada: "69,90", qtdParc: "10", valorParc: "159,90", total: "1.668,90" },
   cartao: { entrada: "69,90", qtdParc: "12", valorParc: "119,90", total: "1.508,70" },
-  pix:    { entrada: "69,90", qtdParc: "1",  valorParc: "1.198,00", total: "1.267,90" },
 };
 
 function MatriculaPublicaPage() {
   const [step, setStep] = useState<Step>(1);
   const [dados, setDados] = useState<DadosAluno>({
-    nome: "", email: "", telefone: "", cpf: "", data_nascimento: "", sexo: "",
+    nome: "", telefone: "", cpf: "", data_nascimento: "",
   });
 
   const [forma, setForma] = useState<FormaPag | null>(null);
   const [aceito, setAceito] = useState(false);
   const [assinatura, setAssinatura] = useState("");
+  const [confirmacaoCpf, setConfirmacaoCpf] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState<Sucesso | null>(null);
 
@@ -110,12 +108,11 @@ function MatriculaPublicaPage() {
   const contratoHtml = useMemo(() => {
     if (!modelo?.conteudo_html || !forma) return "";
     const plano = PLANOS[forma];
-    const formaLabel = forma === "boleto" ? "Boleto Bancário" : forma === "cartao" ? "Cartão de Crédito" : "À Vista (PIX)";
+    const formaLabel = forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito";
     let html = modelo.conteudo_html;
     const variables: Record<string, string> = {
       "[NOME_ALUNO]": dados.nome,
       "[CPF_ALUNO]": dados.cpf,
-      "[EMAIL_ALUNO]": dados.email,
       "[TELEFONE_ALUNO]": dados.telefone,
       "[DATA_NASCIMENTO]": dataISO ? format(new Date(dataISO + "T00:00:00"), "dd/MM/yyyy") : dados.data_nascimento,
       "[PACOTE_NOME]": "Aulão - Lançamento",
@@ -141,11 +138,9 @@ function MatriculaPublicaPage() {
   function validarStep1(): string | null {
     if (!dados.nome.trim() || dados.nome.trim().split(/\s+/).length < 2)
       return "Informe nome completo";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dados.email)) return "E-mail inválido";
     if (dados.telefone.replace(/\D/g, "").length < 10) return "Telefone inválido";
     if (!isValidCPF(dados.cpf)) return "CPF inválido";
     if (!parseDateBR(dados.data_nascimento)) return "Data de nascimento inválida (use dd/mm/aaaa)";
-    if (dados.sexo !== "Masculino" && dados.sexo !== "Feminino") return "Selecione o sexo";
     return null;
 
   }
@@ -167,6 +162,10 @@ function MatriculaPublicaPage() {
       toast.error("Digite seu nome completo exatamente como no cadastro");
       return;
     }
+    if (confirmacaoCpf.trim() !== dados.cpf.trim()) {
+      toast.error("O CPF de confirmação não confere com o CPF informado no cadastro");
+      return;
+    }
     if (!dataISO) { toast.error("Data de nascimento inválida"); return; }
 
     setEnviando(true);
@@ -174,7 +173,7 @@ function MatriculaPublicaPage() {
       const utm = getUtm();
       const { data, error } = await supabase.rpc("criar_matricula_lancamento" as any, {
         p_nome: dados.nome.trim(),
-        p_email: dados.email.trim().toLowerCase(),
+        p_email: null,
         p_telefone: dados.telefone,
         p_cpf: dados.cpf,
         p_data_nascimento: dataISO,
@@ -186,7 +185,7 @@ function MatriculaPublicaPage() {
         p_utm_content: utm.utm_content,
         p_contrato_html: contratoHtml || null,
         p_assinatura_nome: assinatura.trim() || null,
-        p_sexo: dados.sexo,
+        p_sexo: null,
       });
 
 
@@ -200,7 +199,7 @@ function MatriculaPublicaPage() {
         return;
       }
 
-      const formaTxt = forma === "boleto" ? "Boleto" : forma === "cartao" ? "Cartão" : "À Vista (PIX)";
+      const formaTxt = forma === "boleto" ? "Boleto" : "Cartão";
       const mensagem = `Nova matrícula de Aulão! 🎉🟠\n👤 Nome: ${dados.nome}\n📱 Telefone: ${dados.telefone}\n💳 Preferência: ${formaTxt}\nContrato assinado: ${assinatura ? "Sim" : "Não"}\nVer detalhes no menu Matrículas Aulão.`;
       try {
         await fetch("/api/public/hooks/zapi-send", {
@@ -273,16 +272,6 @@ function MatriculaPublicaPage() {
                     />
                   </div>
                   <div>
-                    <Label>E-mail *</Label>
-                    <Input
-                      type="email"
-                      value={dados.email}
-                      onChange={(e) => setDados({ ...dados, email: e.target.value })}
-                      placeholder="seu@email.com"
-                      autoCapitalize="none"
-                    />
-                  </div>
-                  <div>
                     <Label>Telefone (com DDD) *</Label>
                     <Input
                       value={dados.telefone}
@@ -309,19 +298,6 @@ function MatriculaPublicaPage() {
                       inputMode="numeric"
                     />
                   </div>
-                  <div>
-                    <Label>Sexo *</Label>
-                    <select
-                      value={dados.sexo}
-                      onChange={(e) => setDados({ ...dados, sexo: e.target.value as DadosAluno["sexo"] })}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="">Selecione...</option>
-                      <option value="Masculino">Masculino</option>
-                      <option value="Feminino">Feminino</option>
-                    </select>
-                  </div>
-
                 </div>
                 <Button className="w-full" onClick={handleAvancar1}>Avançar</Button>
               </>
@@ -351,15 +327,9 @@ function MatriculaPublicaPage() {
                     <div className="text-3xl mb-1">💳</div>
                     <div className="font-semibold">Cartão de Crédito</div>
                     <div className="text-sm text-muted-foreground">12x de R$ 119,90</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForma("pix")}
-                    className={`border rounded-lg p-4 text-left transition ${forma === "pix" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
-                  >
-                    <div className="text-3xl mb-1">💰</div>
-                    <div className="font-semibold">À Vista (PIX)</div>
-                    <div className="text-sm text-muted-foreground">R$ 1.198,00</div>
+                    <div className="text-sm text-orange-700 font-medium mt-1">
+                      ⚡ Nessa opção você conclui tudo em menos tempo — entre 10 e 30 dias
+                    </div>
                   </button>
                 </div>
                 <div className="flex gap-2 pt-2">
@@ -388,6 +358,15 @@ function MatriculaPublicaPage() {
                     value={assinatura}
                     onChange={(e) => setAssinatura(e.target.value)}
                     placeholder={dados.nome}
+                  />
+                </div>
+                <div>
+                  <Label>Confirme seu CPF</Label>
+                  <Input
+                    value={confirmacaoCpf}
+                    onChange={(e) => setConfirmacaoCpf(maskCPF(e.target.value))}
+                    placeholder="000.000.000-00"
+                    inputMode="numeric"
                   />
                 </div>
                 <div className="flex gap-2 pt-2">
