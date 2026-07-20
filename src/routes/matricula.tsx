@@ -38,6 +38,8 @@ interface DadosAluno {
 
 interface Sucesso {
   jaExistia: boolean;
+  matriculaId: string;
+  formaPagamento: FormaPag;
 }
 
 function getUtm() {
@@ -307,7 +309,7 @@ function MatriculaPublicaPage() {
         console.warn("Falha ao enviar WhatsApp da equipe", e);
       }
 
-      setSucesso({ jaExistia: false });
+      setSucesso({ jaExistia: false, matriculaId: row.id, formaPagamento: forma! });
     } catch (e: any) {
       toast.error(e.message || "Erro ao processar matrícula");
     } finally {
@@ -315,20 +317,210 @@ function MatriculaPublicaPage() {
     }
   };
 
+  const [pagLoading, setPagLoading] = useState(false);
+  const [pagResult, setPagResult] = useState<any>(null);
+  const [pagErro, setPagErro] = useState<string | null>(null);
+  const [cartao, setCartao] = useState({ holderName: "", number: "", expiryMonth: "", expiryYear: "", ccv: "" });
+  const [copiado, setCopiado] = useState(false);
+
+  const gerarPagamento = async (billingType: "PIX" | "CREDIT_CARD", ccData?: any) => {
+    if (!sucesso) return;
+    setPagLoading(true);
+    setPagErro(null);
+    try {
+      const body: any = { matricula_id: sucesso.matriculaId, billing_type: billingType };
+      if (billingType === "CREDIT_CARD" && ccData) {
+        body.credit_card = ccData;
+        body.credit_card_holder_info = {
+          name: dados.nome,
+          cpfCnpj: dados.cpf.replace(/\D/g, ""),
+          phone: dados.telefone.replace(/\D/g, ""),
+          postalCode: "00000000",
+          addressNumber: "0",
+        };
+      }
+      const res = await fetch("/api/public/hooks/asaas-aulao", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || "Erro ao processar pagamento");
+      setPagResult(data);
+    } catch (e: any) {
+      setPagErro(e.message || "Erro ao processar pagamento");
+    } finally {
+      setPagLoading(false);
+    }
+  };
+
   if (sucesso) {
+    const isBoleto = sucesso.formaPagamento === "boleto";
+
+    // Se já tem resultado de pagamento
+    if (pagResult) {
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-8 pb-6 text-center space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle2 className="h-10 w-10 text-green-600" />
+              </div>
+
+              {pagResult.billing_type === "PIX" && pagResult.pix_qr_code ? (
+                <>
+                  <h1 className="text-2xl font-bold">Escaneie o QR Code para pagar</h1>
+                  <p className="text-muted-foreground text-sm">Taxa de matrícula: <strong>R$ 69,90</strong></p>
+                  <div className="flex justify-center">
+                    <img
+                      src={`data:image/png;base64,${pagResult.pix_qr_code}`}
+                      alt="QR Code PIX"
+                      className="w-56 h-56 border rounded-lg"
+                    />
+                  </div>
+                  {pagResult.pix_copia_cola && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Ou copie o código PIX:</p>
+                      <div className="bg-gray-50 border rounded p-2 text-xs break-all font-mono max-h-20 overflow-y-auto">
+                        {pagResult.pix_copia_cola}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(pagResult.pix_copia_cola);
+                          setCopiado(true);
+                          setTimeout(() => setCopiado(false), 3000);
+                        }}
+                      >
+                        {copiado ? "✅ Copiado!" : "📋 Copiar código PIX"}
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    Após o pagamento ser confirmado, nossa equipe liberará seu acesso às aulas via WhatsApp.
+                  </p>
+                </>
+              ) : pagResult.credit_card_status ? (
+                <>
+                  <h1 className="text-2xl font-bold">
+                    {pagResult.credit_card_status === "CONFIRMED" || pagResult.credit_card_status === "RECEIVED"
+                      ? "Pagamento aprovado!"
+                      : "Pagamento em processamento"}
+                  </h1>
+                  <p className="text-muted-foreground">
+                    {pagResult.credit_card_status === "CONFIRMED" || pagResult.credit_card_status === "RECEIVED"
+                      ? "Sua taxa de matrícula de R$ 69,90 foi paga. Nossa equipe entrará em contato pelo WhatsApp para liberar seu acesso."
+                      : "O pagamento está sendo processado. Você receberá a confirmação em breve pelo WhatsApp."}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-2xl font-bold">Pagamento registrado!</h1>
+                  <p className="text-muted-foreground">Nossa equipe entrará em contato pelo WhatsApp.</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
         <Card className="w-full max-w-md">
-          <CardContent className="pt-8 pb-6 text-center space-y-4">
+          <CardContent className="pt-8 pb-6 space-y-4">
             <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
               <CheckCircle2 className="h-10 w-10 text-green-600" />
             </div>
-            <h1 className="text-2xl font-bold">Matrícula realizada com sucesso!</h1>
-            <p className="text-muted-foreground">
-              Recebemos seus dados e seu contrato assinado. Você vai receber uma mensagem nossa no WhatsApp
-              em instantes, e nossa equipe entrará em contato para alinhar o pagamento e liberar seu acesso
-              às aulas.
+            <h1 className="text-2xl font-bold text-center">Matrícula realizada com sucesso!</h1>
+            <p className="text-muted-foreground text-center text-sm">
+              Para garantir sua vaga, efetue o pagamento da taxa de matrícula de <strong>R$ 69,90</strong>.
             </p>
+
+            {pagErro && (
+              <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">{pagErro}</div>
+            )}
+
+            {isBoleto ? (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-center">Pague via PIX — rápido e seguro:</p>
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  onClick={() => gerarPagamento("PIX")}
+                  disabled={pagLoading}
+                >
+                  {pagLoading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PIX...</>
+                  ) : (
+                    "💰 Gerar QR Code PIX — R$ 69,90"
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-center">Pague com cartão de crédito:</p>
+                <div className="space-y-2">
+                  <div>
+                    <Label>Nome no cartão</Label>
+                    <Input
+                      value={cartao.holderName}
+                      onChange={(e) => setCartao({ ...cartao, holderName: e.target.value })}
+                      placeholder="Nome como está no cartão"
+                    />
+                  </div>
+                  <div>
+                    <Label>Número do cartão</Label>
+                    <Input
+                      value={cartao.number}
+                      onChange={(e) => setCartao({ ...cartao, number: e.target.value.replace(/\D/g, "").slice(0, 16) })}
+                      placeholder="0000 0000 0000 0000"
+                      inputMode="numeric"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label>Mês</Label>
+                      <Input
+                        value={cartao.expiryMonth}
+                        onChange={(e) => setCartao({ ...cartao, expiryMonth: e.target.value.replace(/\D/g, "").slice(0, 2) })}
+                        placeholder="MM"
+                        inputMode="numeric"
+                      />
+                    </div>
+                    <div>
+                      <Label>Ano</Label>
+                      <Input
+                        value={cartao.expiryYear}
+                        onChange={(e) => setCartao({ ...cartao, expiryYear: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                        placeholder="AAAA"
+                        inputMode="numeric"
+                      />
+                    </div>
+                    <div>
+                      <Label>CVV</Label>
+                      <Input
+                        value={cartao.ccv}
+                        onChange={(e) => setCartao({ ...cartao, ccv: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                        placeholder="123"
+                        inputMode="numeric"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={() => gerarPagamento("CREDIT_CARD", cartao)}
+                  disabled={pagLoading || !cartao.holderName || !cartao.number || !cartao.expiryMonth || !cartao.expiryYear || !cartao.ccv}
+                >
+                  {pagLoading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processando...</>
+                  ) : (
+                    "💳 Pagar R$ 69,90"
+                  )}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Loader2, FileText, CheckCircle2, XCircle } from "lucide-react";
+import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,6 +104,27 @@ function MatriculasAulaoList() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("matriculas_aulao" as any)
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Matrícula excluída com sucesso");
+      qc.invalidateQueries({ queryKey: ["matriculas-aulao"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handleDelete = (m: any) => {
+    if (window.confirm(`Tem certeza que deseja excluir a matrícula de ${m.nome}?`)) {
+      deleteMutation.mutate(m.id);
+    }
+  };
+
   const handleEdit = (m: any) => {
     setEditing({ ...m });
     setIsModalOpen(true);
@@ -189,6 +210,9 @@ function MatriculasAulaoList() {
                       )}
                       <Button size="icon" variant="ghost" title="Editar" onClick={() => handleEdit(m)}>
                         <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" title="Excluir" onClick={() => handleDelete(m)}>
+                        <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </div>
                   </TableCell>

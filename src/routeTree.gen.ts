@@ -44,6 +44,7 @@ import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.
 import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
 import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_student.aluno.prova-final.execucao'
 import { Route as StudentAlunoProvaFinalRealizarRouteImport } from './routes/_student.aluno.prova-final.realizar'
+import { Route as ApiPublicHooksAsaasAulaoRouteImport } from './routes/api/public/hooks/asaas-aulao'
 import { Route as ApiPublicHooksLembreteProvaRouteImport } from './routes/api/public/hooks/lembrete-prova'
 import { Route as ApiPublicHooksWhatsappCobrancaRouteImport } from './routes/api/public/hooks/whatsapp-cobranca'
 import { Route as ApiPublicHooksZapiJobsDiariosRouteImport } from './routes/api/public/hooks/zapi-jobs-diarios'
@@ -224,6 +225,12 @@ const StudentAlunoProvaFinalRealizarRoute =
     path: '/realizar',
     getParentRoute: () => StudentAlunoProvaFinalRoute,
   } as any)
+const ApiPublicHooksAsaasAulaoRoute =
+  ApiPublicHooksAsaasAulaoRouteImport.update({
+    id: '/api/public/hooks/asaas-aulao',
+    path: '/api/public/hooks/asaas-aulao',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksLembreteProvaRoute =
   ApiPublicHooksLembreteProvaRouteImport.update({
     id: '/api/public/hooks/lembrete-prova',
@@ -281,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
+  '/api/public/hooks/asaas-aulao': typeof ApiPublicHooksAsaasAulaoRoute
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
@@ -320,6 +328,7 @@ export interface FileRoutesByTo {
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
+  '/api/public/hooks/asaas-aulao': typeof ApiPublicHooksAsaasAulaoRoute
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
@@ -362,6 +371,7 @@ export interface FileRoutesById {
   '/_student/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/_student/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/_student/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
+  '/api/public/hooks/asaas-aulao': typeof ApiPublicHooksAsaasAulaoRoute
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/aluno/curso/$id'
     | '/aluno/prova-final/execucao'
     | '/aluno/prova-final/realizar'
+    | '/api/public/hooks/asaas-aulao'
     | '/api/public/hooks/lembrete-prova'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
@@ -442,6 +453,7 @@ export interface FileRouteTypes {
     | '/aluno/curso/$id'
     | '/aluno/prova-final/execucao'
     | '/aluno/prova-final/realizar'
+    | '/api/public/hooks/asaas-aulao'
     | '/api/public/hooks/lembrete-prova'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
@@ -483,6 +495,7 @@ export interface FileRouteTypes {
     | '/_student/aluno/curso/$id'
     | '/_student/aluno/prova-final/execucao'
     | '/_student/aluno/prova-final/realizar'
+    | '/api/public/hooks/asaas-aulao'
     | '/api/public/hooks/lembrete-prova'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
@@ -498,6 +511,7 @@ export interface RootRouteChildren {
   AlunoLoginRoute: typeof AlunoLoginRoute
   ContratoTokenRoute: typeof ContratoTokenRoute
   ExternoProvaRoute: typeof ExternoProvaRoute
+  ApiPublicHooksAsaasAulaoRoute: typeof ApiPublicHooksAsaasAulaoRoute
   ApiPublicHooksLembreteProvaRoute: typeof ApiPublicHooksLembreteProvaRoute
   ApiPublicHooksWhatsappCobrancaRoute: typeof ApiPublicHooksWhatsappCobrancaRoute
   ApiPublicHooksZapiJobsDiariosRoute: typeof ApiPublicHooksZapiJobsDiariosRoute
@@ -751,6 +765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentAlunoProvaFinalRealizarRouteImport
       parentRoute: typeof StudentAlunoProvaFinalRoute
     }
+    '/api/public/hooks/asaas-aulao': {
+      id: '/api/public/hooks/asaas-aulao'
+      path: '/api/public/hooks/asaas-aulao'
+      fullPath: '/api/public/hooks/asaas-aulao'
+      preLoaderRoute: typeof ApiPublicHooksAsaasAulaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/lembrete-prova': {
       id: '/api/public/hooks/lembrete-prova'
       path: '/api/public/hooks/lembrete-prova'
@@ -875,6 +896,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlunoLoginRoute: AlunoLoginRoute,
   ContratoTokenRoute: ContratoTokenRoute,
   ExternoProvaRoute: ExternoProvaRoute,
+  ApiPublicHooksAsaasAulaoRoute: ApiPublicHooksAsaasAulaoRoute,
   ApiPublicHooksLembreteProvaRoute: ApiPublicHooksLembreteProvaRoute,
   ApiPublicHooksWhatsappCobrancaRoute: ApiPublicHooksWhatsappCobrancaRoute,
   ApiPublicHooksZapiJobsDiariosRoute: ApiPublicHooksZapiJobsDiariosRoute,
