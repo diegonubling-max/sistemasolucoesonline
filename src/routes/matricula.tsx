@@ -70,9 +70,9 @@ function parseDateBR(value: string): string | null {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; valorParc: string; total: string }> = {
-  boleto: { entrada: "69,90", qtdParc: "10", valorParc: "159,90", total: "1.668,90" },
-  cartao: { entrada: "69,90", qtdParc: "12", valorParc: "119,90", total: "1.508,70" },
+const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; parcelasExibicao: string; valorParc: string; total: string }> = {
+  boleto: { entrada: "69,90", qtdParc: "10", parcelasExibicao: "1 + 9", valorParc: "159,90", total: "1.668,90" },
+  cartao: { entrada: "69,90", qtdParc: "12", parcelasExibicao: "12", valorParc: "119,90", total: "1.508,70" },
 };
 
 function getProximoEncerramento(): Date {
@@ -211,13 +211,17 @@ function MatriculaPublicaPage() {
       "[FORMA_PAGAMENTO]": formaLabel,
       "[VALOR_ENTRADA]": `R$ ${plano.entrada}`,
       "[VALOR_PARCELA]": `R$ ${plano.valorParc}`,
-      "[NUMERO_PARCELAS]": plano.qtdParc,
+      "[NUMERO_PARCELAS]": plano.parcelasExibicao,
       "[VALOR_TOTAL]": `R$ ${plano.total}`,
       "[DATA_MATRICULA]": format(new Date(), "dd/MM/yyyy"),
       "[NOME_ESCOLA]": "Soluções Online",
       "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy"),
       "[DATA_HOJE]": format(new Date(), "dd/MM/yyyy"),
-      "[DATA_PRIMEIRA_PARCELA]": format(new Date(), "dd/MM/yyyy"),
+      "[DATA_PRIMEIRA_PARCELA]": (() => {
+        const d = new Date();
+        if (forma === "boleto") d.setDate(d.getDate() + 30);
+        return format(d, "dd/MM/yyyy");
+      })(),
     };
     Object.entries(variables).forEach(([k, v]) => {
       html = html.replaceAll(k, v);
