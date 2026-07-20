@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,44 @@ const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; valorParc: st
   cartao: { entrada: "69,90", qtdParc: "12", valorParc: "119,90", total: "1.508,70" },
 };
 
+function getProximoEncerramento(): Date {
+  const agora = new Date();
+  const meta = new Date(agora);
+  meta.setHours(19, 30, 0, 0);
+  if (agora >= meta) {
+    meta.setDate(meta.getDate() + 1);
+  }
+  return meta;
+}
+
+function formatContagem(ms: number): string {
+  if (ms < 0) ms = 0;
+  const totalSegundos = Math.floor(ms / 1000);
+  const h = Math.floor(totalSegundos / 3600);
+  const m = Math.floor((totalSegundos % 3600) / 60);
+  const s = totalSegundos % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+const NOMES_PROVA_SOCIAL: { nome: string; cidade: string }[] = [
+  { nome: "Marcos Silva", cidade: "Florianópolis/SC" },
+  { nome: "Juliana Costa", cidade: "São José/SC" },
+  { nome: "Adriana Souza", cidade: "Palhoça/SC" },
+  { nome: "Rafael Oliveira", cidade: "Biguaçu/SC" },
+  { nome: "Camila Santos", cidade: "Itajaí/SC" },
+  { nome: "Bruno Ferreira", cidade: "Blumenau/SC" },
+  { nome: "Patrícia Almeida", cidade: "Joinville/SC" },
+  { nome: "Diego Pereira", cidade: "Criciúma/SC" },
+  { nome: "Fernanda Lima", cidade: "Tubarão/SC" },
+  { nome: "Rodrigo Martins", cidade: "Chapecó/SC" },
+  { nome: "Vanessa Rodrigues", cidade: "Curitiba/PR" },
+  { nome: "Thiago Barbosa", cidade: "Porto Alegre/RS" },
+  { nome: "Larissa Gomes", cidade: "São Paulo/SP" },
+  { nome: "Anderson Ribeiro", cidade: "Balneário Camboriú/SC" },
+  { nome: "Priscila Cardoso", cidade: "Camboriú/SC" },
+];
+
 function MatriculaPublicaPage() {
   const [step, setStep] = useState<Step>(1);
   const [dados, setDados] = useState<DadosAluno>({
@@ -87,6 +125,31 @@ function MatriculaPublicaPage() {
   const [confirmacaoCpf, setConfirmacaoCpf] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState<Sucesso | null>(null);
+
+  const [tempoRestante, setTempoRestante] = useState(() => getProximoEncerramento().getTime() - Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTempoRestante(getProximoEncerramento().getTime() - Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const [provaSocialIndex, setProvaSocialIndex] = useState(0);
+  const [provaSocialVisivel, setProvaSocialVisivel] = useState(true);
+  useEffect(() => {
+    let timeoutEsconder: ReturnType<typeof setTimeout>;
+    const interval = setInterval(() => {
+      setProvaSocialVisivel(false);
+      timeoutEsconder = setTimeout(() => {
+        setProvaSocialIndex((i) => (i + 1) % NOMES_PROVA_SOCIAL.length);
+        setProvaSocialVisivel(true);
+      }, 400);
+    }, 4000 + Math.random() * 1000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeoutEsconder);
+    };
+  }, []);
 
   const { data: modelo } = useQuery({
     queryKey: ["contrato-publico"],
@@ -251,6 +314,15 @@ function MatriculaPublicaPage() {
           <span className="text-gray-600 font-medium">Banner do Aulão (1080x600)</span>
         </div>
 
+        <div className="mb-4 rounded-lg border-2 border-red-600 bg-red-50 px-4 py-3 text-center">
+          <div className="text-xs md:text-sm font-semibold text-red-700 uppercase tracking-wide">
+            ⏰ Encerramento das matrículas em
+          </div>
+          <div className="text-3xl md:text-4xl font-black text-red-600 tabular-nums tracking-wider">
+            {formatContagem(tempoRestante)}
+          </div>
+        </div>
+
         <div className="flex justify-center gap-2 mb-6">
           {[1, 2, 3].map((n) => (
             <div key={n} className={`h-2 w-16 rounded-full ${step >= n ? "bg-orange-500" : "bg-gray-200"}`} />
@@ -383,6 +455,21 @@ function MatriculaPublicaPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      <div
+        className={`fixed bottom-4 left-4 right-4 md:right-auto md:max-w-xs bg-white border border-gray-200 shadow-lg rounded-lg px-4 py-3 flex items-center gap-3 transition-all duration-300 ${
+          provaSocialVisivel ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+        }`}
+      >
+        <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold shrink-0">
+          {NOMES_PROVA_SOCIAL[provaSocialIndex].nome.charAt(0)}
+        </div>
+        <div className="text-sm">
+          <strong>{NOMES_PROVA_SOCIAL[provaSocialIndex].nome}</strong> — {NOMES_PROVA_SOCIAL[provaSocialIndex].cidade}
+          <br />
+          <span className="text-muted-foreground">realizou a matrícula agora</span>
+        </div>
       </div>
     </div>
   );
