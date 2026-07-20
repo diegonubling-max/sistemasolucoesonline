@@ -321,6 +321,7 @@ function MatriculaPublicaPage() {
   const [pagResult, setPagResult] = useState<any>(null);
   const [pagErro, setPagErro] = useState<string | null>(null);
   const [cartao, setCartao] = useState({ holderName: "", number: "", expiryMonth: "", expiryYear: "", ccv: "" });
+  const [parcelas, setParcelas] = useState(12);
   const [copiado, setCopiado] = useState(false);
 
   const gerarPagamento = async (billingType: "PIX" | "CREDIT_CARD", ccData?: any) => {
@@ -328,10 +329,13 @@ function MatriculaPublicaPage() {
     setPagLoading(true);
     setPagErro(null);
     try {
-      const body: any = { matricula_id: sucesso.matriculaId, billing_type: billingType };
+      const body: any = {
+        matricula_id: sucesso.matriculaId,
+        billing_type: billingType,
+        installment_count: billingType === "CREDIT_CARD" ? parcelas : undefined,
+      };
       if (billingType === "CREDIT_CARD" && ccData) {
-        body.credit_card = ccData.card;
-        body.installment_count = ccData.parcelas;
+        body.credit_card = ccData;
         body.credit_card_holder_info = {
           name: dados.nome,
           cpfCnpj: dados.cpf.replace(/\D/g, ""),
@@ -355,13 +359,11 @@ function MatriculaPublicaPage() {
     }
   };
 
-  const [cartaoParcelas, setCartaoParcelas] = useState(12);
+  const WHATSAPP_LINK = `https://wa.me/55${WHATSAPP_EQUIPE}?text=${encodeURIComponent("Olá! Acabei de fazer minha matrícula no Aulão e preciso de ajuda.")}`;
 
   if (sucesso) {
     const isBoleto = sucesso.formaPagamento === "boleto";
-    const valorCartaoTotal = 1438.80;
 
-    // Se já tem resultado de pagamento
     if (pagResult) {
       return (
         <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
@@ -414,7 +416,7 @@ function MatriculaPublicaPage() {
                   </h1>
                   <p className="text-muted-foreground">
                     {pagResult.credit_card_status === "CONFIRMED" || pagResult.credit_card_status === "RECEIVED"
-                      ? "Seu pagamento foi aprovado com sucesso. Nossa equipe entrará em contato pelo WhatsApp para liberar seu acesso às aulas."
+                      ? "Seu pagamento foi aprovado com sucesso! Nossa equipe entrará em contato pelo WhatsApp para liberar seu acesso às aulas."
                       : "O pagamento está sendo processado. Você receberá a confirmação em breve pelo WhatsApp."}
                   </p>
                 </>
@@ -424,6 +426,15 @@ function MatriculaPublicaPage() {
                   <p className="text-muted-foreground">Nossa equipe entrará em contato pelo WhatsApp.</p>
                 </>
               )}
+
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-xs text-muted-foreground hover:text-green-700 underline mt-2"
+              >
+                Precisa de ajuda? Fale com nossa equipe
+              </a>
             </CardContent>
           </Card>
         </div>
@@ -437,7 +448,11 @@ function MatriculaPublicaPage() {
             <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
               <CheckCircle2 className="h-10 w-10 text-green-600" />
             </div>
-            <h1 className="text-2xl font-bold text-center">Matrícula realizada com sucesso!</h1>
+            <h1 className="text-2xl font-bold text-center">Bem-vindo(a) à Soluções Online! 🎓</h1>
+            <p className="text-muted-foreground text-center text-sm">
+              Parabéns pela decisão! Você está a um passo de realizar o sonho de concluir seus estudos
+              em <strong>menos de 6 meses</strong>. Falta pouco — efetue o pagamento abaixo para garantir sua vaga.
+            </p>
 
             {pagErro && (
               <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">{pagErro}</div>
@@ -445,49 +460,22 @@ function MatriculaPublicaPage() {
 
             {isBoleto ? (
               <div className="space-y-3">
-                <p className="text-muted-foreground text-center text-sm">
-                  Para garantir sua vaga, efetue o pagamento da taxa de matrícula de <strong>R$ 69,90</strong> via PIX.
-                </p>
+                <p className="text-sm font-medium text-center">Pague a taxa de matrícula via PIX — rápido e seguro:</p>
                 <Button
-                  className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
+                  className="w-full bg-green-600 hover:bg-green-700 text-base py-5"
                   onClick={() => gerarPagamento("PIX")}
                   disabled={pagLoading}
                 >
                   {pagLoading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PIX...</>
                   ) : (
-                    "💰 Gerar QR Code PIX — R$ 69,90"
+                    "💰 Pagar Taxa de Matrícula — R$ 69,90"
                   )}
                 </Button>
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-muted-foreground text-center text-sm">
-                  Efetue o pagamento do curso completo no cartão de crédito.
-                </p>
-
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
-                  <p className="text-sm text-orange-800">Valor total: <strong>R$ {valorCartaoTotal.toFixed(2).replace(".", ",")}</strong></p>
-                  <p className="text-lg font-bold text-orange-700">
-                    {cartaoParcelas}x de R$ {(valorCartaoTotal / cartaoParcelas).toFixed(2).replace(".", ",")}
-                  </p>
-                </div>
-
-                <div>
-                  <Label>Parcelas</Label>
-                  <select
-                    value={cartaoParcelas}
-                    onChange={(e) => setCartaoParcelas(Number(e.target.value))}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => (
-                      <option key={n} value={n}>
-                        {n}x de R$ {(valorCartaoTotal / n).toFixed(2).replace(".", ",")} {n === 1 ? "(à vista)" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
+                <p className="text-sm font-medium text-center">Pague com cartão de crédito em até 12x:</p>
                 <div className="space-y-2">
                   <div>
                     <Label>Nome no cartão</Label>
@@ -535,25 +523,50 @@ function MatriculaPublicaPage() {
                       />
                     </div>
                   </div>
+                  <div>
+                    <Label>Parcelas</Label>
+                    <select
+                      value={parcelas}
+                      onChange={(e) => setParcelas(Number(e.target.value))}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => {
+                        const valorParcela = (1438.80 / n).toFixed(2).replace(".", ",");
+                        return <option key={n} value={n}>{n}x de R$ {valorParcela}</option>;
+                      })}
+                    </select>
+                  </div>
                 </div>
                 <Button
-                  className="w-full text-lg py-6"
-                  onClick={() => gerarPagamento("CREDIT_CARD", { card: cartao, parcelas: cartaoParcelas })}
+                  className="w-full text-base py-5"
+                  onClick={() => gerarPagamento("CREDIT_CARD", cartao)}
                   disabled={pagLoading || !cartao.holderName || !cartao.number || !cartao.expiryMonth || !cartao.expiryYear || !cartao.ccv}
                 >
                   {pagLoading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processando...</>
                   ) : (
-                    `💳 Pagar ${cartaoParcelas}x de R$ ${(valorCartaoTotal / cartaoParcelas).toFixed(2).replace(".", ",")}`
+                    `💳 Pagar ${parcelas}x de R$ ${(1438.80 / parcelas).toFixed(2).replace(".", ",")}`
                   )}
                 </Button>
               </div>
             )}
+
+            <div className="text-center pt-2">
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground hover:text-green-700 underline"
+              >
+                Precisa de ajuda? Fale com nossa equipe
+              </a>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white px-4 py-6 md:py-10">
