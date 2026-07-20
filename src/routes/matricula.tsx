@@ -305,14 +305,11 @@ function MatriculaPublicaPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white px-4 py-6 md:py-10">
       <div className="max-w-2xl mx-auto">
-        {/* Banner container — substituir por imagem depois (1080x600) */}
-        <div
-          id="matricula-banner"
-          className="mb-6 w-full rounded-lg border-2 border-dashed border-gray-400 flex items-center justify-center text-center px-4 h-[200px] md:h-[300px]"
-          style={{ backgroundColor: "#f0f0f0" }}
-        >
-          <span className="text-gray-600 font-medium">Banner do Aulão (1080x600)</span>
-        </div>
+        <img
+          src="/banner-matriculas.png"
+          alt="Matrículas Abertas — Faça sua matrícula e garanta sua vaga. Vagas limitadas."
+          className="mb-6 w-full rounded-lg"
+        />
 
         <div className="mb-4 rounded-lg border-2 border-red-600 bg-red-50 px-4 py-3 text-center">
           <div className="text-xs md:text-sm font-semibold text-red-700 uppercase tracking-wide">
