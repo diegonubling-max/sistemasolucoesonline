@@ -134,8 +134,8 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
           }
 
           // 4. Criar cobrança
-          // PIX = taxa de matrícula R$69,90 | Cartão = curso completo R$1.438,80
-          const valor = billing_type === "PIX" ? 69.90 : 1438.80;
+          // TESTE: PIX = R$9,90 | Cartão = R$20,00 (produção: 69.90 / 1438.80)
+          const valor = billing_type === "PIX" ? 9.90 : 20.00;
           const dueDate = new Date();
           dueDate.setDate(dueDate.getDate() + 1);
 

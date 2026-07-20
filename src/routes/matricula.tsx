@@ -376,7 +376,7 @@ function MatriculaPublicaPage() {
               {pagResult.billing_type === "PIX" && pagResult.pix_qr_code ? (
                 <>
                   <h1 className="text-2xl font-bold">Escaneie o QR Code para pagar</h1>
-                  <p className="text-muted-foreground text-sm">Taxa de matrícula: <strong>R$ 69,90</strong></p>
+                  <p className="text-muted-foreground text-sm">Taxa de matrícula: <strong>R$ 9,90</strong> (teste)</p>
                   <div className="flex justify-center">
                     <img
                       src={`data:image/png;base64,${pagResult.pix_qr_code}`}
@@ -469,7 +469,7 @@ function MatriculaPublicaPage() {
                   {pagLoading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PIX...</>
                   ) : (
-                    "💰 Pagar Taxa de Matrícula — R$ 69,90"
+                    "💰 Pagar Taxa de Matrícula — R$ 9,90 (teste)"
                   )}
                 </Button>
               </div>
@@ -531,7 +531,7 @@ function MatriculaPublicaPage() {
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
                       {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => {
-                        const valorParcela = (1438.80 / n).toFixed(2).replace(".", ",");
+                        const valorParcela = (20.00 / n).toFixed(2).replace(".", ",");
                         return <option key={n} value={n}>{n}x de R$ {valorParcela}</option>;
                       })}
                     </select>
@@ -545,7 +545,7 @@ function MatriculaPublicaPage() {
                   {pagLoading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processando...</>
                   ) : (
-                    `💳 Pagar ${parcelas}x de R$ ${(1438.80 / parcelas).toFixed(2).replace(".", ",")}`
+                    `💳 Pagar ${parcelas}x de R$ ${(20.00 / parcelas).toFixed(2).replace(".", ",")}`
                   )}
                 </Button>
               </div>
