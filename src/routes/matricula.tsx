@@ -483,11 +483,13 @@ function MatriculaPublicaPage() {
         </Card>
       </div>
 
-      <div
-        className={`fixed top-4 left-4 right-4 md:right-auto md:max-w-xs bg-white border border-gray-200 shadow-lg rounded-lg px-4 py-3 flex items-center gap-3 z-50 transition-all duration-300 ${
-          provaSocialVisivel ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
-        }`}
-      >
+      {!sucesso && (
+        <div
+          style={{ top: "max(1rem, env(safe-area-inset-top, 1rem))" }}
+          className={`fixed left-4 right-4 md:left-auto md:right-4 md:max-w-xs bg-white border border-green-200 shadow-xl rounded-lg px-4 py-3 flex items-center gap-3 z-[9999] transition-all duration-300 ${
+            provaSocialVisivel ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+          }`}
+        >
         <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold shrink-0">
           {NOMES_PROVA_SOCIAL[provaSocialIndex].nome.charAt(0)}
         </div>
@@ -497,6 +499,7 @@ function MatriculaPublicaPage() {
           <span className="text-muted-foreground">realizou a matrícula agora</span>
         </div>
       </div>
+      )}
     </div>
   );
 }
