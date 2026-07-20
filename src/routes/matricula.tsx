@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, isValidCPF } from "@/lib/format";
 import { format } from "date-fns";
-import { Loader2, Copy, GraduationCap, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
 const POLO_ID_FLORIPA = "32671c78-9076-4f88-8161-bfd5ee8e866b";
 const WHATSAPP_EQUIPE = "48991535895";
@@ -39,8 +39,6 @@ interface DadosAluno {
 
 
 interface Sucesso {
-  ctr: string;
-  senha: string;
   jaExistia: boolean;
 }
 
@@ -197,13 +195,13 @@ function MatriculaPublicaPage() {
       if (!row) throw new Error("Resposta vazia do servidor");
 
       if (row.ja_existia) {
-        toast.error("Você já possui matrícula! Use seu CTR e senha para acessar.", { duration: 8000 });
+        toast.error("Você já possui matrícula! Nossa equipe já está com seus dados.", { duration: 8000 });
         setEnviando(false);
         return;
       }
 
       const formaTxt = forma === "boleto" ? "Boleto" : forma === "cartao" ? "Cartão" : "À Vista (PIX)";
-      const mensagem = `Nova matrícula de Aulão! 🎉🟠\n👤 Nome: ${dados.nome}\n📱 Telefone: ${dados.telefone}\n💳 Preferência: ${formaTxt}\n🔑 CTR: ${row.ctr}\n🔒 Senha: ${row.senha}\nEntrar em contato para alinhar pagamento.`;
+      const mensagem = `Nova matrícula de Aulão! 🎉🟠\n👤 Nome: ${dados.nome}\n📱 Telefone: ${dados.telefone}\n💳 Preferência: ${formaTxt}\nContrato assinado: ${assinatura ? "Sim" : "Não"}\nVer detalhes no menu Matrículas Aulão.`;
       try {
         await fetch("/api/public/hooks/zapi-send", {
           method: "POST",
@@ -214,19 +212,12 @@ function MatriculaPublicaPage() {
         console.warn("Falha ao enviar WhatsApp da equipe", e);
       }
 
-      setSucesso({ ctr: row.ctr, senha: row.senha, jaExistia: false });
+      setSucesso({ jaExistia: false });
     } catch (e: any) {
       toast.error(e.message || "Erro ao processar matrícula");
     } finally {
       setEnviando(false);
     }
-  };
-
-  const copiarAcesso = () => {
-    if (!sucesso) return;
-    const texto = `CTR: ${sucesso.ctr}\nSenha: ${sucesso.senha}\nAcesso: https://sistemasolucoesonline.lovable.app/aluno/login`;
-    navigator.clipboard.writeText(texto);
-    toast.success("Dados copiados!");
   };
 
   if (sucesso) {
@@ -238,25 +229,11 @@ function MatriculaPublicaPage() {
               <CheckCircle2 className="h-10 w-10 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold">Matrícula realizada com sucesso!</h1>
-            <p className="text-muted-foreground">Seus dados de acesso:</p>
-            <div className="bg-gray-50 border rounded-lg p-4 text-left space-y-1">
-              <p><strong>CTR:</strong> {sucesso.ctr}</p>
-              <p><strong>Senha:</strong> {sucesso.senha}</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Nossa equipe entrará em contato pelo WhatsApp para alinhar o pagamento.
+            <p className="text-muted-foreground">
+              Recebemos seus dados e seu contrato assinado. Você vai receber uma mensagem nossa no WhatsApp
+              em instantes, e nossa equipe entrará em contato para alinhar o pagamento e liberar seu acesso
+              às aulas.
             </p>
-            <div className="grid gap-2">
-              <Button variant="outline" onClick={copiarAcesso}>
-                <Copy className="h-4 w-4 mr-2" /> Copiar dados de acesso
-              </Button>
-              <Button
-                className="bg-green-600 hover:bg-green-700"
-                onClick={() => (window.location.href = "/aluno/login")}
-              >
-                <GraduationCap className="h-4 w-4 mr-2" /> Acessar minhas aulas
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>

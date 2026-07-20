@@ -9,48 +9,52 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as MatriculaRouteImport } from './routes/matricula'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as StudentRouteImport } from './routes/_student'
 import { Route as AdminRouteImport } from './routes/_admin'
+import { Route as StudentRouteImport } from './routes/_student'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as MatriculaRouteImport } from './routes/matricula'
 import { Route as AdminIndexRouteImport } from './routes/_admin.index'
-import { Route as ExternoProvaRouteImport } from './routes/externo.prova'
-import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
-import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
-import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
-import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
-import { Route as AdminProvasAgendadasRouteImport } from './routes/_admin.provas-agendadas'
-import { Route as AdminPosVendaRouteImport } from './routes/_admin.pos-venda'
-import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
-import { Route as AdminMinhasComissoesRouteImport } from './routes/_admin.minhas-comissoes'
-import { Route as AdminMinhaEquipeRouteImport } from './routes/_admin.minha-equipe'
-import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
-import { Route as AdminDocumentacaoRouteImport } from './routes/_admin.documentacao'
-import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
 import { Route as AdminColaboradoresRouteImport } from './routes/_admin.colaboradores'
-import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
+import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
+import { Route as AdminDocumentacaoRouteImport } from './routes/_admin.documentacao'
+import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
+import { Route as AdminMatriculasAulaoRouteImport } from './routes/_admin.matriculas-aulao'
+import { Route as AdminMinhaEquipeRouteImport } from './routes/_admin.minha-equipe'
+import { Route as AdminMinhasComissoesRouteImport } from './routes/_admin.minhas-comissoes'
+import { Route as AdminPacotesRouteImport } from './routes/_admin.pacotes'
+import { Route as AdminPosVendaRouteImport } from './routes/_admin.pos-venda'
+import { Route as AdminProvasAgendadasRouteImport } from './routes/_admin.provas-agendadas'
+import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
+import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
+import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
+import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
+import { Route as ExternoProvaRouteImport } from './routes/externo.prova'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
-import { Route as StudentAlunoProvaFinalRouteImport } from './routes/_student.aluno.prova-final'
-import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
-import { Route as StudentAlunoFinanceiroRouteImport } from './routes/_student.aluno.financeiro'
-import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.aluno.dashboard'
-import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
+import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
+import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
+import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.aluno.dashboard'
+import { Route as StudentAlunoFinanceiroRouteImport } from './routes/_student.aluno.financeiro'
+import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
+import { Route as StudentAlunoProvaFinalRouteImport } from './routes/_student.aluno.prova-final'
 import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$id.index'
-import { Route as ApiPublicHooksZapiSendRouteImport } from './routes/api/public/hooks/zapi-send'
-import { Route as ApiPublicHooksZapiJobsDiariosRouteImport } from './routes/api/public/hooks/zapi-jobs-diarios'
-import { Route as ApiPublicHooksWhatsappCobrancaRouteImport } from './routes/api/public/hooks/whatsapp-cobranca'
-import { Route as ApiPublicHooksLembreteProvaRouteImport } from './routes/api/public/hooks/lembrete-prova'
-import { Route as StudentAlunoProvaFinalRealizarRouteImport } from './routes/_student.aluno.prova-final.realizar'
-import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_student.aluno.prova-final.execucao'
-import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
-import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
-import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
 import { Route as AdminAlunosIdEditarRouteImport } from './routes/_admin.alunos.$id.editar'
+import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
+import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
+import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
+import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_student.aluno.prova-final.execucao'
+import { Route as StudentAlunoProvaFinalRealizarRouteImport } from './routes/_student.aluno.prova-final.realizar'
+import { Route as ApiPublicHooksLembreteProvaRouteImport } from './routes/api/public/hooks/lembrete-prova'
+import { Route as ApiPublicHooksWhatsappCobrancaRouteImport } from './routes/api/public/hooks/whatsapp-cobranca'
+import { Route as ApiPublicHooksZapiJobsDiariosRouteImport } from './routes/api/public/hooks/zapi-jobs-diarios'
+import { Route as ApiPublicHooksZapiSendRouteImport } from './routes/api/public/hooks/zapi-send'
 
-const MatriculaRoute = MatriculaRouteImport.update({
-  id: '/matricula',
-  path: '/matricula',
+const AdminRoute = AdminRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentRoute = StudentRouteImport.update({
+  id: '/_student',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -58,12 +62,9 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StudentRoute = StudentRouteImport.update({
-  id: '/_student',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/_admin',
+const MatriculaRoute = MatriculaRouteImport.update({
+  id: '/matricula',
+  path: '/matricula',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -71,64 +72,9 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const ExternoProvaRoute = ExternoProvaRouteImport.update({
-  id: '/externo/prova',
-  path: '/externo/prova',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContratoTokenRoute = ContratoTokenRouteImport.update({
-  id: '/contrato/$token',
-  path: '/contrato/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AlunoLoginRoute = AlunoLoginRouteImport.update({
-  id: '/aluno/login',
-  path: '/aluno/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminSetorProvasRoute = AdminSetorProvasRouteImport.update({
-  id: '/setor-provas',
-  path: '/setor-provas',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
-  id: '/segmentos',
-  path: '/segmentos',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminProvasAgendadasRoute = AdminProvasAgendadasRouteImport.update({
-  id: '/provas-agendadas',
-  path: '/provas-agendadas',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPosVendaRoute = AdminPosVendaRouteImport.update({
-  id: '/pos-venda',
-  path: '/pos-venda',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPacotesRoute = AdminPacotesRouteImport.update({
-  id: '/pacotes',
-  path: '/pacotes',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMinhasComissoesRoute = AdminMinhasComissoesRouteImport.update({
-  id: '/minhas-comissoes',
-  path: '/minhas-comissoes',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMinhaEquipeRoute = AdminMinhaEquipeRouteImport.update({
-  id: '/minha-equipe',
-  path: '/minha-equipe',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminDocumentacaoRoute = AdminDocumentacaoRouteImport.update({
-  id: '/documentacao',
-  path: '/documentacao',
+const AdminColaboradoresRoute = AdminColaboradoresRouteImport.update({
+  id: '/colaboradores',
+  path: '/colaboradores',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
@@ -136,44 +82,74 @@ const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminColaboradoresRoute = AdminColaboradoresRouteImport.update({
-  id: '/colaboradores',
-  path: '/colaboradores',
+const AdminDocumentacaoRoute = AdminDocumentacaoRouteImport.update({
+  id: '/documentacao',
+  path: '/documentacao',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCursosIndexRoute = AdminCursosIndexRouteImport.update({
-  id: '/cursos/',
-  path: '/cursos/',
+const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminMatriculasAulaoRoute = AdminMatriculasAulaoRouteImport.update({
+  id: '/matriculas-aulao',
+  path: '/matriculas-aulao',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMinhaEquipeRoute = AdminMinhaEquipeRouteImport.update({
+  id: '/minha-equipe',
+  path: '/minha-equipe',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMinhasComissoesRoute = AdminMinhasComissoesRouteImport.update({
+  id: '/minhas-comissoes',
+  path: '/minhas-comissoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPacotesRoute = AdminPacotesRouteImport.update({
+  id: '/pacotes',
+  path: '/pacotes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPosVendaRoute = AdminPosVendaRouteImport.update({
+  id: '/pos-venda',
+  path: '/pos-venda',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProvasAgendadasRoute = AdminProvasAgendadasRouteImport.update({
+  id: '/provas-agendadas',
+  path: '/provas-agendadas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSegmentosRoute = AdminSegmentosRouteImport.update({
+  id: '/segmentos',
+  path: '/segmentos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSetorProvasRoute = AdminSetorProvasRouteImport.update({
+  id: '/setor-provas',
+  path: '/setor-provas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AlunoLoginRoute = AlunoLoginRouteImport.update({
+  id: '/aluno/login',
+  path: '/aluno/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContratoTokenRoute = ContratoTokenRouteImport.update({
+  id: '/contrato/$token',
+  path: '/contrato/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExternoProvaRoute = ExternoProvaRouteImport.update({
+  id: '/externo/prova',
+  path: '/externo/prova',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminAlunosIndexRoute = AdminAlunosIndexRouteImport.update({
   id: '/alunos/',
   path: '/alunos/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const StudentAlunoProvaFinalRoute = StudentAlunoProvaFinalRouteImport.update({
-  id: '/aluno/prova-final',
-  path: '/aluno/prova-final',
-  getParentRoute: () => StudentRoute,
-} as any)
-const StudentAlunoPerfilRoute = StudentAlunoPerfilRouteImport.update({
-  id: '/aluno/perfil',
-  path: '/aluno/perfil',
-  getParentRoute: () => StudentRoute,
-} as any)
-const StudentAlunoFinanceiroRoute = StudentAlunoFinanceiroRouteImport.update({
-  id: '/aluno/financeiro',
-  path: '/aluno/financeiro',
-  getParentRoute: () => StudentRoute,
-} as any)
-const StudentAlunoDashboardRoute = StudentAlunoDashboardRouteImport.update({
-  id: '/aluno/dashboard',
-  path: '/aluno/dashboard',
-  getParentRoute: () => StudentRoute,
-} as any)
-const AdminCursosNovoRoute = AdminCursosNovoRouteImport.update({
-  id: '/cursos/novo',
-  path: '/cursos/novo',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAlunosNovoRoute = AdminAlunosNovoRouteImport.update({
@@ -181,20 +157,77 @@ const AdminAlunosNovoRoute = AdminAlunosNovoRouteImport.update({
   path: '/alunos/novo',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCursosIndexRoute = AdminCursosIndexRouteImport.update({
+  id: '/cursos/',
+  path: '/cursos/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCursosNovoRoute = AdminCursosNovoRouteImport.update({
+  id: '/cursos/novo',
+  path: '/cursos/novo',
+  getParentRoute: () => AdminRoute,
+} as any)
+const StudentAlunoDashboardRoute = StudentAlunoDashboardRouteImport.update({
+  id: '/aluno/dashboard',
+  path: '/aluno/dashboard',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentAlunoFinanceiroRoute = StudentAlunoFinanceiroRouteImport.update({
+  id: '/aluno/financeiro',
+  path: '/aluno/financeiro',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentAlunoPerfilRoute = StudentAlunoPerfilRouteImport.update({
+  id: '/aluno/perfil',
+  path: '/aluno/perfil',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentAlunoProvaFinalRoute = StudentAlunoProvaFinalRouteImport.update({
+  id: '/aluno/prova-final',
+  path: '/aluno/prova-final',
+  getParentRoute: () => StudentRoute,
+} as any)
 const AdminAlunosIdIndexRoute = AdminAlunosIdIndexRouteImport.update({
   id: '/alunos/$id/',
   path: '/alunos/$id/',
   getParentRoute: () => AdminRoute,
 } as any)
-const ApiPublicHooksZapiSendRoute = ApiPublicHooksZapiSendRouteImport.update({
-  id: '/api/public/hooks/zapi-send',
-  path: '/api/public/hooks/zapi-send',
-  getParentRoute: () => rootRouteImport,
+const AdminAlunosIdEditarRoute = AdminAlunosIdEditarRouteImport.update({
+  id: '/alunos/$id/editar',
+  path: '/alunos/$id/editar',
+  getParentRoute: () => AdminRoute,
 } as any)
-const ApiPublicHooksZapiJobsDiariosRoute =
-  ApiPublicHooksZapiJobsDiariosRouteImport.update({
-    id: '/api/public/hooks/zapi-jobs-diarios',
-    path: '/api/public/hooks/zapi-jobs-diarios',
+const AdminCursosIdAulasRoute = AdminCursosIdAulasRouteImport.update({
+  id: '/cursos/$id/aulas',
+  path: '/cursos/$id/aulas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCursosIdEditarRoute = AdminCursosIdEditarRouteImport.update({
+  id: '/cursos/$id/editar',
+  path: '/cursos/$id/editar',
+  getParentRoute: () => AdminRoute,
+} as any)
+const StudentAlunoCursoIdRoute = StudentAlunoCursoIdRouteImport.update({
+  id: '/aluno/curso/$id',
+  path: '/aluno/curso/$id',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentAlunoProvaFinalExecucaoRoute =
+  StudentAlunoProvaFinalExecucaoRouteImport.update({
+    id: '/execucao',
+    path: '/execucao',
+    getParentRoute: () => StudentAlunoProvaFinalRoute,
+  } as any)
+const StudentAlunoProvaFinalRealizarRoute =
+  StudentAlunoProvaFinalRealizarRouteImport.update({
+    id: '/realizar',
+    path: '/realizar',
+    getParentRoute: () => StudentAlunoProvaFinalRoute,
+  } as any)
+const ApiPublicHooksLembreteProvaRoute =
+  ApiPublicHooksLembreteProvaRouteImport.update({
+    id: '/api/public/hooks/lembrete-prova',
+    path: '/api/public/hooks/lembrete-prova',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksWhatsappCobrancaRoute =
@@ -203,43 +236,16 @@ const ApiPublicHooksWhatsappCobrancaRoute =
     path: '/api/public/hooks/whatsapp-cobranca',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksLembreteProvaRoute =
-  ApiPublicHooksLembreteProvaRouteImport.update({
-    id: '/api/public/hooks/lembrete-prova',
-    path: '/api/public/hooks/lembrete-prova',
+const ApiPublicHooksZapiJobsDiariosRoute =
+  ApiPublicHooksZapiJobsDiariosRouteImport.update({
+    id: '/api/public/hooks/zapi-jobs-diarios',
+    path: '/api/public/hooks/zapi-jobs-diarios',
     getParentRoute: () => rootRouteImport,
   } as any)
-const StudentAlunoProvaFinalRealizarRoute =
-  StudentAlunoProvaFinalRealizarRouteImport.update({
-    id: '/realizar',
-    path: '/realizar',
-    getParentRoute: () => StudentAlunoProvaFinalRoute,
-  } as any)
-const StudentAlunoProvaFinalExecucaoRoute =
-  StudentAlunoProvaFinalExecucaoRouteImport.update({
-    id: '/execucao',
-    path: '/execucao',
-    getParentRoute: () => StudentAlunoProvaFinalRoute,
-  } as any)
-const StudentAlunoCursoIdRoute = StudentAlunoCursoIdRouteImport.update({
-  id: '/aluno/curso/$id',
-  path: '/aluno/curso/$id',
-  getParentRoute: () => StudentRoute,
-} as any)
-const AdminCursosIdEditarRoute = AdminCursosIdEditarRouteImport.update({
-  id: '/cursos/$id/editar',
-  path: '/cursos/$id/editar',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCursosIdAulasRoute = AdminCursosIdAulasRouteImport.update({
-  id: '/cursos/$id/aulas',
-  path: '/cursos/$id/aulas',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAlunosIdEditarRoute = AdminAlunosIdEditarRouteImport.update({
-  id: '/alunos/$id/editar',
-  path: '/alunos/$id/editar',
-  getParentRoute: () => AdminRoute,
+const ApiPublicHooksZapiSendRoute = ApiPublicHooksZapiSendRouteImport.update({
+  id: '/api/public/hooks/zapi-send',
+  path: '/api/public/hooks/zapi-send',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/documentacao': typeof AdminDocumentacaoRoute
   '/financeiro': typeof AdminFinanceiroRoute
+  '/matriculas-aulao': typeof AdminMatriculasAulaoRoute
   '/minha-equipe': typeof AdminMinhaEquipeRoute
   '/minhas-comissoes': typeof AdminMinhasComissoesRoute
   '/pacotes': typeof AdminPacotesRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/documentacao': typeof AdminDocumentacaoRoute
   '/financeiro': typeof AdminFinanceiroRoute
+  '/matriculas-aulao': typeof AdminMatriculasAulaoRoute
   '/minha-equipe': typeof AdminMinhaEquipeRoute
   '/minhas-comissoes': typeof AdminMinhasComissoesRoute
   '/pacotes': typeof AdminPacotesRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/_admin/configuracoes': typeof AdminConfiguracoesRoute
   '/_admin/documentacao': typeof AdminDocumentacaoRoute
   '/_admin/financeiro': typeof AdminFinanceiroRoute
+  '/_admin/matriculas-aulao': typeof AdminMatriculasAulaoRoute
   '/_admin/minha-equipe': typeof AdminMinhaEquipeRoute
   '/_admin/minhas-comissoes': typeof AdminMinhasComissoesRoute
   '/_admin/pacotes': typeof AdminPacotesRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/documentacao'
     | '/financeiro'
+    | '/matriculas-aulao'
     | '/minha-equipe'
     | '/minhas-comissoes'
     | '/pacotes'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/documentacao'
     | '/financeiro'
+    | '/matriculas-aulao'
     | '/minha-equipe'
     | '/minhas-comissoes'
     | '/pacotes'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
     | '/_admin/configuracoes'
     | '/_admin/documentacao'
     | '/_admin/financeiro'
+    | '/_admin/matriculas-aulao'
     | '/_admin/minha-equipe'
     | '/_admin/minhas-comissoes'
     | '/_admin/pacotes'
@@ -494,18 +506,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/matricula': {
-      id: '/matricula'
-      path: '/matricula'
-      fullPath: '/matricula'
-      preLoaderRoute: typeof MatriculaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/_admin': {
+      id: '/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_student': {
@@ -515,11 +520,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_admin': {
-      id: '/_admin'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AdminRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matricula': {
+      id: '/matricula'
+      path: '/matricula'
+      fullPath: '/matricula'
+      preLoaderRoute: typeof MatriculaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_admin/': {
@@ -529,88 +541,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/externo/prova': {
-      id: '/externo/prova'
-      path: '/externo/prova'
-      fullPath: '/externo/prova'
-      preLoaderRoute: typeof ExternoProvaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contrato/$token': {
-      id: '/contrato/$token'
-      path: '/contrato/$token'
-      fullPath: '/contrato/$token'
-      preLoaderRoute: typeof ContratoTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/aluno/login': {
-      id: '/aluno/login'
-      path: '/aluno/login'
-      fullPath: '/aluno/login'
-      preLoaderRoute: typeof AlunoLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_admin/setor-provas': {
-      id: '/_admin/setor-provas'
-      path: '/setor-provas'
-      fullPath: '/setor-provas'
-      preLoaderRoute: typeof AdminSetorProvasRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/segmentos': {
-      id: '/_admin/segmentos'
-      path: '/segmentos'
-      fullPath: '/segmentos'
-      preLoaderRoute: typeof AdminSegmentosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/provas-agendadas': {
-      id: '/_admin/provas-agendadas'
-      path: '/provas-agendadas'
-      fullPath: '/provas-agendadas'
-      preLoaderRoute: typeof AdminProvasAgendadasRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/pos-venda': {
-      id: '/_admin/pos-venda'
-      path: '/pos-venda'
-      fullPath: '/pos-venda'
-      preLoaderRoute: typeof AdminPosVendaRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/pacotes': {
-      id: '/_admin/pacotes'
-      path: '/pacotes'
-      fullPath: '/pacotes'
-      preLoaderRoute: typeof AdminPacotesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/minhas-comissoes': {
-      id: '/_admin/minhas-comissoes'
-      path: '/minhas-comissoes'
-      fullPath: '/minhas-comissoes'
-      preLoaderRoute: typeof AdminMinhasComissoesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/minha-equipe': {
-      id: '/_admin/minha-equipe'
-      path: '/minha-equipe'
-      fullPath: '/minha-equipe'
-      preLoaderRoute: typeof AdminMinhaEquipeRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/financeiro': {
-      id: '/_admin/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AdminFinanceiroRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/documentacao': {
-      id: '/_admin/documentacao'
-      path: '/documentacao'
-      fullPath: '/documentacao'
-      preLoaderRoute: typeof AdminDocumentacaoRouteImport
+    '/_admin/colaboradores': {
+      id: '/_admin/colaboradores'
+      path: '/colaboradores'
+      fullPath: '/colaboradores'
+      preLoaderRoute: typeof AdminColaboradoresRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/configuracoes': {
@@ -620,60 +555,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConfiguracoesRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/colaboradores': {
-      id: '/_admin/colaboradores'
-      path: '/colaboradores'
-      fullPath: '/colaboradores'
-      preLoaderRoute: typeof AdminColaboradoresRouteImport
+    '/_admin/documentacao': {
+      id: '/_admin/documentacao'
+      path: '/documentacao'
+      fullPath: '/documentacao'
+      preLoaderRoute: typeof AdminDocumentacaoRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/cursos/': {
-      id: '/_admin/cursos/'
-      path: '/cursos'
-      fullPath: '/cursos/'
-      preLoaderRoute: typeof AdminCursosIndexRouteImport
+    '/_admin/financeiro': {
+      id: '/_admin/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AdminFinanceiroRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/_admin/matriculas-aulao': {
+      id: '/_admin/matriculas-aulao'
+      path: '/matriculas-aulao'
+      fullPath: '/matriculas-aulao'
+      preLoaderRoute: typeof AdminMatriculasAulaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/minha-equipe': {
+      id: '/_admin/minha-equipe'
+      path: '/minha-equipe'
+      fullPath: '/minha-equipe'
+      preLoaderRoute: typeof AdminMinhaEquipeRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/minhas-comissoes': {
+      id: '/_admin/minhas-comissoes'
+      path: '/minhas-comissoes'
+      fullPath: '/minhas-comissoes'
+      preLoaderRoute: typeof AdminMinhasComissoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/pacotes': {
+      id: '/_admin/pacotes'
+      path: '/pacotes'
+      fullPath: '/pacotes'
+      preLoaderRoute: typeof AdminPacotesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/pos-venda': {
+      id: '/_admin/pos-venda'
+      path: '/pos-venda'
+      fullPath: '/pos-venda'
+      preLoaderRoute: typeof AdminPosVendaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/provas-agendadas': {
+      id: '/_admin/provas-agendadas'
+      path: '/provas-agendadas'
+      fullPath: '/provas-agendadas'
+      preLoaderRoute: typeof AdminProvasAgendadasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/segmentos': {
+      id: '/_admin/segmentos'
+      path: '/segmentos'
+      fullPath: '/segmentos'
+      preLoaderRoute: typeof AdminSegmentosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/setor-provas': {
+      id: '/_admin/setor-provas'
+      path: '/setor-provas'
+      fullPath: '/setor-provas'
+      preLoaderRoute: typeof AdminSetorProvasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/aluno/login': {
+      id: '/aluno/login'
+      path: '/aluno/login'
+      fullPath: '/aluno/login'
+      preLoaderRoute: typeof AlunoLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contrato/$token': {
+      id: '/contrato/$token'
+      path: '/contrato/$token'
+      fullPath: '/contrato/$token'
+      preLoaderRoute: typeof ContratoTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/externo/prova': {
+      id: '/externo/prova'
+      path: '/externo/prova'
+      fullPath: '/externo/prova'
+      preLoaderRoute: typeof ExternoProvaRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_admin/alunos/': {
       id: '/_admin/alunos/'
       path: '/alunos'
       fullPath: '/alunos/'
       preLoaderRoute: typeof AdminAlunosIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_student/aluno/prova-final': {
-      id: '/_student/aluno/prova-final'
-      path: '/aluno/prova-final'
-      fullPath: '/aluno/prova-final'
-      preLoaderRoute: typeof StudentAlunoProvaFinalRouteImport
-      parentRoute: typeof StudentRoute
-    }
-    '/_student/aluno/perfil': {
-      id: '/_student/aluno/perfil'
-      path: '/aluno/perfil'
-      fullPath: '/aluno/perfil'
-      preLoaderRoute: typeof StudentAlunoPerfilRouteImport
-      parentRoute: typeof StudentRoute
-    }
-    '/_student/aluno/financeiro': {
-      id: '/_student/aluno/financeiro'
-      path: '/aluno/financeiro'
-      fullPath: '/aluno/financeiro'
-      preLoaderRoute: typeof StudentAlunoFinanceiroRouteImport
-      parentRoute: typeof StudentRoute
-    }
-    '/_student/aluno/dashboard': {
-      id: '/_student/aluno/dashboard'
-      path: '/aluno/dashboard'
-      fullPath: '/aluno/dashboard'
-      preLoaderRoute: typeof StudentAlunoDashboardRouteImport
-      parentRoute: typeof StudentRoute
-    }
-    '/_admin/cursos/novo': {
-      id: '/_admin/cursos/novo'
-      path: '/cursos/novo'
-      fullPath: '/cursos/novo'
-      preLoaderRoute: typeof AdminCursosNovoRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/alunos/novo': {
@@ -683,74 +660,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosNovoRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/cursos/': {
+      id: '/_admin/cursos/'
+      path: '/cursos'
+      fullPath: '/cursos/'
+      preLoaderRoute: typeof AdminCursosIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/cursos/novo': {
+      id: '/_admin/cursos/novo'
+      path: '/cursos/novo'
+      fullPath: '/cursos/novo'
+      preLoaderRoute: typeof AdminCursosNovoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_student/aluno/dashboard': {
+      id: '/_student/aluno/dashboard'
+      path: '/aluno/dashboard'
+      fullPath: '/aluno/dashboard'
+      preLoaderRoute: typeof StudentAlunoDashboardRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/_student/aluno/financeiro': {
+      id: '/_student/aluno/financeiro'
+      path: '/aluno/financeiro'
+      fullPath: '/aluno/financeiro'
+      preLoaderRoute: typeof StudentAlunoFinanceiroRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/_student/aluno/perfil': {
+      id: '/_student/aluno/perfil'
+      path: '/aluno/perfil'
+      fullPath: '/aluno/perfil'
+      preLoaderRoute: typeof StudentAlunoPerfilRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/_student/aluno/prova-final': {
+      id: '/_student/aluno/prova-final'
+      path: '/aluno/prova-final'
+      fullPath: '/aluno/prova-final'
+      preLoaderRoute: typeof StudentAlunoProvaFinalRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/_admin/alunos/$id/': {
       id: '/_admin/alunos/$id/'
       path: '/alunos/$id'
       fullPath: '/alunos/$id/'
       preLoaderRoute: typeof AdminAlunosIdIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/api/public/hooks/zapi-send': {
-      id: '/api/public/hooks/zapi-send'
-      path: '/api/public/hooks/zapi-send'
-      fullPath: '/api/public/hooks/zapi-send'
-      preLoaderRoute: typeof ApiPublicHooksZapiSendRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/zapi-jobs-diarios': {
-      id: '/api/public/hooks/zapi-jobs-diarios'
-      path: '/api/public/hooks/zapi-jobs-diarios'
-      fullPath: '/api/public/hooks/zapi-jobs-diarios'
-      preLoaderRoute: typeof ApiPublicHooksZapiJobsDiariosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/whatsapp-cobranca': {
-      id: '/api/public/hooks/whatsapp-cobranca'
-      path: '/api/public/hooks/whatsapp-cobranca'
-      fullPath: '/api/public/hooks/whatsapp-cobranca'
-      preLoaderRoute: typeof ApiPublicHooksWhatsappCobrancaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/lembrete-prova': {
-      id: '/api/public/hooks/lembrete-prova'
-      path: '/api/public/hooks/lembrete-prova'
-      fullPath: '/api/public/hooks/lembrete-prova'
-      preLoaderRoute: typeof ApiPublicHooksLembreteProvaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_student/aluno/prova-final/realizar': {
-      id: '/_student/aluno/prova-final/realizar'
-      path: '/realizar'
-      fullPath: '/aluno/prova-final/realizar'
-      preLoaderRoute: typeof StudentAlunoProvaFinalRealizarRouteImport
-      parentRoute: typeof StudentAlunoProvaFinalRoute
-    }
-    '/_student/aluno/prova-final/execucao': {
-      id: '/_student/aluno/prova-final/execucao'
-      path: '/execucao'
-      fullPath: '/aluno/prova-final/execucao'
-      preLoaderRoute: typeof StudentAlunoProvaFinalExecucaoRouteImport
-      parentRoute: typeof StudentAlunoProvaFinalRoute
-    }
-    '/_student/aluno/curso/$id': {
-      id: '/_student/aluno/curso/$id'
-      path: '/aluno/curso/$id'
-      fullPath: '/aluno/curso/$id'
-      preLoaderRoute: typeof StudentAlunoCursoIdRouteImport
-      parentRoute: typeof StudentRoute
-    }
-    '/_admin/cursos/$id/editar': {
-      id: '/_admin/cursos/$id/editar'
-      path: '/cursos/$id/editar'
-      fullPath: '/cursos/$id/editar'
-      preLoaderRoute: typeof AdminCursosIdEditarRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/cursos/$id/aulas': {
-      id: '/_admin/cursos/$id/aulas'
-      path: '/cursos/$id/aulas'
-      fullPath: '/cursos/$id/aulas'
-      preLoaderRoute: typeof AdminCursosIdAulasRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/alunos/$id/editar': {
@@ -760,6 +716,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAlunosIdEditarRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/cursos/$id/aulas': {
+      id: '/_admin/cursos/$id/aulas'
+      path: '/cursos/$id/aulas'
+      fullPath: '/cursos/$id/aulas'
+      preLoaderRoute: typeof AdminCursosIdAulasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/cursos/$id/editar': {
+      id: '/_admin/cursos/$id/editar'
+      path: '/cursos/$id/editar'
+      fullPath: '/cursos/$id/editar'
+      preLoaderRoute: typeof AdminCursosIdEditarRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_student/aluno/curso/$id': {
+      id: '/_student/aluno/curso/$id'
+      path: '/aluno/curso/$id'
+      fullPath: '/aluno/curso/$id'
+      preLoaderRoute: typeof StudentAlunoCursoIdRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/_student/aluno/prova-final/execucao': {
+      id: '/_student/aluno/prova-final/execucao'
+      path: '/execucao'
+      fullPath: '/aluno/prova-final/execucao'
+      preLoaderRoute: typeof StudentAlunoProvaFinalExecucaoRouteImport
+      parentRoute: typeof StudentAlunoProvaFinalRoute
+    }
+    '/_student/aluno/prova-final/realizar': {
+      id: '/_student/aluno/prova-final/realizar'
+      path: '/realizar'
+      fullPath: '/aluno/prova-final/realizar'
+      preLoaderRoute: typeof StudentAlunoProvaFinalRealizarRouteImport
+      parentRoute: typeof StudentAlunoProvaFinalRoute
+    }
+    '/api/public/hooks/lembrete-prova': {
+      id: '/api/public/hooks/lembrete-prova'
+      path: '/api/public/hooks/lembrete-prova'
+      fullPath: '/api/public/hooks/lembrete-prova'
+      preLoaderRoute: typeof ApiPublicHooksLembreteProvaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/whatsapp-cobranca': {
+      id: '/api/public/hooks/whatsapp-cobranca'
+      path: '/api/public/hooks/whatsapp-cobranca'
+      fullPath: '/api/public/hooks/whatsapp-cobranca'
+      preLoaderRoute: typeof ApiPublicHooksWhatsappCobrancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/zapi-jobs-diarios': {
+      id: '/api/public/hooks/zapi-jobs-diarios'
+      path: '/api/public/hooks/zapi-jobs-diarios'
+      fullPath: '/api/public/hooks/zapi-jobs-diarios'
+      preLoaderRoute: typeof ApiPublicHooksZapiJobsDiariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/zapi-send': {
+      id: '/api/public/hooks/zapi-send'
+      path: '/api/public/hooks/zapi-send'
+      fullPath: '/api/public/hooks/zapi-send'
+      preLoaderRoute: typeof ApiPublicHooksZapiSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -768,6 +787,7 @@ interface AdminRouteChildren {
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminDocumentacaoRoute: typeof AdminDocumentacaoRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
+  AdminMatriculasAulaoRoute: typeof AdminMatriculasAulaoRoute
   AdminMinhaEquipeRoute: typeof AdminMinhaEquipeRoute
   AdminMinhasComissoesRoute: typeof AdminMinhasComissoesRoute
   AdminPacotesRoute: typeof AdminPacotesRoute
@@ -791,6 +811,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminDocumentacaoRoute: AdminDocumentacaoRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,
+  AdminMatriculasAulaoRoute: AdminMatriculasAulaoRoute,
   AdminMinhaEquipeRoute: AdminMinhaEquipeRoute,
   AdminMinhasComissoesRoute: AdminMinhasComissoesRoute,
   AdminPacotesRoute: AdminPacotesRoute,
@@ -862,3 +883,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
