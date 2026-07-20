@@ -97,20 +97,45 @@ function formatContagem(ms: number): string {
 
 const NOMES_PROVA_SOCIAL: { nome: string; cidade: string }[] = [
   { nome: "Marcos Silva", cidade: "Florianópolis/SC" },
-  { nome: "Juliana Costa", cidade: "São José/SC" },
+  { nome: "Juliana Costa", cidade: "Lages/SC" },
   { nome: "Adriana Souza", cidade: "Palhoça/SC" },
-  { nome: "Rafael Oliveira", cidade: "Biguaçu/SC" },
+  { nome: "Rafael Oliveira", cidade: "Chapecó/SC" },
   { nome: "Camila Santos", cidade: "Itajaí/SC" },
-  { nome: "Bruno Ferreira", cidade: "Blumenau/SC" },
-  { nome: "Patrícia Almeida", cidade: "Joinville/SC" },
+  { nome: "Bruno Ferreira", cidade: "Xanxerê/SC" },
+  { nome: "Patrícia Almeida", cidade: "Rio do Sul/SC" },
   { nome: "Diego Pereira", cidade: "Criciúma/SC" },
-  { nome: "Fernanda Lima", cidade: "Tubarão/SC" },
-  { nome: "Rodrigo Martins", cidade: "Chapecó/SC" },
-  { nome: "Vanessa Rodrigues", cidade: "Curitiba/PR" },
-  { nome: "Thiago Barbosa", cidade: "Porto Alegre/RS" },
-  { nome: "Larissa Gomes", cidade: "São Paulo/SP" },
-  { nome: "Anderson Ribeiro", cidade: "Balneário Camboriú/SC" },
-  { nome: "Priscila Cardoso", cidade: "Camboriú/SC" },
+  { nome: "Fernanda Lima", cidade: "Concórdia/SC" },
+  { nome: "Rodrigo Martins", cidade: "Videira/SC" },
+  { nome: "Vanessa Rodrigues", cidade: "Canoinhas/SC" },
+  { nome: "Thiago Barbosa", cidade: "Caçador/SC" },
+  { nome: "Larissa Gomes", cidade: "Araranguá/SC" },
+  { nome: "Anderson Ribeiro", cidade: "Brusque/SC" },
+  { nome: "Priscila Cardoso", cidade: "Navegantes/SC" },
+  { nome: "Roberta Nascimento", cidade: "Pelotas/RS" },
+  { nome: "Lucas Moreira", cidade: "Canoas/RS" },
+  { nome: "Tatiana Vieira", cidade: "Santa Maria/RS" },
+  { nome: "Marcelo Duarte", cidade: "Passo Fundo/RS" },
+  { nome: "Simone Teixeira", cidade: "Erechim/RS" },
+  { nome: "Felipe Ramos", cidade: "Bagé/RS" },
+  { nome: "Aline Freitas", cidade: "Londrina/PR" },
+  { nome: "Eduardo Mendes", cidade: "Cascavel/PR" },
+  { nome: "Carla Nunes", cidade: "Maringá/PR" },
+  { nome: "Gustavo Pinto", cidade: "Ponta Grossa/PR" },
+  { nome: "Renata Araújo", cidade: "Guarapuava/PR" },
+  { nome: "Sandra Machado", cidade: "Campinas/SP" },
+  { nome: "Paulo Henrique", cidade: "Ribeirão Preto/SP" },
+  { nome: "Daniele Rocha", cidade: "Sorocaba/SP" },
+  { nome: "Cláudio Borges", cidade: "São José dos Campos/SP" },
+  { nome: "Michele Tavares", cidade: "Juiz de Fora/MG" },
+  { nome: "Leandro Campos", cidade: "Uberlândia/MG" },
+  { nome: "Isabela Correia", cidade: "Montes Claros/MG" },
+  { nome: "Fábio Monteiro", cidade: "Governador Valadares/MG" },
+  { nome: "Jéssica Dias", cidade: "Vitória da Conquista/BA" },
+  { nome: "Ricardo Lopes", cidade: "Feira de Santana/BA" },
+  { nome: "Amanda Cunha", cidade: "Imperatriz/MA" },
+  { nome: "Carlos Alberto", cidade: "Mossoró/RN" },
+  { nome: "Luciana Brito", cidade: "Caruaru/PE" },
+  { nome: "Márcio Rezende", cidade: "Macapá/AP" },
 ];
 
 function MatriculaPublicaPage() {
@@ -134,17 +159,21 @@ function MatriculaPublicaPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const [provaSocialIndex, setProvaSocialIndex] = useState(0);
+  const [provaSocialIndex, setProvaSocialIndex] = useState(() => Math.floor(Math.random() * NOMES_PROVA_SOCIAL.length));
   const [provaSocialVisivel, setProvaSocialVisivel] = useState(true);
   useEffect(() => {
     let timeoutEsconder: ReturnType<typeof setTimeout>;
-    const interval = setInterval(() => {
-      setProvaSocialVisivel(false);
-      timeoutEsconder = setTimeout(() => {
-        setProvaSocialIndex((i) => (i + 1) % NOMES_PROVA_SOCIAL.length);
-        setProvaSocialVisivel(true);
-      }, 400);
-    }, 4000 + Math.random() * 1000);
+    const agendar = () => {
+      const delay = 8000 + Math.random() * 4000; // 8 a 12 segundos
+      return setInterval(() => {
+        setProvaSocialVisivel(false);
+        timeoutEsconder = setTimeout(() => {
+          setProvaSocialIndex(() => Math.floor(Math.random() * NOMES_PROVA_SOCIAL.length));
+          setProvaSocialVisivel(true);
+        }, 400);
+      }, delay);
+    };
+    const interval = agendar();
     return () => {
       clearInterval(interval);
       clearTimeout(timeoutEsconder);
