@@ -443,13 +443,13 @@ function MatriculaPublicaPage() {
                   </div>
                   {pagResult.pix_copia_cola && (
                     <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">Ou copie o código PIX:</p>
-                      <div className="bg-gray-50 border rounded p-2 text-xs break-all font-mono max-h-20 overflow-y-auto">
+                      <div className="bg-gray-50 border rounded px-3 py-2 text-xs font-mono text-muted-foreground truncate">
                         {pagResult.pix_copia_cola}
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full"
                         onClick={() => {
                           navigator.clipboard.writeText(pagResult.pix_copia_cola);
                           setCopiado(true);
