@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
 const POLO_ID_FLORIPA = "32671c78-9076-4f88-8161-bfd5ee8e866b";
-const WHATSAPP_EQUIPE = "48991535895";
+const WHATSAPP_EQUIPE = "48984393047";
 
 export const Route = createFileRoute("/matricula")({
   head: () => ({
@@ -364,18 +364,6 @@ function MatriculaPublicaPage() {
         const row = Array.isArray(data) ? data[0] : data;
         if (!row) throw new Error("Resposta vazia do servidor");
         matriculaId = row.id;
-      }
-
-      const formaTxt = forma === "boleto" ? "Boleto" : "Cartão";
-      const mensagem = `Nova matrícula de Aulão! 🎉🟠\n👤 Nome: ${dados.nome}\n📱 Telefone: ${dados.telefone}\n💳 Preferência: ${formaTxt}\nContrato assinado: ${assinatura ? "Sim" : "Não"}\nVer detalhes no menu Matrículas Aulão.`;
-      try {
-        await fetch("/api/public/hooks/zapi-send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: WHATSAPP_EQUIPE, message: mensagem }),
-        });
-      } catch (e) {
-        console.warn("Falha ao enviar WhatsApp da equipe", e);
       }
 
       setSucesso({ jaExistia: false, matriculaId: matriculaId!, formaPagamento: forma! });
