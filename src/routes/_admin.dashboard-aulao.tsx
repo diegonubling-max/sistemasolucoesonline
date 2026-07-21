@@ -66,7 +66,7 @@ function DashboardAulao() {
         description="Visão geral de matrículas e faturamento do Aulão"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total de Matrículas</CardTitle>
@@ -93,20 +93,7 @@ function DashboardAulao() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Recebido</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-700">{fmt(recebidoTotal)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {boletosPagos.length + cartoesPagos.length} pagamento(s) confirmado(s)
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
+<Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Aguardando Pagamento</CardTitle>
             <Clock className="h-4 w-4 text-orange-500" />

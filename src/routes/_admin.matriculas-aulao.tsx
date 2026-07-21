@@ -50,6 +50,9 @@ function MatriculasAulaoList() {
   const [editing, setEditing] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [busca, setBusca] = useState("");
+  const [filtroForma, setFiltroForma] = useState<"todos" | "boleto" | "cartao">("todos");
+  const [filtroContrato, setFiltroContrato] = useState<"todos" | "sim" | "nao">("todos");
+  const [filtroPagamento, setFiltroPagamento] = useState<"todos" | "pago" | "aguardando">("todos");
   const [contratoAberto, setContratoAberto] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -65,14 +68,21 @@ function MatriculasAulaoList() {
   });
 
   const filtrados = (data ?? []).filter((m) => {
-    if (!busca.trim()) return true;
-    const q = busca.trim().toLowerCase();
-    return (
-      m.nome?.toLowerCase().includes(q) ||
-      m.email?.toLowerCase().includes(q) ||
-      m.telefone?.includes(q) ||
-      m.cpf?.includes(q)
-    );
+    if (busca.trim()) {
+      const q = busca.trim().toLowerCase();
+      if (!(
+        m.nome?.toLowerCase().includes(q) ||
+        m.email?.toLowerCase().includes(q) ||
+        m.telefone?.includes(q) ||
+        m.cpf?.includes(q)
+      )) return false;
+    }
+    if (filtroForma !== "todos" && m.forma_pagamento !== filtroForma) return false;
+    if (filtroContrato === "sim" && !m.assinatura_nome) return false;
+    if (filtroContrato === "nao" && m.assinatura_nome) return false;
+    if (filtroPagamento === "pago" && m.pagamento_status !== "confirmado") return false;
+    if (filtroPagamento === "aguardando" && m.pagamento_status === "confirmado") return false;
+    return true;
   });
 
   const saveMutation = useMutation({
@@ -137,13 +147,43 @@ function MatriculasAulaoList() {
         description={`${data?.length ?? 0} matrícula(s) recebida(s) pelo link público`}
       />
 
-      <div className="mb-4">
+      <div className="mb-4 space-y-3">
         <Input
           placeholder="Buscar por nome, e-mail, telefone ou CPF..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           className="max-w-sm"
         />
+        <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mr-1">Forma:</div>
+          {([["todos", "Todos"], ["boleto", "Boleto"], ["cartao", "Cartão"]] as const).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setFiltroForma(v)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition ${filtroForma === v ? "bg-primary text-primary-foreground" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+            >{label}</button>
+          ))}
+
+          <div className="w-px h-5 bg-gray-300 mx-1" />
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mr-1">Contrato:</div>
+          {([["todos", "Todos"], ["sim", "Assinado"], ["nao", "Não assinado"]] as const).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setFiltroContrato(v)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition ${filtroContrato === v ? "bg-primary text-primary-foreground" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+            >{label}</button>
+          ))}
+
+          <div className="w-px h-5 bg-gray-300 mx-1" />
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mr-1">Pagamento:</div>
+          {([["todos", "Todos"], ["pago", "Pago"], ["aguardando", "Aguardando"]] as const).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setFiltroPagamento(v)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition ${filtroPagamento === v ? "bg-primary text-primary-foreground" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+            >{label}</button>
+          ))}
+        </div>
       </div>
 
       <Card>
