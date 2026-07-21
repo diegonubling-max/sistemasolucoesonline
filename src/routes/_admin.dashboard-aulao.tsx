@@ -92,21 +92,6 @@ function DashboardAulao() {
             </p>
           </CardContent>
         </Card>
-
-<Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Aguardando Pagamento</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-orange-600">
-              {total - boletosPagos.length - cartoesPagos.length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {fmt(faturamentoTotal - recebidoTotal)} a receber
-            </p>
-          </CardContent>
-        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
