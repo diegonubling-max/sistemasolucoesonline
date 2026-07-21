@@ -16,6 +16,7 @@ import { Route as MatriculaRouteImport } from './routes/matricula'
 import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as AdminColaboradoresRouteImport } from './routes/_admin.colaboradores'
 import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
+import { Route as AdminDashboardAulaoRouteImport } from './routes/_admin.dashboard-aulao'
 import { Route as AdminDocumentacaoRouteImport } from './routes/_admin.documentacao'
 import { Route as AdminFinanceiroRouteImport } from './routes/_admin.financeiro'
 import { Route as AdminMatriculasAulaoRouteImport } from './routes/_admin.matriculas-aulao'
@@ -82,6 +83,11 @@ const AdminColaboradoresRoute = AdminColaboradoresRouteImport.update({
 const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDashboardAulaoRoute = AdminDashboardAulaoRouteImport.update({
+  id: '/dashboard-aulao',
+  path: '/dashboard-aulao',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDocumentacaoRoute = AdminDocumentacaoRouteImport.update({
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/matricula': typeof MatriculaRoute
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
+  '/dashboard-aulao': typeof AdminDashboardAulaoRoute
   '/documentacao': typeof AdminDocumentacaoRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/matriculas-aulao': typeof AdminMatriculasAulaoRoute
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/matricula': typeof MatriculaRoute
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
+  '/dashboard-aulao': typeof AdminDashboardAulaoRoute
   '/documentacao': typeof AdminDocumentacaoRoute
   '/financeiro': typeof AdminFinanceiroRoute
   '/matriculas-aulao': typeof AdminMatriculasAulaoRoute
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   '/matricula': typeof MatriculaRoute
   '/_admin/colaboradores': typeof AdminColaboradoresRoute
   '/_admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/_admin/dashboard-aulao': typeof AdminDashboardAulaoRoute
   '/_admin/documentacao': typeof AdminDocumentacaoRoute
   '/_admin/financeiro': typeof AdminFinanceiroRoute
   '/_admin/matriculas-aulao': typeof AdminMatriculasAulaoRoute
@@ -396,6 +405,7 @@ export interface FileRouteTypes {
     | '/matricula'
     | '/colaboradores'
     | '/configuracoes'
+    | '/dashboard-aulao'
     | '/documentacao'
     | '/financeiro'
     | '/matriculas-aulao'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/matricula'
     | '/colaboradores'
     | '/configuracoes'
+    | '/dashboard-aulao'
     | '/documentacao'
     | '/financeiro'
     | '/matriculas-aulao'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/matricula'
     | '/_admin/colaboradores'
     | '/_admin/configuracoes'
+    | '/_admin/dashboard-aulao'
     | '/_admin/documentacao'
     | '/_admin/financeiro'
     | '/_admin/matriculas-aulao'
@@ -581,6 +593,13 @@ declare module '@tanstack/react-router' {
       path: '/configuracoes'
       fullPath: '/configuracoes'
       preLoaderRoute: typeof AdminConfiguracoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/dashboard-aulao': {
+      id: '/_admin/dashboard-aulao'
+      path: '/dashboard-aulao'
+      fullPath: '/dashboard-aulao'
+      preLoaderRoute: typeof AdminDashboardAulaoRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/documentacao': {
@@ -827,6 +846,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminColaboradoresRoute: typeof AdminColaboradoresRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
+  AdminDashboardAulaoRoute: typeof AdminDashboardAulaoRoute
   AdminDocumentacaoRoute: typeof AdminDocumentacaoRoute
   AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminMatriculasAulaoRoute: typeof AdminMatriculasAulaoRoute
@@ -851,6 +871,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminColaboradoresRoute: AdminColaboradoresRoute,
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
+  AdminDashboardAulaoRoute: AdminDashboardAulaoRoute,
   AdminDocumentacaoRoute: AdminDocumentacaoRoute,
   AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminMatriculasAulaoRoute: AdminMatriculasAulaoRoute,

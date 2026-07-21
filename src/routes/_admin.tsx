@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_admin")({
   component: AdminLayout,
 });
 
-const ADMIN_ONLY_PREFIXES = ["/cursos", "/segmentos", "/pacotes", "/colaboradores", "/matriculas-aulao"];
+const ADMIN_ONLY_PREFIXES = ["/cursos", "/segmentos", "/pacotes", "/colaboradores", "/matriculas-aulao", "/dashboard-aulao"];
 const PERM_PREFIXES: Record<string, string> = {
   "/alunos": "ver_alunos",
   "/financeiro": "ver_financeiro",

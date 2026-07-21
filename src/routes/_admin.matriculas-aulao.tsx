@@ -151,6 +151,7 @@ function MatriculasAulaoList() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">#</TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Telefone</TableHead>
@@ -164,13 +165,14 @@ function MatriculasAulaoList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
               )}
-              {filtrados.map((m) => (
+              {filtrados.map((m, index) => (
                 <TableRow key={m.id}>
+                  <TableCell className="font-medium text-muted-foreground">{filtrados.length - index}</TableCell>
                   <TableCell className="whitespace-nowrap">
                     {m.created_at ? new Date(m.created_at).toLocaleDateString("pt-BR") : "-"}
                   </TableCell>
@@ -235,7 +237,7 @@ function MatriculasAulaoList() {
               ))}
               {!isLoading && filtrados.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     Nenhuma matrícula encontrada.
                   </TableCell>
                 </TableRow>
