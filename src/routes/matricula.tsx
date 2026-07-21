@@ -150,6 +150,7 @@ function MatriculaPublicaPage() {
   const [aceito, setAceito] = useState(false);
   const [assinatura, setAssinatura] = useState("");
   const [confirmacaoCpf, setConfirmacaoCpf] = useState("");
+  const [matriculaIdParcial, setMatriculaIdParcial] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState<Sucesso | null>(null);
 
@@ -243,14 +244,45 @@ function MatriculaPublicaPage() {
 
   }
 
-  const handleAvancar1 = () => {
+  const handleAvancar1 = async () => {
     const err = validarStep1();
     if (err) { toast.error(err); return; }
+    // Salvar dados parciais no banco (sem contrato ainda)
+    try {
+      const dataISO = parseDateBR(dados.data_nascimento);
+      const { data, error } = await supabase.rpc("criar_matricula_lancamento" as any, {
+        p_nome: dados.nome.trim(),
+        p_email: null,
+        p_telefone: dados.telefone,
+        p_cpf: dados.cpf,
+        p_data_nascimento: dataISO,
+        p_forma_pagamento: "boleto",
+        p_polo_id: POLO_ID_FLORIPA,
+        p_utm_source: null, p_utm_medium: null, p_utm_campaign: null, p_utm_content: null,
+        p_contrato_html: null,
+        p_assinatura_nome: null,
+        p_sexo: null,
+      });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row && !row.ja_existia) {
+        setMatriculaIdParcial(row.id);
+      } else if (row?.ja_existia) {
+        setMatriculaIdParcial(row.id);
+      }
+    } catch (e) {
+      console.warn("Erro ao salvar dados parciais:", e);
+    }
     setStep(2);
   };
 
-  const handleAvancar2 = () => {
+  const handleAvancar2 = async () => {
     if (!forma) { toast.error("Selecione uma forma de pagamento"); return; }
+    // Atualizar forma de pagamento no registro parcial
+    if (matriculaIdParcial) {
+      try {
+        await supabase.from("matriculas_aulao" as any).update({ forma_pagamento: forma }).eq("id", matriculaIdParcial);
+      } catch (e) { console.warn("Erro ao salvar forma pagamento:", e); }
+    }
     setStep(3);
   };
 
@@ -268,33 +300,41 @@ function MatriculaPublicaPage() {
 
     setEnviando(true);
     try {
-      const utm = getUtm();
-      const { data, error } = await supabase.rpc("criar_matricula_lancamento" as any, {
-        p_nome: dados.nome.trim(),
-        p_email: null,
-        p_telefone: dados.telefone,
-        p_cpf: dados.cpf,
-        p_data_nascimento: dataISO,
-        p_forma_pagamento: forma,
-        p_polo_id: POLO_ID_FLORIPA,
-        p_utm_source: utm.utm_source,
-        p_utm_medium: utm.utm_medium,
-        p_utm_campaign: utm.utm_campaign,
-        p_utm_content: utm.utm_content,
-        p_contrato_html: contratoHtml || null,
-        p_assinatura_nome: assinatura.trim() || null,
-        p_sexo: null,
-      });
+      let matriculaId = matriculaIdParcial;
 
-
-      if (error) throw error;
-      const row = Array.isArray(data) ? data[0] : data;
-      if (!row) throw new Error("Resposta vazia do servidor");
-
-      if (row.ja_existia) {
-        toast.error("Você já possui matrícula! Nossa equipe já está com seus dados.", { duration: 8000 });
-        setEnviando(false);
-        return;
+      if (matriculaId) {
+        // Atualizar registro parcial com contrato e assinatura
+        const { error } = await supabase.from("matriculas_aulao" as any).update({
+          contrato_html: contratoHtml || null,
+          assinatura_nome: assinatura.trim(),
+          assinado_em: new Date().toISOString(),
+          forma_pagamento: forma,
+          boas_vindas_agendado_para: new Date(Date.now() + (120 + Math.floor(Math.random() * 120)) * 1000).toISOString(),
+        }).eq("id", matriculaId);
+        if (error) throw error;
+      } else {
+        // Fallback: criar novo registro se por algum motivo não salvou antes
+        const utm = getUtm();
+        const { data, error } = await supabase.rpc("criar_matricula_lancamento" as any, {
+          p_nome: dados.nome.trim(),
+          p_email: null,
+          p_telefone: dados.telefone,
+          p_cpf: dados.cpf,
+          p_data_nascimento: dataISO,
+          p_forma_pagamento: forma,
+          p_polo_id: POLO_ID_FLORIPA,
+          p_utm_source: utm.utm_source,
+          p_utm_medium: utm.utm_medium,
+          p_utm_campaign: utm.utm_campaign,
+          p_utm_content: utm.utm_content,
+          p_contrato_html: contratoHtml || null,
+          p_assinatura_nome: assinatura.trim() || null,
+          p_sexo: null,
+        });
+        if (error) throw error;
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row) throw new Error("Resposta vazia do servidor");
+        matriculaId = row.id;
       }
 
       const formaTxt = forma === "boleto" ? "Boleto" : "Cartão";
@@ -309,7 +349,7 @@ function MatriculaPublicaPage() {
         console.warn("Falha ao enviar WhatsApp da equipe", e);
       }
 
-      setSucesso({ jaExistia: false, matriculaId: row.id, formaPagamento: forma! });
+      setSucesso({ jaExistia: false, matriculaId: matriculaId!, formaPagamento: forma! });
     } catch (e: any) {
       toast.error(e.message || "Erro ao processar matrícula");
     } finally {
@@ -469,7 +509,7 @@ function MatriculaPublicaPage() {
                   {pagLoading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PIX...</>
                   ) : (
-                    "💰 Pagar Taxa de Matrícula — R$ 9,90 (teste)"
+                    "💰 Pagar Taxa de Matrícula — R$ 69,90"
                   )}
                 </Button>
               </div>
@@ -530,8 +570,8 @@ function MatriculaPublicaPage() {
                       onChange={(e) => setParcelas(Number(e.target.value))}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      {[1,2,3,4].map((n) => {
-                        const valorParcela = (20.00 / n).toFixed(2).replace(".", ",");
+                      {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => {
+                        const valorParcela = (1438.80 / n).toFixed(2).replace(".", ",");
                         return <option key={n} value={n}>{n}x de R$ {valorParcela}</option>;
                       })}
                     </select>
@@ -545,7 +585,7 @@ function MatriculaPublicaPage() {
                   {pagLoading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processando...</>
                   ) : (
-                    `💳 Pagar ${parcelas}x de R$ ${(20.00 / parcelas).toFixed(2).replace(".", ",")}`
+                    "✅ Confirmar Matrícula"
                   )}
                 </Button>
               </div>
