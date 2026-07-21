@@ -570,9 +570,9 @@ function MatriculaPublicaPage() {
                       onChange={(e) => setParcelas(Number(e.target.value))}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => {
+                      {[12,11,10,9,8,7,6,5,4,3,2,1].map((n) => {
                         const valorParcela = (1438.80 / n).toFixed(2).replace(".", ",");
-                        return <option key={n} value={n}>{n}x de R$ {valorParcela}</option>;
+                        return <option key={n} value={n}>{n}x de R$ {valorParcela} — Sem Juros</option>;
                       })}
                     </select>
                   </div>
