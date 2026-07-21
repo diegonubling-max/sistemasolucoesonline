@@ -156,6 +156,7 @@ function MatriculasAulaoList() {
                 <TableHead>Telefone</TableHead>
                 <TableHead>Forma Pgto</TableHead>
                 <TableHead>Contrato</TableHead>
+                <TableHead>Pagamento</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -163,7 +164,7 @@ function MatriculasAulaoList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
@@ -189,6 +190,20 @@ function MatriculasAulaoList() {
                       <span className="inline-flex items-center gap-1 text-muted-foreground">
                         <XCircle className="h-4 w-4" /> Não assinado
                       </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {m.pagamento_status === "confirmado" ? (
+                      <span className="inline-flex items-center gap-1 text-green-700 font-medium">
+                        <CheckCircle2 className="h-4 w-4" /> Pago
+                        {m.pagamento_valor && <span className="text-xs text-muted-foreground ml-1">(R$ {Number(m.pagamento_valor).toFixed(2).replace(".", ",")})</span>}
+                      </span>
+                    ) : m.asaas_payment_id ? (
+                      <span className="inline-flex items-center gap-1 text-orange-600">
+                        ⏳ Aguardando
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -220,7 +235,7 @@ function MatriculasAulaoList() {
               ))}
               {!isLoading && filtrados.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhuma matrícula encontrada.
                   </TableCell>
                 </TableRow>
