@@ -340,8 +340,8 @@ function MatriculaPublicaPage() {
           name: dados.nome,
           cpfCnpj: dados.cpf.replace(/\D/g, ""),
           phone: dados.telefone.replace(/\D/g, ""),
-          postalCode: "00000000",
-          addressNumber: "0",
+          postalCode: "88058512",
+          addressNumber: "65",
         };
       }
       const res = await fetch("/api/public/hooks/asaas-aulao", {
@@ -530,7 +530,7 @@ function MatriculaPublicaPage() {
                       onChange={(e) => setParcelas(Number(e.target.value))}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                      {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => {
+                      {[1,2,3,4].map((n) => {
                         const valorParcela = (20.00 / n).toFixed(2).replace(".", ",");
                         return <option key={n} value={n}>{n}x de R$ {valorParcela}</option>;
                       })}

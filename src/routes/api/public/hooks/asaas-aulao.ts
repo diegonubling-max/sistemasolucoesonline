@@ -159,15 +159,18 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
               expiryYear: payload.credit_card.expiryYear,
               ccv: payload.credit_card.ccv,
             };
-            paymentBody.creditCardHolderInfo = payload.credit_card_holder_info || {
-              name: matricula.nome,
-              cpfCnpj: (matricula.cpf || "").replace(/\D/g, ""),
-              phone: (matricula.telefone || "").replace(/\D/g, ""),
-              postalCode: "88058512",
-              addressNumber: "65",
+            paymentBody.creditCardHolderInfo = {
+              name: payload.credit_card_holder_info?.name || matricula.nome,
+              cpfCnpj: payload.credit_card_holder_info?.cpfCnpj || (matricula.cpf || "").replace(/\D/g, ""),
+              phone: payload.credit_card_holder_info?.phone || (matricula.telefone || "").replace(/\D/g, ""),
+              postalCode: payload.credit_card_holder_info?.postalCode || "88058512",
+              addressNumber: payload.credit_card_holder_info?.addressNumber || "65",
+              email: matricula.email || "aluno@supletivosolucoesonline.com.br",
             };
-            // Parcelamento (2-12x)
-            const parcelas = payload.installment_count || 12;
+            // Remover IP pra evitar bloqueio — Asaas aceita sem
+            // Parcelamento: mínimo R$5 por parcela no Asaas
+            const maxParcelas = Math.max(1, Math.floor(valor / 5));
+            const parcelas = Math.min(payload.installment_count || 1, maxParcelas);
             if (parcelas > 1) {
               paymentBody.installmentCount = parcelas;
               paymentBody.installmentValue = Math.round((valor / parcelas) * 100) / 100;
@@ -182,7 +185,8 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
           const payData = await payRes.json();
 
           if (!payRes.ok) {
-            return jsonResponse({ error: "Erro ao criar cobrança", detail: payData }, 502);
+            const errMsg = payData?.errors?.[0]?.description || payData?.message || JSON.stringify(payData);
+            return jsonResponse({ error: `Erro ao criar cobrança: ${errMsg}`, detail: payData }, 502);
           }
 
           // 5. Se PIX, buscar QR code
