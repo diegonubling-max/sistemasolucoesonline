@@ -49,8 +49,8 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
           return jsonResponse({ error: "matricula_id e billing_type obrigatórios" }, 400);
         }
 
-        const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+        const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "https://qhvsveedougwymxjhbgi.supabase.co";
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFodnN2ZWVkb3Vnd3lteGpoYmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODYxNTksImV4cCI6MjA5OTc2MjE1OX0.PPn-E410oEADMix5JUdluAoFkY13QTtMe2O74_t5r38";
         if (!supabaseUrl || !supabaseKey) {
           return jsonResponse({ error: "Supabase não configurado" }, 500);
         }
