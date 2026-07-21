@@ -302,12 +302,41 @@ function MatriculaPublicaPage() {
     try {
       let matriculaId = matriculaIdParcial;
 
+      // Gerar bloco de validação da assinatura digital
+      const agora = new Date();
+      const dataHoraAssinatura = agora.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      const hashBase = `${dados.cpf}-${assinatura.trim()}-${agora.toISOString()}`;
+      const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(hashBase));
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("").substring(0, 16).toUpperCase();
+      const codigoValidacao = `SOL-${hashHex}`;
+
+      const blocoValidacao = `
+<div style="margin-top:40px;padding:16px;border:2px solid #1a1a2e;border-radius:8px;background:#f8f9fa;font-size:12px;line-height:1.6;">
+  <div style="text-align:center;margin-bottom:12px;">
+    <strong style="font-size:14px;color:#1a1a2e;">✅ CONTRATO ASSINADO DIGITALMENTE</strong>
+  </div>
+  <table style="width:100%;border-collapse:collapse;">
+    <tr><td style="padding:4px 8px;color:#555;width:40%;">Assinado por:</td><td style="padding:4px 8px;"><strong>${assinatura.trim()}</strong></td></tr>
+    <tr><td style="padding:4px 8px;color:#555;">CPF do signatário:</td><td style="padding:4px 8px;"><strong>${dados.cpf}</strong></td></tr>
+    <tr><td style="padding:4px 8px;color:#555;">Data e hora:</td><td style="padding:4px 8px;"><strong>${dataHoraAssinatura}</strong></td></tr>
+    <tr><td style="padding:4px 8px;color:#555;">Código de validação:</td><td style="padding:4px 8px;font-family:monospace;"><strong>${codigoValidacao}</strong></td></tr>
+    <tr><td style="padding:4px 8px;color:#555;">Forma de pagamento:</td><td style="padding:4px 8px;"><strong>${forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito"}</strong></td></tr>
+  </table>
+  <div style="margin-top:12px;padding-top:8px;border-top:1px solid #ddd;color:#777;font-size:10px;text-align:center;">
+    Este contrato foi assinado eletronicamente conforme MP 2.200-2/2001 e art. 784, §4º do CPC.<br>
+    A autenticidade pode ser verificada pelo código acima junto à Escola Soluções Online.
+  </div>
+</div>`;
+
+      const contratoComValidacao = (contratoHtml || "") + blocoValidacao;
+
       if (matriculaId) {
         // Atualizar registro parcial com contrato e assinatura
         const { error } = await supabase.from("matriculas_aulao" as any).update({
-          contrato_html: contratoHtml || null,
+          contrato_html: contratoComValidacao,
           assinatura_nome: assinatura.trim(),
-          assinado_em: new Date().toISOString(),
+          assinado_em: agora.toISOString(),
           forma_pagamento: forma,
           boas_vindas_agendado_para: new Date(Date.now() + (120 + Math.floor(Math.random() * 120)) * 1000).toISOString(),
         }).eq("id", matriculaId);
@@ -327,7 +356,7 @@ function MatriculaPublicaPage() {
           p_utm_medium: utm.utm_medium,
           p_utm_campaign: utm.utm_campaign,
           p_utm_content: utm.utm_content,
-          p_contrato_html: contratoHtml || null,
+          p_contrato_html: contratoComValidacao,
           p_assinatura_nome: assinatura.trim() || null,
           p_sexo: null,
         });
