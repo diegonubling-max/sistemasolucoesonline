@@ -433,7 +433,7 @@ function MatriculaPublicaPage() {
               {pagResult.billing_type === "PIX" && pagResult.pix_qr_code ? (
                 <>
                   <h1 className="text-2xl font-bold">Escaneie o QR Code para pagar</h1>
-                  <p className="text-muted-foreground text-sm">Taxa de matrícula: <strong>R$ 9,90</strong> (teste)</p>
+                  <p className="text-muted-foreground text-sm">Taxa de matrícula: <strong>R$ 69,90</strong></p>
                   <div className="flex justify-center">
                     <img
                       src={`data:image/png;base64,${pagResult.pix_qr_code}`}

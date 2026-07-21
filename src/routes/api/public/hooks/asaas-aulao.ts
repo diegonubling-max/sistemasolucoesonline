@@ -148,6 +148,7 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
               ? "Taxa de Matrícula - Aulão Soluções Online"
               : "Curso Completo - Aulão Soluções Online",
             externalReference: matricula.id,
+            postalService: false,
           };
 
           // Se for cartão, adicionar dados do cartão e parcelamento
