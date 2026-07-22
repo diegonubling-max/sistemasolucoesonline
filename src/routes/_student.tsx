@@ -26,6 +26,8 @@ export const Route = createFileRoute("/_student")({
   component: StudentLayout,
 });
 
+export const PROVA_FINAL_HABILITADA = false; // Desabilitado temporariamente a pedido do Diego (22/07/2026)
+
 function StudentLayout() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
@@ -255,13 +257,15 @@ function StudentLayout() {
               >
                 Financeiro
               </Link>
-              <Link
-                to="/aluno/prova-final"
-                className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
-                activeProps={{ className: "text-white font-bold" }}
-              >
-                Prova Final
-              </Link>
+              {PROVA_FINAL_HABILITADA && (
+                <Link
+                  to="/aluno/prova-final"
+                  className="text-white/80 hover:text-white font-medium transition-colors flex items-center gap-2"
+                  activeProps={{ className: "text-white font-bold" }}
+                >
+                  Prova Final
+                </Link>
+              )}
             </nav>
           </div>
 
@@ -324,13 +328,15 @@ function StudentLayout() {
               >
                 Financeiro
               </Link>
-              <Link
-                to="/aluno/prova-final"
-                className="text-white/80 hover:text-white font-medium p-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Prova Final
-              </Link>
+              {PROVA_FINAL_HABILITADA && (
+                <Link
+                  to="/aluno/prova-final"
+                  className="text-white/80 hover:text-white font-medium p-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Prova Final
+                </Link>
+              )}
               <Link
                 to="/aluno/perfil"
                 className="text-white/80 hover:text-white font-medium p-2"

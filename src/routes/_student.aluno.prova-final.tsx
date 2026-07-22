@@ -14,6 +14,7 @@ import { useWindowSize } from "react-use";
 import { cn } from "@/lib/utils";
 import { ProvaFluxo } from "@/components/prova/ProvaFluxo";
 import { verificarLiberacaoProva } from "@/lib/prova-liberacao";
+import { PROVA_FINAL_HABILITADA } from "./_student";
 
 export const Route = createFileRoute("/_student/aluno/prova-final")({
   component: ProvaFinalPage,
@@ -28,6 +29,15 @@ function ProvaFinalPage() {
   const { session } = useAuth();
   const navigate = useNavigate();
   const { width, height } = useWindowSize();
+
+  useEffect(() => {
+    if (!PROVA_FINAL_HABILITADA) {
+      toast.error("A Prova Final está temporariamente indisponível.");
+      navigate({ to: "/aluno/dashboard" });
+    }
+  }, [navigate]);
+
+  if (!PROVA_FINAL_HABILITADA) return null;
   
   // Estados da Prova
   const [etapa, setEtapa] = useState<'instrucoes' | 'escolher_ordem' | 'realizando' | 'resultado'>('instrucoes');
