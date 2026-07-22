@@ -162,3 +162,14 @@ if (!tel.startsWith('55')) tel = '55' + tel;
 - **Meta Pixel:** rastreamento de conversões na página /matricula e /aulao
 - **Utmify:** rastreamento de criativos de anúncios
 - **Domínio próprio:** migração do lovable.app para domínio próprio via Vercel
+
+## Supabase Storage — Buckets
+
+| Bucket | Público | Uso |
+|--------|---------|-----|
+| `fotos-perfil` | Sim | Foto de perfil do aluno |
+| `thumbnails-aulas` | Sim | Thumbnail de cada aula (criado 22/07/2026, políticas de acesso público criadas junto) |
+| `thumbnails-cursos` | Sim | Thumbnail de curso (criado 22/07/2026, junto com o de aulas) |
+| `thumbnails` | Sim | Bucket genérico de thumbnails de sessão anterior (21-22/07/2026) |
+
+**Nota:** ao criar novo bucket, sempre criar também as políticas de `storage.objects` (select/insert/update/delete) pro bucket — RLS de `storage.objects` fica ativo por padrão mesmo com RLS desabilitado nas tabelas normais, e sem política nenhuma o upload falha silenciosamente (nenhum toast de erro claro do lado do Supabase, só falha genérica).

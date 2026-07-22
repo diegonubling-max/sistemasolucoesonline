@@ -85,9 +85,9 @@
 - Início (dashboard com banners)
 - Meus Cursos (aulas EJA + Vitrine)
 - Financeiro (parcelas, status de pagamento)
-- Prova Final (configurações, agendamento, histórico)
+- ~~Prova Final (configurações, agendamento, histórico)~~ — **item de menu removido temporariamente** (22/07/2026). Rota continua no código mas redireciona pro dashboard se acessada direto. Flag `PROVA_FINAL_HABILITADA` em `src/routes/_student.tsx`.
 
-### Prova Final
+### Prova Final ⏸️ desabilitada temporariamente (22/07/2026)
 **Seções (nesta ordem):**
 1. Configurações da Prova Final
 2. Novo Agendamento
@@ -190,8 +190,16 @@
 | 🔗 | Azul | Cartão + não pagou | Copiar link de pagamento (/pagamento/:id) |
 | 🔗 | Laranja | Não assinou contrato | Copiar link do contrato (/contrato/:id) |
 | ✏️ | — | Sempre | Editar |
+| 🚫 (UserX) | Laranja | Status ≠ cancelado | Inativar (aluno desistiu) — muda status pra `cancelado`, com confirmação; para automaticamente o disparo de boas-vindas Z-API (22/07/2026) |
+| ✅ (UserCheck) | Verde | Status = cancelado | Reativar — volta status pra `matriculado` |
 | 🗑️ | Vermelho | Sempre | Excluir |
 
 - Opção "À Vista (PIX)" removida do seletor de forma de pagamento no edit
 - Coluna Pagamento mostra valor real pago (R$69,90 boleto / R$1.438,80 cartão)
+
+## Perfil do Aluno (`/aluno/perfil`) — Atualizado 22/07/2026
+- Card "Dados da Conta" agora editável: botão de lápis abre modo de edição pra Nome Completo e Telefone
+- CTR permanece somente leitura (identificador do aluno, não pode ser alterado)
+- Botões Salvar/Cancelar; ao salvar, atualiza `alunos.nome` e `alunos.telefone` pelo e-mail da sessão
+- Bug corrigido: query usava coluna `foto_perfil` que não existe mais na tabela `alunos` (é `foto_url`) — causava falha silenciosa da query inteira, deixando nome/telefone/CTR em branco ("---"). Ver BUG-017 em 14_BUGS_CONHECIDOS.md
 

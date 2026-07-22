@@ -57,6 +57,7 @@
 - ✅ Rastreamento de progresso (panda_allData, threshold 70%)
 - ✅ Botão "Marcar como concluída" (individual e por matéria)
 - ✅ Migração YouTube → Panda preservando progresso
+- ✅ Upload de thumbnail por aula (Cursos → editar curso → editar aula) — buckets `thumbnails-aulas` e `thumbnails-cursos` criados no Supabase Storage com políticas públicas (22/07/2026). Coluna `thumbnail_url` em `aulas`.
 
 ## Módulo: Prova Final
 - ✅ Banco de questões (10 por matéria, 4 alternativas)
@@ -120,7 +121,9 @@
 - ✅ Push Notifications (Firebase)
 - ✅ Progresso de aulas
 - ✅ Financeiro com aviso de parcelas (corrigido: não conta isento)
-- ✅ Prova Final com regra de liberação
+- ⏸️ Prova Final com regra de liberação — **desabilitada temporariamente no menu** (22/07/2026, a pedido do Diego). Flag `PROVA_FINAL_HABILITADA = false` em `src/routes/_student.tsx`; acesso direto por URL também bloqueado (redireciona pro dashboard). Reativar trocando a flag pra `true`.
+- ✅ Perfil do aluno editável (nome e telefone) — botão de lápis no card "Dados da Conta" (22/07/2026). CTR permanece somente leitura.
+- ✅ Upload de foto de perfil (bucket `fotos-perfil`)
 
 ## Módulo: Página Pública /matricula
 - 🔧 Parcial: checkout criado mas ajustes em andamento

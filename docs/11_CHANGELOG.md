@@ -221,3 +221,18 @@
 - Z-API: credenciais como fallback no código server-side
 - Webhook Asaas: fila de sincronização ativada pra resolver status "Interrompido"
 
+
+## Sessão 22/Jul/2026 — Thumbnail de aula, perfil do aluno editável, inativação no Aulão
+
+### Banco de Dados / Storage
+- Buckets `thumbnails-aulas` e `thumbnails-cursos` criados no Supabase Storage (públicos), com políticas de select/insert/update/delete — upload de thumbnail de aula estava implementado no frontend mas falhava porque os buckets nunca existiam
+- BUG-017 corrigido: coluna `foto_perfil` (não existe mais) → `foto_url` na tabela `alunos`, em 3 pontos do código; tipos gerados (`types.ts`) atualizados
+
+### Frontend
+- Perfil do aluno (`/aluno/perfil`): card "Dados da Conta" agora editável (nome e telefone), com botão de lápis, Salvar/Cancelar; CTR continua somente leitura
+- Admin → Matrículas Aulão: novo botão "Inativar" (aluno desistiu) que muda status pra `cancelado` com confirmação, e "Reativar" pra reverter — reaproveita o filtro já existente que impede o disparo de boas-vindas Z-API pra matrículas canceladas
+- Menu "Prova Final" removido temporariamente da área do aluno (desktop e mobile) a pedido do Diego — flag `PROVA_FINAL_HABILITADA` em `_student.tsx`; acesso direto pela URL também bloqueado (redireciona pro dashboard)
+
+### Pendente
+- Revisão de responsividade mobile na área do aluno — aguardando prints do Diego indicando qual tela está aparecendo "espremida" no celular (dashboard, financeiro, perfil e player de aula já foram revisados no código e usam padrões responsivos)
+

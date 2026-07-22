@@ -73,6 +73,11 @@
 - **Solução:** Ao dar baixa, chamar API Asaas `/v3/payments/{id}/receiveInCash`
 - **Status:** ✅ Resolvido (14/07/2026)
 
+### BUG-017: Perfil do aluno em branco (nome, telefone, CTR e foto todos "---")
+- **Causa:** Query em `_student.aluno.perfil.tsx` selecionava a coluna `foto_perfil`, que não existe mais na tabela `alunos` (foi recriada como `foto_url` em algum reset anterior). O Supabase/PostgREST rejeita a query inteira quando uma coluna não existe, então nome/telefone/CTR também ficavam em branco, não só a foto. O mesmo erro estava no card "Alunos Online" do dashboard admin (`_admin.index.tsx`).
+- **Solução:** Trocado `foto_perfil` → `foto_url` nos 3 lugares (select, update do upload de foto, render) em `_student.aluno.perfil.tsx` e `_admin.index.tsx`, e corrigido `src/integrations/supabase/types.ts` (tipos gerados desatualizados).
+- **Status:** ✅ Resolvido (22/07/2026)
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

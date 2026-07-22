@@ -61,3 +61,5 @@
 - [ ] Criar checklist de teste pós-alteração
 - [ ] Criar função SQL de verificação de integridade
 - [ ] Configurar branches Git (main = produção, dev = desenvolvimento)
+- [ ] Reativar menu "Prova Final" na área do aluno quando Diego decidir (flag `PROVA_FINAL_HABILITADA` em `src/routes/_student.tsx`)
+- [ ] Revisar responsividade mobile da área do aluno com prints reais do Diego (98% dos alunos assistem aula pelo celular)
