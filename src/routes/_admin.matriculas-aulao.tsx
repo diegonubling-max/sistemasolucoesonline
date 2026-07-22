@@ -36,7 +36,6 @@ export const Route = createFileRoute("/_admin/matriculas-aulao")({
 const FORMA_LABEL: Record<string, string> = {
   boleto: "Boleto",
   cartao: "Cartão",
-  pix: "À Vista (PIX)",
 };
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
@@ -402,7 +401,6 @@ function MatriculasAulaoList() {
                 <SelectContent>
                   <SelectItem value="boleto">Boleto</SelectItem>
                   <SelectItem value="cartao">Cartão</SelectItem>
-                  <SelectItem value="pix">À Vista (PIX)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
