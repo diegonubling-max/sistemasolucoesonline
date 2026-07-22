@@ -133,7 +133,7 @@ function AlunosList() {
       let q = supabase
         .from("alunos")
         .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, origem, cadastro_completo, matriculas(id), contratos(id, status), cursos_vitrine(id)", { count: "exact" })
-        .order("created_at", { ascending: false });
+        .order("ctr", { ascending: false });
 
       if (statusFilter !== "all") {
         q = q.eq('status', statusFilter);
