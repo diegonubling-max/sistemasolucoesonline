@@ -104,6 +104,25 @@ function StudentCourse() {
     enabled: !!alunoId && !!activeAulaId,
   });
 
+  // Buscar todas as aulas assistidas deste curso pra calcular %
+  const { data: aulasAssistidas } = useQuery({
+    queryKey: ["curso-assistidas", alunoId, id],
+    queryFn: async () => {
+      if (!alunoId) return [];
+      const { data } = await supabase
+        .from("aluno_aulas_assistidas")
+        .select("aula_id, percentual_assistido")
+        .eq("aluno_id", alunoId)
+        .eq("curso_id", id);
+      return data ?? [];
+    },
+    enabled: !!alunoId,
+  });
+
+  const aulasAssistidasSet = new Set(
+    (aulasAssistidas ?? []).filter(a => Number(a.percentual_assistido) >= 70).map(a => a.aula_id)
+  );
+
   const { data: curso, isLoading: loadingCurso, error: cursoError } = useQuery({
     queryKey: ["student-course", id, session?.user.email],
     queryFn: async () => {
@@ -278,7 +297,9 @@ function StudentCourse() {
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
              <span>{curso?.aulas?.length} aulas</span>
              <span className="h-1 w-1 rounded-full bg-gray-300" />
-             <span className="text-[#2D6ADF] font-bold">0% concluído</span>
+             <span className="text-[#2D6ADF] font-bold">
+               {curso?.aulas?.length ? Math.round((aulasAssistidasSet.size / curso.aulas.length) * 100) : 0}% concluído
+             </span>
              {curso?.material_pdf_url && (
                <>
                  <span className="h-1 w-1 rounded-full bg-gray-300" />
@@ -402,7 +423,11 @@ function StudentCourse() {
                           {aula.titulo}
                         </p>
                       </div>
-                      {isActive && <div className="h-1.5 w-1.5 rounded-full bg-[#2D6ADF] animate-pulse" />}
+                      {aulasAssistidasSet.has(aula.id) ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                      ) : isActive ? (
+                        <div className="h-1.5 w-1.5 rounded-full bg-[#2D6ADF] animate-pulse" />
+                      ) : null}
                     </button>
                   );
                 })}
