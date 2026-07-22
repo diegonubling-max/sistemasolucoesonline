@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, isValidCPF } from "@/lib/format";
 import { format } from "date-fns";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, FileText } from "lucide-react";
 
 const POLO_ID_FLORIPA = "32671c78-9076-4f88-8161-bfd5ee8e866b";
 const WHATSAPP_EQUIPE = "48984393047";
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/matricula")({
   component: MatriculaPublicaPage,
 });
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2;
 type FormaPag = "boleto" | "cartao";
 
 interface DadosAluno {
@@ -153,6 +154,7 @@ function MatriculaPublicaPage() {
   const [matriculaIdParcial, setMatriculaIdParcial] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState<Sucesso | null>(null);
+  const [termoAberto, setTermoAberto] = useState(false);
 
   const [tempoRestante, setTempoRestante] = useState(() => getProximoEncerramento().getTime() - Date.now());
   useEffect(() => {
@@ -195,7 +197,7 @@ function MatriculaPublicaPage() {
         .maybeSingle();
       return data as { id: string; conteudo_html: string } | null;
     },
-    enabled: step === 3,
+    enabled: step === 2,
   });
 
   const dataISO = useMemo(() => parseDateBR(dados.data_nascimento), [dados.data_nascimento]);
@@ -275,19 +277,9 @@ function MatriculaPublicaPage() {
     setStep(2);
   };
 
-  const handleAvancar2 = async () => {
+  const handleFinalizarStep2 = async () => {
     if (!forma) { toast.error("Selecione uma forma de pagamento"); return; }
-    // Atualizar forma de pagamento no registro parcial
-    if (matriculaIdParcial) {
-      try {
-        await supabase.from("matriculas_aulao" as any).update({ forma_pagamento: forma }).eq("id", matriculaIdParcial);
-      } catch (e) { console.warn("Erro ao salvar forma pagamento:", e); }
-    }
-    setStep(3);
-  };
-
-  const handleSubmit = async () => {
-    if (!aceito) { toast.error("Aceite o contrato para continuar"); return; }
+    if (!aceito) { toast.error("Aceite os termos para continuar"); return; }
     if (assinatura.trim().toLowerCase() !== dados.nome.trim().toLowerCase()) {
       toast.error("Digite seu nome completo exatamente como no cadastro");
       return;
@@ -314,17 +306,17 @@ function MatriculaPublicaPage() {
       const blocoValidacao = `
 <div style="margin-top:40px;padding:16px;border:2px solid #1a1a2e;border-radius:8px;background:#f8f9fa;font-size:12px;line-height:1.6;">
   <div style="text-align:center;margin-bottom:12px;">
-    <strong style="font-size:14px;color:#1a1a2e;">✅ CONTRATO ASSINADO DIGITALMENTE</strong>
+    <strong style="font-size:14px;color:#1a1a2e;">✅ TERMO ACEITO DIGITALMENTE</strong>
   </div>
   <table style="width:100%;border-collapse:collapse;">
-    <tr><td style="padding:4px 8px;color:#555;width:40%;">Assinado por:</td><td style="padding:4px 8px;"><strong>${assinatura.trim()}</strong></td></tr>
+    <tr><td style="padding:4px 8px;color:#555;width:40%;">Aceito por:</td><td style="padding:4px 8px;"><strong>${assinatura.trim()}</strong></td></tr>
     <tr><td style="padding:4px 8px;color:#555;">CPF do signatário:</td><td style="padding:4px 8px;"><strong>${dados.cpf}</strong></td></tr>
     <tr><td style="padding:4px 8px;color:#555;">Data e hora:</td><td style="padding:4px 8px;"><strong>${dataHoraAssinatura}</strong></td></tr>
     <tr><td style="padding:4px 8px;color:#555;">Código de validação:</td><td style="padding:4px 8px;font-family:monospace;"><strong>${codigoValidacao}</strong></td></tr>
     <tr><td style="padding:4px 8px;color:#555;">Forma de pagamento:</td><td style="padding:4px 8px;"><strong>${forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito"}</strong></td></tr>
   </table>
   <div style="margin-top:12px;padding-top:8px;border-top:1px solid #ddd;color:#777;font-size:10px;text-align:center;">
-    Este contrato foi assinado eletronicamente conforme MP 2.200-2/2001 e art. 784, §4º do CPC.<br>
+    Este termo foi aceito eletronicamente conforme MP 2.200-2/2001 e art. 784, §4º do CPC.<br>
     A autenticidade pode ser verificada pelo código acima junto à Escola Soluções Online.
   </div>
 </div>`;
@@ -332,12 +324,12 @@ function MatriculaPublicaPage() {
       const contratoComValidacao = (contratoHtml || "") + blocoValidacao;
 
       if (matriculaId) {
-        // Atualizar registro parcial com contrato e assinatura
+        // Atualizar registro parcial com forma de pagamento, termo e assinatura
         const { error } = await supabase.from("matriculas_aulao" as any).update({
+          forma_pagamento: forma,
           contrato_html: contratoComValidacao,
           assinatura_nome: assinatura.trim(),
           assinado_em: agora.toISOString(),
-          forma_pagamento: forma,
           boas_vindas_agendado_para: new Date(Date.now() + (120 + Math.floor(Math.random() * 120)) * 1000).toISOString(),
         }).eq("id", matriculaId);
         if (error) throw error;
@@ -644,7 +636,7 @@ function MatriculaPublicaPage() {
         </div>
 
         <div className="flex justify-center gap-2 mb-6">
-          {[1, 2, 3].map((n) => (
+          {[1, 2].map((n) => (
             <div key={n} className={`h-2 w-16 rounded-full ${step >= n ? "bg-orange-500" : "bg-gray-200"}`} />
           ))}
         </div>
@@ -724,51 +716,50 @@ function MatriculaPublicaPage() {
                     </div>
                   </button>
                 </div>
-                <div className="flex gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Voltar</Button>
-                  <Button onClick={handleAvancar2} className="flex-1">Avançar</Button>
-                </div>
-              </>
-            )}
 
-            {step === 3 && (
-              <>
-                <h2 className="text-xl font-semibold">Contrato de Matrícula</h2>
-                <div
-                  className="border rounded max-h-80 overflow-y-auto p-4 text-sm bg-gray-50 prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: contratoHtml || "<p>Carregando contrato...</p>" }}
-                />
-                <div className="flex items-start gap-2">
-                  <Checkbox id="aceito" checked={aceito} onCheckedChange={(v) => setAceito(!!v)} />
-                  <Label htmlFor="aceito" className="text-sm leading-tight">
-                    Li e aceito todas as cláusulas do contrato
-                  </Label>
+                <div className="border-t pt-4 space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => setTermoAberto(true)}
+                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 underline underline-offset-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Ler o termo de matrícula completo
+                  </button>
+
+                  <div className="flex items-start gap-2">
+                    <Checkbox id="aceito" checked={aceito} onCheckedChange={(v) => setAceito(!!v)} />
+                    <Label htmlFor="aceito" className="text-sm leading-tight">
+                      Li e aceito os termos de matrícula
+                    </Label>
+                  </div>
+                  <div>
+                    <Label>Confirme seu nome completo</Label>
+                    <Input
+                      value={assinatura}
+                      onChange={(e) => setAssinatura(e.target.value)}
+                      placeholder={dados.nome}
+                    />
+                  </div>
+                  <div>
+                    <Label>Confirme seu CPF</Label>
+                    <Input
+                      value={confirmacaoCpf}
+                      onChange={(e) => setConfirmacaoCpf(maskCPF(e.target.value))}
+                      placeholder="000.000.000-00"
+                      inputMode="numeric"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Assinatura digital (digite seu nome completo)</Label>
-                  <Input
-                    value={assinatura}
-                    onChange={(e) => setAssinatura(e.target.value)}
-                    placeholder={dados.nome}
-                  />
-                </div>
-                <div>
-                  <Label>Confirme seu CPF</Label>
-                  <Input
-                    value={confirmacaoCpf}
-                    onChange={(e) => setConfirmacaoCpf(maskCPF(e.target.value))}
-                    placeholder="000.000.000-00"
-                    inputMode="numeric"
-                  />
-                </div>
+
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setStep(2)} className="flex-1" disabled={enviando}>Voltar</Button>
+                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={enviando}>Voltar</Button>
                   <Button
-                    onClick={handleSubmit}
+                    onClick={handleFinalizarStep2}
                     disabled={enviando}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                   >
-                    {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>✅ Realizar Matrícula</>)}
+                    {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>✅ Confirmar Matrícula</>)}
                   </Button>
                 </div>
               </>
@@ -776,6 +767,18 @@ function MatriculaPublicaPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={termoAberto} onOpenChange={setTermoAberto}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Termo de Matrícula</DialogTitle>
+          </DialogHeader>
+          <div
+            className="text-sm bg-gray-50 rounded p-4 prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: contratoHtml || "<p>Carregando termo...</p>" }}
+          />
+        </DialogContent>
+      </Dialog>
 
       {!sucesso && (
         <div
