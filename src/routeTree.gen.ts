@@ -30,6 +30,7 @@ import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-prov
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
 import { Route as ExternoProvaRouteImport } from './routes/externo.prova'
+import { Route as PagamentoIdRouteImport } from './routes/pagamento.$id'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
@@ -153,6 +154,11 @@ const ContratoTokenRoute = ContratoTokenRouteImport.update({
 const ExternoProvaRoute = ExternoProvaRouteImport.update({
   id: '/externo/prova',
   path: '/externo/prova',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoIdRoute = PagamentoIdRouteImport.update({
+  id: '/pagamento/$id',
+  path: '/pagamento/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminAlunosIndexRoute = AdminAlunosIndexRouteImport.update({
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/externo/prova': typeof ExternoProvaRoute
+  '/pagamento/$id': typeof PagamentoIdRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/externo/prova': typeof ExternoProvaRoute
+  '/pagamento/$id': typeof PagamentoIdRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
@@ -374,6 +382,7 @@ export interface FileRoutesById {
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/externo/prova': typeof ExternoProvaRoute
+  '/pagamento/$id': typeof PagamentoIdRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
@@ -419,6 +428,7 @@ export interface FileRouteTypes {
     | '/aluno/login'
     | '/contrato/$token'
     | '/externo/prova'
+    | '/pagamento/$id'
     | '/alunos/novo'
     | '/cursos/novo'
     | '/aluno/dashboard'
@@ -461,6 +471,7 @@ export interface FileRouteTypes {
     | '/aluno/login'
     | '/contrato/$token'
     | '/externo/prova'
+    | '/pagamento/$id'
     | '/alunos/novo'
     | '/cursos/novo'
     | '/aluno/dashboard'
@@ -504,6 +515,7 @@ export interface FileRouteTypes {
     | '/aluno/login'
     | '/contrato/$token'
     | '/externo/prova'
+    | '/pagamento/$id'
     | '/_admin/'
     | '/_admin/alunos/novo'
     | '/_admin/cursos/novo'
@@ -536,6 +548,7 @@ export interface RootRouteChildren {
   AlunoLoginRoute: typeof AlunoLoginRoute
   ContratoTokenRoute: typeof ContratoTokenRoute
   ExternoProvaRoute: typeof ExternoProvaRoute
+  PagamentoIdRoute: typeof PagamentoIdRoute
   ApiPublicHooksAsaasAulaoRoute: typeof ApiPublicHooksAsaasAulaoRoute
   ApiPublicHooksAsaasWebhookAulaoRoute: typeof ApiPublicHooksAsaasWebhookAulaoRoute
   ApiPublicHooksLembreteProvaRoute: typeof ApiPublicHooksLembreteProvaRoute
@@ -691,6 +704,13 @@ declare module '@tanstack/react-router' {
       path: '/externo/prova'
       fullPath: '/externo/prova'
       preLoaderRoute: typeof ExternoProvaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento/$id': {
+      id: '/pagamento/$id'
+      path: '/pagamento/$id'
+      fullPath: '/pagamento/$id'
+      preLoaderRoute: typeof PagamentoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_admin/alunos/': {
@@ -938,6 +958,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlunoLoginRoute: AlunoLoginRoute,
   ContratoTokenRoute: ContratoTokenRoute,
   ExternoProvaRoute: ExternoProvaRoute,
+  PagamentoIdRoute: PagamentoIdRoute,
   ApiPublicHooksAsaasAulaoRoute: ApiPublicHooksAsaasAulaoRoute,
   ApiPublicHooksAsaasWebhookAulaoRoute: ApiPublicHooksAsaasWebhookAulaoRoute,
   ApiPublicHooksLembreteProvaRoute: ApiPublicHooksLembreteProvaRoute,

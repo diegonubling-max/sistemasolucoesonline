@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -268,6 +268,20 @@ function MatriculasAulaoList() {
                       <Button size="icon" variant="ghost" title="Editar" onClick={() => handleEdit(m)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      {m.forma_pagamento === "cartao" && m.pagamento_status !== "confirmado" && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Copiar link de pagamento"
+                          onClick={() => {
+                            const link = `${window.location.origin}/pagamento/${m.id}`;
+                            navigator.clipboard.writeText(link);
+                            toast.success("Link de pagamento copiado!");
+                          }}
+                        >
+                          <Link2 className="h-4 w-4 text-blue-500" />
+                        </Button>
+                      )}
                       <Button size="icon" variant="ghost" title="Excluir" onClick={() => handleDelete(m)}>
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
