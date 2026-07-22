@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2, Link2, Send, UserX, UserCheck } from "lucide-react";
+import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2, Link2, Send, UserX, UserCheck, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,8 @@ const FORMA_LABEL: Record<string, string> = {
   cartao: "Cartão",
 };
 
+const FORMA_PAGAMENTO_MANUAL_OPCOES = ["Pix", "Dinheiro", "Transferência", "Outro"];
+
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   matriculado: { label: "Matriculado", className: "bg-accent text-accent-foreground hover:bg-accent" },
   editado: { label: "Editado", className: "bg-blue-100 text-blue-800 hover:bg-blue-100" },
@@ -53,6 +55,9 @@ function MatriculasAulaoList() {
   const [filtroContrato, setFiltroContrato] = useState<"todos" | "sim" | "nao">("todos");
   const [filtroPagamento, setFiltroPagamento] = useState<"todos" | "pago" | "aguardando">("todos");
   const [contratoAberto, setContratoAberto] = useState<string | null>(null);
+  const [pagamentoManual, setPagamentoManual] = useState<any>(null);
+  const [pagamentoManualForma, setPagamentoManualForma] = useState("Pix");
+  const [pagamentoManualValor, setPagamentoManualValor] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["matriculas-aulao"],
@@ -151,6 +156,44 @@ function MatriculasAulaoList() {
 
   const handleReativar = (m: any) => {
     statusMutation.mutate({ id: m.id, status: "matriculado" });
+  };
+
+  const pagamentoManualMutation = useMutation({
+    mutationFn: async ({ id, forma, valor }: { id: string; forma: string; valor: number }) => {
+      const { error } = await supabase
+        .from("matriculas_aulao" as any)
+        .update({
+          pagamento_status: "confirmado",
+          pagamento_valor: valor,
+          pagamento_forma_manual: forma,
+          pagamento_confirmado_em: new Date().toISOString(),
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Pagamento registrado com sucesso");
+      qc.invalidateQueries({ queryKey: ["matriculas-aulao"] });
+      setPagamentoManual(null);
+      setPagamentoManualForma("Pix");
+      setPagamentoManualValor("");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handleAbrirPagamentoManual = (m: any) => {
+    setPagamentoManual(m);
+    setPagamentoManualForma(m.pagamento_forma_manual || "Pix");
+    setPagamentoManualValor(m.pagamento_valor ? String(m.pagamento_valor) : "");
+  };
+
+  const handleConfirmarPagamentoManual = () => {
+    const valorNum = Number(pagamentoManualValor.replace(",", "."));
+    if (!pagamentoManualValor || isNaN(valorNum) || valorNum <= 0) {
+      toast.error("Informe um valor válido");
+      return;
+    }
+    pagamentoManualMutation.mutate({ id: pagamentoManual.id, forma: pagamentoManualForma, valor: valorNum });
   };
 
   const handleDelete = (m: any) => {
@@ -262,7 +305,7 @@ function MatriculasAulaoList() {
                     {m.pagamento_status === "confirmado" ? (
                       <span className="inline-flex items-center gap-1 text-green-700 font-medium">
                         <CheckCircle2 className="h-4 w-4" /> Pago
-                        {m.pagamento_valor && <span className="text-xs text-muted-foreground ml-1">(R$ {Number(m.pagamento_valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })})</span>}
+                        {m.pagamento_valor && <span className="text-xs text-muted-foreground ml-1">(R$ {Number(m.pagamento_valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}{m.pagamento_forma_manual ? ` via ${m.pagamento_forma_manual}` : ""})</span>}
                       </span>
                     ) : m.asaas_payment_id ? (
                       <span className="inline-flex items-center gap-1 text-orange-600">
@@ -292,6 +335,16 @@ function MatriculasAulaoList() {
                       <Button size="icon" variant="ghost" title="Editar" onClick={() => handleEdit(m)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      {m.pagamento_status !== "confirmado" && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Registrar pagamento (Pix, dinheiro, transferência, etc.)"
+                          onClick={() => handleAbrirPagamentoManual(m)}
+                        >
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                        </Button>
+                      )}
                       {m.status === "cancelado" ? (
                         <Button
                           size="icon"
@@ -503,6 +556,50 @@ function MatriculasAulaoList() {
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+      {/* Registrar pagamento manual (Pix, dinheiro, transferência, etc.) */}
+      <Dialog open={!!pagamentoManual} onOpenChange={(v) => !v && setPagamentoManual(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Registrar Pagamento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Matrícula de <strong>{pagamentoManual?.nome}</strong>
+            </p>
+            <div className="space-y-1.5">
+              <Label>Forma de pagamento</Label>
+              <Select value={pagamentoManualForma} onValueChange={setPagamentoManualForma}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {FORMA_PAGAMENTO_MANUAL_OPCOES.map((opcao) => (
+                    <SelectItem key={opcao} value={opcao}>{opcao}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Valor pago (R$)</Label>
+              <Input
+                value={pagamentoManualValor}
+                onChange={(e) => setPagamentoManualValor(e.target.value)}
+                placeholder="69,90"
+                inputMode="decimal"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPagamentoManual(null)}>Cancelar</Button>
+            <Button
+              onClick={handleConfirmarPagamentoManual}
+              disabled={pagamentoManualMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {pagamentoManualMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Confirmar Pagamento
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
