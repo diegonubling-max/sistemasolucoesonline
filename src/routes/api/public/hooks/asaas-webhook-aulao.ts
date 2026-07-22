@@ -58,7 +58,6 @@ export const Route = createFileRoute("/api/public/hooks/asaas-webhook-aulao")({
             .from("matriculas_aulao")
             .update({
               pagamento_status: "confirmado",
-              pagamento_valor: payment.value,
             })
             .eq("id", externalReference);
 
