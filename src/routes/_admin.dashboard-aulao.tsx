@@ -11,7 +11,6 @@ export const Route = createFileRoute("/_admin/dashboard-aulao")({
 });
 
 const VALOR_BOLETO_TOTAL = 1668.90;
-const VALOR_BOLETO_TAXA = 69.90;
 const VALOR_CARTAO_TOTAL = 1438.80;
 
 function fmt(v: number) {
@@ -45,8 +44,8 @@ function DashboardAulao() {
   const faturamentoCartao = totalCartao * VALOR_CARTAO_TOTAL;
   const faturamentoTotal = faturamentoBoleto + faturamentoCartao;
 
-  const recebidoBoleto = boletosPagos.length * VALOR_BOLETO_TAXA;
-  const recebidoCartao = cartoesPagos.length * VALOR_CARTAO_TOTAL;
+  const recebidoBoleto = boletosPagos.reduce((acc, m) => acc + Number(m.pagamento_valor || 0), 0);
+  const recebidoCartao = cartoesPagos.reduce((acc, m) => acc + Number(m.pagamento_valor || 0), 0);
   const recebidoTotal = recebidoBoleto + recebidoCartao;
 
   const assinaram = matriculas?.filter((m) => m.assinatura_nome) ?? [];
