@@ -164,3 +164,53 @@ SELECT content, status_code FROM net._http_response WHERE id = N;
 ### Confirmação Asaas ao dar baixa
 - Se parcela tem `asaas_id`, chama API Asaas `/v3/payments/{id}/receiveInCash`
 - Evita emails de cobrança automáticos do Asaas
+
+---
+
+## Novas Rotas Server-Side (Sessão Jul/2026)
+
+### /api/public/hooks/asaas-aulao (POST)
+Cria cobrança no Asaas para matrículas do aulão.
+- PIX: taxa de matrícula R$69,90 → retorna QR code + copia-e-cola
+- Cartão: curso completo R$1.438,80 → suporta parcelamento 1-12x (mínimo R$5/parcela)
+- Cria/reutiliza cliente no Asaas por CPF
+- Salva asaas_customer_id, asaas_payment_id, pagamento_status na matriculas_aulao
+- Fallback de credenciais: Supabase URL/key e Asaas key do polo
+
+### /api/public/hooks/asaas-webhook-aulao (POST)
+Webhook chamado pelo Asaas quando pagamento PIX é confirmado.
+- Eventos: PAYMENT_CONFIRMED, PAYMENT_RECEIVED
+- Atualiza pagamento_status = 'confirmado' na matriculas_aulao via externalReference
+
+### /api/public/hooks/zapi-send (POST) — atualizado
+- Credenciais Z-API adicionadas como fallback no código (não depende de env vars)
+- Instance ID: 3F4CC1DC22AB31BDE17ECE717FF40C71
+- Número do Z-API: 48 98439-3047
+
+## RPCs:
+### criar_matricula_lancamento — recriada
+- Insere em matriculas_aulao (não mais em alunos)
+- Não gera login/senha
+- Agendamento de boas-vindas com delay aleatório 2-4 minutos
+
+## Cron Jobs (pg_cron):
+### aulao-boas-vindas (a cada minuto)
+- Função: enviar_boas_vindas_aulao_pendentes()
+- Chama Z-API DIRETAMENTE via pg_net (não passa pelo servidor web)
+- URL: https://api.z-api.io/instances/.../send-text
+- Dispara para matrículas onde boas_vindas_agendado_para <= now() e boas_vindas_enviado_em IS NULL
+
+## Triggers:
+- trg_matriculas_aulao_updated_at — atualiza updated_at automaticamente
+
+
+## Webhook Asaas — Correção:
+- Webhook NÃO sobrescreve pagamento_valor com valor da parcela (payment.value)
+- Apenas atualiza pagamento_status = 'confirmado'
+- Valor total correto é salvo na criação da cobrança (R$69,90 PIX / R$1.438,80 cartão)
+
+## Notas sobre aluno_aulas_assistidas:
+- Coluna curso_id é obrigatória para queries do frontend (admin e aluno)
+- Ao inserir progresso manualmente, sempre preencher curso_id via JOIN com aulas
+- Percentual >= 70 conta como "concluída" no frontend
+

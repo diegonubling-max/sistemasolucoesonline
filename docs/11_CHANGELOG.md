@@ -143,3 +143,81 @@
 - Correções financeiras (timezone, comissões, filtros)
 - Cursos Vitrine importados
 - Varredura de segurança (Client-Token Z-API corrigido)
+
+---
+
+## Sessão 20-21/Jul/2026 — Aulão: Matrícula Pública + Pagamento + Dashboard
+
+### Banco de Dados
+- Tabela `matriculas_aulao` criada (matrículas públicas sem login/senha)
+- Tabela `modelos_contrato` recriada (tinha sumido no reset do Lovable)
+- Contrato oficial inserido como modelo ativo com variáveis [BRACKET]
+- Colunas Asaas adicionadas em `polos` (asaas_api_key, asaas_ambiente, etc.)
+- Colunas de pagamento Asaas adicionadas em `matriculas_aulao`
+- Email tornado nullable em matriculas_aulao
+- RPC `criar_matricula_lancamento` recriada (insere em matriculas_aulao, não em alunos)
+- Função `enviar_boas_vindas_aulao_pendentes` reescrita pra chamar Z-API diretamente via pg_net
+- Cron job `aulao-boas-vindas` ativo (a cada minuto)
+- Segmento "EJA - Ensino Médio" reordenado pra ordem=0 (primeiro no menu)
+
+### Frontend — Páginas Públicas
+- `/matricula` — Checkout completo: 3 etapas, cronômetro regressivo, prova social, banner, salvamento progressivo, contrato com validação digital SHA-256
+- `/pagamento/:id` — Pagamento cartão avulso (link enviado pelo admin)
+- `/contrato/:id` — Assinatura de contrato avulsa (link enviado pelo admin)
+
+### Frontend — Admin
+- Menu "Dashboard Aulão" com cards de faturamento Boleto/Cartão
+- Menu "Matrículas Aulão" com filtros (Forma, Contrato, Pagamento), numeração, coluna pagamento, ações (editar, excluir, copiar link pagamento, copiar link contrato, enviar contrato WhatsApp)
+
+### Backend — Rotas Server-Side
+- `/api/public/hooks/asaas-aulao` — Cria cobrança PIX (R$69,90) ou Cartão (R$1.438,80 em até 12x)
+- `/api/public/hooks/asaas-webhook-aulao` — Webhook para confirmação de pagamento PIX
+- Credenciais Z-API e Supabase adicionadas como fallback nas rotas
+
+### Integrações
+- Asaas produção configurado no polo (API key no banco)
+- Webhook Asaas configurado (PAYMENT_CONFIRMED + PAYMENT_RECEIVED)
+- Z-API configurado e testado (Instance 3F4CC1DC, número 48 98439-3047)
+- Boas-vindas Z-API dispara direto do banco via pg_net (delay 2-4min aleatório)
+
+### Removidos
+- Opção "À Vista (PIX)" do checkout
+- Campos email e sexo do cadastro público
+- Notificação automática do Asaas pro aluno
+- Notificação WhatsApp pra equipe na matrícula
+
+
+## Sessão 21-22/Jul/2026 — Correções e melhorias pós-lançamento
+
+### Banco de Dados
+- Colunas curso_id, duracao_total, ultima_posicao adicionadas em aluno_aulas_assistidas
+- Colunas descricao, valor_matricula, numero_parcelas adicionadas em pacotes
+- Tabela banners_polo recriada
+- Storage bucket 'thumbnails' criado com políticas públicas
+- Registros com forma_pagamento='pix' migrados pra 'cartao' em matriculas_aulao
+
+### Frontend
+- Área do aluno: % concluído calculado em tempo real (era hardcoded 0%)
+- Checkmark verde nas aulas concluídas na sidebar do aluno
+- Salvamento progressivo na matrícula (dados→pagamento→contrato)
+- Bloco de validação digital no contrato (SHA-256, MP 2.200-2/2001)
+- Página /pagamento/:id para pagamento avulso de cartão
+- Página /contrato/:id para assinatura remota de contrato
+- Botão copiar link do contrato (laranja) e copiar link de pagamento (azul) no admin
+- Botão enviar contrato via WhatsApp removido (substituído pelo copiar link)
+- Opção "À Vista (PIX)" removida do seletor de edição
+- Seletor de parcelas: padrão 12x, ordem decrescente, label "Sem Juros"
+- Botão cartão mudado pra "Confirmar Matrícula" (sem preço)
+- Valores restaurados: PIX R$69,90 / Cartão 12x R$119,90
+
+### Backend
+- Webhook Asaas corrigido: não sobrescreve pagamento_valor com valor da parcela
+- Notificação WhatsApp pra equipe removida do fluxo de matrícula
+- Link de ajuda aponta pro número do Z-API (48 98439-3047)
+- Boas-vindas Z-API: chamada direta via pg_net (não passa pelo servidor)
+
+### Integrações
+- Asaas: notificações automáticas desativadas (postalService: false)
+- Z-API: credenciais como fallback no código server-side
+- Webhook Asaas: fila de sincronização ativada pra resolver status "Interrompido"
+

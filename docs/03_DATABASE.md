@@ -459,3 +459,84 @@ Combina parcelas pagas (pagamento total) com parcelas_pagamentos (pagamento parc
 
 ## RLS
 **Desativado** em todas as tabelas. Grants concedidos para `anon` e `authenticated` em todas as tabelas e sequences.
+
+---
+
+## Tabela: matriculas_aulao (NOVA — Aulão / Lançamento)
+
+Armazena matrículas feitas pelo link público `/matricula` (sem criação de login/senha).
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid PK | ID da matrícula |
+| nome | text NOT NULL | Nome completo |
+| email | text (nullable) | E-mail (não coletado atualmente) |
+| telefone | text NOT NULL | Telefone com DDD |
+| cpf | text NOT NULL | CPF formatado |
+| data_nascimento | date | Data de nascimento |
+| sexo | text | Sexo (não coletado atualmente) |
+| forma_pagamento | text NOT NULL | 'boleto' ou 'cartao' |
+| contrato_html | text | HTML do contrato com bloco de validação digital |
+| assinatura_nome | text | Nome digitado na assinatura |
+| assinado_em | timestamptz | Data/hora da assinatura |
+| status | text DEFAULT 'matriculado' | 'matriculado', 'editado', 'cancelado' |
+| polo_id | uuid | FK para polos |
+| asaas_customer_id | text | ID do cliente no Asaas |
+| asaas_payment_id | text | ID da cobrança no Asaas |
+| pagamento_status | text DEFAULT 'pendente' | 'pendente', 'confirmado', 'falhou' |
+| pagamento_valor | numeric(10,2) | Valor efetivamente cobrado |
+| pagamento_pix_qrcode | text | QR code PIX base64 |
+| pagamento_pix_copiacola | text | Código PIX copia-e-cola |
+| boas_vindas_agendado_para | timestamptz | Quando disparar boas-vindas Z-API |
+| boas_vindas_enviado_em | timestamptz | Quando foi enviado |
+| observacoes | text | Anotações internas |
+| utm_source/medium/campaign/content | text | Parâmetros UTM |
+| created_at | timestamptz | Criação |
+| updated_at | timestamptz | Última atualização (trigger automático) |
+
+**Índices:** cpf, telefone, boas_vindas pendentes
+**RLS:** Desabilitado
+
+## Tabela: modelos_contrato (recriada)
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid PK | |
+| nome | text NOT NULL | Nome do modelo (ex: "Contrato Aulao Padrao") |
+| conteudo_html | text NOT NULL | HTML com variáveis [BRACKET] |
+| ativo | boolean DEFAULT true | Se está ativo |
+| created_at | timestamptz | |
+
+## Colunas adicionadas em polos:
+- asaas_api_key (text) — Chave API do Asaas
+- asaas_ambiente (text DEFAULT 'sandbox') — 'sandbox' ou 'producao'
+- nome_escola, logo_url, whatsapp_suporte, asaas_webhook_token (text)
+
+
+## Colunas adicionadas em aluno_aulas_assistidas (pós-reset):
+- curso_id (uuid) — FK para cursos, preenchido a partir de aulas.curso_id
+- duracao_total (integer DEFAULT 0) — duração total do vídeo
+- ultima_posicao (numeric DEFAULT 0) — posição do player ao pausar
+
+## Colunas adicionadas em pacotes (pós-reset):
+- descricao (text)
+- valor_matricula (numeric DEFAULT 0)
+- numero_parcelas (integer DEFAULT 1)
+
+## Tabela: banners_polo (recriada)
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid PK | |
+| polo_id | uuid FK polos | |
+| titulo | text | Título do banner |
+| imagem_url | text NOT NULL | URL da imagem |
+| link_url | text | Link ao clicar |
+| ordem | integer DEFAULT 0 | Ordem de exibição |
+| ativo | boolean DEFAULT true | |
+| created_at | timestamptz | |
+
+## Storage Buckets:
+- thumbnails (público) — usado para banners dos polos e thumbnails
+- thumbnails-aulas (público) — thumbnails das aulas
+- thumbnails-cursos (público) — thumbnails dos cursos
+

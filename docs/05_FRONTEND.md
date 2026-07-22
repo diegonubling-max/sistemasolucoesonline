@@ -150,3 +150,48 @@
 
 ## Arquivo Principal do Financeiro
 `src/routes/_admin.financeiro.tsx` — contém as guias Matrículas por Vendedora, Relatório de Vendas, etc.
+
+---
+
+## Novas Páginas e Menus (Sessão Jul/2026)
+
+### Páginas Públicas (sem login):
+- `/matricula` — Checkout do Aulão: cadastro → forma pagamento → contrato → assinatura digital → pagamento (PIX ou cartão via Asaas)
+  - Cronômetro regressivo vermelho (encerra 19:30, reinicia 24h)
+  - Notificações de prova social rotativas (nomes fictícios, 8-12s, estados variados)
+  - Banner "Matrículas Abertas" no topo
+  - Salvamento progressivo (dados salvos a cada etapa)
+  - Contrato com bloco de validação digital (hash SHA-256, referência MP 2.200-2/2001)
+  - Boleto → PIX R$69,90 | Cartão → 12x R$119,90 sem juros
+- `/pagamento/:id` — Página de pagamento cartão (link enviado pelo admin para alunos que não pagaram)
+- `/contrato/:id` — Página de assinatura de contrato (link enviado pelo admin para alunos que não assinaram)
+
+### Menus Admin (admin only):
+- **Dashboard Aulão** (`/dashboard-aulao`) — Cards: Total Matrículas, Faturamento Total; Detalhamento Boleto/Cartão com barras de progresso
+- **Matrículas Aulão** (`/matriculas-aulao`) — Lista com:
+  - Coluna # (numeração), Data, Nome, Telefone, Forma Pgto, Contrato, Pagamento, Status, Ações
+  - Filtros: Forma (Todos/Boleto/Cartão), Contrato (Todos/Assinado/Não), Pagamento (Todos/Pago/Aguardando)
+  - Ações: Ver contrato, Copiar link pagamento (cartão), Copiar link contrato, Enviar contrato WhatsApp, Editar, Excluir
+
+### Componentes:
+- `AppSidebar.tsx` — Menus Dashboard Aulão (BarChart3) e Matrículas Aulão (Megaphone) adicionados
+
+
+## Área do Aluno — Correções (pós-docs):
+- Progresso por curso agora calculado em tempo real (era hardcoded 0%)
+- Checkmark verde ✅ ao lado de cada aula concluída (>=70% assistido) na lista lateral
+- Bolinha azul pulsante na aula ativa
+- Query usa coluna curso_id na aluno_aulas_assistidas pra filtrar por curso
+
+## Matrículas Aulão — Ações atualizadas:
+| Ícone | Cor | Quando aparece | Ação |
+|-------|-----|----------------|------|
+| 📄 | — | Contrato assinado | Ver contrato |
+| 🔗 | Azul | Cartão + não pagou | Copiar link de pagamento (/pagamento/:id) |
+| 🔗 | Laranja | Não assinou contrato | Copiar link do contrato (/contrato/:id) |
+| ✏️ | — | Sempre | Editar |
+| 🗑️ | Vermelho | Sempre | Excluir |
+
+- Opção "À Vista (PIX)" removida do seletor de forma de pagamento no edit
+- Coluna Pagamento mostra valor real pago (R$69,90 boleto / R$1.438,80 cartão)
+
