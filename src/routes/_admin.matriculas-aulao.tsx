@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2, Link2 } from "lucide-react";
+import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2, Link2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -280,6 +280,23 @@ function MatriculasAulaoList() {
                           }}
                         >
                           <Link2 className="h-4 w-4 text-blue-500" />
+                        </Button>
+                      )}
+                      {!m.assinatura_nome && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Enviar contrato via WhatsApp"
+                          onClick={() => {
+                            const link = `${window.location.origin}/contrato/${m.id}`;
+                            const telefone = (m.telefone || "").replace(/\D/g, "");
+                            const fone = telefone.startsWith("55") ? telefone : `55${telefone}`;
+                            const primeiroNome = (m.nome || "").split(" ")[0];
+                            const msg = `Olá, ${primeiroNome}! 🎓\n\nSeu cadastro na Escola Soluções Online foi realizado com sucesso!\n\nPara confirmar sua matrícula, assine o contrato pelo link abaixo:\n${link}\n\nQualquer dúvida, estamos à disposição!`;
+                            window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, "_blank");
+                          }}
+                        >
+                          <Send className="h-4 w-4 text-green-600" />
                         </Button>
                       )}
                       <Button size="icon" variant="ghost" title="Excluir" onClick={() => handleDelete(m)}>

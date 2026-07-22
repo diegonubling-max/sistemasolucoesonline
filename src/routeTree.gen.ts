@@ -28,6 +28,7 @@ import { Route as AdminProvasAgendadasRouteImport } from './routes/_admin.provas
 import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
 import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
+import { Route as ContratoIdRouteImport } from './routes/contrato.$id'
 import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
 import { Route as ExternoProvaRouteImport } from './routes/externo.prova'
 import { Route as PagamentoIdRouteImport } from './routes/pagamento.$id'
@@ -144,6 +145,11 @@ const AdminSetorProvasRoute = AdminSetorProvasRouteImport.update({
 const AlunoLoginRoute = AlunoLoginRouteImport.update({
   id: '/aluno/login',
   path: '/aluno/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContratoIdRoute = ContratoIdRouteImport.update({
+  id: '/contrato/$id',
+  path: '/contrato/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContratoTokenRoute = ContratoTokenRouteImport.update({
@@ -292,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
+  '/contrato/$id': typeof ContratoIdRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/externo/prova': typeof ExternoProvaRoute
   '/pagamento/$id': typeof PagamentoIdRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
+  '/contrato/$id': typeof ContratoIdRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/externo/prova': typeof ExternoProvaRoute
   '/pagamento/$id': typeof PagamentoIdRoute
@@ -380,6 +388,7 @@ export interface FileRoutesById {
   '/_admin/segmentos': typeof AdminSegmentosRoute
   '/_admin/setor-provas': typeof AdminSetorProvasRoute
   '/aluno/login': typeof AlunoLoginRoute
+  '/contrato/$id': typeof ContratoIdRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/externo/prova': typeof ExternoProvaRoute
   '/pagamento/$id': typeof PagamentoIdRoute
@@ -426,6 +435,7 @@ export interface FileRouteTypes {
     | '/segmentos'
     | '/setor-provas'
     | '/aluno/login'
+    | '/contrato/$id'
     | '/contrato/$token'
     | '/externo/prova'
     | '/pagamento/$id'
@@ -469,6 +479,7 @@ export interface FileRouteTypes {
     | '/segmentos'
     | '/setor-provas'
     | '/aluno/login'
+    | '/contrato/$id'
     | '/contrato/$token'
     | '/externo/prova'
     | '/pagamento/$id'
@@ -513,6 +524,7 @@ export interface FileRouteTypes {
     | '/_admin/segmentos'
     | '/_admin/setor-provas'
     | '/aluno/login'
+    | '/contrato/$id'
     | '/contrato/$token'
     | '/externo/prova'
     | '/pagamento/$id'
@@ -546,6 +558,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MatriculaRoute: typeof MatriculaRoute
   AlunoLoginRoute: typeof AlunoLoginRoute
+  ContratoIdRoute: typeof ContratoIdRoute
   ContratoTokenRoute: typeof ContratoTokenRoute
   ExternoProvaRoute: typeof ExternoProvaRoute
   PagamentoIdRoute: typeof PagamentoIdRoute
@@ -690,6 +703,13 @@ declare module '@tanstack/react-router' {
       path: '/aluno/login'
       fullPath: '/aluno/login'
       preLoaderRoute: typeof AlunoLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contrato/$id': {
+      id: '/contrato/$id'
+      path: '/contrato/$id'
+      fullPath: '/contrato/$id'
+      preLoaderRoute: typeof ContratoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contrato/$token': {
@@ -956,6 +976,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MatriculaRoute: MatriculaRoute,
   AlunoLoginRoute: AlunoLoginRoute,
+  ContratoIdRoute: ContratoIdRoute,
   ContratoTokenRoute: ContratoTokenRoute,
   ExternoProvaRoute: ExternoProvaRoute,
   PagamentoIdRoute: PagamentoIdRoute,
