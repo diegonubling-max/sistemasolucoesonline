@@ -295,21 +295,6 @@ function MatriculasAulaoList() {
                           >
                             <Link2 className="h-4 w-4 text-orange-500" />
                           </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            title="Enviar contrato via WhatsApp"
-                            onClick={() => {
-                              const link = `${window.location.origin}/contrato/${m.id}`;
-                              const telefone = (m.telefone || "").replace(/\D/g, "");
-                              const fone = telefone.startsWith("55") ? telefone : `55${telefone}`;
-                              const primeiroNome = (m.nome || "").split(" ")[0];
-                              const msg = `Olá, ${primeiroNome}! 🎓\n\nSeu cadastro na Escola Soluções Online foi realizado com sucesso!\n\nPara confirmar sua matrícula, assine o contrato pelo link abaixo:\n${link}\n\nQualquer dúvida, estamos à disposição!`;
-                              window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, "_blank");
-                            }}
-                          >
-                            <Send className="h-4 w-4 text-green-600" />
-                          </Button>
                         </>
                       )}
                       <Button size="icon" variant="ghost" title="Excluir" onClick={() => handleDelete(m)}>
