@@ -256,7 +256,7 @@ export type Database = {
           dias_prova_final: number | null
           email: string | null
           formado_em: string | null
-          foto_perfil: string | null
+          foto_url: string | null
           id: string
           materias_prova: string[] | null
           menor_de_idade: boolean | null
@@ -293,7 +293,7 @@ export type Database = {
           dias_prova_final?: number | null
           email?: string | null
           formado_em?: string | null
-          foto_perfil?: string | null
+          foto_url?: string | null
           id?: string
           materias_prova?: string[] | null
           menor_de_idade?: boolean | null
@@ -330,7 +330,7 @@ export type Database = {
           dias_prova_final?: number | null
           email?: string | null
           formado_em?: string | null
-          foto_perfil?: string | null
+          foto_url?: string | null
           id?: string
           materias_prova?: string[] | null
           menor_de_idade?: boolean | null

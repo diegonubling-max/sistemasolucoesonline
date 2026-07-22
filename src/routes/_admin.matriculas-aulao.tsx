@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2, Link2, Send } from "lucide-react";
+import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2, Link2, Send, UserX, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -127,6 +127,31 @@ function MatriculasAulaoList() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase
+        .from("matriculas_aulao" as any)
+        .update({ status })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      toast.success(variables.status === "cancelado" ? "Matrícula inativada" : "Matrícula reativada");
+      qc.invalidateQueries({ queryKey: ["matriculas-aulao"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handleInativar = (m: any) => {
+    if (window.confirm(`Confirma que ${m.nome} desistiu e deseja inativar essa matrícula? Ela deixa de receber mensagens automáticas.`)) {
+      statusMutation.mutate({ id: m.id, status: "cancelado" });
+    }
+  };
+
+  const handleReativar = (m: any) => {
+    statusMutation.mutate({ id: m.id, status: "matriculado" });
+  };
 
   const handleDelete = (m: any) => {
     if (window.confirm(`Tem certeza que deseja excluir a matrícula de ${m.nome}?`)) {
@@ -267,6 +292,27 @@ function MatriculasAulaoList() {
                       <Button size="icon" variant="ghost" title="Editar" onClick={() => handleEdit(m)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      {m.status === "cancelado" ? (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Reativar matrícula"
+                          onClick={() => handleReativar(m)}
+                          disabled={statusMutation.isPending}
+                        >
+                          <UserCheck className="h-4 w-4 text-green-600" />
+                        </Button>
+                      ) : (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Inativar (aluno desistiu)"
+                          onClick={() => handleInativar(m)}
+                          disabled={statusMutation.isPending}
+                        >
+                          <UserX className="h-4 w-4 text-orange-600" />
+                        </Button>
+                      )}
                       {m.forma_pagamento === "cartao" && m.pagamento_status !== "confirmado" && (
                         <Button
                           size="icon"

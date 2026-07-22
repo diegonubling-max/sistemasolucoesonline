@@ -233,7 +233,7 @@ function Dashboard() {
       const desde = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       let q = supabase
         .from("aluno_sessoes")
-        .select("aluno_id, login_em, alunos!inner(id, nome, ctr, foto_perfil, polo_id)")
+        .select("aluno_id, login_em, alunos!inner(id, nome, ctr, foto_url, polo_id)")
         .gte("login_em", desde)
         .order("login_em", { ascending: false })
         .limit(100);
@@ -483,8 +483,8 @@ function Dashboard() {
                     className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/60 cursor-pointer transition-colors"
                   >
                     <div className="relative">
-                      {s.alunos.foto_perfil ? (
-                        <img src={s.alunos.foto_perfil} alt={s.alunos.nome} className="w-10 h-10 rounded-full object-cover" />
+                      {s.alunos.foto_url ? (
+                        <img src={s.alunos.foto_url} alt={s.alunos.nome} className="w-10 h-10 rounded-full object-cover" />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
                           {inicial}

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, Key, User as UserIcon, Phone, Camera, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Key, User as UserIcon, Phone, Camera, ShieldCheck, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useStudentTheme } from "./_student";
+import { maskPhone } from "@/lib/format";
 
 export const Route = createFileRoute("/_student/aluno/perfil")({
   head: () => ({ meta: [{ title: "Meu Perfil — Soluções Online" }] }),
@@ -19,18 +20,51 @@ export const Route = createFileRoute("/_student/aluno/perfil")({
 function StudentProfile() {
   const { session } = useAuth();
   const { isDark } = useStudentTheme();
-  
+  const qc = useQueryClient();
+
   const { data: alunoData, refetch: refetchAluno } = useQuery({
     queryKey: ["student-profile", session?.user.email],
     queryFn: async () => {
       const { data } = await supabase
         .from("alunos")
-        .select("nome, ctr, email, telefone, foto_perfil")
+        .select("nome, ctr, email, telefone, foto_url")
         .eq("email", session?.user.email ?? "")
         .single();
       return data;
     },
     enabled: !!session?.user.email,
+  });
+
+  const [editingDados, setEditingDados] = useState(false);
+  const [nomeEdit, setNomeEdit] = useState("");
+  const [telefoneEdit, setTelefoneEdit] = useState("");
+
+  useEffect(() => {
+    if (alunoData) {
+      setNomeEdit(alunoData.nome || "");
+      setTelefoneEdit(alunoData.telefone || "");
+    }
+  }, [alunoData]);
+
+  const updateDados = useMutation({
+    mutationFn: async () => {
+      if (!session?.user.email) return;
+      if (!nomeEdit.trim()) throw new Error("Nome não pode ficar em branco");
+
+      const { error } = await supabase
+        .from("alunos")
+        .update({ nome: nomeEdit.trim(), telefone: telefoneEdit })
+        .eq("email", session.user.email);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Dados atualizados com sucesso!");
+      setEditingDados(false);
+      refetchAluno();
+      qc.invalidateQueries({ queryKey: ["alunos-online"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: configs } = useQuery({
@@ -104,7 +138,7 @@ function StudentProfile() {
 
       const { error: updateError } = await supabase
         .from('alunos')
-        .update({ foto_perfil: publicUrl })
+        .update({ foto_url: publicUrl })
         .eq('email', session.user.email);
 
       if (updateError) throw updateError;
@@ -139,9 +173,9 @@ function StudentProfile() {
     <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row items-center gap-8 bg-white border-gray-100 shadow-sm p-8 rounded-2xl border transition-colors shadow-xl">
         <div className="relative group">
-            {alunoData?.foto_perfil ? (
+            {alunoData?.foto_url ? (
               <img 
-                src={alunoData.foto_perfil} 
+                src={alunoData.foto_url} 
                 alt={alunoData.nome}
                 className="h-32 w-32 rounded-full object-cover shadow-2xl border-4 border-white"
               />
@@ -183,28 +217,88 @@ function StudentProfile() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="bg-white border-gray-100 shadow-md border-none shadow-xl border">
-            <CardHeader>
-            <CardTitle className="text-gray-900 flex items-center gap-2">
-                <UserIcon className="h-5 w-5 text-[#2D6ADF]" />
-                Dados da Conta
-            </CardTitle>
-            <CardDescription className="text-gray-500">Informações básicas do seu registro</CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <div>
+              <CardTitle className="text-gray-900 flex items-center gap-2">
+                  <UserIcon className="h-5 w-5 text-[#2D6ADF]" />
+                  Dados da Conta
+              </CardTitle>
+              <CardDescription className="text-gray-500">Informações básicas do seu registro</CardDescription>
+            </div>
+            {!editingDados && (
+              <Button variant="ghost" size="icon" onClick={() => setEditingDados(true)} title="Editar dados">
+                <Pencil className="h-4 w-4 text-[#2D6ADF]" />
+              </Button>
+            )}
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Nome Completo</p>
-                    <p className="text-gray-900 font-medium">{alunoData?.nome || "---"}</p>
-                </div>
-                <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                      <Phone className="h-3 w-3" /> Telefone
-                    </p>
-                    <p className="text-gray-900 font-medium">{alunoData?.telefone || "---"}</p>
-                </div>
-                <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
-                    <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">CTR</p>
-                    <p className="text-gray-900 font-medium">{alunoData?.ctr || "---"}</p>
-                </div>
+                {editingDados ? (
+                  <>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="nome-edit" className="text-gray-700">Nome Completo</Label>
+                      <Input
+                        id="nome-edit"
+                        value={nomeEdit}
+                        onChange={(e) => setNomeEdit(e.target.value)}
+                        className="bg-white border-gray-200 focus-visible:ring-[#2D6ADF]"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="telefone-edit" className="text-gray-700 flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> Telefone
+                      </Label>
+                      <Input
+                        id="telefone-edit"
+                        value={telefoneEdit}
+                        onChange={(e) => setTelefoneEdit(maskPhone(e.target.value))}
+                        className="bg-white border-gray-200 focus-visible:ring-[#2D6ADF]"
+                      />
+                    </div>
+                    <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
+                        <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">CTR</p>
+                        <p className="text-gray-900 font-medium">{alunoData?.ctr || "---"}</p>
+                        <p className="text-xs text-gray-400 mt-1">O CTR é seu identificador e não pode ser alterado.</p>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        onClick={() => updateDados.mutate()}
+                        disabled={updateDados.isPending || !nomeEdit.trim()}
+                        className="bg-[#2D6ADF] hover:bg-[#2D6ADF]/90 text-white font-bold flex-1"
+                      >
+                        {updateDados.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        Salvar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setEditingDados(false);
+                          setNomeEdit(alunoData?.nome || "");
+                          setTelefoneEdit(alunoData?.telefone || "");
+                        }}
+                        disabled={updateDados.isPending}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
+                        <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Nome Completo</p>
+                        <p className="text-gray-900 font-medium">{alunoData?.nome || "---"}</p>
+                    </div>
+                    <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
+                        <p className="text-xs text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1">
+                          <Phone className="h-3 w-3" /> Telefone
+                        </p>
+                        <p className="text-gray-900 font-medium">{alunoData?.telefone || "---"}</p>
+                    </div>
+                    <div className="bg-gray-50 border-gray-100 p-4 rounded-lg border transition-colors">
+                        <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">CTR</p>
+                        <p className="text-gray-900 font-medium">{alunoData?.ctr || "---"}</p>
+                    </div>
+                  </>
+                )}
             </CardContent>
         </Card>
 
