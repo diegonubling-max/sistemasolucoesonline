@@ -238,7 +238,7 @@ function MatriculasAulaoList() {
                     {m.pagamento_status === "confirmado" ? (
                       <span className="inline-flex items-center gap-1 text-green-700 font-medium">
                         <CheckCircle2 className="h-4 w-4" /> Pago
-                        {m.pagamento_valor && <span className="text-xs text-muted-foreground ml-1">(R$ {Number(m.pagamento_valor).toFixed(2).replace(".", ",")})</span>}
+                        {m.pagamento_valor && <span className="text-xs text-muted-foreground ml-1">(R$ {Number(m.pagamento_valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })})</span>}
                       </span>
                     ) : m.asaas_payment_id ? (
                       <span className="inline-flex items-center gap-1 text-orange-600">
@@ -283,21 +283,35 @@ function MatriculasAulaoList() {
                         </Button>
                       )}
                       {!m.assinatura_nome && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Enviar contrato via WhatsApp"
-                          onClick={() => {
-                            const link = `${window.location.origin}/contrato/${m.id}`;
-                            const telefone = (m.telefone || "").replace(/\D/g, "");
-                            const fone = telefone.startsWith("55") ? telefone : `55${telefone}`;
-                            const primeiroNome = (m.nome || "").split(" ")[0];
-                            const msg = `Olá, ${primeiroNome}! 🎓\n\nSeu cadastro na Escola Soluções Online foi realizado com sucesso!\n\nPara confirmar sua matrícula, assine o contrato pelo link abaixo:\n${link}\n\nQualquer dúvida, estamos à disposição!`;
-                            window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, "_blank");
-                          }}
-                        >
-                          <Send className="h-4 w-4 text-green-600" />
-                        </Button>
+                        <>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Copiar link do contrato"
+                            onClick={() => {
+                              const link = `${window.location.origin}/contrato/${m.id}`;
+                              navigator.clipboard.writeText(link);
+                              toast.success("Link do contrato copiado!");
+                            }}
+                          >
+                            <Link2 className="h-4 w-4 text-orange-500" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Enviar contrato via WhatsApp"
+                            onClick={() => {
+                              const link = `${window.location.origin}/contrato/${m.id}`;
+                              const telefone = (m.telefone || "").replace(/\D/g, "");
+                              const fone = telefone.startsWith("55") ? telefone : `55${telefone}`;
+                              const primeiroNome = (m.nome || "").split(" ")[0];
+                              const msg = `Olá, ${primeiroNome}! 🎓\n\nSeu cadastro na Escola Soluções Online foi realizado com sucesso!\n\nPara confirmar sua matrícula, assine o contrato pelo link abaixo:\n${link}\n\nQualquer dúvida, estamos à disposição!`;
+                              window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`, "_blank");
+                            }}
+                          >
+                            <Send className="h-4 w-4 text-green-600" />
+                          </Button>
+                        </>
                       )}
                       <Button size="icon" variant="ghost" title="Excluir" onClick={() => handleDelete(m)}>
                         <Trash2 className="h-4 w-4 text-red-500" />
