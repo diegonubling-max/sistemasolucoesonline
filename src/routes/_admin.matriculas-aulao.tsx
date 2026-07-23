@@ -199,9 +199,25 @@ function MatriculasAulaoList() {
         })
         .eq("id", id);
       if (updErr) throw updErr;
+
+      // Dispara a criação do acesso do aluno (idempotente — não faz nada se já foi criado)
+      try {
+        const res = await fetch("/api/public/hooks/converter-matricula-aulao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ matricula_aulao_id: id }),
+        });
+        const conversao = await res.json();
+        return conversao;
+      } catch {
+        return null;
+      }
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (conversao: any, variables) => {
       toast.success("Pagamento adicionado com sucesso");
+      if (conversao?.ok && conversao.ctr && conversao.senha && !conversao.already) {
+        toast.success(`Acesso do aluno criado! Login: ${conversao.ctr} — Senha: ${conversao.senha}`, { duration: 15000 });
+      }
       qc.invalidateQueries({ queryKey: ["matriculas-aulao"] });
       qc.invalidateQueries({ queryKey: ["matricula-aulao-pagamentos", variables.id] });
       setPagamentoManualForma("Pix");

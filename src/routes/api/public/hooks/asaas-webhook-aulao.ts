@@ -67,6 +67,19 @@ export const Route = createFileRoute("/api/public/hooks/asaas-webhook-aulao")({
           }
 
           console.log(`[asaas-webhook-aulao] Pagamento confirmado para matrícula ${externalReference}`);
+
+          // Dispara a criação do acesso do aluno (login/senha) de forma assíncrona
+          try {
+            const origin = new URL(request.url).origin;
+            await fetch(`${origin}/api/public/hooks/converter-matricula-aulao`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ matricula_aulao_id: externalReference }),
+            });
+          } catch (convErr) {
+            console.error("[asaas-webhook-aulao] Erro ao converter matrícula em acesso:", convErr);
+          }
+
           return jsonResponse({ ok: true, matricula_id: externalReference, event });
         } catch (e: any) {
           console.error("[asaas-webhook-aulao] Erro:", e);

@@ -298,6 +298,40 @@ function MatriculaDemoPage() {
   const [cartao, setCartao] = useState({ holderName: "", number: "", expiryMonth: "", expiryYear: "", ccv: "" });
   const [parcelas, setParcelas] = useState(12);
   const [copiado, setCopiado] = useState(false);
+  const [acessoCriado, setAcessoCriado] = useState<{ ctr: number; senha: string } | null>(null);
+
+  const converterAcesso = async () => {
+    if (!sucesso) return;
+    try {
+      const res = await fetch("/api/public/hooks/converter-matricula-aulao", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matricula_aulao_id: sucesso.matriculaId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok && data.ctr && data.senha) {
+        setAcessoCriado({ ctr: data.ctr, senha: data.senha });
+      }
+    } catch {
+      // silencioso — o webhook do Asaas também tenta converter em paralelo
+    }
+  };
+
+  useEffect(() => {
+    if (!sucesso || !pagResult || pagResult.billing_type !== "PIX" || acessoCriado) return;
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from("matriculas_aulao" as any)
+        .select("pagamento_status")
+        .eq("id", sucesso.matriculaId)
+        .single();
+      if ((data as any)?.pagamento_status === "confirmado") {
+        clearInterval(interval);
+        converterAcesso();
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [sucesso, pagResult, acessoCriado]);
 
   const gerarPagamento = async (billingType: "PIX" | "CREDIT_CARD", ccData?: any) => {
     if (!sucesso) return;
@@ -327,6 +361,9 @@ function MatriculaDemoPage() {
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || "Erro ao processar pagamento");
       setPagResult(data);
+      if (billingType === "CREDIT_CARD" && (data.credit_card_status === "CONFIRMED" || data.credit_card_status === "RECEIVED")) {
+        converterAcesso();
+      }
     } catch (e: any) {
       setPagErro(e.message || "Erro ao processar pagamento");
     } finally {
@@ -348,7 +385,29 @@ function MatriculaDemoPage() {
                 <CheckCircle2 className="h-10 w-10 text-green-600" />
               </div>
 
-              {pagResult.billing_type === "PIX" && pagResult.pix_qr_code ? (
+              {acessoCriado ? (
+                <>
+                  <h1 className="text-2xl font-bold">Seu acesso já está liberado! 🎉</h1>
+                  <p className="text-muted-foreground text-sm">Guarde seus dados de acesso:</p>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2 text-left">
+                    <div>
+                      <p className="text-xs text-green-700 uppercase font-bold tracking-wider">Login</p>
+                      <p className="text-lg font-mono font-bold">{acessoCriado.ctr}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-green-700 uppercase font-bold tracking-wider">Senha</p>
+                      <p className="text-lg font-mono font-bold">{acessoCriado.senha}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Enviamos esses dados também pelo WhatsApp.</p>
+                  <Button
+                    onClick={() => window.open("https://sistema.supletivosolucoesonline.com.br", "_blank")}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    Acessar minhas aulas
+                  </Button>
+                </>
+              ) : pagResult.billing_type === "PIX" && pagResult.pix_qr_code ? (
                 <>
                   <h1 className="text-2xl font-bold">Escaneie o QR Code para pagar</h1>
                   <p className="text-muted-foreground text-sm">Taxa de matrícula: <strong>R$ 69,90</strong></p>
@@ -379,7 +438,7 @@ function MatriculaDemoPage() {
                     </div>
                   )}
                   <p className="text-sm text-muted-foreground">
-                    Após o pagamento ser confirmado, nossa equipe liberará seu acesso às aulas via WhatsApp.
+                    Assim que o pagamento cair, seu login e senha aparecem aqui automaticamente (e também vão pro seu WhatsApp).
                   </p>
                 </>
               ) : pagResult.credit_card_status ? (
@@ -391,7 +450,7 @@ function MatriculaDemoPage() {
                   </h1>
                   <p className="text-muted-foreground">
                     {pagResult.credit_card_status === "CONFIRMED" || pagResult.credit_card_status === "RECEIVED"
-                      ? "Seu pagamento foi aprovado com sucesso! Nossa equipe entrará em contato pelo WhatsApp para liberar seu acesso às aulas."
+                      ? "Seu pagamento foi aprovado — liberando seu acesso às aulas..."
                       : "O pagamento está sendo processado. Você receberá a confirmação em breve pelo WhatsApp."}
                   </p>
                 </>
