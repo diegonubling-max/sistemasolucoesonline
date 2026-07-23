@@ -534,8 +534,8 @@ Criado um registro em `cursos` com `is_prova_final = true`, vinculado ao segment
 - `trg_antecipar_liberacao_prova` (em `prova_agendamentos`, AFTER INSERT/UPDATE) — se a Mônica agendar a prova antes do prazo de 60 dias, antecipa `data_liberacao_prova` pra data agendada
 - `trg_vincular_prova_final` (em `matriculas`, AFTER INSERT) — vincula automaticamente o curso "Prova Final" a toda matrícula nova
 
-### Limitação conhecida
-Os 24 alunos migrados tiveram `data_liberacao_prova` calculada a partir do `created_at` da matrícula no banco novo (17/07/2026, data da reconstrução), não da matrícula histórica real — essa informação não sobreviveu ao reset. Se Diego tiver as datas reais, pode pedir correção manual por CTR.
+### Correção aplicada (23/07/2026)
+Diego ajustou a data-base dos 24 alunos migrados pra 01/07/2026 (em vez da data de reconstrução do banco, 17/07/2026) + 60 dias — todos liberam em 30/08/2026.
 
 ## Tabela: modelos_contrato (recriada)
 

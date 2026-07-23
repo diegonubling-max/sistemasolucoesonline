@@ -62,6 +62,5 @@
 - [ ] Criar função SQL de verificação de integridade
 - [ ] Configurar branches Git (main = produção, dev = desenvolvimento)
 - [ ] Diego reenviar as questões da Prova Final (10 por matéria) — `prova_questoes` está vazia desde o reset do Supabase
-- [ ] Se possível, Diego informar as datas reais de matrícula dos 24 alunos migrados (CTR 1706-1744) pra corrigir `data_liberacao_prova` — atualmente calculada a partir da data de reconstrução do banco (17/07/2026), não da matrícula histórica real
 - [ ] Reativar disparo automático de boas-vindas Z-API (`aulao-boas-vindas`) quando Diego decidir (`cron.alter_job(job_id := 1, active := true)`)
 - [ ] Revisar responsividade mobile da área do aluno com prints reais do Diego (98% dos alunos assistem aula pelo celular)
