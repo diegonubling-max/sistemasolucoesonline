@@ -95,6 +95,9 @@ SELECT content, status_code FROM net._http_response WHERE id = N;
 
 ## Z-API (WhatsApp)
 
+### ⏸️ Status atual (22/07/2026)
+Todos os disparos automáticos via Z-API estão **pausados temporariamente** a pedido do Diego ("não será necessário por enquanto"). O único cron job ativo no projeto Supabase atual era `aulao-boas-vindas` (boas-vindas do Aulão) — foi desativado via `cron.alter_job(active := false)`, sem excluir o job, pra reativar rápido quando decidir voltar a usar. Os demais tipos de disparo na tabela abaixo são referência do sistema legado (Lovable) e não têm cron job correspondente recriado neste projeto Supabase ainda.
+
 ### Dados da Instância
 - **Nome:** solucoes-online
 - **Status:** Conectada
@@ -106,7 +109,7 @@ SELECT content, status_code FROM net._http_response WHERE id = N;
 - Rota proxy: `/api/public/hooks/zapi-send`
 - Chaves lidas de `process.env` (ZAPI_INSTANCE_ID, ZAPI_TOKEN, ZAPI_CLIENT_TOKEN)
 
-### Tipos de Disparo
+### Tipos de Disparo (referência — ver status atual acima)
 
 | Tipo | Quando | Exclusões |
 |------|--------|-----------|

@@ -487,6 +487,8 @@ Armazena matrículas feitas pelo link público `/matricula` (sem criação de lo
 | pagamento_valor | numeric(10,2) | Valor efetivamente cobrado |
 | pagamento_pix_qrcode | text | QR code PIX base64 |
 | pagamento_pix_copiacola | text | Código PIX copia-e-cola |
+| pagamento_forma_manual | text (nova 22/07/2026) | Forma do último pagamento manual registrado (Pix/Dinheiro/Transferência/Outro), ou "Múltiplas formas" se houver mais de uma |
+| pagamento_confirmado_em | timestamptz (nova 22/07/2026) | Data/hora do último pagamento manual registrado |
 | boas_vindas_agendado_para | timestamptz | Quando disparar boas-vindas Z-API |
 | boas_vindas_enviado_em | timestamptz | Quando foi enviado |
 | observacoes | text | Anotações internas |
@@ -495,6 +497,23 @@ Armazena matrículas feitas pelo link público `/matricula` (sem criação de lo
 | updated_at | timestamptz | Última atualização (trigger automático) |
 
 **Índices:** cpf, telefone, boas_vindas pendentes
+**RLS:** Desabilitado
+
+**Nota (22/07/2026):** `pagamento_valor` é sempre a SOMA de todos os lançamentos em `matriculas_aulao_pagamentos` daquela matrícula, recalculada a cada novo pagamento registrado pelo admin.
+
+## Tabela: matriculas_aulao_pagamentos (NOVA — 22/07/2026)
+
+Histórico de pagamentos de uma matrícula do Aulão. Permite registrar múltiplos pagamentos (ex: taxa inicial via Asaas + parcela paga depois via Pix manual) sem perder o histórico.
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid PK | ID do lançamento |
+| matricula_id | uuid FK → matriculas_aulao(id) ON DELETE CASCADE | Matrícula relacionada |
+| forma | text NOT NULL | Forma do pagamento (Pix, Dinheiro, Transferência, Outro, ou "Pix/Cartão (Asaas)" pros pagamentos automáticos já existentes) |
+| valor | numeric NOT NULL | Valor deste lançamento |
+| criado_em | timestamptz DEFAULT now() | Quando foi registrado |
+
+**Índice:** matricula_id
 **RLS:** Desabilitado
 
 ## Tabela: modelos_contrato (recriada)

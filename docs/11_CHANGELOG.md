@@ -236,3 +236,26 @@
 ### Pendente
 - Revisão de responsividade mobile na área do aluno — aguardando prints do Diego indicando qual tela está aparecendo "espremida" no celular (dashboard, financeiro, perfil e player de aula já foram revisados no código e usam padrões responsivos)
 
+
+## Sessão 22/Jul/2026 (continuação) — Ordenação de alunos, pausa Z-API, matrícula simplificada, pagamento manual somativo
+
+### Admin — Alunos
+- Lista de Alunos passa a ordenar por CTR decrescente (era por data de criação)
+
+### Z-API
+- Disparo automático `aulao-boas-vindas` pausado (`cron.alter_job active=false`) a pedido do Diego — "não será necessário por enquanto"
+
+### Matrícula pública (/matricula)
+- Guia "Contrato" removida — vira "Termo de Matrícula", oculto por padrão, só abre em modal ao clicar em "Ler o termo completo"
+- Fluxo passa de 3 pra 2 etapas: Dados → Pagamento + Termo (aceite por checkbox)
+- Removida a exigência de redigitar nome/CPF pra assinar — usa automaticamente o nome já preenchido na etapa 1
+- Botão final "Confirmar Matrícula" leva direto pra tela de boas-vindas + pagamento
+
+### Matrículas Aulão — Pagamento manual
+- Novo botão 💲 "Registrar pagamento" (sempre visível) pra lançar pagamentos recebidos fora do Asaas (Pix manual, dinheiro, transferência, outro)
+- Cada lançamento é **somado** ao total já pago (histórico completo em nova tabela `matriculas_aulao_pagamentos`), não substitui
+- Caso real resolvido: aluno Paulo Acássio de Lima pagou R$ 69,90 (Asaas) + R$ 159,90 (Pix, manual) = R$ 229,80 registrados corretamente
+
+### Dashboard Aulão
+- BUG-018 corrigido: "Recebido" (Boleto/Cartão) calculava `quantidade paga × valor fixo`, ignorando pagamentos extras/parciais — agora soma o `pagamento_valor` real de cada matrícula
+

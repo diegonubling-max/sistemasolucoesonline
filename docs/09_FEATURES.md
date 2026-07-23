@@ -98,6 +98,7 @@
 - ✅ Migração de dados do sistema antigo
 
 ## Módulo: WhatsApp (Z-API)
+- ⏸️ **Disparos pausados temporariamente** a pedido do Diego (22/07/2026) — ver 07_INTEGRACOES.md pro status atual real por cron job
 - ✅ Boas-vindas, cobrança, motivacional, FDS, lembrete prova
 - ✅ Pós-Venda D+1, D+5, D+15
 - ✅ Oferta cursos por perfil vocacional
@@ -126,9 +127,8 @@
 - ✅ Upload de foto de perfil (bucket `fotos-perfil`)
 
 ## Módulo: Página Pública /matricula
-- 🔧 Parcial: checkout criado mas ajustes em andamento
-- ✅ 3 opções de pagamento (Boleto, Cartão, Avista)
-- ✅ Contrato digital integrado
-- ✅ WhatsApp para equipe
+- ✅ Fluxo em 2 etapas (Dados → Pagamento + Termo), atualizado 22/07/2026
+- ✅ 2 opções de pagamento (Boleto, Cartão) com checkout real via Asaas
+- ✅ Termo de matrícula oculto por padrão (abre em modal), aceite só por checkbox — sem redigitar nome/CPF
+- ✅ Registro de pagamentos fora do Asaas (Pix manual, dinheiro, transferência) pelo admin, somativo com histórico
 - 🔧 Pendente: pixel Meta + Utmify
-- 🔧 Pendente: banner 1080x600

@@ -78,6 +78,11 @@
 - **Solução:** Trocado `foto_perfil` → `foto_url` nos 3 lugares (select, update do upload de foto, render) em `_student.aluno.perfil.tsx` e `_admin.index.tsx`, e corrigido `src/integrations/supabase/types.ts` (tipos gerados desatualizados).
 - **Status:** ✅ Resolvido (22/07/2026)
 
+### BUG-018: Dashboard Aulão — "Recebido" (Boleto/Cartão) não refletia pagamentos extras/parciais
+- **Causa:** O cálculo era `quantidade de matrículas pagas × valor fixo` (ex: 1 boleto pago = sempre R$ 69,90), em vez de somar o valor real (`pagamento_valor`) de cada matrícula. Quando um aluno pagava mais de uma vez (ex: taxa inicial + parcela depois), o valor extra não aparecia no dashboard.
+- **Solução:** `recebidoBoleto`/`recebidoCartao` agora somam `pagamento_valor` de cada matrícula paga, que por sua vez é sempre a soma dos lançamentos em `matriculas_aulao_pagamentos`.
+- **Status:** ✅ Resolvido (22/07/2026)
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

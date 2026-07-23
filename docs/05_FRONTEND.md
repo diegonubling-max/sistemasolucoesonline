@@ -122,13 +122,12 @@
 ## Página Pública: /matricula (Checkout Aulão)
 - Mobile-first
 - Banner 1080x600px no topo
-- 3 etapas: Dados → Pagamento → Contrato
+- 2 etapas (atualizado 22/07/2026): Dados → Pagamento + Termo
 - Data de nascimento: campo texto com máscara (não calendário)
 - Sexo: select (Masculino/Feminino)
-- Pagamento: 3 cards (Boleto, Cartão, Avista) — só preferência, sem pagamento real
-- Contrato: texto completo + checkbox + assinatura digital
-- Confirmação: CTR + senha + link para login + botão copiar
-- WhatsApp automático para equipe (telefone: 48991535895)
+- Pagamento: 2 cards (Boleto, Cartão) com checkout real via Asaas
+- Termo: fica oculto, só abre em modal ao clicar em "Ler o termo de matrícula completo"; aceite só por checkbox "Li e aceito os termos de matrícula" — sem redigitar nome/CPF (usa o nome da etapa 1 como assinatura)
+- Confirmação: tela de boas-vindas + pagamento (PIX/boleto/cartão)
 
 ## Badges Visuais
 
@@ -167,7 +166,7 @@
 - `/contrato/:id` — Página de assinatura de contrato (link enviado pelo admin para alunos que não assinaram)
 
 ### Menus Admin (admin only):
-- **Dashboard Aulão** (`/dashboard-aulao`) — Cards: Total Matrículas, Faturamento Total; Detalhamento Boleto/Cartão com barras de progresso
+- **Dashboard Aulão** (`/dashboard-aulao`) — Cards: Total Matrículas, Faturamento Total; Detalhamento Boleto/Cartão com barras de progresso. "Recebido" soma o `pagamento_valor` real de cada matrícula paga (corrigido 22/07/2026 — antes multiplicava quantidade × valor fixo e não refletia pagamentos extras/parciais)
 - **Matrículas Aulão** (`/matriculas-aulao`) — Lista com:
   - Coluna # (numeração), Data, Nome, Telefone, Forma Pgto, Contrato, Pagamento, Status, Ações
   - Filtros: Forma (Todos/Boleto/Cartão), Contrato (Todos/Assinado/Não), Pagamento (Todos/Pago/Aguardando)
@@ -190,12 +189,13 @@
 | 🔗 | Azul | Cartão + não pagou | Copiar link de pagamento (/pagamento/:id) |
 | 🔗 | Laranja | Não assinou contrato | Copiar link do contrato (/contrato/:id) |
 | ✏️ | — | Sempre | Editar |
+| 💲 (DollarSign) | Verde | Sempre | Registrar pagamento (Pix, dinheiro, transferência, etc.) — abre modal com histórico de pagamentos já lançados; valor informado **soma** ao total (não substitui). Cada lançamento vira uma linha em `matriculas_aulao_pagamentos` (22/07/2026) |
 | 🚫 (UserX) | Laranja | Status ≠ cancelado | Inativar (aluno desistiu) — muda status pra `cancelado`, com confirmação; para automaticamente o disparo de boas-vindas Z-API (22/07/2026) |
 | ✅ (UserCheck) | Verde | Status = cancelado | Reativar — volta status pra `matriculado` |
 | 🗑️ | Vermelho | Sempre | Excluir |
 
 - Opção "À Vista (PIX)" removida do seletor de forma de pagamento no edit
-- Coluna Pagamento mostra valor real pago (R$69,90 boleto / R$1.438,80 cartão)
+- Coluna Pagamento mostra o total real pago (soma de todos os lançamentos), com a forma entre parênteses (ex: "Pago (R$ 229,80 via Pix)")
 
 ## Perfil do Aluno (`/aluno/perfil`) — Atualizado 22/07/2026
 - Card "Dados da Conta" agora editável: botão de lápis abre modo de edição pra Nome Completo e Telefone

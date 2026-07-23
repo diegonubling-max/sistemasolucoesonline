@@ -189,21 +189,19 @@ CECO, Educa Nexus, Ifope, Nobel, Referencial, Santa Rita
 
 ## Matrícula de Aulão (/matricula)
 
-### Fluxo
-1. Aluno preenche dados pessoais
-2. Escolhe preferência de pagamento (Boleto/Cartão/Avista)
-3. Assina contrato digitalmente
-4. Matrícula criada como "incompleta"
-5. WhatsApp enviado para equipe com dados do aluno
-6. Equipe entra em contato para negociar pagamento
-7. Admin confirma ou cancela matrícula
+### Fluxo (atualizado 22/07/2026)
+1. Aluno preenche dados pessoais (etapa 1)
+2. Etapa 2 (única): escolhe forma de pagamento (Boleto/Cartão), lê o Termo de Matrícula se quiser (fica oculto, só abre em modal ao clicar no link), marca a caixinha "Li e aceito os termos de matrícula" e confirma — **não precisa mais redigitar nome/CPF**, a assinatura usa o nome já preenchido na etapa 1
+3. Ao confirmar, gera o registro de aceite (hash SHA-256, código de validação) e vai direto pra tela de boas-vindas + pagamento (PIX/boleto/cartão via Asaas)
+4. Matrícula criada/atualizada com `assinatura_nome`, `assinado_em`, `contrato_html` preenchidos
+5. Admin acompanha/edita a matrícula em Matrículas Aulão
 
 ### Regras
-- NÃO processa pagamento online
 - Alunos identificados por `origem = 'Lançamento'`
 - Badge 🟠 Aulão no admin
-- Badge ⏳ Aguardando confirmação enquanto incompleta
-- Contrato já assinado — não pedir novamente no admin
+- Termo já aceito digitalmente — não pedir novamente no admin
+- Pagamento fora do fluxo Asaas (Pix manual, dinheiro, transferência) é registrado pelo admin via botão 💲 "Registrar pagamento" em Matrículas Aulão — é **somativo**: cada registro soma ao total já pago daquele aluno (histórico em `matriculas_aulao_pagamentos`), não substitui
+- Disparo automático de boas-vindas via Z-API (`aulao-boas-vindas`) **pausado temporariamente** a pedido do Diego (22/07/2026) — cron job existe mas está com `active = false`
 
 ## Asaas
 
