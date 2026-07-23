@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_student")({
   component: StudentLayout,
 });
 
-export const PROVA_FINAL_HABILITADA = false; // Desabilitado temporariamente a pedido do Diego (22/07/2026)
+export const PROVA_FINAL_HABILITADA = true; // Reativado a pedido do Diego (23/07/2026) — matéria Prova de volta ao dashboard
 
 function StudentLayout() {
   const { session, loading } = useAuth();
