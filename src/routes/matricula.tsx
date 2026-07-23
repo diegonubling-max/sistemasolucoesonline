@@ -149,8 +149,6 @@ function MatriculaPublicaPage() {
 
   const [forma, setForma] = useState<FormaPag | null>(null);
   const [aceito, setAceito] = useState(false);
-  const [assinatura, setAssinatura] = useState("");
-  const [confirmacaoCpf, setConfirmacaoCpf] = useState("");
   const [matriculaIdParcial, setMatriculaIdParcial] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState<Sucesso | null>(null);
@@ -280,14 +278,6 @@ function MatriculaPublicaPage() {
   const handleFinalizarStep2 = async () => {
     if (!forma) { toast.error("Selecione uma forma de pagamento"); return; }
     if (!aceito) { toast.error("Aceite os termos para continuar"); return; }
-    if (assinatura.trim().toLowerCase() !== dados.nome.trim().toLowerCase()) {
-      toast.error("Digite seu nome completo exatamente como no cadastro");
-      return;
-    }
-    if (confirmacaoCpf.trim() !== dados.cpf.trim()) {
-      toast.error("O CPF de confirmação não confere com o CPF informado no cadastro");
-      return;
-    }
     if (!dataISO) { toast.error("Data de nascimento inválida"); return; }
 
     setEnviando(true);
@@ -297,7 +287,7 @@ function MatriculaPublicaPage() {
       // Gerar bloco de validação da assinatura digital
       const agora = new Date();
       const dataHoraAssinatura = agora.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-      const hashBase = `${dados.cpf}-${assinatura.trim()}-${agora.toISOString()}`;
+      const hashBase = `${dados.cpf}-${dados.nome.trim()}-${agora.toISOString()}`;
       const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(hashBase));
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("").substring(0, 16).toUpperCase();
@@ -309,7 +299,7 @@ function MatriculaPublicaPage() {
     <strong style="font-size:14px;color:#1a1a2e;">✅ TERMO ACEITO DIGITALMENTE</strong>
   </div>
   <table style="width:100%;border-collapse:collapse;">
-    <tr><td style="padding:4px 8px;color:#555;width:40%;">Aceito por:</td><td style="padding:4px 8px;"><strong>${assinatura.trim()}</strong></td></tr>
+    <tr><td style="padding:4px 8px;color:#555;width:40%;">Aceito por:</td><td style="padding:4px 8px;"><strong>${dados.nome.trim()}</strong></td></tr>
     <tr><td style="padding:4px 8px;color:#555;">CPF do signatário:</td><td style="padding:4px 8px;"><strong>${dados.cpf}</strong></td></tr>
     <tr><td style="padding:4px 8px;color:#555;">Data e hora:</td><td style="padding:4px 8px;"><strong>${dataHoraAssinatura}</strong></td></tr>
     <tr><td style="padding:4px 8px;color:#555;">Código de validação:</td><td style="padding:4px 8px;font-family:monospace;"><strong>${codigoValidacao}</strong></td></tr>
@@ -328,7 +318,7 @@ function MatriculaPublicaPage() {
         const { error } = await supabase.from("matriculas_aulao" as any).update({
           forma_pagamento: forma,
           contrato_html: contratoComValidacao,
-          assinatura_nome: assinatura.trim(),
+          assinatura_nome: dados.nome.trim(),
           assinado_em: agora.toISOString(),
           boas_vindas_agendado_para: new Date(Date.now() + (120 + Math.floor(Math.random() * 120)) * 1000).toISOString(),
         }).eq("id", matriculaId);
@@ -349,7 +339,7 @@ function MatriculaPublicaPage() {
           p_utm_campaign: utm.utm_campaign,
           p_utm_content: utm.utm_content,
           p_contrato_html: contratoComValidacao,
-          p_assinatura_nome: assinatura.trim() || null,
+          p_assinatura_nome: dados.nome.trim() || null,
           p_sexo: null,
         });
         if (error) throw error;
@@ -732,23 +722,6 @@ function MatriculaPublicaPage() {
                     <Label htmlFor="aceito" className="text-sm leading-tight">
                       Li e aceito os termos de matrícula
                     </Label>
-                  </div>
-                  <div>
-                    <Label>Confirme seu nome completo</Label>
-                    <Input
-                      value={assinatura}
-                      onChange={(e) => setAssinatura(e.target.value)}
-                      placeholder={dados.nome}
-                    />
-                  </div>
-                  <div>
-                    <Label>Confirme seu CPF</Label>
-                    <Input
-                      value={confirmacaoCpf}
-                      onChange={(e) => setConfirmacaoCpf(maskCPF(e.target.value))}
-                      placeholder="000.000.000-00"
-                      inputMode="numeric"
-                    />
                   </div>
                 </div>
 
