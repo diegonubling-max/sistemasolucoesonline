@@ -516,6 +516,27 @@ Histórico de pagamentos de uma matrícula do Aulão. Permite registrar múltipl
 **Índice:** matricula_id
 **RLS:** Desabilitado
 
+## Prova Final — Estrutura Restaurada (23/07/2026)
+
+Colunas recriadas após terem sumido no reset do Lovable/Supabase (ver BUG-019):
+
+| Coluna | Tabela | Tipo | Descrição |
+|--------|--------|------|-----------|
+| data_liberacao_prova | alunos | timestamptz | Data em que a prova libera pro aluno (padrão: 1ª matrícula + 60 dias; antecipada se a Mônica agendar antes) |
+| materias_prova | alunos | text[] | Matérias personalizadas do aluno (se vazio, usa a lista padrão de 10 matérias EJA) |
+| whatsapp | polos | text | WhatsApp do setor de provas daquele polo (fallback: 5551990010689) |
+
+### Curso "Prova Final" (pseudo-curso)
+Criado um registro em `cursos` com `is_prova_final = true`, vinculado ao segmento EJA. Não é uma matéria de verdade — é o "cartão" que aparece no final da lista de matérias do aluno (thumbnail + contagem regressiva). Vinculado via `matricula_cursos` a todas as matrículas EJA ativas.
+
+### Triggers criados
+- `trg_definir_liberacao_prova` (em `matriculas`, AFTER INSERT) — define `data_liberacao_prova` automaticamente (matrícula + 60 dias) se o aluno ainda não tiver
+- `trg_antecipar_liberacao_prova` (em `prova_agendamentos`, AFTER INSERT/UPDATE) — se a Mônica agendar a prova antes do prazo de 60 dias, antecipa `data_liberacao_prova` pra data agendada
+- `trg_vincular_prova_final` (em `matriculas`, AFTER INSERT) — vincula automaticamente o curso "Prova Final" a toda matrícula nova
+
+### Limitação conhecida
+Os 24 alunos migrados tiveram `data_liberacao_prova` calculada a partir do `created_at` da matrícula no banco novo (17/07/2026, data da reconstrução), não da matrícula histórica real — essa informação não sobreviveu ao reset. Se Diego tiver as datas reais, pode pedir correção manual por CTR.
+
 ## Tabela: modelos_contrato (recriada)
 
 | Coluna | Tipo | Descrição |

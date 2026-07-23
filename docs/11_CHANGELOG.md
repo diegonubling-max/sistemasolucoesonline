@@ -259,3 +259,18 @@
 ### Dashboard Aulão
 - BUG-018 corrigido: "Recebido" (Boleto/Cartão) calculava `quantidade paga × valor fixo`, ignorando pagamentos extras/parciais — agora soma o `pagamento_valor` real de cada matrícula
 
+
+## Sessão 23/Jul/2026 — Página de demonstração e restauração da Prova Final
+
+### Nova página
+- `/matricula-demo` criada — cópia idêntica de `/matricula` sem o popup de prova social, pra uso em demonstração ao vivo em aula
+
+### Prova Final restaurada (BUG-019)
+- Descoberto que 3 colunas essenciais sumiram no reset do Supabase: `alunos.data_liberacao_prova`, `alunos.materias_prova`, `polos.whatsapp` — qualquer query que as selecionasse falhava por inteiro
+- Colunas recriadas; `data_liberacao_prova` recalculada pra todos os 24 alunos atuais (1ª matrícula + 60 dias)
+- Criado curso pseudo "Prova Final" (`is_prova_final = true`) vinculado à matrícula de todos os alunos EJA ativos — é isso que faz a thumbnail aparecer no final da lista de matérias
+- Triggers criados pra automatizar isso em matrículas futuras: `trg_definir_liberacao_prova`, `trg_antecipar_liberacao_prova` (Mônica agenda antes do prazo), `trg_vincular_prova_final`
+- Flag `PROVA_FINAL_HABILITADA` religada pra `true` — menu e rota `/aluno/prova-final` de volta
+- **Pendente:** `prova_questoes` está vazia — Diego precisa reenviar as 10 questões por matéria
+- **Limitação:** data de matrícula real dos 24 alunos migrados se perdeu no reset; contagem de 60 dias desses alunos específicos começa da reconstrução do banco (17/07/2026), não da matrícula histórica
+

@@ -122,7 +122,7 @@
 - ✅ Push Notifications (Firebase)
 - ✅ Progresso de aulas
 - ✅ Financeiro com aviso de parcelas (corrigido: não conta isento)
-- ⏸️ Prova Final com regra de liberação — **desabilitada temporariamente no menu** (22/07/2026, a pedido do Diego). Flag `PROVA_FINAL_HABILITADA = false` em `src/routes/_student.tsx`; acesso direto por URL também bloqueado (redireciona pro dashboard). Reativar trocando a flag pra `true`.
+- ✅ Prova Final com regra de liberação — reativada 23/07/2026 (estrutura de banco restaurada, ver BUG-019). Menu e rota `/aluno/prova-final` de volta. **Falta apenas Diego reenviar as questões** (`prova_questoes` está vazia)
 - ✅ Perfil do aluno editável (nome e telefone) — botão de lápis no card "Dados da Conta" (22/07/2026). CTR permanece somente leitura.
 - ✅ Upload de foto de perfil (bucket `fotos-perfil`)
 
