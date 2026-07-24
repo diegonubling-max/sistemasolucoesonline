@@ -14,7 +14,6 @@ export const Route = createFileRoute("/webinar/$id")({
 });
 
 const EMOJIS = ["❤️", "🔥", "👏", "😂", "😮", "🙌", "✅", "🎉"];
-const HEARTBEAT_INTERVAL_MS = 20000;
 
 function extrairYoutubeId(url: string): string | null {
   if (!url) return null;
@@ -85,52 +84,11 @@ function WebinarPage() {
     }
   };
 
-  // Heartbeat — mantém o participante marcado como online
-  useEffect(() => {
-    if (!participante) return;
-    const enviar = () => {
-      supabase
-        .from("webinar_participantes" as any)
-        .update({ ultimo_heartbeat: new Date().toISOString(), saiu_em: null, saida_automatica: false })
-        .eq("id", participante.id)
-        .then(() => {});
-    };
-    enviar();
-    const interval = setInterval(enviar, HEARTBEAT_INTERVAL_MS);
-
-    const handleBeforeUnload = () => {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/webinar_participantes?id=eq.${participante.id}`;
-      fetch(url, {
-        method: "PATCH",
-        headers: {
-          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal",
-        },
-        body: JSON.stringify({ saiu_em: new Date().toISOString() }),
-        keepalive: true,
-      }).catch(() => {});
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [participante]);
-
-  // Contador de pessoas online + comentários em tempo real
+  // Presença em tempo real (Supabase Presence) — substitui o heartbeat manual.
+  // A biblioteca do Supabase cuida sozinha de detectar quando a aba fecha ou a conexão cai.
   useEffect(() => {
     if (!participante) return;
 
-    const carregarContagem = async () => {
-      const { count } = await supabase
-        .from("webinar_participantes" as any)
-        .select("id", { count: "exact", head: true })
-        .eq("webinar_id", id)
-        .is("saiu_em", null);
-      setQtdOnline(count ?? 0);
-    };
     const carregarComentarios = async () => {
       const { data } = await supabase
         .from("webinar_comentarios" as any)
@@ -140,16 +98,25 @@ function WebinarPage() {
         .limit(200);
       setComentarios((data as any) ?? []);
     };
-    carregarContagem();
     carregarComentarios();
 
-    const channel = supabase
-      .channel(`webinar-${id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "webinar_participantes", filter: `webinar_id=eq.${id}` },
-        () => carregarContagem(),
-      )
+    const presenceChannel = supabase.channel(`webinar-presence-${id}`, {
+      config: { presence: { key: participante.id } },
+    });
+
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel.presenceState();
+        setQtdOnline(Object.keys(state).length);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await presenceChannel.track({ nome: participante.nome, entrou_em: new Date().toISOString() });
+        }
+      });
+
+    const commentsChannel = supabase
+      .channel(`webinar-comentarios-${id}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "webinar_comentarios", filter: `webinar_id=eq.${id}` },
@@ -158,7 +125,8 @@ function WebinarPage() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(presenceChannel);
+      supabase.removeChannel(commentsChannel);
     };
   }, [participante, id]);
 

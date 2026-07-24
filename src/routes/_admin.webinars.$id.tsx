@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,8 @@ function WebinarMonitor() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const [ultimaSaida, setUltimaSaida] = useState<{ nome: string; telefone: string; hora: string } | null>(null);
+  const [onlineAgora, setOnlineAgora] = useState(0);
+  const participantesRef = useRef<any[]>([]);
 
   const { data: webinar } = useQuery({
     queryKey: ["webinar", id],
@@ -60,34 +62,59 @@ function WebinarMonitor() {
     refetchInterval: 20000,
   });
 
-  // Realtime: feed de entradas/saídas
+  // Presença em tempo real: o admin observa o mesmo canal que os alunos usam.
+  // Quando alguém sai (fecha a aba, cai a conexão), o Supabase avisa sozinho — sem heartbeat manual.
   useEffect(() => {
-    const channel = supabase
-      .channel(`webinar-admin-${id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "webinar_participantes", filter: `webinar_id=eq.${id}` },
-        (payload) => {
-          qc.invalidateQueries({ queryKey: ["webinar-participantes", id] });
-          const novo = payload.new as any;
-          const antigo = payload.old as any;
-          if (novo?.saiu_em && !antigo?.saiu_em) {
-            setUltimaSaida({
-              nome: novo.nome,
-              telefone: novo.telefone,
-              hora: new Date(novo.saiu_em).toLocaleTimeString("pt-BR"),
-            });
-          }
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [id, qc]);
+    if (!webinar) return;
 
-  const online = (participantes ?? []).filter((p) => !p.saiu_em);
+    const presenceChannel = supabase.channel(`webinar-presence-${id}`, {
+      config: { presence: {} },
+    });
+
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel.presenceState();
+        setOnlineAgora(Object.keys(state).length);
+      })
+      .on("presence", { event: "leave" }, ({ key, leftPresences }) => {
+        const saidoEm = new Date().toISOString();
+        supabase
+          .from("webinar_participantes" as any)
+          .update({ saiu_em: saidoEm })
+          .eq("id", key)
+          .is("saiu_em", null)
+          .then(() => qc.invalidateQueries({ queryKey: ["webinar-participantes", id] }));
+
+        const info = (leftPresences?.[0] as any) ?? {};
+        const participanteLocal = participantesRef.current.find((p: any) => p.id === key);
+        setUltimaSaida({
+          nome: info.nome || participanteLocal?.nome || "Alguém",
+          telefone: participanteLocal?.telefone || "",
+          hora: new Date(saidoEm).toLocaleTimeString("pt-BR"),
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(presenceChannel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, webinar?.id]);
+
+  // Grava um snapshot da quantidade online a cada minuto, enquanto o painel está aberto e a aula ao vivo
+  useEffect(() => {
+    if (!webinar || webinar.status !== "ao_vivo") return;
+    const interval = setInterval(() => {
+      supabase.from("webinar_snapshots" as any).insert({ webinar_id: id, quantidade_online: onlineAgora }).then(() => {});
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [webinar, id, onlineAgora]);
+
   const saidos = (participantes ?? []).filter((p) => p.saiu_em);
+
+  useEffect(() => {
+    participantesRef.current = participantes ?? [];
+  }, [participantes]);
 
   return (
     <div className="p-6 space-y-6">
@@ -110,7 +137,7 @@ function WebinarMonitor() {
               <Users className="h-4 w-4" /> Online agora
             </CardTitle>
           </CardHeader>
-          <CardContent><p className="text-3xl font-bold text-green-600">{online.length}</p></CardContent>
+          <CardContent><p className="text-3xl font-bold text-green-600">{onlineAgora}</p></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
