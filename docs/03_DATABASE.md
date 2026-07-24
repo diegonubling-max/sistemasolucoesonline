@@ -516,6 +516,21 @@ Histórico de pagamentos de uma matrícula do Aulão. Permite registrar múltipl
 **Índice:** matricula_id
 **RLS:** Desabilitado
 
+## Colunas Restauradas — Padrão Recorrente (reset do Supabase)
+
+Várias colunas que o código já esperava sumiram na reconstrução do banco (Lovable/Supabase). Lista acumulada até agora (ver BUGs 017, 018 [dashboard], 019, 020 em 14_BUGS_CONHECIDOS.md):
+
+| Tabela | Coluna | Restaurada em |
+|--------|--------|----------------|
+| alunos | foto_url (era foto_perfil no código antigo) | BUG-017 |
+| alunos | data_liberacao_prova | BUG-019 |
+| alunos | materias_prova | BUG-019 |
+| polos | whatsapp | BUG-019 |
+| aluno_sessoes | login_em, logout_em, duracao_minutos | BUG-020 (23/07/2026) |
+| aluno_aulas_assistidas | assistida_em | BUG-020 (23/07/2026) |
+
+**Lição:** sempre que uma tela ou funcionalidade parecer "quebrada do nada" sem erro visível pro usuário, o primeiro suspeito é uma coluna que o código espera mas o banco reconstruído não tem — o Supabase rejeita a query inteira nesses casos (sem mensagem clara pro usuário final).
+
 ## Prova Final — Estrutura Restaurada (23/07/2026)
 
 Colunas recriadas após terem sumido no reset do Lovable/Supabase (ver BUG-019):

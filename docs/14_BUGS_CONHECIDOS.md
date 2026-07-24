@@ -90,6 +90,11 @@
 - **Pendente:** a tabela `prova_questoes` está vazia (0 questões) — Diego precisa reenviar as perguntas de cada matéria pra prova poder ser realizada de fato.
 - **Status:** ✅ Estrutura corrigida / ⏳ Aguardando reenvio das questões
 
+### BUG-020: Histórico de acesso do aluno não aparecia (sessões e aulas assistidas)
+- **Causa:** 4 colunas sumiram no reset do Supabase, mesmo padrão dos BUGs 017/018/019: `aluno_sessoes.login_em`, `aluno_sessoes.logout_em`, `aluno_sessoes.duracao_minutos` e `aluno_aulas_assistidas.assistida_em`. As sessões de login continuavam sendo criadas normalmente (`aluno_sessoes` só tinha `id`, `aluno_id`, `created_at`), mas qualquer tela que ordenasse ou lesse por essas colunas quebrava a query inteira — isso incluía o card "Alunos Online" do dashboard admin, a aba "Histórico" no perfil do aluno (sessões de login e aulas assistidas), e o encerramento de sessão ao fechar a aba. Também quebrava, silenciosamente, o botão **"Marcar como concluída"** no admin (o upsert tentava gravar `assistida_em`, que não existia, e falhava por inteiro).
+- **Solução (23/07/2026):** As 4 colunas foram recriadas e retro-preenchidas com o `created_at` de cada registro já existente (11 sessões, 110 registros de aulas assistidas). Nenhuma mudança de código foi necessária — os dados já estavam certos, só faltavam as colunas no banco.
+- **Status:** ✅ Resolvido — login/logout, duração da sessão, percentual e tempo assistido por aula, tudo funcionando de novo.
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

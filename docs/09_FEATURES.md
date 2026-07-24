@@ -21,6 +21,7 @@
 - ✅ Campo origem para rastreamento de canal (enum: Google, Meta, Indicação, Outros, Lançamento)
 - ✅ Multi-polo (4 polos)
 - ✅ Log de exclusão de alunos
+- ✅ Histórico de acesso (login/logout, duração, aulas assistidas com tempo e percentual) — corrigido 23/07/2026, ver BUG-020
 
 ## Módulo: Matrículas
 - ✅ Fluxo de 5 etapas com navegação livre

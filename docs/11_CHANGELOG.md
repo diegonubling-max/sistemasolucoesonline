@@ -272,5 +272,15 @@
 - Triggers criados pra automatizar isso em matrículas futuras: `trg_definir_liberacao_prova`, `trg_antecipar_liberacao_prova` (Mônica agenda antes do prazo), `trg_vincular_prova_final`
 - Flag `PROVA_FINAL_HABILITADA` religada pra `true` — menu e rota `/aluno/prova-final` de volta
 - **Pendente:** `prova_questoes` está vazia — Diego precisa reenviar as 10 questões por matéria
-- **Limitação:** data de matrícula real dos 24 alunos migrados se perdeu no reset; contagem de 60 dias desses alunos específicos começa da reconstrução do banco (17/07/2026), não da matrícula histórica
+- Data-base dos 24 alunos migrados corrigida manualmente por Diego pra 01/07/2026 (libera em 30/08/2026)
+
+### Acesso automático após pagamento (/matricula)
+- Ao confirmar pagamento (webhook Asaas, cartão na hora, ou registro manual no admin), o sistema agora cria automaticamente o aluno, o acesso (via Admin API, nunca SQL direto), a matrícula e libera os cursos — antes disso não existia (aulão gerava só um registro sem login)
+- Login e senha aparecem na tela do `/matricula` e são enviados por WhatsApp
+- Nova rota `/api/public/hooks/converter-matricula-aulao` (ver 06_BACKEND.md)
+- Fora do escopo por enquanto: não gera parcelas/financeiro automaticamente
+
+### Histórico de acesso do aluno (BUG-020)
+- 4 colunas sumiram no reset: `aluno_sessoes.login_em/logout_em/duracao_minutos` e `aluno_aulas_assistidas.assistida_em` — quebravam o card "Alunos Online", a aba "Histórico" do perfil do aluno e o botão "Marcar como concluída" no admin
+- Colunas recriadas e retro-preenchidas a partir do `created_at` de cada registro — nenhuma mudança de código foi necessária
 
