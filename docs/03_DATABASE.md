@@ -582,9 +582,10 @@ Chat ao vivo — `webinar_id`, `participante_id`, `nome`, `texto`, `created_at`.
 ### webinar_snapshots
 Uma linha por minuto por webinar ao vivo, gravada pelo cron `webinar-presenca` — `webinar_id`, `registrado_em`, `quantidade_online`. Alimenta o gráfico de quedas no painel admin.
 
-### Trigger/Cron
-- `processar_webinar_presenca()` — roda a cada minuto (`cron.schedule('webinar-presenca', ...)`): marca `saiu_em` de quem não manda heartbeat há mais de 45s, e grava o snapshot de quantidade online.
-- Realtime habilitado em `webinar_participantes` e `webinar_comentarios` (`ALTER PUBLICATION supabase_realtime ADD TABLE ...`).
+### Trigger/Cron — atualizado 23/07/2026
+~~`processar_webinar_presenca()` (cron a cada minuto)~~ — **removido**. A detecção de entrada/saída agora usa o recurso de **Presence** do Supabase Realtime (websocket), que já cuida de detectar sozinho quando alguém fecha a aba ou perde conexão — sem heartbeat manual do navegador do aluno. O painel admin (`/webinars/:id`) fica escutando esse mesmo canal: ao receber um evento de saída, grava `saiu_em` no banco e atualiza o feed; a cada 1 minuto (enquanto o painel estiver aberto e a aula ao vivo), grava um snapshot em `webinar_snapshots` com a contagem em tempo real, alimentando o gráfico de quedas.
+- Realtime continua habilitado em `webinar_comentarios` (chat). `webinar_participantes` não precisa mais de Realtime via Postgres Changes — a contagem/saída usa Presence.
+- **Limitação aceita:** a gravação de saída e os snapshots dependem do painel admin estar aberto durante a aula (cenário esperado, já que o Diego assiste o painel ao vivo).
 
 ## Tabela: modelos_contrato (recriada)
 

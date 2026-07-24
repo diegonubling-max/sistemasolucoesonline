@@ -291,3 +291,8 @@
 - Painel `/webinars/:id` no admin — feed ao vivo de entradas/saídas com aviso destacado, e gráfico de pessoas online ao longo da aula pra identificar onde a galera mais sai
 - 4 tabelas novas (`webinars`, `webinar_participantes`, `webinar_comentarios`, `webinar_snapshots`) + Realtime habilitado + cron `webinar-presenca` (a cada minuto)
 
+### Webinar — detecção de presença revisada (23/07/2026)
+- Diego achou o heartbeat manual (a cada 20s) uma "gambiarra" — trocado por **Supabase Presence** (recurso nativo de tempo real): a biblioteca do Supabase detecta sozinha quando o aluno fecha a aba ou perde conexão, sem nenhum código de "ping" manual no navegador do aluno
+- Painel admin escuta o mesmo canal de presença: grava a saída no banco assim que detecta, atualiza o feed ao vivo, e grava o snapshot pro gráfico a cada minuto (enquanto o painel estiver aberto)
+- Cron `webinar-presenca` removido (não é mais necessário)
+
