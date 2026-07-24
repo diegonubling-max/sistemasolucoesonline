@@ -284,3 +284,10 @@
 - 4 colunas sumiram no reset: `aluno_sessoes.login_em/logout_em/duracao_minutos` e `aluno_aulas_assistidas.assistida_em` — quebravam o card "Alunos Online", a aba "Histórico" do perfil do aluno e o botão "Marcar como concluída" no admin
 - Colunas recriadas e retro-preenchidas a partir do `created_at` de cada registro — nenhuma mudança de código foi necessária
 
+### Sistema de Webinar / Aula ao Vivo (novo)
+- Novo menu "Webinars" no admin — cria uma aula com título + link do YouTube (ao vivo, não listado)
+- Página pública `/webinar/:id` — aluno entra só com nome + WhatsApp, assiste o vídeo incorporado, comenta com emojis (chat em tempo real), vê quantas pessoas estão online
+- Detecção de saída por heartbeat (a cada 20s; sem resposta por 45s = considerado saído) — mais confiável do que só fechar a aba
+- Painel `/webinars/:id` no admin — feed ao vivo de entradas/saídas com aviso destacado, e gráfico de pessoas online ao longo da aula pra identificar onde a galera mais sai
+- 4 tabelas novas (`webinars`, `webinar_participantes`, `webinar_comentarios`, `webinar_snapshots`) + Realtime habilitado + cron `webinar-presenca` (a cada minuto)
+

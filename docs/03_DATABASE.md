@@ -552,6 +552,40 @@ Criado um registro em `cursos` com `is_prova_final = true`, vinculado ao segment
 ### Correção aplicada (23/07/2026)
 Diego ajustou a data-base dos 24 alunos migrados pra 01/07/2026 (em vez da data de reconstrução do banco, 17/07/2026) + 60 dias — todos liberam em 30/08/2026.
 
+## Tabelas: Sistema de Webinar (NOVAS — 23/07/2026)
+
+Sistema de aula ao vivo com chat e monitoramento de presença. Vídeo em si é incorporado via link do YouTube — não há streaming próprio.
+
+### webinars
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid PK | |
+| titulo | text | Nome da aula ao vivo |
+| youtube_url | text | Link do YouTube (ao vivo, não listado) |
+| status | text | `agendado` / `ao_vivo` / `encerrado` |
+| iniciado_em / encerrado_em | timestamptz | Preenchidos ao trocar o status |
+
+### webinar_participantes
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid PK | |
+| webinar_id | uuid FK | |
+| nome, telefone | text | Preenchidos pelo aluno na entrada (sem login/senha) |
+| entrou_em | timestamptz | Hora de entrada |
+| saiu_em | timestamptz | Hora de saída (manual via beforeunload, ou automática por timeout de heartbeat) |
+| saida_automatica | boolean | true se detectado por timeout, não por fechamento explícito da aba |
+| ultimo_heartbeat | timestamptz | Atualizado a cada 20s pelo navegador do aluno enquanto a aba está aberta |
+
+### webinar_comentarios
+Chat ao vivo — `webinar_id`, `participante_id`, `nome`, `texto`, `created_at`. Distribuído em tempo real via Supabase Realtime (Postgres Changes).
+
+### webinar_snapshots
+Uma linha por minuto por webinar ao vivo, gravada pelo cron `webinar-presenca` — `webinar_id`, `registrado_em`, `quantidade_online`. Alimenta o gráfico de quedas no painel admin.
+
+### Trigger/Cron
+- `processar_webinar_presenca()` — roda a cada minuto (`cron.schedule('webinar-presenca', ...)`): marca `saiu_em` de quem não manda heartbeat há mais de 45s, e grava o snapshot de quantidade online.
+- Realtime habilitado em `webinar_participantes` e `webinar_comentarios` (`ALTER PUBLICATION supabase_realtime ADD TABLE ...`).
+
 ## Tabela: modelos_contrato (recriada)
 
 | Coluna | Tipo | Descrição |

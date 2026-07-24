@@ -116,6 +116,16 @@
 - ✅ Vitrine de resgate
 - ✅ Questionário "Descubra seu Potencial"
 
+## Módulo: Webinar / Aula ao Vivo (NOVO — 23/07/2026)
+- ✅ Admin cria um "Webinar" com título + link do YouTube (ao vivo, não listado)
+- ✅ Página pública `/webinar/:id` — aluno digita nome + WhatsApp (sem senha) pra entrar
+- ✅ Vídeo do YouTube incorporado + chat ao vivo com emojis (tempo real via Supabase Realtime)
+- ✅ Contador de pessoas online em tempo real
+- ✅ Registro de entrada (nome, telefone, horário) e saída (detectada por heartbeat a cada 20s — se parar de responder por 45s, marca como saído automaticamente)
+- ✅ Painel admin `/webinars/:id` — feed ao vivo de quem entrou/saiu, com aviso destacado a cada saída
+- ✅ Gráfico de pessoas online ao longo da aula (snapshot a cada minuto via cron `webinar-presenca`), pra identificar os momentos de maior queda
+- 🔧 Streaming em si não é feito pelo sistema — Diego transmite pelo YouTube (ou outra plataforma) e o link é só incorporado
+
 ## Módulo: Área do Aluno
 - ✅ Login por CTR
 - ✅ Responsiva / PWA
