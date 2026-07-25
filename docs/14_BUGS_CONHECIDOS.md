@@ -95,6 +95,13 @@
 - **Solução (23/07/2026):** As 4 colunas foram recriadas e retro-preenchidas com o `created_at` de cada registro já existente (11 sessões, 110 registros de aulas assistidas). Nenhuma mudança de código foi necessária — os dados já estavam certos, só faltavam as colunas no banco.
 - **Status:** ✅ Resolvido — login/logout, duração da sessão, percentual e tempo assistido por aula, tudo funcionando de novo.
 
+### BUG-021: Botões/links pra páginas novas não funcionavam (routeTree.gen.ts desatualizado)
+- **Causa:** `src/routeTree.gen.ts` é um arquivo gerado automaticamente pelo plugin do TanStack Router (rodando junto do `vite build`/`vite dev`), mas fica commitado no repositório. Como várias páginas novas desta sessão (`/matricula-demo`, `/webinar/:id`, `/webinars`, `/webinars/:id`, `/api/public/hooks/converter-matricula-aulao`) foram criadas via commit direto na API do GitHub — sem rodar o build localmente — esse arquivo nunca foi atualizado. Resultado: o roteador em produção não conhecia essas rotas, então botões/links pra elas simplesmente não faziam nada ao clicar (sem erro visível, já que o React nem tenta navegar pra uma rota que não existe na árvore).
+- **Como foi descoberto:** Diego reportou que o botão "ver quem está ao vivo" (Webinars) não funcionava.
+- **Solução (23/07/2026):** Rodado `npm install --legacy-peer-deps` + `npx vite build` no sandbox pra regenerar o `routeTree.gen.ts` de verdade, e commitado o arquivo atualizado.
+- **Prevenção:** ver nota em 15_CONVENCOES_IA.md, seção "Rotas novas" — sempre regenerar esse arquivo depois de criar uma rota nova.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

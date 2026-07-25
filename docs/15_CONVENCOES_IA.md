@@ -128,6 +128,12 @@ SELECT content, status_code FROM net._http_response WHERE id = N;
 - Inputs de data: campo texto com máscara (não date picker)
 - Botões grandes, texto legível
 
+### ⚠️ Rotas novas (TanStack Router) — CRÍTICO
+- Sempre que criar/renomear um arquivo em `src/routes/`, o `src/routeTree.gen.ts` **precisa ser regenerado e commitado junto**. Ele é um arquivo gerado, mas está commitado no repo — se ficar desatualizado, o link/botão pra rota nova **não funciona em produção** (clica e não acontece nada, sem erro visível).
+- Isso já aconteceu (23/07/2026): várias rotas novas (`/matricula-demo`, `/webinar/:id`, `/webinars`, `/webinars/:id`, `/api/public/hooks/converter-matricula-aulao`) foram criadas via commit direto pela API do GitHub (sem rodar `vite dev`/`vite build` localmente), e o `routeTree.gen.ts` nunca foi atualizado — ficaram todas invisíveis pro roteador em produção até serem descobertas e corrigidas.
+- **Sempre que criar um arquivo novo em `src/routes/`:** rodar `npm install --legacy-peer-deps` (há conflito de peer deps com valibot/@hookform/resolvers) e depois `npx vite build` no sandbox antes de finalizar a sessão — isso regenera o `routeTree.gen.ts` automaticamente. Commitar esse arquivo junto com as rotas novas.
+- Não é preciso rodar isso pra edições em arquivos de rota já existentes — só quando um arquivo novo é criado (ou removido/renomeado).
+
 ---
 
 ## Regras de Segurança

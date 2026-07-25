@@ -295,4 +295,8 @@
 - Diego achou o heartbeat manual (a cada 20s) uma "gambiarra" — trocado por **Supabase Presence** (recurso nativo de tempo real): a biblioteca do Supabase detecta sozinha quando o aluno fecha a aba ou perde conexão, sem nenhum código de "ping" manual no navegador do aluno
 - Painel admin escuta o mesmo canal de presença: grava a saída no banco assim que detecta, atualiza o feed ao vivo, e grava o snapshot pro gráfico a cada minuto (enquanto o painel estiver aberto)
 - Cron `webinar-presenca` removido (não é mais necessário)
+- Depois, Diego pediu o heartbeat de volta como reforço (a cada 45s, ainda invisível pro aluno) + autoplay mudo direto no ponto ao vivo (regra dos navegadores pra autoplay funcionar)
+
+### BUG-021: routeTree.gen.ts desatualizado
+- Rotas novas criadas via API do GitHub (sem rodar build local) não apareciam pro roteador em produção — botões/links pra elas não funcionavam. Corrigido rodando `npm install --legacy-peer-deps` + `npx vite build` e commitando o arquivo regenerado. Ver nota de prevenção em 15_CONVENCOES_IA.md.
 
