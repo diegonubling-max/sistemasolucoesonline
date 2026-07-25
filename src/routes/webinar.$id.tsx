@@ -84,7 +84,23 @@ function WebinarPage() {
     }
   };
 
-  // Presença em tempo real (Supabase Presence) — substitui o heartbeat manual.
+  // Heartbeat de reforço (a cada 45s) — invisível pro aluno, só um "ainda estou aqui"
+  // gravado em segundo plano. O Presence (abaixo) já detecta saída sozinho; isso é redundância extra.
+  useEffect(() => {
+    if (!participante) return;
+    const enviar = () => {
+      supabase
+        .from("webinar_participantes" as any)
+        .update({ ultimo_heartbeat: new Date().toISOString() })
+        .eq("id", participante.id)
+        .then(() => {});
+    };
+    enviar();
+    const interval = setInterval(enviar, 45000);
+    return () => clearInterval(interval);
+  }, [participante]);
+
+  // Presença em tempo real (Supabase Presence) — detecta entrada/saída automaticamente.
   // A biblioteca do Supabase cuida sozinha de detectar quando a aba fecha ou a conexão cai.
   useEffect(() => {
     if (!participante) return;
@@ -234,11 +250,14 @@ function WebinarPage() {
             {qtdOnline}
           </div>
         </div>
+        <div className="text-xs text-center bg-neutral-800 text-neutral-300 py-1">
+          🔇 O vídeo inicia sem som (regra dos navegadores) — clique nele pra ativar o áudio
+        </div>
         <div className="aspect-video w-full bg-black">
           {youtubeId ? (
             <iframe
               className="w-full h-full"
-              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1`}
               title={webinar.titulo}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
