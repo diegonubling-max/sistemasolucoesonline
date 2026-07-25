@@ -13,6 +13,7 @@ import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as StudentRouteImport } from './routes/_student'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MatriculaRouteImport } from './routes/matricula'
+import { Route as MatriculaDemoRouteImport } from './routes/matricula-demo'
 import { Route as AdminIndexRouteImport } from './routes/_admin.index'
 import { Route as AdminColaboradoresRouteImport } from './routes/_admin.colaboradores'
 import { Route as AdminConfiguracoesRouteImport } from './routes/_admin.configuracoes'
@@ -27,15 +28,18 @@ import { Route as AdminPosVendaRouteImport } from './routes/_admin.pos-venda'
 import { Route as AdminProvasAgendadasRouteImport } from './routes/_admin.provas-agendadas'
 import { Route as AdminSegmentosRouteImport } from './routes/_admin.segmentos'
 import { Route as AdminSetorProvasRouteImport } from './routes/_admin.setor-provas'
+import { Route as AdminWebinarsRouteImport } from './routes/_admin.webinars'
 import { Route as AlunoLoginRouteImport } from './routes/aluno.login'
 import { Route as ContratoIdRouteImport } from './routes/contrato.$id'
 import { Route as ContratoTokenRouteImport } from './routes/contrato.$token'
 import { Route as ExternoProvaRouteImport } from './routes/externo.prova'
 import { Route as PagamentoIdRouteImport } from './routes/pagamento.$id'
+import { Route as WebinarIdRouteImport } from './routes/webinar.$id'
 import { Route as AdminAlunosIndexRouteImport } from './routes/_admin.alunos.index'
 import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo'
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
+import { Route as AdminWebinarsIdRouteImport } from './routes/_admin.webinars.$id'
 import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.aluno.dashboard'
 import { Route as StudentAlunoFinanceiroRouteImport } from './routes/_student.aluno.financeiro'
 import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
@@ -49,6 +53,7 @@ import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_st
 import { Route as StudentAlunoProvaFinalRealizarRouteImport } from './routes/_student.aluno.prova-final.realizar'
 import { Route as ApiPublicHooksAsaasAulaoRouteImport } from './routes/api/public/hooks/asaas-aulao'
 import { Route as ApiPublicHooksAsaasWebhookAulaoRouteImport } from './routes/api/public/hooks/asaas-webhook-aulao'
+import { Route as ApiPublicHooksConverterMatriculaAulaoRouteImport } from './routes/api/public/hooks/converter-matricula-aulao'
 import { Route as ApiPublicHooksLembreteProvaRouteImport } from './routes/api/public/hooks/lembrete-prova'
 import { Route as ApiPublicHooksWhatsappCobrancaRouteImport } from './routes/api/public/hooks/whatsapp-cobranca'
 import { Route as ApiPublicHooksZapiJobsDiariosRouteImport } from './routes/api/public/hooks/zapi-jobs-diarios'
@@ -70,6 +75,11 @@ const LoginRoute = LoginRouteImport.update({
 const MatriculaRoute = MatriculaRouteImport.update({
   id: '/matricula',
   path: '/matricula',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatriculaDemoRoute = MatriculaDemoRouteImport.update({
+  id: '/matricula-demo',
+  path: '/matricula-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -142,6 +152,11 @@ const AdminSetorProvasRoute = AdminSetorProvasRouteImport.update({
   path: '/setor-provas',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminWebinarsRoute = AdminWebinarsRouteImport.update({
+  id: '/webinars',
+  path: '/webinars',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AlunoLoginRoute = AlunoLoginRouteImport.update({
   id: '/aluno/login',
   path: '/aluno/login',
@@ -167,6 +182,11 @@ const PagamentoIdRoute = PagamentoIdRouteImport.update({
   path: '/pagamento/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WebinarIdRoute = WebinarIdRouteImport.update({
+  id: '/webinar/$id',
+  path: '/webinar/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminAlunosIndexRoute = AdminAlunosIndexRouteImport.update({
   id: '/alunos/',
   path: '/alunos/',
@@ -186,6 +206,11 @@ const AdminCursosNovoRoute = AdminCursosNovoRouteImport.update({
   id: '/cursos/novo',
   path: '/cursos/novo',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminWebinarsIdRoute = AdminWebinarsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminWebinarsRoute,
 } as any)
 const StudentAlunoDashboardRoute = StudentAlunoDashboardRouteImport.update({
   id: '/aluno/dashboard',
@@ -256,6 +281,12 @@ const ApiPublicHooksAsaasWebhookAulaoRoute =
     path: '/api/public/hooks/asaas-webhook-aulao',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksConverterMatriculaAulaoRoute =
+  ApiPublicHooksConverterMatriculaAulaoRouteImport.update({
+    id: '/api/public/hooks/converter-matricula-aulao',
+    path: '/api/public/hooks/converter-matricula-aulao',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksLembreteProvaRoute =
   ApiPublicHooksLembreteProvaRouteImport.update({
     id: '/api/public/hooks/lembrete-prova',
@@ -284,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
   '/matricula': typeof MatriculaRoute
+  '/matricula-demo': typeof MatriculaDemoRoute
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/dashboard-aulao': typeof AdminDashboardAulaoRoute
@@ -297,13 +329,16 @@ export interface FileRoutesByFullPath {
   '/provas-agendadas': typeof AdminProvasAgendadasRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
+  '/webinars': typeof AdminWebinarsRouteWithChildren
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$id': typeof ContratoIdRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/externo/prova': typeof ExternoProvaRoute
   '/pagamento/$id': typeof PagamentoIdRoute
+  '/webinar/$id': typeof WebinarIdRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
+  '/webinars/$id': typeof AdminWebinarsIdRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
@@ -318,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
   '/api/public/hooks/asaas-aulao': typeof ApiPublicHooksAsaasAulaoRoute
   '/api/public/hooks/asaas-webhook-aulao': typeof ApiPublicHooksAsaasWebhookAulaoRoute
+  '/api/public/hooks/converter-matricula-aulao': typeof ApiPublicHooksConverterMatriculaAulaoRoute
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
@@ -328,6 +364,7 @@ export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
   '/matricula': typeof MatriculaRoute
+  '/matricula-demo': typeof MatriculaDemoRoute
   '/colaboradores': typeof AdminColaboradoresRoute
   '/configuracoes': typeof AdminConfiguracoesRoute
   '/dashboard-aulao': typeof AdminDashboardAulaoRoute
@@ -341,13 +378,16 @@ export interface FileRoutesByTo {
   '/provas-agendadas': typeof AdminProvasAgendadasRoute
   '/segmentos': typeof AdminSegmentosRoute
   '/setor-provas': typeof AdminSetorProvasRoute
+  '/webinars': typeof AdminWebinarsRouteWithChildren
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$id': typeof ContratoIdRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/externo/prova': typeof ExternoProvaRoute
   '/pagamento/$id': typeof PagamentoIdRoute
+  '/webinar/$id': typeof WebinarIdRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
+  '/webinars/$id': typeof AdminWebinarsIdRoute
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
@@ -362,6 +402,7 @@ export interface FileRoutesByTo {
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
   '/api/public/hooks/asaas-aulao': typeof ApiPublicHooksAsaasAulaoRoute
   '/api/public/hooks/asaas-webhook-aulao': typeof ApiPublicHooksAsaasWebhookAulaoRoute
+  '/api/public/hooks/converter-matricula-aulao': typeof ApiPublicHooksConverterMatriculaAulaoRoute
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
@@ -374,6 +415,7 @@ export interface FileRoutesById {
   '/_student': typeof StudentRouteWithChildren
   '/login': typeof LoginRoute
   '/matricula': typeof MatriculaRoute
+  '/matricula-demo': typeof MatriculaDemoRoute
   '/_admin/colaboradores': typeof AdminColaboradoresRoute
   '/_admin/configuracoes': typeof AdminConfiguracoesRoute
   '/_admin/dashboard-aulao': typeof AdminDashboardAulaoRoute
@@ -387,14 +429,17 @@ export interface FileRoutesById {
   '/_admin/provas-agendadas': typeof AdminProvasAgendadasRoute
   '/_admin/segmentos': typeof AdminSegmentosRoute
   '/_admin/setor-provas': typeof AdminSetorProvasRoute
+  '/_admin/webinars': typeof AdminWebinarsRouteWithChildren
   '/aluno/login': typeof AlunoLoginRoute
   '/contrato/$id': typeof ContratoIdRoute
   '/contrato/$token': typeof ContratoTokenRoute
   '/externo/prova': typeof ExternoProvaRoute
   '/pagamento/$id': typeof PagamentoIdRoute
+  '/webinar/$id': typeof WebinarIdRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
+  '/_admin/webinars/$id': typeof AdminWebinarsIdRoute
   '/_student/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/_student/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/_student/aluno/perfil': typeof StudentAlunoPerfilRoute
@@ -409,6 +454,7 @@ export interface FileRoutesById {
   '/_student/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
   '/api/public/hooks/asaas-aulao': typeof ApiPublicHooksAsaasAulaoRoute
   '/api/public/hooks/asaas-webhook-aulao': typeof ApiPublicHooksAsaasWebhookAulaoRoute
+  '/api/public/hooks/converter-matricula-aulao': typeof ApiPublicHooksConverterMatriculaAulaoRoute
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
@@ -421,6 +467,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/matricula'
+    | '/matricula-demo'
     | '/colaboradores'
     | '/configuracoes'
     | '/dashboard-aulao'
@@ -434,13 +481,16 @@ export interface FileRouteTypes {
     | '/provas-agendadas'
     | '/segmentos'
     | '/setor-provas'
+    | '/webinars'
     | '/aluno/login'
     | '/contrato/$id'
     | '/contrato/$token'
     | '/externo/prova'
     | '/pagamento/$id'
+    | '/webinar/$id'
     | '/alunos/novo'
     | '/cursos/novo'
+    | '/webinars/$id'
     | '/aluno/dashboard'
     | '/aluno/financeiro'
     | '/aluno/perfil'
@@ -455,6 +505,7 @@ export interface FileRouteTypes {
     | '/aluno/prova-final/realizar'
     | '/api/public/hooks/asaas-aulao'
     | '/api/public/hooks/asaas-webhook-aulao'
+    | '/api/public/hooks/converter-matricula-aulao'
     | '/api/public/hooks/lembrete-prova'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
@@ -465,6 +516,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/matricula'
+    | '/matricula-demo'
     | '/colaboradores'
     | '/configuracoes'
     | '/dashboard-aulao'
@@ -478,13 +530,16 @@ export interface FileRouteTypes {
     | '/provas-agendadas'
     | '/segmentos'
     | '/setor-provas'
+    | '/webinars'
     | '/aluno/login'
     | '/contrato/$id'
     | '/contrato/$token'
     | '/externo/prova'
     | '/pagamento/$id'
+    | '/webinar/$id'
     | '/alunos/novo'
     | '/cursos/novo'
+    | '/webinars/$id'
     | '/aluno/dashboard'
     | '/aluno/financeiro'
     | '/aluno/perfil'
@@ -499,6 +554,7 @@ export interface FileRouteTypes {
     | '/aluno/prova-final/realizar'
     | '/api/public/hooks/asaas-aulao'
     | '/api/public/hooks/asaas-webhook-aulao'
+    | '/api/public/hooks/converter-matricula-aulao'
     | '/api/public/hooks/lembrete-prova'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
@@ -510,6 +566,7 @@ export interface FileRouteTypes {
     | '/_student'
     | '/login'
     | '/matricula'
+    | '/matricula-demo'
     | '/_admin/colaboradores'
     | '/_admin/configuracoes'
     | '/_admin/dashboard-aulao'
@@ -523,14 +580,17 @@ export interface FileRouteTypes {
     | '/_admin/provas-agendadas'
     | '/_admin/segmentos'
     | '/_admin/setor-provas'
+    | '/_admin/webinars'
     | '/aluno/login'
     | '/contrato/$id'
     | '/contrato/$token'
     | '/externo/prova'
     | '/pagamento/$id'
+    | '/webinar/$id'
     | '/_admin/'
     | '/_admin/alunos/novo'
     | '/_admin/cursos/novo'
+    | '/_admin/webinars/$id'
     | '/_student/aluno/dashboard'
     | '/_student/aluno/financeiro'
     | '/_student/aluno/perfil'
@@ -545,6 +605,7 @@ export interface FileRouteTypes {
     | '/_student/aluno/prova-final/realizar'
     | '/api/public/hooks/asaas-aulao'
     | '/api/public/hooks/asaas-webhook-aulao'
+    | '/api/public/hooks/converter-matricula-aulao'
     | '/api/public/hooks/lembrete-prova'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
@@ -557,13 +618,16 @@ export interface RootRouteChildren {
   StudentRoute: typeof StudentRouteWithChildren
   LoginRoute: typeof LoginRoute
   MatriculaRoute: typeof MatriculaRoute
+  MatriculaDemoRoute: typeof MatriculaDemoRoute
   AlunoLoginRoute: typeof AlunoLoginRoute
   ContratoIdRoute: typeof ContratoIdRoute
   ContratoTokenRoute: typeof ContratoTokenRoute
   ExternoProvaRoute: typeof ExternoProvaRoute
   PagamentoIdRoute: typeof PagamentoIdRoute
+  WebinarIdRoute: typeof WebinarIdRoute
   ApiPublicHooksAsaasAulaoRoute: typeof ApiPublicHooksAsaasAulaoRoute
   ApiPublicHooksAsaasWebhookAulaoRoute: typeof ApiPublicHooksAsaasWebhookAulaoRoute
+  ApiPublicHooksConverterMatriculaAulaoRoute: typeof ApiPublicHooksConverterMatriculaAulaoRoute
   ApiPublicHooksLembreteProvaRoute: typeof ApiPublicHooksLembreteProvaRoute
   ApiPublicHooksWhatsappCobrancaRoute: typeof ApiPublicHooksWhatsappCobrancaRoute
   ApiPublicHooksZapiJobsDiariosRoute: typeof ApiPublicHooksZapiJobsDiariosRoute
@@ -598,6 +662,13 @@ declare module '@tanstack/react-router' {
       path: '/matricula'
       fullPath: '/matricula'
       preLoaderRoute: typeof MatriculaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matricula-demo': {
+      id: '/matricula-demo'
+      path: '/matricula-demo'
+      fullPath: '/matricula-demo'
+      preLoaderRoute: typeof MatriculaDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_admin/': {
@@ -698,6 +769,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSetorProvasRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/webinars': {
+      id: '/_admin/webinars'
+      path: '/webinars'
+      fullPath: '/webinars'
+      preLoaderRoute: typeof AdminWebinarsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/aluno/login': {
       id: '/aluno/login'
       path: '/aluno/login'
@@ -733,6 +811,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PagamentoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/webinar/$id': {
+      id: '/webinar/$id'
+      path: '/webinar/$id'
+      fullPath: '/webinar/$id'
+      preLoaderRoute: typeof WebinarIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_admin/alunos/': {
       id: '/_admin/alunos/'
       path: '/alunos'
@@ -760,6 +845,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cursos/novo'
       preLoaderRoute: typeof AdminCursosNovoRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/_admin/webinars/$id': {
+      id: '/_admin/webinars/$id'
+      path: '/$id'
+      fullPath: '/webinars/$id'
+      preLoaderRoute: typeof AdminWebinarsIdRouteImport
+      parentRoute: typeof AdminWebinarsRoute
     }
     '/_student/aluno/dashboard': {
       id: '/_student/aluno/dashboard'
@@ -852,6 +944,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAsaasWebhookAulaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/converter-matricula-aulao': {
+      id: '/api/public/hooks/converter-matricula-aulao'
+      path: '/api/public/hooks/converter-matricula-aulao'
+      fullPath: '/api/public/hooks/converter-matricula-aulao'
+      preLoaderRoute: typeof ApiPublicHooksConverterMatriculaAulaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/lembrete-prova': {
       id: '/api/public/hooks/lembrete-prova'
       path: '/api/public/hooks/lembrete-prova'
@@ -883,6 +982,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminWebinarsRouteChildren {
+  AdminWebinarsIdRoute: typeof AdminWebinarsIdRoute
+}
+
+const AdminWebinarsRouteChildren: AdminWebinarsRouteChildren = {
+  AdminWebinarsIdRoute: AdminWebinarsIdRoute,
+}
+
+const AdminWebinarsRouteWithChildren = AdminWebinarsRoute._addFileChildren(
+  AdminWebinarsRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminColaboradoresRoute: typeof AdminColaboradoresRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
@@ -897,6 +1008,7 @@ interface AdminRouteChildren {
   AdminProvasAgendadasRoute: typeof AdminProvasAgendadasRoute
   AdminSegmentosRoute: typeof AdminSegmentosRoute
   AdminSetorProvasRoute: typeof AdminSetorProvasRoute
+  AdminWebinarsRoute: typeof AdminWebinarsRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
   AdminCursosNovoRoute: typeof AdminCursosNovoRoute
@@ -922,6 +1034,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminProvasAgendadasRoute: AdminProvasAgendadasRoute,
   AdminSegmentosRoute: AdminSegmentosRoute,
   AdminSetorProvasRoute: AdminSetorProvasRoute,
+  AdminWebinarsRoute: AdminWebinarsRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
   AdminAlunosNovoRoute: AdminAlunosNovoRoute,
   AdminCursosNovoRoute: AdminCursosNovoRoute,
@@ -975,13 +1088,17 @@ const rootRouteChildren: RootRouteChildren = {
   StudentRoute: StudentRouteWithChildren,
   LoginRoute: LoginRoute,
   MatriculaRoute: MatriculaRoute,
+  MatriculaDemoRoute: MatriculaDemoRoute,
   AlunoLoginRoute: AlunoLoginRoute,
   ContratoIdRoute: ContratoIdRoute,
   ContratoTokenRoute: ContratoTokenRoute,
   ExternoProvaRoute: ExternoProvaRoute,
   PagamentoIdRoute: PagamentoIdRoute,
+  WebinarIdRoute: WebinarIdRoute,
   ApiPublicHooksAsaasAulaoRoute: ApiPublicHooksAsaasAulaoRoute,
   ApiPublicHooksAsaasWebhookAulaoRoute: ApiPublicHooksAsaasWebhookAulaoRoute,
+  ApiPublicHooksConverterMatriculaAulaoRoute:
+    ApiPublicHooksConverterMatriculaAulaoRoute,
   ApiPublicHooksLembreteProvaRoute: ApiPublicHooksLembreteProvaRoute,
   ApiPublicHooksWhatsappCobrancaRoute: ApiPublicHooksWhatsappCobrancaRoute,
   ApiPublicHooksZapiJobsDiariosRoute: ApiPublicHooksZapiJobsDiariosRoute,
