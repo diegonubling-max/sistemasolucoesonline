@@ -43,15 +43,29 @@ interface Sucesso {
   formaPagamento: FormaPag;
 }
 
+function lerCookieUtmCompartilhado(): Record<string, string | null> {
+  if (typeof document === "undefined") return {};
+  const match = document.cookie.match(/(?:^|; )solucoes_utm=([^;]*)/);
+  if (!match) return {};
+  try {
+    return JSON.parse(decodeURIComponent(match[1]));
+  } catch {
+    return {};
+  }
+}
+
 function getUtm() {
   if (typeof window === "undefined") return {};
   const p = new URLSearchParams(window.location.search);
+  const cookie = lerCookieUtmCompartilhado();
+  // Prioridade: parâmetro na própria URL do /matricula; se não tiver, usa o cookie
+  // compartilhado entre subdomínios (gravado no /aulao, já que o WhatsApp não repassa UTM).
   return {
-    utm_source: p.get("utm_source") || null,
-    utm_medium: p.get("utm_medium") || null,
-    utm_campaign: p.get("utm_campaign") || null,
-    utm_content: p.get("utm_content") || null,
-    fbclid: p.get("fbclid") || null,
+    utm_source: p.get("utm_source") || cookie.utm_source || null,
+    utm_medium: p.get("utm_medium") || cookie.utm_medium || null,
+    utm_campaign: p.get("utm_campaign") || cookie.utm_campaign || null,
+    utm_content: p.get("utm_content") || cookie.utm_content || null,
+    fbclid: p.get("fbclid") || cookie.fbclid || null,
   };
 }
 
