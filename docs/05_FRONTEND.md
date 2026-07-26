@@ -195,6 +195,7 @@
 | 🗑️ | Vermelho | Sempre | Excluir |
 
 - Opção "À Vista (PIX)" removida do seletor de forma de pagamento no edit
+- Filtros disponíveis: Forma (Boleto/Cartão), Contrato (Assinado/Não assinado), Pagamento (Pago/Aguardando), Status (Todos/Ativos/Cancelados) — adicionado 24/07/2026
 - Coluna Pagamento mostra o total real pago (soma de todos os lançamentos), com a forma entre parênteses (ex: "Pago (R$ 229,80 via Pix)")
 
 ## Perfil do Aluno (`/aluno/perfil`) — Atualizado 22/07/2026

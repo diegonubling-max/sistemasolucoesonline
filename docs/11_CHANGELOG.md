@@ -300,3 +300,9 @@
 ### BUG-021: routeTree.gen.ts desatualizado
 - Rotas novas criadas via API do GitHub (sem rodar build local) não apareciam pro roteador em produção — botões/links pra elas não funcionavam. Corrigido rodando `npm install --legacy-peer-deps` + `npx vite build` e commitando o arquivo regenerado. Ver nota de prevenção em 15_CONVENCOES_IA.md.
 
+
+## Sessão 24/Jul/2026
+
+### Matrículas Aulão
+- Novo filtro "Status" (Todos / Ativos / Cancelados) na lista, ao lado dos filtros de Forma/Contrato/Pagamento já existentes
+
