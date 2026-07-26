@@ -161,8 +161,14 @@ if (!tel.startsWith('55')) tel = '55' + tel;
 
 ---
 
+## Meta Pixel — /matricula (implementado 24/07/2026)
+- Pixel ID: `1309165311032519` (reaproveitado do que já era usado numa página `/aulao` anterior, perdida no reset — Diego não tinha um ID diferente pra passar)
+- Dispara `PageView` ao carregar a página
+- Dispara evento `Lead` assim que o aluno preenche a etapa de Dados e clica em Avançar
+- **Não foi adicionado no `/matricula-demo`** — de propósito, pra não poluir os dados de conversão do Meta com leads de demonstração/teste em aula (diferente de um registro de teste no banco, um evento de Pixel não dá pra "desfazer" depois)
+- Nenhum outro pixel/script de rastreamento foi encontrado em nenhuma outra página do sistema atual
+
 ## Integrações Futuras (Planejadas)
-- **Meta Pixel:** rastreamento de conversões na página /matricula e /aulao
 - **Utmify:** rastreamento de criativos de anúncios
 - **Domínio próprio:** migração do lovable.app para domínio próprio via Vercel
 

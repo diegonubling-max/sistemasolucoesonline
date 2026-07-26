@@ -306,3 +306,9 @@
 ### Matrículas Aulão
 - Novo filtro "Status" (Todos / Ativos / Cancelados) na lista, ao lado dos filtros de Forma/Contrato/Pagamento já existentes
 
+### Meta Pixel no /matricula
+- Nenhum código de Pixel foi encontrado em lugar nenhum do sistema atual (a página /aulao mencionada em sessões antigas não existe mais no código, foi perdida no reset)
+- Implementado: PageView ao carregar a página + evento Lead assim que o aluno preenche a etapa de Dados e avança
+- Pixel ID reaproveitado do que já era usado antes (1309165311032519), já que Diego não tinha outro pra passar
+- Deliberadamente NÃO adicionado no /matricula-demo, pra não sujar os dados de conversão do Meta com leads de teste/demonstração em aula
+
