@@ -51,6 +51,7 @@ function getUtm() {
     utm_medium: p.get("utm_medium") || null,
     utm_campaign: p.get("utm_campaign") || null,
     utm_content: p.get("utm_content") || null,
+    fbclid: p.get("fbclid") || null,
   };
 }
 
@@ -163,7 +164,7 @@ function MatriculaPublicaPage() {
   }, []);
 
   // Meta Pixel — rastreamento de conversão do checkout do aulão
-  const META_PIXEL_ID = "1309165311032519";
+  const META_PIXEL_ID = "2773111239702600";
   useEffect(() => {
     if ((window as any).fbq) {
       (window as any).fbq("track", "PageView");
@@ -276,8 +277,14 @@ function MatriculaPublicaPage() {
     const err = validarStep1();
     if (err) { toast.error(err); return; }
 
+    const utm = getUtm();
+
     // Meta Pixel — evento de conversão (Lead) assim que o aluno preenche os dados e avança
-    (window as any).fbq?.("track", "Lead");
+    (window as any).fbq?.("track", "Lead", {
+      utm_source: utm.utm_source,
+      utm_campaign: utm.utm_campaign,
+      utm_content: utm.utm_content,
+    });
 
     // Salvar dados parciais no banco (sem contrato ainda)
     try {
@@ -290,12 +297,15 @@ function MatriculaPublicaPage() {
         p_data_nascimento: dataISO,
         p_forma_pagamento: "boleto",
         p_polo_id: POLO_ID_FLORIPA,
-        p_utm_source: null, p_utm_medium: null, p_utm_campaign: null, p_utm_content: null,
+        p_utm_source: utm.utm_source, p_utm_medium: utm.utm_medium, p_utm_campaign: utm.utm_campaign, p_utm_content: utm.utm_content,
         p_contrato_html: null,
         p_assinatura_nome: null,
         p_sexo: null,
       });
       const row = Array.isArray(data) ? data[0] : data;
+      if (row?.id && utm.fbclid) {
+        supabase.from("matriculas_aulao" as any).update({ fbclid: utm.fbclid }).eq("id", row.id).then(() => {});
+      }
       if (row && !row.ja_existia) {
         setMatriculaIdParcial(row.id);
       } else if (row?.ja_existia) {
