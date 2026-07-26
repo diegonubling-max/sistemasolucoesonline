@@ -312,3 +312,9 @@
 - Pixel ID reaproveitado do que já era usado antes (1309165311032519), já que Diego não tinha outro pra passar
 - Deliberadamente NÃO adicionado no /matricula-demo, pra não sujar os dados de conversão do Meta com leads de teste/demonstração em aula
 
+### Meta Pixel — correção (26/07/2026)
+- Diego confirmou (em outro chat, "Site - Github - Vercel") que o `/aulao` real fica em outro repositório e usa o pixel `2773111239702600` via GTM — corrigido o ID no `/matricula` pra bater com esse
+- BUG corrigido: o cadastro principal salvava `utm_source/medium/campaign/content` sempre como `null` (a função que lê da URL já existia, mas só era chamada num caminho alternativo raramente usado)
+- Adicionado `fbclid` (capturado da URL) em `matriculas_aulao.fbclid`, pra permitir casar a conversão com o clique do anúncio depois
+- Pendente: confirmar se o `/aulao` (noutro repositório) já repassa os UTMs no link do grupo/WhatsApp — sem isso, os parâmetros nunca chegam na URL do `/matricula`
+

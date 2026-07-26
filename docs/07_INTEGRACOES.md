@@ -161,12 +161,14 @@ if (!tel.startsWith('55')) tel = '55' + tel;
 
 ---
 
-## Meta Pixel — /matricula (implementado 24/07/2026)
-- Pixel ID: `1309165311032519` (reaproveitado do que já era usado numa página `/aulao` anterior, perdida no reset — Diego não tinha um ID diferente pra passar)
+## Meta Pixel — /matricula (implementado 24/07/2026, corrigido 26/07/2026)
+- Pixel ID correto: `2773111239702600` (confirmado por Diego via Auxiliar de Pixel da Meta — é o mesmo pixel já usado no `/aulao`, que fica num site/repositório separado deste, gerenciado via GTM)
 - Dispara `PageView` ao carregar a página
-- Dispara evento `Lead` assim que o aluno preenche a etapa de Dados e clica em Avançar
-- **Não foi adicionado no `/matricula-demo`** — de propósito, pra não poluir os dados de conversão do Meta com leads de demonstração/teste em aula (diferente de um registro de teste no banco, um evento de Pixel não dá pra "desfazer" depois)
-- Nenhum outro pixel/script de rastreamento foi encontrado em nenhuma outra página do sistema atual
+- Dispara evento `Lead` (com utm_source/utm_campaign/utm_content como parâmetros customizados) assim que o aluno preenche a etapa de Dados e clica em Avançar
+- **Bug corrigido:** o cadastro principal (`criar_matricula_lancamento`, chamado em `handleAvancar1`) sempre salvava `utm_source/medium/campaign/content` como `null` — a função `getUtm()` que lê da URL já existia, mas só era usada num caminho alternativo que quase nunca roda. Corrigido pra usar os UTMs reais no cadastro principal.
+- `fbclid` (parâmetro que o Meta adiciona nos links de anúncio) agora também é capturado da URL e salvo em `matriculas_aulao.fbclid` — útil pra casar a conversão com o clique original via Conversions API no futuro
+- **Não foi adicionado no `/matricula-demo`** — de propósito, pra não poluir os dados de conversão do Meta com leads de demonstração/teste em aula
+- **Pendente (depende de outro repositório):** o `/aulao` (que fica em outro site, chat "Site - Github - Vercel") precisa passar os UTMs recebidos no link do grupo/WhatsApp adiante, senão eles nunca chegam na URL do `/matricula` pra esse sistema capturar. Confirmar isso é o próximo passo antes de fechar o rastreamento ponta a ponta (anúncio → grupo → matrícula → Meta).
 
 ## Integrações Futuras (Planejadas)
 - **Utmify:** rastreamento de criativos de anúncios

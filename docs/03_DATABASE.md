@@ -492,7 +492,8 @@ Armazena matrículas feitas pelo link público `/matricula` (sem criação de lo
 | boas_vindas_agendado_para | timestamptz | Quando disparar boas-vindas Z-API |
 | boas_vindas_enviado_em | timestamptz | Quando foi enviado |
 | observacoes | text | Anotações internas |
-| utm_source/medium/campaign/content | text | Parâmetros UTM |
+| utm_source/medium/campaign/content | text | Parâmetros UTM (bug corrigido em 26/07/2026 — antes sempre ficava null) |
+| fbclid | text (nova 26/07/2026) | Click ID do Meta Ads, capturado da URL — pra casar a conversão com o clique do anúncio via Conversions API no futuro |
 | created_at | timestamptz | Criação |
 | updated_at | timestamptz | Última atualização (trigger automático) |
 
