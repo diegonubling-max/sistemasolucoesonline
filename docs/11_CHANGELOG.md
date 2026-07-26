@@ -318,3 +318,8 @@
 - Adicionado `fbclid` (capturado da URL) em `matriculas_aulao.fbclid`, pra permitir casar a conversão com o clique do anúncio depois
 - Pendente: confirmar se o `/aulao` (noutro repositório) já repassa os UTMs no link do grupo/WhatsApp — sem isso, os parâmetros nunca chegam na URL do `/matricula`
 
+### Meta Pixel — descoberta do problema de cross-domain (26/07/2026)
+- O outro chat ("Site - Github - Vercel") propôs usar `localStorage` da UTMify pra levar os UTMs do `/aulao` até o formulário de matrícula — mas isso não funciona: `/aulao` fica em `supletivosolucoesonline.com.br` e `/matricula` fica em `sistema.supletivosolucoesonline.com.br`, origens diferentes pro navegador; `localStorage` não atravessa subdomínios
+- Solução correta: cookie com `Domain=.supletivosolucoesonline.com.br` (com o ponto na frente), que É compartilhado entre subdomínios
+- Lado da leitura já implementado no `/matricula` (`lerCookieUtmCompartilhado()`, cookie `solucoes_utm`) — falta o outro repositório gravar esse cookie no `/aulao`
+
