@@ -162,6 +162,34 @@ function MatriculaPublicaPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Meta Pixel — rastreamento de conversão do checkout do aulão
+  const META_PIXEL_ID = "1309165311032519";
+  useEffect(() => {
+    if ((window as any).fbq) {
+      (window as any).fbq("track", "PageView");
+      return;
+    }
+    (function (f: any, b: Document, e: string, v: string) {
+      let n: any, t: any, s: any;
+      if (f.fbq) return;
+      n = f.fbq = function (...args: any[]) {
+        n.callMethod ? n.callMethod.apply(n, args) : n.queue.push(args);
+      };
+      if (!f._fbq) f._fbq = n;
+      n.push = n;
+      n.loaded = true;
+      n.version = "2.0";
+      n.queue = [];
+      t = b.createElement(e) as HTMLScriptElement;
+      t.async = true;
+      t.src = v;
+      s = b.getElementsByTagName(e)[0];
+      s.parentNode?.insertBefore(t, s);
+    })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+    (window as any).fbq("init", META_PIXEL_ID);
+    (window as any).fbq("track", "PageView");
+  }, []);
+
   const [provaSocialIndex, setProvaSocialIndex] = useState(() => Math.floor(Math.random() * NOMES_PROVA_SOCIAL.length));
   const [provaSocialVisivel, setProvaSocialVisivel] = useState(true);
   useEffect(() => {
@@ -247,6 +275,10 @@ function MatriculaPublicaPage() {
   const handleAvancar1 = async () => {
     const err = validarStep1();
     if (err) { toast.error(err); return; }
+
+    // Meta Pixel — evento de conversão (Lead) assim que o aluno preenche os dados e avança
+    (window as any).fbq?.("track", "Lead");
+
     // Salvar dados parciais no banco (sem contrato ainda)
     try {
       const dataISO = parseDateBR(dados.data_nascimento);
