@@ -54,6 +54,7 @@ function MatriculasAulaoList() {
   const [filtroForma, setFiltroForma] = useState<"todos" | "boleto" | "cartao">("todos");
   const [filtroContrato, setFiltroContrato] = useState<"todos" | "sim" | "nao">("todos");
   const [filtroPagamento, setFiltroPagamento] = useState<"todos" | "pago" | "aguardando">("todos");
+  const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativos" | "cancelados">("todos");
   const [contratoAberto, setContratoAberto] = useState<string | null>(null);
   const [pagamentoManual, setPagamentoManual] = useState<any>(null);
   const [pagamentoManualForma, setPagamentoManualForma] = useState("Pix");
@@ -86,6 +87,8 @@ function MatriculasAulaoList() {
     if (filtroContrato === "nao" && m.assinatura_nome) return false;
     if (filtroPagamento === "pago" && m.pagamento_status !== "confirmado") return false;
     if (filtroPagamento === "aguardando" && m.pagamento_status === "confirmado") return false;
+    if (filtroStatus === "ativos" && m.status === "cancelado") return false;
+    if (filtroStatus === "cancelados" && m.status !== "cancelado") return false;
     return true;
   });
 
@@ -293,6 +296,16 @@ function MatriculasAulaoList() {
               key={v}
               onClick={() => setFiltroPagamento(v)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition ${filtroPagamento === v ? "bg-primary text-primary-foreground" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+            >{label}</button>
+          ))}
+
+          <div className="w-px h-5 bg-gray-300 mx-1" />
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mr-1">Status:</div>
+          {([["todos", "Todos"], ["ativos", "Ativos"], ["cancelados", "Cancelados"]] as const).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setFiltroStatus(v)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition ${filtroStatus === v ? "bg-primary text-primary-foreground" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
             >{label}</button>
           ))}
         </div>
