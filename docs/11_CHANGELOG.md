@@ -323,3 +323,8 @@
 - Solução correta: cookie com `Domain=.supletivosolucoesonline.com.br` (com o ponto na frente), que É compartilhado entre subdomínios
 - Lado da leitura já implementado no `/matricula` (`lerCookieUtmCompartilhado()`, cookie `solucoes_utm`) — falta o outro repositório gravar esse cookie no `/aulao`
 
+### BUG-022: Cadastrar novo aluno quebrado
+- Colunas `alunos.cadastrado_por`, `cadastrado_por_id`, `menor_de_idade`, `responsavel_email` sumiram no reset — corrigido
+- Trocada a RPC arriscada `criar_acesso_aluno` (SQL direto em auth.users) por um endpoint novo `/api/public/hooks/criar-acesso-aluno` usando Admin API, no fluxo "Novo Aluno" do admin
+- E-mail fictício (quando aluno não informa e-mail) corrigido pro padrão real `{ctr}@aluno.com` (estava `ctr{N}@solucoesonline.com.br`)
+

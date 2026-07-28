@@ -102,6 +102,13 @@
 - **Prevenção:** ver nota em 15_CONVENCOES_IA.md, seção "Rotas novas" — sempre regenerar esse arquivo depois de criar uma rota nova.
 - **Status:** ✅ Resolvido
 
+### BUG-022: Cadastrar novo aluno dava erro "Could not find the 'cadastrado_por' column"
+- **Causa:** mesmo padrão de sempre — 4 colunas sumiram no reset do Supabase: `alunos.cadastrado_por`, `cadastrado_por_id`, `menor_de_idade`, `responsavel_email`. O formulário "Novo Aluno" do admin sempre tentou gravar essas colunas, então o cadastro falhava logo na primeira etapa.
+- **Solução (26/07/2026):** colunas recriadas.
+- **Bônus corrigido no mesmo lugar:** o passo seguinte (criar o login do aluno) usava a RPC `criar_acesso_aluno`, que insere direto em `auth.users`/`auth.identities` via SQL — exatamente o padrão que já causou "Database error querying schema" no GoTrue antes (ver histórico dos 24 alunos migrados). Trocado por um endpoint novo (`/api/public/hooks/criar-acesso-aluno`) que usa a Admin API do Supabase, igual ao resto do sistema. Também corrigido o e-mail fictício gerado quando o aluno não informa e-mail: estava no formato `ctr{N}@solucoesonline.com.br`, agora usa o padrão real `{N}@aluno.com`.
+- **Ainda usando a RPC arriscada (não mexido, menor prioridade):** `aluno.login.tsx` também chama `criar_acesso_aluno`, mas só como "garantia" — a função já verifica se o e-mail existe e não faz nada se existir, então o risco ali é bem menor (só afeta login de conta que nunca foi criada). Vale revisar no futuro.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
