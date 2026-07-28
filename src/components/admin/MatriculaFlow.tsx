@@ -1089,6 +1089,15 @@ export function MatriculaFlow({
                               descricao: `Parcela ${i} (Negociado)`
                             });
                           }
+                        } else if (pacote?.tipo === 'cartao') {
+                          // Cartão: cobrança única — quem divide em parcelas é a operadora do cartão, não o sistema
+                          novasParcelas.push({
+                            id: Math.random().toString(36).substr(2, 9),
+                            numero: 1,
+                            vencimento: setDate(hoje, dia > lastDayOfMonth(hoje).getDate() ? lastDayOfMonth(hoje).getDate() : dia),
+                            valor: (pacote.valor_total || 0) - (pacote.valor_matricula || 0),
+                            descricao: `Cartão ${pacote.numero_parcelas}x de R$ ${Number(pacote.valor_parcela).toFixed(2)}`
+                          });
                         } else {
                           const offsetInicial = hoje.getDate() <= dia ? 0 : 1;
                           for (let i = 1; i <= (pacote?.numero_parcelas || 0); i++) {
@@ -1112,7 +1121,7 @@ export function MatriculaFlow({
                         }
 
                         setParcelasGeradas(novasParcelas);
-                        toast.success("Parcelas geradas com sucesso!");
+                        toast.success(pacote?.tipo === 'cartao' ? "Cobrança única de cartão gerada!" : "Parcelas geradas com sucesso!");
                       }}
                     >
                       Gerar parcelas
