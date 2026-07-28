@@ -197,6 +197,7 @@
 - Opção "À Vista (PIX)" removida do seletor de forma de pagamento no edit
 - Filtros disponíveis: Forma (Boleto/Cartão), Contrato (Assinado/Não assinado), Pagamento (Pago/Aguardando), Status (Todos/Ativos/Cancelados) — adicionado 24/07/2026
 - Coluna Pagamento mostra o total real pago (soma de todos os lançamentos), com a forma entre parênteses (ex: "Pago (R$ 229,80 via Pix)")
+- Coluna "Previsão de Pagamento" (28/07/2026) — campo de data editável direto na tabela, sem precisar abrir o modal de edição. Usado quando o aluno faz a matrícula mas pede pra pagar depois (taxa ou cartão) — a equipe registra a data combinada por telefone. Fica vermelho se a data já passou e o pagamento ainda não foi confirmado.
 
 ## Perfil do Aluno (`/aluno/perfil`) — Atualizado 22/07/2026
 - Card "Dados da Conta" agora editável: botão de lápis abre modo de edição pra Nome Completo e Telefone

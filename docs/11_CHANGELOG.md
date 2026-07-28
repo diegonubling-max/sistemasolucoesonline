@@ -360,3 +360,7 @@
 - A pedido do Diego, a etapa de termo (link "ler o termo" + checkbox "Li e aceito") foi removida do `/matricula` e do `/matricula-demo` — depois de escolher a forma de pagamento, o aluno vai direto pro pagamento (boleto ou cartão)
 - O registro de aceite do termo (hash, código de validação, nome já preenchido) continua sendo gerado em segundo plano, sem exigir ação explícita do aluno
 
+### Matrículas Aulão — nova coluna "Previsão de Pagamento" (28/07/2026)
+- Campo de data editável direto na tabela (sem abrir modal) — pra registrar quando o aluno combinou de pagar, depois de fazer a matrícula mas pedir mais tempo
+- Fica vermelho se a data já passou e o pagamento ainda não foi confirmado
+
