@@ -191,6 +191,9 @@ Cria: aluno com CTR novo, acesso via Admin API, matrícula real, libera os 10 cu
 ### /api/public/hooks/criar-acesso-aluno (POST) — NOVA (26/07/2026)
 Cria o acesso de login (Admin API) de um aluno já existente na tabela `alunos`. Usada pelo fluxo "Novo Aluno" do admin (`MatriculaFlow.tsx`) — substituiu a RPC `criar_acesso_aluno`, que inserzia direto em `auth.users`/`auth.identities` via SQL (mesmo padrão que já quebrou login antes). Recebe `{ email, senha, aluno_id }`, cria o usuário e o `user_roles` (role='aluno'). Também depende de `SUPABASE_SERVICE_ROLE_KEY`.
 
+### /api/public/hooks/redefinir-senha-aluno (POST) — NOVA (26/07/2026)
+Redefine a senha de um aluno via Admin API. Substitui a RPC `redefinir_senha_aluno`, que **não existe mais no banco** (sumiu no reset) — estava quebrando 3 fluxos: admin editar nome+resetar senha, admin "redefinir senha padrão", e o **próprio aluno trocar a senha no perfil**. Recebe `{ email, senha }`; localiza o usuário via `auth.admin.listUsers()` (paginado) filtrando por e-mail, e atualiza com `auth.admin.updateUserById()`. Depende de `SUPABASE_SERVICE_ROLE_KEY`.
+
 ### /api/public/hooks/zapi-send (POST) — atualizado
 - Credenciais Z-API adicionadas como fallback no código (não depende de env vars)
 - Instance ID: 3F4CC1DC22AB31BDE17ECE717FF40C71

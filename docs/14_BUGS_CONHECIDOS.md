@@ -115,6 +115,14 @@
 - **Nota:** essa configuração por aluno é independente do trigger `trg_definir_liberacao_prova` (que usa 60 dias fixos como padrão pra matrículas novas) — o admin pode ajustar esse prazo individualmente por aqui depois.
 - **Status:** ✅ Resolvido
 
+### BUG-024: Formulário de aluno com mais colunas faltando + redefinir senha quebrado em 3 lugares
+- **Causa 1:** mais 5 colunas sumiram no reset: `alunos.observacao`, `origem_detalhe`, `responsavel_nome`, `responsavel_telefone`, `responsavel_cpf`. Fiz uma checagem completa de todos os campos do formulário `AlunoForm.tsx` contra o banco de uma vez, pra parar de descobrir uma coluna por vez.
+- **Causa 2 (mais séria):** a RPC `redefinir_senha_aluno` **não existe mais no banco** — e ela era chamada em 3 lugares: quando o admin edita o nome do aluno e opta por resetar a senha, quando o admin clica em "redefinir senha padrão", e **quando o próprio aluno troca a senha dele no perfil** (essa era a mais grave, afetava alunos reais direto).
+- **Solução (26/07/2026):** colunas recriadas; criado endpoint `/api/public/hooks/redefinir-senha-aluno` usando Admin API do Supabase (localiza o usuário pelo e-mail via `listUsers` e atualiza a senha com `updateUserById`) — substituindo a RPC ausente nos 3 lugares.
+- **Bônus corrigido:** e-mail fictício (`ctr{N}@solucoesonline.com.br`) corrigido pro padrão real (`{N}@aluno.com`) em mais 2 lugares (edição de aluno e redefinição de senha); URL antiga do Lovable (`sistemasolucoesonline.lovable.app`) trocada pela URL certa (`sistema.supletivosolucoesonline.com.br`) na mensagem de WhatsApp de redefinição de senha.
+- **Encontrado mas não mexido:** ainda existem outras referências à URL antiga do Lovable espalhadas em ~7 arquivos (`ContratoAlunoModal.tsx`, `MatriculaFlow.tsx`, `zApiService.ts`, `__root.tsx`, `login.tsx`, `aluno.login.tsx`, `lembrete-prova.ts`, `_admin.provas-agendadas.tsx`) — vale uma limpeza dedicada depois.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

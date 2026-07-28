@@ -331,3 +331,9 @@
 ### BUG-023: dias_prova_final também sumiu
 - Mesmo cadastro de aluno voltou a quebrar, agora por falta de `alunos.dias_prova_final` (prazo configurável de liberação da Prova Final por aluno) — coluna recriada, sem precisar mudar nenhum código
 
+### BUG-024: Varredura completa do formulário de aluno + redefinir senha quebrado
+- Mais 5 colunas restauradas de uma vez (`observacao`, `origem_detalhe`, `responsavel_nome`, `responsavel_telefone`, `responsavel_cpf`), depois de checar todos os campos do `AlunoForm.tsx` contra o banco
+- Descoberto que a RPC `redefinir_senha_aluno` não existe mais — quebrava 3 fluxos, incluindo o **próprio aluno trocar a senha no perfil**. Criado endpoint `/api/public/hooks/redefinir-senha-aluno` (Admin API) substituindo nos 3 lugares
+- E-mail fictício corrigido em mais 2 arquivos (edição de aluno, redefinição de senha) pro padrão `{ctr}@aluno.com`
+- URL antiga do Lovable corrigida na mensagem de WhatsApp de redefinição de senha (ainda existem outras ~7 referências espalhadas, não mexidas — ver 14_BUGS_CONHECIDOS.md)
+

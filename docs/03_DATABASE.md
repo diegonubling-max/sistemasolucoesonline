@@ -531,6 +531,7 @@ Várias colunas que o código já esperava sumiram na reconstrução do banco (L
 | aluno_aulas_assistidas | assistida_em | BUG-020 (23/07/2026) |
 | alunos | cadastrado_por, cadastrado_por_id, menor_de_idade, responsavel_email | BUG-022 (26/07/2026) |
 | alunos | dias_prova_final | BUG-023 (26/07/2026) |
+| alunos | observacao, origem_detalhe, responsavel_nome, responsavel_telefone, responsavel_cpf | BUG-024 (26/07/2026) |
 
 **Lição:** sempre que uma tela ou funcionalidade parecer "quebrada do nada" sem erro visível pro usuário, o primeiro suspeito é uma coluna que o código espera mas o banco reconstruído não tem — o Supabase rejeita a query inteira nesses casos (sem mensagem clara pro usuário final).
 
