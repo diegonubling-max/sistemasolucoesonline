@@ -165,6 +165,20 @@ function MatriculasAulaoList() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const previsaoMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: string | null }) => {
+      const { error } = await supabase
+        .from("matriculas_aulao" as any)
+        .update({ previsao_pagamento: data })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["matriculas-aulao"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const handleInativar = (m: any) => {
     if (window.confirm(`Confirma que ${m.nome} desistiu e deseja inativar essa matrícula? Ela deixa de receber mensagens automáticas.`)) {
       statusMutation.mutate({ id: m.id, status: "cancelado" });
@@ -323,6 +337,7 @@ function MatriculasAulaoList() {
                 <TableHead>Forma Pgto</TableHead>
                 <TableHead>Contrato</TableHead>
                 <TableHead>Pagamento</TableHead>
+                <TableHead>Previsão de Pagamento</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -372,6 +387,18 @@ function MatriculasAulaoList() {
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>
                     )}
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="date"
+                      value={m.previsao_pagamento || ""}
+                      onChange={(e) => previsaoMutation.mutate({ id: m.id, data: e.target.value || null })}
+                      className={`h-8 text-xs w-36 ${
+                        m.previsao_pagamento && m.pagamento_status !== "confirmado" && m.previsao_pagamento < new Date().toISOString().slice(0, 10)
+                          ? "border-red-400 text-red-700"
+                          : ""
+                      }`}
+                    />
                   </TableCell>
                   <TableCell>
                     <Badge className={STATUS_LABEL[m.status]?.className}>
