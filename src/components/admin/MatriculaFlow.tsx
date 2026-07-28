@@ -722,9 +722,9 @@ export function MatriculaFlow({
 
               let finalEmail = studentData.email;
 
-              // Se o email não foi informado, gera o fictício
+              // Se o email não foi informado, gera o fictício (mesmo padrão dos demais alunos: {ctr}@aluno.com)
               if (!finalEmail) {
-                finalEmail = `ctr${studentData.ctr}@solucoesonline.com.br`;
+                finalEmail = `${studentData.ctr}@aluno.com`;
                 const { error: updateError } = await supabase
                   .from("alunos")
                   .update({ email: finalEmail })
@@ -735,20 +735,25 @@ export function MatriculaFlow({
                 }
               }
 
-              // 2. Create Auth user via RPC
+              // 2. Criar acesso via Admin API (nunca via SQL direto em auth.users)
               if (finalEmail) {
                 console.log('Criando acesso:', finalEmail, senhaGerada, studentData.ctr);
-                const { error: erroAcesso } = await supabase.rpc('criar_acesso_aluno', {
-                  p_email: finalEmail,
-                  p_senha: senhaGerada,
-                  p_ctr: Number(studentData.ctr)
-                });
-
-                if (erroAcesso) {
-                  console.error('Erro RPC:', erroAcesso);
-                  toast.error('Aluno salvo, mas erro ao criar acesso: ' + erroAcesso.message);
-                } else {
-                  toast.success('Aluno cadastrado com sucesso!');
+                try {
+                  const respAcesso = await fetch("/api/public/hooks/criar-acesso-aluno", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: finalEmail, senha: senhaGerada, aluno_id: studentData.id }),
+                  });
+                  const dadosAcesso = await respAcesso.json();
+                  if (!respAcesso.ok || dadosAcesso.error) {
+                    console.error('Erro ao criar acesso:', dadosAcesso.error);
+                    toast.error('Aluno salvo, mas erro ao criar acesso: ' + dadosAcesso.error);
+                  } else {
+                    toast.success('Aluno cadastrado com sucesso!');
+                  }
+                } catch (e: any) {
+                  console.error('Erro ao criar acesso:', e);
+                  toast.error('Aluno salvo, mas erro ao criar acesso: ' + (e?.message || String(e)));
                 }
               }
               
