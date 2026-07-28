@@ -328,3 +328,6 @@
 - Trocada a RPC arriscada `criar_acesso_aluno` (SQL direto em auth.users) por um endpoint novo `/api/public/hooks/criar-acesso-aluno` usando Admin API, no fluxo "Novo Aluno" do admin
 - E-mail fictício (quando aluno não informa e-mail) corrigido pro padrão real `{ctr}@aluno.com` (estava `ctr{N}@solucoesonline.com.br`)
 
+### BUG-023: dias_prova_final também sumiu
+- Mesmo cadastro de aluno voltou a quebrar, agora por falta de `alunos.dias_prova_final` (prazo configurável de liberação da Prova Final por aluno) — coluna recriada, sem precisar mudar nenhum código
+

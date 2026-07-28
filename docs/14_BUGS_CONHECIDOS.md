@@ -109,6 +109,12 @@
 - **Ainda usando a RPC arriscada (não mexido, menor prioridade):** `aluno.login.tsx` também chama `criar_acesso_aluno`, mas só como "garantia" — a função já verifica se o e-mail existe e não faz nada se existir, então o risco ali é bem menor (só afeta login de conta que nunca foi criada). Vale revisar no futuro.
 - **Status:** ✅ Resolvido
 
+### BUG-023: Cadastrar/editar aluno dava erro "Could not find the 'dias_prova_final' column"
+- **Causa:** mesmo padrão de sempre — `alunos.dias_prova_final` sumiu no reset do Supabase. Essa coluna é o prazo (em dias) configurável por aluno pra liberar a Prova Final — usada na aba "Prova Final" da edição do aluno (`ConfigurarProvaFinal`, dentro de `_admin.alunos.$id.editar.tsx`), que recalcula e grava `data_liberacao_prova` a partir dela. Sem a coluna, o cadastro/edição falhava por inteiro.
+- **Solução (26/07/2026):** coluna recriada (`integer DEFAULT 60`), preenchida com 60 pros 24 alunos já existentes.
+- **Nota:** essa configuração por aluno é independente do trigger `trg_definir_liberacao_prova` (que usa 60 dias fixos como padrão pra matrículas novas) — o admin pode ajustar esse prazo individualmente por aqui depois.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
