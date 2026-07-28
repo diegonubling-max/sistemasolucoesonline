@@ -79,7 +79,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
       POST: async ({ request }) => {
-        let payload: { matricula_aulao_id?: string };
+        let payload: { matricula_aulao_id?: string; force?: boolean };
         try {
           payload = await request.json();
         } catch {
@@ -130,7 +130,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             });
           }
 
-          if (matricula.pagamento_status !== "confirmado") {
+          if (matricula.pagamento_status !== "confirmado" && !payload.force) {
             return jsonResponse({ error: "Pagamento ainda não confirmado" }, 400);
           }
 

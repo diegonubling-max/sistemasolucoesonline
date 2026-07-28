@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Eye, Power, Trash2, AlertTriangle, Loader2, FileText, FileCheck, FileWarning, ShoppingBag } from "lucide-react";
+import { Plus, Search, Pencil, Eye, Power, Trash2, AlertTriangle, Loader2, FileText, FileCheck, FileWarning, ShoppingBag, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ContratoAlunoModal } from "@/components/admin/alunos/ContratoAlunoModal";
+import { GerarAcessoAulaoModal } from "@/components/admin/alunos/GerarAcessoAulaoModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -45,6 +46,7 @@ function AlunosList() {
   const [studentToDelete, setStudentToDelete] = useState<{ id: string; nome: string; email: string; hasMatriculas: boolean } | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [studentForContract, setStudentForContract] = useState<any | null>(null);
+  const [showGerarAcessoAulao, setShowGerarAcessoAulao] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [globalSearchCpf, setGlobalSearchCpf] = useState("");
   const [globalSearchResult, setGlobalSearchResult] = useState<any>(null);
@@ -223,12 +225,17 @@ function AlunosList() {
             <Button variant="outline" onClick={() => setShowGlobalSearch(true)}>
               <Search className="h-4 w-4 mr-2" /> Buscar em todos os polos
             </Button>
+            <Button variant="outline" onClick={() => setShowGerarAcessoAulao(true)}>
+              <KeyRound className="h-4 w-4 mr-2" /> Gerar acesso (Aulão)
+            </Button>
             <Button onClick={() => navigate({ to: "/alunos/novo" })}>
               <Plus className="h-4 w-4 mr-2" /> Novo aluno
             </Button>
           </div>
         }
       />
+
+      <GerarAcessoAulaoModal open={showGerarAcessoAulao} onOpenChange={setShowGerarAcessoAulao} />
 
       <Card>
         <CardContent className="pt-6">
