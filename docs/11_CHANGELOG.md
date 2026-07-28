@@ -356,3 +356,7 @@
 ### BUG-028: SUPABASE_SERVICE_ROLE_KEY faltando na Vercel
 - O projeto `sistemasolucoesonline` na Vercel nunca teve essa variável cadastrada — quebrava a criação de acesso/redefinição de senha via Admin API. Diego cadastrou a chave `service_role` do Supabase na Vercel e fez redeploy — resolvido
 
+### Matrícula pública — remoção do termo/checkbox (28/07/2026)
+- A pedido do Diego, a etapa de termo (link "ler o termo" + checkbox "Li e aceito") foi removida do `/matricula` e do `/matricula-demo` — depois de escolher a forma de pagamento, o aluno vai direto pro pagamento (boleto ou cartão)
+- O registro de aceite do termo (hash, código de validação, nome já preenchido) continua sendo gerado em segundo plano, sem exigir ação explícita do aluno
+

@@ -122,11 +122,11 @@
 ## Página Pública: /matricula (Checkout Aulão)
 - Mobile-first
 - Banner 1080x600px no topo
-- 2 etapas (atualizado 22/07/2026): Dados → Pagamento + Termo
+- 2 etapas (atualizado 28/07/2026): Dados → Pagamento
 - Data de nascimento: campo texto com máscara (não calendário)
 - Sexo: select (Masculino/Feminino)
 - Pagamento: 2 cards (Boleto, Cartão) com checkout real via Asaas
-- Termo: fica oculto, só abre em modal ao clicar em "Ler o termo de matrícula completo"; aceite só por checkbox "Li e aceito os termos de matrícula" — sem redigitar nome/CPF (usa o nome da etapa 1 como assinatura)
+- Termo/contrato: nenhuma etapa visível pro aluno — o registro de aceite (hash, código de validação, nome da etapa 1) é gerado em segundo plano ao avançar pro pagamento, sem checkbox nem link "ler o termo" (removidos a pedido do Diego, 28/07/2026, pra tirar fricção do funil)
 - Confirmação: tela de boas-vindas + pagamento (PIX/boleto/cartão)
 
 ## Badges Visuais
