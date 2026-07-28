@@ -1274,7 +1274,7 @@ export function MatriculaFlow({
                 <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-muted/50 rounded-xl border-2 border-dashed border-muted-foreground/20">
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase font-semibold">Total de parcelas</p>
-                    <p className="text-xl font-bold">{parcelasGeradas.length}</p>
+                    <p className="text-xl font-bold">{getSortedParcelas().length}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase font-semibold">Valor das parcelas</p>
