@@ -132,6 +132,13 @@
 - **Encontrado mas não mexido:** `ContratoAlunoModal.tsx` (usado em outros lugares pra ver/gerar contrato, com botão de compartilhar por WhatsApp) **também** depende do mesmo esquema antigo quebrado — precisa da mesma decisão de simplificação, ainda pendente.
 - **Status:** ✅ Cursos/Pacote/Pagamentos resolvidos. ✅ Contrato do Novo Aluno resolvido (assinatura imediata). ⏳ `ContratoAlunoModal.tsx` ainda pendente.
 
+### BUG-026: Parcelas geradas erradas (taxa zerada, número de parcelas errado, cartão virava 1 cobrança só)
+- **Causa 1 (dado errado, não código):** todos os pacotes tinham `valor_matricula = 0` (deveria ser sempre R$69,90) e `numero_parcelas = 1` (independente do nome do pacote — "1+9" tinha `numero_parcelas=1` em vez de 9, "12x" tinha 1 em vez de 12) — provavelmente zerado/perdido no reset do Supabase.
+- **Causa 2 (código):** o botão "Gerar parcelas" do fluxo "Novo Aluno" tinha um tratamento especial pra pacotes do tipo `cartao`, que sempre gerava **uma única linha** com o valor total (ignorando `numero_parcelas`) — só o boleto e a negociação personalizada usavam o loop genérico correto.
+- **Solução (27/07/2026):** corrigidos os valores de todos os 6 pacotes ativos (`valor_matricula=69.90`, `numero_parcelas` batendo com o nome de cada um, `valor_total` recalculado); removido o tratamento especial do cartão no código — agora cartão usa o mesmo loop genérico que boleto, gerando o número certo de parcelas.
+- **Conferido:** `TrocarPacoteModal.tsx` já usava os campos genéricos corretamente — não precisou de mudança de código, só se beneficiou da correção dos dados.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

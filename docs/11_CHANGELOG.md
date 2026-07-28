@@ -344,3 +344,7 @@
 - Diego decidiu simplificar: contrato do "Novo Aluno" agora é assinado na hora, mesmo estilo do `/matricula` (sem link remoto). Removido código morto e URL antiga do Lovable
 - Pendente: `ContratoAlunoModal.tsx` (outro componente que também depende do esquema antigo) ainda não foi ajustado
 
+### BUG-026: Parcelas geradas erradas na guia Pagamentos
+- Todos os 6 pacotes ativos tinham `valor_matricula=0` (deveria ser sempre R$69,90) e `numero_parcelas=1` (independente do nome — "1+9" gerava só 1 parcela) — dado corrigido pra bater com o nome/valor de cada pacote
+- Cartão tinha tratamento especial no código que sempre gerava 1 linha só com o valor total — removido, agora usa o mesmo loop genérico do boleto (gera o número certo de parcelas)
+

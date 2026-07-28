@@ -517,6 +517,19 @@ Histórico de pagamentos de uma matrícula do Aulão. Permite registrar múltipl
 **Índice:** matricula_id
 **RLS:** Desabilitado
 
+## Tabela: pacotes — valores corrigidos (27/07/2026)
+
+Todos tinham `valor_matricula=0` e `numero_parcelas=1` (dado perdido no reset) — corrigidos:
+
+| Nome | Tipo | Taxa matrícula | Valor parcela | Nº parcelas | Valor total |
+|------|------|----------------|---------------|-------------|-------------|
+| Boleto (1+6 de R$199,90) | boleto | R$69,90 | R$199,90 | 6 | R$1.269,30 |
+| Boleto (1+9 de R$159,90) | boleto | R$69,90 | R$159,90 | 9 | R$1.509,00 |
+| Cartão (12x de R$99,90) | cartao | R$69,90 | R$99,90 | 12 | R$1.268,70 |
+| Cartão Acelerado (12x R$119,90) | cartao | R$69,90 | R$119,90 | 12 | R$1.508,70 |
+| Avista | pix | R$69,90 | R$997,00 | 1 | R$1.066,90 |
+| Avista Acelerado | pix | R$69,90 | R$1.199,00 | 1 | R$1.268,90 |
+
 ## Colunas Restauradas — Padrão Recorrente (reset do Supabase)
 
 Várias colunas que o código já esperava sumiram na reconstrução do banco (Lovable/Supabase). Lista acumulada até agora (ver BUGs 017, 018 [dashboard], 019, 020 em 14_BUGS_CONHECIDOS.md):
