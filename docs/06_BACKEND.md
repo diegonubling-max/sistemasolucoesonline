@@ -185,8 +185,9 @@ Webhook chamado pelo Asaas quando pagamento PIX é confirmado.
 
 ### /api/public/hooks/converter-matricula-aulao (POST) — NOVA (23/07/2026)
 Converte uma `matriculas_aulao` já paga em aluno de verdade com login liberado. Idempotente (usa `matriculas_aulao.aluno_id` como trava).
-Chamada por: webhook do Asaas, botão 💲 Registrar Pagamento no admin, e pela própria tela `/matricula`/`/matricula-demo`.
+Chamada por: webhook do Asaas, botão 💲 Registrar Pagamento no admin, pela própria tela `/matricula`/`/matricula-demo`, e (28/07/2026) pelo botão **"Gerar acesso (Aulão)"** no menu Alunos.
 Cria: aluno com CTR novo, acesso via Admin API, matrícula real, libera os 10 cursos EJA (Prova Final vem sozinha pelos triggers), salva o termo em `contratos`. Senha gerada: `1234` + primeiro nome. Depende de `SUPABASE_SERVICE_ROLE_KEY` configurada na Vercel.
+**Parâmetro `force: true` (28/07/2026):** pula a checagem de pagamento confirmado — usado pelo botão "Gerar acesso (Aulão)", pra quando o admin quer liberar acesso a um aluno que fez a matrícula mas ainda não pagou (ex: pediu mais tempo pra pagar).
 
 ### /api/public/hooks/criar-acesso-aluno (POST) — NOVA (26/07/2026)
 Cria o acesso de login (Admin API) de um aluno já existente na tabela `alunos`. Usada pelo fluxo "Novo Aluno" do admin (`MatriculaFlow.tsx`) — substituiu a RPC `criar_acesso_aluno`, que inserzia direto em `auth.users`/`auth.identities` via SQL (mesmo padrão que já quebrou login antes). Recebe `{ email, senha, aluno_id }`, cria o usuário e o `user_roles` (role='aluno'). Também depende de `SUPABASE_SERVICE_ROLE_KEY`.

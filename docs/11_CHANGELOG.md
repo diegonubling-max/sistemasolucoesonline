@@ -364,3 +364,7 @@
 - Campo de data editável direto na tabela (sem abrir modal) — pra registrar quando o aluno combinou de pagar, depois de fazer a matrícula mas pedir mais tempo
 - Fica vermelho se a data já passou e o pagamento ainda não foi confirmado
 
+### Alunos — novo botão "Gerar acesso (Aulão)" (28/07/2026)
+- Diego apontou que o `/matricula` sozinho não gera login/senha até o pagamento confirmar — pra cobrir o caso de aluno que preencheu os dados mas ainda não pagou (ou pediu mais prazo), novo botão no menu Alunos abre uma lista de todos os cadastros do `/matricula` sem `aluno_id` vinculado ainda
+- Cada linha tem um botão "Gerar acesso" que cria o login na hora, mesmo sem pagamento confirmado — endpoint `converter-matricula-aulao` ganhou um parâmetro `force: true` pra pular essa checagem quando chamado por aqui
+

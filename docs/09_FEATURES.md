@@ -22,6 +22,7 @@
 - ✅ Multi-polo (4 polos)
 - ✅ Log de exclusão de alunos
 - ✅ Histórico de acesso (login/logout, duração, aulas assistidas com tempo e percentual) — corrigido 23/07/2026, ver BUG-020
+- ✅ Botão "Gerar acesso (Aulão)" — lista cadastros do `/matricula` sem login ainda e gera na hora, mesmo sem pagamento confirmado (28/07/2026)
 
 ## Módulo: Matrículas
 - ✅ Fluxo de 5 etapas com navegação livre
