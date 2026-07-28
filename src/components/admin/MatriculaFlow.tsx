@@ -80,7 +80,6 @@ export function MatriculaFlow({
   const [pendingModeloId, setPendingModeloId] = useState<string | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [contractContent, setContractContent] = useState("");
-  const [contractLink, setContractLink] = useState<string | null>(null);
   const [accessData, setAccessData] = useState<{ email: string; pass: string; ctr?: string | number; nome?: string } | null>(null);
 
 
@@ -310,17 +309,16 @@ export function MatriculaFlow({
         
       if (errorParcelas) throw errorParcelas;
 
-      // 2. Salvar Contrato
-      const { data: contractData, error: errorContrato } = await supabase
+      // 2. Salvar Contrato — assinado na hora (mesmo estilo do /matricula, sem link remoto)
+      const { error: errorContrato } = await supabase
         .from('contratos')
         .insert({
+          nome: `Contrato de Matrícula — ${aluno.nome}`,
+          conteudo: contractContent,
           aluno_id: aluno.id,
-          matricula_id: matriculaId,
-          conteudo_html: contractContent,
-          status: 'pendente'
-        })
-        .select('token_unico')
-        .single();
+          status: 'assinado',
+          ativo: true,
+        });
 
       if (errorContrato) throw errorContrato;
 
@@ -365,10 +363,7 @@ export function MatriculaFlow({
         setIsProcessingAsaas(false);
       }
 
-      return {
-        token: contractData.token_unico,
-        link: `https://sistemasolucoesonline.lovable.app/contrato/${contractData.token_unico}`
-      };
+      return true;
     },
     onSuccess: async (data) => {
       // Push notification ANTES de abrir o modal de sucesso
@@ -420,7 +415,6 @@ export function MatriculaFlow({
       }
 
       // Só depois abre o modal de sucesso
-      setContractLink(data.link);
       if (aluno) {
         const primeiroNome = (aluno.nome || "").trim().split(/\s+/)[0]?.toLowerCase() || "";
         setAccessData({
@@ -490,31 +484,6 @@ export function MatriculaFlow({
     setShowModelSelection(false);
     setShowContractModal(true);
   };
-
-  const createContract = useMutation({
-    mutationFn: async () => {
-      if (!alunoId || !contractContent) throw new Error("Dados incompletos");
-
-      const { data, error } = await supabase
-        .from('contratos')
-        .insert({
-          aluno_id: alunoId,
-          matricula_id: matriculaId,
-          conteudo_html: contractContent,
-          status: 'pendente'
-        })
-        .select('token_unico')
-        .single();
-
-      if (error) throw error;
-      return `https://sistemasolucoesonline.lovable.app/contrato/${data.token_unico}`;
-    },
-    onSuccess: (link) => {
-      setContractLink(link);
-      toast.success("Contrato gerado com sucesso!");
-    },
-    onError: (e: any) => toast.error("Erro ao gerar contrato: " + e.message)
-  });
 
   const getSortedParcelas = () => {
     const currentPacote = pacotes?.find(p => p.id === selectedPacote);
@@ -1895,23 +1864,11 @@ export function MatriculaFlow({
               </div>
             </div>
 
-            {/* Link do Contrato */}
+            {/* Contrato assinado */}
             <div className="space-y-3">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <FileText className="h-4 w-4" /> Link do Contrato
-              </h3>
-              <div className="flex gap-2">
-                <Input value={contractLink || ""} readOnly className="font-mono text-sm h-12 bg-muted/30" />
-                <Button 
-                  variant="outline"
-                  className="h-12 px-4"
-                  onClick={() => {
-                    navigator.clipboard.writeText(contractLink || "");
-                    toast.success("Link do contrato copiado!");
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                <Check className="h-5 w-5" />
+                <span className="font-medium text-sm">Contrato assinado e registrado com sucesso.</span>
               </div>
             </div>
 
