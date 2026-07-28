@@ -348,3 +348,6 @@
 - Todos os 6 pacotes ativos tinham `valor_matricula=0` (deveria ser sempre R$69,90) e `numero_parcelas=1` (independente do nome — "1+9" gerava só 1 parcela) — dado corrigido pra bater com o nome/valor de cada pacote
 - Cartão tinha tratamento especial no código que sempre gerava 1 linha só com o valor total — removido, agora usa o mesmo loop genérico do boleto (gera o número certo de parcelas)
 
+### BUG-027: Excluir aluno dava erro de foreign key
+- RPC `delete_aluno_completo` esquecia de limpar `matricula_cursos`, `matricula_pacotes`, `cursos_vitrine`, `contratos`, `aluno_sessoes` antes de apagar a matrícula — corrigido, agora limpa todas as tabelas relacionadas na ordem certa. `matriculas_aulao` só é desvinculada (não apagada, é histórico)
+

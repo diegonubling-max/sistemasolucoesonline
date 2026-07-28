@@ -139,6 +139,11 @@
 - **Conferido:** `TrocarPacoteModal.tsx` já usava os campos genéricos corretamente — não precisou de mudança de código, só se beneficiou da correção dos dados.
 - **Status:** ✅ Resolvido
 
+### BUG-027: Excluir aluno dava erro de foreign key (matricula_cursos)
+- **Causa:** a RPC `delete_aluno_completo` esquecia de limpar 5 tabelas relacionadas antes de apagar `matriculas`/`alunos`: `matricula_cursos`, `matricula_pacotes` (nova, criada nesta sessão), `cursos_vitrine`, `contratos`, `aluno_sessoes` — qualquer aluno com dados nessas tabelas (ou seja, praticamente todos) não conseguia ser excluído.
+- **Solução (27/07/2026):** função reescrita pra limpar todas as tabelas que referenciam `alunos`/`matriculas` na ordem certa antes de excluir. `matriculas_aulao` não é apagada (é histórico de marketing/matrícula) — só desvinculada (`aluno_id = NULL`).
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
