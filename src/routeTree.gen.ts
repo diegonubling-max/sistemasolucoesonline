@@ -56,6 +56,7 @@ import { Route as ApiPublicHooksAsaasWebhookAulaoRouteImport } from './routes/ap
 import { Route as ApiPublicHooksConverterMatriculaAulaoRouteImport } from './routes/api/public/hooks/converter-matricula-aulao'
 import { Route as ApiPublicHooksCriarAcessoAlunoRouteImport } from './routes/api/public/hooks/criar-acesso-aluno'
 import { Route as ApiPublicHooksLembreteProvaRouteImport } from './routes/api/public/hooks/lembrete-prova'
+import { Route as ApiPublicHooksRedefinirSenhaAlunoRouteImport } from './routes/api/public/hooks/redefinir-senha-aluno'
 import { Route as ApiPublicHooksWhatsappCobrancaRouteImport } from './routes/api/public/hooks/whatsapp-cobranca'
 import { Route as ApiPublicHooksZapiJobsDiariosRouteImport } from './routes/api/public/hooks/zapi-jobs-diarios'
 import { Route as ApiPublicHooksZapiSendRouteImport } from './routes/api/public/hooks/zapi-send'
@@ -300,6 +301,12 @@ const ApiPublicHooksLembreteProvaRoute =
     path: '/api/public/hooks/lembrete-prova',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRedefinirSenhaAlunoRoute =
+  ApiPublicHooksRedefinirSenhaAlunoRouteImport.update({
+    id: '/api/public/hooks/redefinir-senha-aluno',
+    path: '/api/public/hooks/redefinir-senha-aluno',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksWhatsappCobrancaRoute =
   ApiPublicHooksWhatsappCobrancaRouteImport.update({
     id: '/api/public/hooks/whatsapp-cobranca',
@@ -363,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/converter-matricula-aulao': typeof ApiPublicHooksConverterMatriculaAulaoRoute
   '/api/public/hooks/criar-acesso-aluno': typeof ApiPublicHooksCriarAcessoAlunoRoute
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
+  '/api/public/hooks/redefinir-senha-aluno': typeof ApiPublicHooksRedefinirSenhaAlunoRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
   '/api/public/hooks/zapi-send': typeof ApiPublicHooksZapiSendRoute
@@ -413,6 +421,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/converter-matricula-aulao': typeof ApiPublicHooksConverterMatriculaAulaoRoute
   '/api/public/hooks/criar-acesso-aluno': typeof ApiPublicHooksCriarAcessoAlunoRoute
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
+  '/api/public/hooks/redefinir-senha-aluno': typeof ApiPublicHooksRedefinirSenhaAlunoRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
   '/api/public/hooks/zapi-send': typeof ApiPublicHooksZapiSendRoute
@@ -466,6 +475,7 @@ export interface FileRoutesById {
   '/api/public/hooks/converter-matricula-aulao': typeof ApiPublicHooksConverterMatriculaAulaoRoute
   '/api/public/hooks/criar-acesso-aluno': typeof ApiPublicHooksCriarAcessoAlunoRoute
   '/api/public/hooks/lembrete-prova': typeof ApiPublicHooksLembreteProvaRoute
+  '/api/public/hooks/redefinir-senha-aluno': typeof ApiPublicHooksRedefinirSenhaAlunoRoute
   '/api/public/hooks/whatsapp-cobranca': typeof ApiPublicHooksWhatsappCobrancaRoute
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
   '/api/public/hooks/zapi-send': typeof ApiPublicHooksZapiSendRoute
@@ -518,6 +528,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/converter-matricula-aulao'
     | '/api/public/hooks/criar-acesso-aluno'
     | '/api/public/hooks/lembrete-prova'
+    | '/api/public/hooks/redefinir-senha-aluno'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
     | '/api/public/hooks/zapi-send'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/converter-matricula-aulao'
     | '/api/public/hooks/criar-acesso-aluno'
     | '/api/public/hooks/lembrete-prova'
+    | '/api/public/hooks/redefinir-senha-aluno'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
     | '/api/public/hooks/zapi-send'
@@ -620,6 +632,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/converter-matricula-aulao'
     | '/api/public/hooks/criar-acesso-aluno'
     | '/api/public/hooks/lembrete-prova'
+    | '/api/public/hooks/redefinir-senha-aluno'
     | '/api/public/hooks/whatsapp-cobranca'
     | '/api/public/hooks/zapi-jobs-diarios'
     | '/api/public/hooks/zapi-send'
@@ -643,6 +656,7 @@ export interface RootRouteChildren {
   ApiPublicHooksConverterMatriculaAulaoRoute: typeof ApiPublicHooksConverterMatriculaAulaoRoute
   ApiPublicHooksCriarAcessoAlunoRoute: typeof ApiPublicHooksCriarAcessoAlunoRoute
   ApiPublicHooksLembreteProvaRoute: typeof ApiPublicHooksLembreteProvaRoute
+  ApiPublicHooksRedefinirSenhaAlunoRoute: typeof ApiPublicHooksRedefinirSenhaAlunoRoute
   ApiPublicHooksWhatsappCobrancaRoute: typeof ApiPublicHooksWhatsappCobrancaRoute
   ApiPublicHooksZapiJobsDiariosRoute: typeof ApiPublicHooksZapiJobsDiariosRoute
   ApiPublicHooksZapiSendRoute: typeof ApiPublicHooksZapiSendRoute
@@ -979,6 +993,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLembreteProvaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/redefinir-senha-aluno': {
+      id: '/api/public/hooks/redefinir-senha-aluno'
+      path: '/api/public/hooks/redefinir-senha-aluno'
+      fullPath: '/api/public/hooks/redefinir-senha-aluno'
+      preLoaderRoute: typeof ApiPublicHooksRedefinirSenhaAlunoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/whatsapp-cobranca': {
       id: '/api/public/hooks/whatsapp-cobranca'
       path: '/api/public/hooks/whatsapp-cobranca'
@@ -1122,6 +1143,8 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksConverterMatriculaAulaoRoute,
   ApiPublicHooksCriarAcessoAlunoRoute: ApiPublicHooksCriarAcessoAlunoRoute,
   ApiPublicHooksLembreteProvaRoute: ApiPublicHooksLembreteProvaRoute,
+  ApiPublicHooksRedefinirSenhaAlunoRoute:
+    ApiPublicHooksRedefinirSenhaAlunoRoute,
   ApiPublicHooksWhatsappCobrancaRoute: ApiPublicHooksWhatsappCobrancaRoute,
   ApiPublicHooksZapiJobsDiariosRoute: ApiPublicHooksZapiJobsDiariosRoute,
   ApiPublicHooksZapiSendRoute: ApiPublicHooksZapiSendRoute,

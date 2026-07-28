@@ -438,11 +438,13 @@ function AlunoDetalhes() {
       const primeiroNomeLower = primeiroNomeRaw.toLowerCase();
       const primeiroNomeCap = primeiroNomeRaw.charAt(0).toUpperCase() + primeiroNomeRaw.slice(1).toLowerCase();
       const senhaPadrao = `1234${primeiroNomeLower}`;
-      const { error } = await supabase.rpc('redefinir_senha_aluno', {
-        p_email: aluno.email,
-        p_nova_senha: senhaPadrao,
+      const resp = await fetch("/api/public/hooks/redefinir-senha-aluno", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: aluno.email, senha: senhaPadrao }),
       });
-      if (error) throw error;
+      const resultado = await resp.json();
+      if (!resp.ok || resultado.error) throw new Error(resultado.error || "Erro ao redefinir senha");
       if (notify && aluno.telefone) {
         try {
           const mensagem =
@@ -450,7 +452,7 @@ function AlunoDetalhes() {
             `Olá, *${primeiroNomeCap}*! Sua senha foi redefinida com sucesso.\n\n` +
             `📋 *Login:* ${aluno.ctr}\n` +
             `🔑 *Nova senha:* ${senhaPadrao}\n\n` +
-            `👉 Acesse: https://sistemasolucoesonline.lovable.app/aluno/login`;
+            `👉 Acesse: https://sistema.supletivosolucoesonline.com.br/aluno/login`;
           const { sendWhatsApp } = await import("@/services/zApiService");
           await sendWhatsApp(aluno.telefone, mensagem, { alunoId: aluno.id, tipo: "redefinicao_senha" });
 

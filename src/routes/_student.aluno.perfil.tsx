@@ -99,14 +99,16 @@ function StudentProfile() {
         throw new Error("Senha atual incorreta");
       }
 
-      // 2. Atualizar para a nova senha via RPC para contornar verificação de senha fraca
-      const { error } = await supabase.rpc('redefinir_senha_aluno', {
-        p_email: session?.user.email ?? "",
-        p_nova_senha: newPassword
+      // 2. Atualizar para a nova senha via Admin API (a RPC antiga não existe mais no banco)
+      const resp = await fetch("/api/public/hooks/redefinir-senha-aluno", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: session?.user.email ?? "", senha: newPassword }),
       });
+      const resultado = await resp.json();
 
-      if (error) {
-        throw new Error('Erro ao alterar senha: ' + error.message);
+      if (!resp.ok || resultado.error) {
+        throw new Error('Erro ao alterar senha: ' + (resultado.error || "desconhecido"));
       }
     },
     onSuccess: () => {

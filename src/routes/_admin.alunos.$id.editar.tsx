@@ -97,7 +97,7 @@ function EditarAluno() {
 
       // Se o email foi removido e não tem um, gera o fictício baseado no CTR existente
       if (!finalEmail && aluno?.ctr) {
-        finalEmail = `ctr${aluno.ctr}@solucoesonline.com.br`;
+        finalEmail = `${aluno.ctr}@aluno.com`;
       }
 
       const vendedoraAnterior = aluno?.vendedora ?? null;
@@ -236,19 +236,25 @@ function EditarAluno() {
           return;
         }
         const novaSenha = "1234" + primeiroNomeNovo.toLowerCase();
-        const emailAlvo = aluno?.email || (aluno?.ctr ? `ctr${aluno.ctr}@solucoesonline.com.br` : null);
+        const emailAlvo = aluno?.email || (aluno?.ctr ? `${aluno.ctr}@aluno.com` : null);
         if (!emailAlvo) {
           toast.error("E-mail do aluno não encontrado para redefinir senha.");
           return;
         }
-        const { error } = await supabase.rpc("redefinir_senha_aluno", {
-          p_email: emailAlvo,
-          p_nova_senha: novaSenha,
-        });
-        if (error) {
-          toast.error("Erro ao redefinir senha", { description: error.message });
-        } else {
-          toast.success("Nome e senha atualizados com sucesso!");
+        try {
+          const resp = await fetch("/api/public/hooks/redefinir-senha-aluno", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: emailAlvo, senha: novaSenha }),
+          });
+          const resultado = await resp.json();
+          if (!resp.ok || resultado.error) {
+            toast.error("Erro ao redefinir senha", { description: resultado.error });
+          } else {
+            toast.success("Nome e senha atualizados com sucesso!");
+          }
+        } catch (e: any) {
+          toast.error("Erro ao redefinir senha", { description: e?.message || String(e) });
         }
       },
     });
