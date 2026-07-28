@@ -368,3 +368,10 @@
 - Diego apontou que o `/matricula` sozinho não gera login/senha até o pagamento confirmar — pra cobrir o caso de aluno que preencheu os dados mas ainda não pagou (ou pediu mais prazo), novo botão no menu Alunos abre uma lista de todos os cadastros do `/matricula` sem `aluno_id` vinculado ainda
 - Cada linha tem um botão "Gerar acesso" que cria o login na hora, mesmo sem pagamento confirmado — endpoint `converter-matricula-aulao` ganhou um parâmetro `force: true` pra pular essa checagem quando chamado por aqui
 
+### Cartão — cobrança única restaurada (28/07/2026)
+- A remoção do tratamento especial do cartão (feita no BUG-026) estava errada — cartão gera cobrança ÚNICA (a operadora divide em N vezes, não o sistema). Revertido: cartão agora gera 1 linha de parcela com o valor total, boleto continua gerando N linhas separadas
+
+### Previsão de Pagamento — backfill (28/07/2026)
+- Diego pediu pra preencher automaticamente a coluna `previsao_pagamento` de todos os alunos que já tinham valor recebido, usando a data em que o pagamento foi registrado
+- 6 registros atualizados: usou `pagamento_confirmado_em` quando disponível, senão `updated_at` como fallback
+
