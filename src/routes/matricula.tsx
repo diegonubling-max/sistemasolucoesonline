@@ -5,13 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, isValidCPF } from "@/lib/format";
 import { format } from "date-fns";
-import { Loader2, CheckCircle2, FileText } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
 const POLO_ID_FLORIPA = "32671c78-9076-4f88-8161-bfd5ee8e866b";
 const WHATSAPP_EQUIPE = "48984393047";
@@ -163,11 +161,9 @@ function MatriculaPublicaPage() {
   });
 
   const [forma, setForma] = useState<FormaPag | null>(null);
-  const [aceito, setAceito] = useState(false);
   const [matriculaIdParcial, setMatriculaIdParcial] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState<Sucesso | null>(null);
-  const [termoAberto, setTermoAberto] = useState(false);
 
   const [tempoRestante, setTempoRestante] = useState(() => getProximoEncerramento().getTime() - Date.now());
   useEffect(() => {
@@ -333,7 +329,6 @@ function MatriculaPublicaPage() {
 
   const handleFinalizarStep2 = async () => {
     if (!forma) { toast.error("Selecione uma forma de pagamento"); return; }
-    if (!aceito) { toast.error("Aceite os termos para continuar"); return; }
     if (!dataISO) { toast.error("Data de nascimento inválida"); return; }
 
     setEnviando(true);
@@ -823,24 +818,6 @@ function MatriculaPublicaPage() {
                   </button>
                 </div>
 
-                <div className="border-t pt-4 space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => setTermoAberto(true)}
-                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 underline underline-offset-2"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Ler o termo de matrícula completo
-                  </button>
-
-                  <div className="flex items-start gap-2">
-                    <Checkbox id="aceito" checked={aceito} onCheckedChange={(v) => setAceito(!!v)} />
-                    <Label htmlFor="aceito" className="text-sm leading-tight">
-                      Li e aceito os termos de matrícula
-                    </Label>
-                  </div>
-                </div>
-
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={enviando}>Voltar</Button>
                   <Button
@@ -848,7 +825,7 @@ function MatriculaPublicaPage() {
                     disabled={enviando}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                   >
-                    {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>✅ Confirmar Matrícula</>)}
+                    {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>➡️ Ir para o pagamento</>)}
                   </Button>
                 </div>
               </>
@@ -856,18 +833,6 @@ function MatriculaPublicaPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Dialog open={termoAberto} onOpenChange={setTermoAberto}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Termo de Matrícula</DialogTitle>
-          </DialogHeader>
-          <div
-            className="text-sm bg-gray-50 rounded p-4 prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: contratoHtml || "<p>Carregando termo...</p>" }}
-          />
-        </DialogContent>
-      </Dialog>
 
       {!sucesso && (
         <div
