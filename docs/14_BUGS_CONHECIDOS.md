@@ -137,6 +137,7 @@
 - **Causa 2 (código):** o botão "Gerar parcelas" do fluxo "Novo Aluno" tinha um tratamento especial pra pacotes do tipo `cartao`, que sempre gerava **uma única linha** com o valor total (ignorando `numero_parcelas`) — só o boleto e a negociação personalizada usavam o loop genérico correto.
 - **Solução (27/07/2026):** corrigidos os valores de todos os 6 pacotes ativos (`valor_matricula=69.90`, `numero_parcelas` batendo com o nome de cada um, `valor_total` recalculado); removido o tratamento especial do cartão no código — agora cartão usa o mesmo loop genérico que boleto, gerando o número certo de parcelas.
 - **Conferido:** `TrocarPacoteModal.tsx` já usava os campos genéricos corretamente — não precisou de mudança de código, só se beneficiou da correção dos dados.
+- **Nota (28/07/2026):** o contador "Total de parcelas" na tela mostrava só as parcelas geradas pelo loop, sem contar a taxa de matrícula (ex: 1+9 mostrava "9" em vez de "10") — o banco sempre salvou certo (confirmado: 10 parcelas, R$1.509,00 pro aluno Nicole Borba Nubling/CTR 1746), era só o rótulo na tela. Corrigido pra contar junto.
 - **Status:** ✅ Resolvido
 
 ### BUG-027: Excluir aluno dava erro de foreign key (matricula_cursos)
