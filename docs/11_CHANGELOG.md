@@ -346,8 +346,13 @@
 
 ### BUG-026: Parcelas geradas erradas na guia Pagamentos
 - Todos os 6 pacotes ativos tinham `valor_matricula=0` (deveria ser sempre R$69,90) e `numero_parcelas=1` (independente do nome — "1+9" gerava só 1 parcela) — dado corrigido pra bater com o nome/valor de cada pacote
-- Cartão tinha tratamento especial no código que sempre gerava 1 linha só com o valor total — removido, agora usa o mesmo loop genérico do boleto (gera o número certo de parcelas)
+- Correção adicional: interpretação do nome "1+N" estava errada — significa N+1 parcelas iguais, não taxa+N. Boleto 1+6→7 parcelas, 1+9→10 parcelas
+- Contador "Total de parcelas" na tela corrigido pra incluir a taxa
+- Cartão: tentativa inicial de unificar com o loop do boleto foi **revertida** — cartão gera cobrança única mesmo (decisão de negócio: a operadora do cartão divide em N vezes, não o sistema)
 
 ### BUG-027: Excluir aluno dava erro de foreign key
 - RPC `delete_aluno_completo` esquecia de limpar `matricula_cursos`, `matricula_pacotes`, `cursos_vitrine`, `contratos`, `aluno_sessoes` antes de apagar a matrícula — corrigido, agora limpa todas as tabelas relacionadas na ordem certa. `matriculas_aulao` só é desvinculada (não apagada, é histórico)
+
+### BUG-028: SUPABASE_SERVICE_ROLE_KEY faltando na Vercel
+- O projeto `sistemasolucoesonline` na Vercel nunca teve essa variável cadastrada — quebrava a criação de acesso/redefinição de senha via Admin API. Diego cadastrou a chave `service_role` do Supabase na Vercel e fez redeploy — resolvido
 

@@ -132,18 +132,23 @@
 - **Encontrado mas não mexido:** `ContratoAlunoModal.tsx` (usado em outros lugares pra ver/gerar contrato, com botão de compartilhar por WhatsApp) **também** depende do mesmo esquema antigo quebrado — precisa da mesma decisão de simplificação, ainda pendente.
 - **Status:** ✅ Cursos/Pacote/Pagamentos resolvidos. ✅ Contrato do Novo Aluno resolvido (assinatura imediata). ⏳ `ContratoAlunoModal.tsx` ainda pendente.
 
-### BUG-026: Parcelas geradas erradas (taxa zerada, número de parcelas errado, cartão virava 1 cobrança só)
-- **Causa 1 (dado errado, não código):** todos os pacotes tinham `valor_matricula = 0` (deveria ser sempre R$69,90) e `numero_parcelas = 1` (independente do nome do pacote — "1+9" tinha `numero_parcelas=1` em vez de 9, "12x" tinha 1 em vez de 12) — provavelmente zerado/perdido no reset do Supabase.
-- **Causa 2 (código):** o botão "Gerar parcelas" do fluxo "Novo Aluno" tinha um tratamento especial pra pacotes do tipo `cartao`, que sempre gerava **uma única linha** com o valor total (ignorando `numero_parcelas`) — só o boleto e a negociação personalizada usavam o loop genérico correto.
-- **Solução (27/07/2026):** corrigidos os valores de todos os 6 pacotes ativos (`valor_matricula=69.90`, `numero_parcelas` batendo com o nome de cada um, `valor_total` recalculado); removido o tratamento especial do cartão no código — agora cartão usa o mesmo loop genérico que boleto, gerando o número certo de parcelas.
+### BUG-026: Parcelas geradas erradas (taxa zerada, número de parcelas errado)
+- **Causa 1 (dado errado, não código):** todos os pacotes tinham `valor_matricula = 0` (deveria ser sempre R$69,90) e `numero_parcelas = 1` (independente do nome do pacote — "1+9" tinha `numero_parcelas=1` em vez de 10, "12x" tinha 1 em vez de 12) — provavelmente zerado/perdido no reset do Supabase.
+- **Solução (27/07/2026):** corrigidos os valores de todos os 6 pacotes ativos (`valor_matricula=69.90`, `numero_parcelas` batendo com o nome de cada um, `valor_total` recalculado).
 - **Conferido:** `TrocarPacoteModal.tsx` já usava os campos genéricos corretamente — não precisou de mudança de código, só se beneficiou da correção dos dados.
 - **Nota (28/07/2026):** o contador "Total de parcelas" na tela mostrava só as parcelas geradas pelo loop, sem contar a taxa de matrícula (ex: 1+9 mostrava "9" em vez de "10") — corrigido pra contar junto.
 - **Correção adicional (28/07/2026):** o `numero_parcelas` dos pacotes de boleto ainda estava errado por interpretação equivocada do nome — "1+9" significa **10 parcelas iguais** de R$159,90 (não taxa + 9), e a taxa de R$69,90 é cobrada **à parte**, somada por cima. Corrigido: Boleto 1+6 → `numero_parcelas=7` (valor_total R$1.469,20), Boleto 1+9 → `numero_parcelas=10` (valor_total R$1.668,90, batendo com a constante `VALOR_BOLETO_TOTAL` já usada no Dashboard Aulão). Nenhum aluno de teste precisou de correção retroativa (já tinha sido excluído no teste do BUG-027).
+- **Cartão — decisão de negócio (28/07/2026):** diferente do boleto, o cartão de crédito gera **uma única cobrança** com o valor total das parcelas (a operadora do cartão é quem divide em N vezes pro cliente, não o sistema) — o tratamento especial pro cartão no código do "Novo Aluno" (removido por engano nesta mesma sessão, achando que era um bug) foi **restaurado**, agora usando os dados corretos de `valor_total`/`valor_matricula`. A taxa de matrícula continua sendo uma linha separada de R$69,90.
 - **Status:** ✅ Resolvido
 
 ### BUG-027: Excluir aluno dava erro de foreign key (matricula_cursos)
 - **Causa:** a RPC `delete_aluno_completo` esquecia de limpar 5 tabelas relacionadas antes de apagar `matriculas`/`alunos`: `matricula_cursos`, `matricula_pacotes` (nova, criada nesta sessão), `cursos_vitrine`, `contratos`, `aluno_sessoes` — qualquer aluno com dados nessas tabelas (ou seja, praticamente todos) não conseguia ser excluído.
 - **Solução (27/07/2026):** função reescrita pra limpar todas as tabelas que referenciam `alunos`/`matriculas` na ordem certa antes de excluir. `matriculas_aulao` não é apagada (é histórico de marketing/matrícula) — só desvinculada (`aluno_id = NULL`).
+- **Status:** ✅ Resolvido
+
+### BUG-028: SUPABASE_SERVICE_ROLE_KEY nunca existiu na Vercel (projeto sistemasolucoesonline)
+- **Causa:** o projeto `sistemasolucoesonline` na Vercel só tinha 5 variáveis (`SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_URL`) — a `SUPABASE_SERVICE_ROLE_KEY` nunca foi cadastrada lá. Isso quebrava qualquer endpoint que precisasse da Admin API do Supabase: `criar-acesso-aluno`, `redefinir-senha-aluno`, e (intermitentemente, dependendo de quando cada coisa foi testada) o próprio `converter-matricula-aulao`.
+- **Solução (28/07/2026):** Diego pegou a chave `service_role` em Supabase → Settings → API Keys (aba "Legacy anon, service_role API keys" → Reveal) e cadastrou como `SUPABASE_SERVICE_ROLE_KEY` na Vercel (Production), com redeploy manual em seguida.
 - **Status:** ✅ Resolvido
 
 ## Conhecidos / Não Resolvidos ⚠️

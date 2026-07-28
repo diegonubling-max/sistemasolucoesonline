@@ -521,6 +521,8 @@ Histórico de pagamentos de uma matrícula do Aulão. Permite registrar múltipl
 
 **Convenção de nome "1+N":** significa **N+1 parcelas iguais** (ex: "1+9" = 10 parcelas de mesmo valor), não "taxa + N". A taxa de matrícula (sempre R$69,90) é cobrada **à parte**, somada por cima do valor das parcelas — não faz parte da contagem "1+N".
 
+**Cartão x Boleto na geração de parcelas:** boleto (e negociação personalizada) geram uma linha de `parcelas` por parcela (N linhas), porque cada boleto é um documento separado que o sistema precisa controlar. **Cartão gera uma única linha** com o valor total das parcelas somadas — quem divide em N vezes pro cliente é a operadora do cartão, não o sistema. A taxa de matrícula continua sendo uma linha separada em qualquer caso.
+
 
 Todos tinham `valor_matricula=0` e `numero_parcelas=1` (dado perdido no reset) — corrigidos:
 
