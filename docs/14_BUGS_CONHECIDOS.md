@@ -123,6 +123,15 @@
 - **Encontrado mas não mexido:** ainda existem outras referências à URL antiga do Lovable espalhadas em ~7 arquivos (`ContratoAlunoModal.tsx`, `MatriculaFlow.tsx`, `zApiService.ts`, `__root.tsx`, `login.tsx`, `aluno.login.tsx`, `lembrete-prova.ts`, `_admin.provas-agendadas.tsx`) — vale uma limpeza dedicada depois.
 - **Status:** ✅ Resolvido
 
+### BUG-025: Guias Cursos/Pacote/Pagamentos/Contrato do "Novo Aluno" quebradas
+- **Pacote:** a tabela **inteira** `matricula_pacotes` não existia no banco (não era só uma coluna) — recriada. Isso também estava quebrando silenciosamente relatórios do Financeiro que dependem dela (`SalesReport.tsx`, `_admin.financeiro.tsx`).
+- **Pacote (negociação personalizada):** coluna `matriculas.observacao` também sumiu (diferente da de `alunos`, já corrigida antes) — recriada.
+- **Pagamentos:** coluna `parcelas.polo_id` sumiu — recriada.
+- **Contrato — o mais sério:** a tabela `contratos` foi reconstruída com uma estrutura bem diferente do que esse fluxo esperava (o antigo recurso de **assinatura remota por link único com token e validação de identidade** sumiu por completo — colunas `matricula_id`/`conteudo_html`/`token_unico` não existem, e as RPCs `get_contrato_publico` e afins também não existem mais no banco).
+- **Decisão do Diego:** em vez de reconstruir o recurso de link remoto do zero, o contrato do "Novo Aluno" agora é **assinado na hora**, dentro do próprio cadastro — mesmo estilo simplificado do `/matricula`. Removido código morto (`createContract`, mutação nunca usada) e a URL antiga do Lovable que construía o link.
+- **Encontrado mas não mexido:** `ContratoAlunoModal.tsx` (usado em outros lugares pra ver/gerar contrato, com botão de compartilhar por WhatsApp) **também** depende do mesmo esquema antigo quebrado — precisa da mesma decisão de simplificação, ainda pendente.
+- **Status:** ✅ Cursos/Pacote/Pagamentos resolvidos. ✅ Contrato do Novo Aluno resolvido (assinatura imediata). ⏳ `ContratoAlunoModal.tsx` ainda pendente.
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

@@ -64,3 +64,5 @@
 - [ ] Diego reenviar as questões da Prova Final (10 por matéria) — `prova_questoes` está vazia desde o reset do Supabase
 - [ ] Reativar disparo automático de boas-vindas Z-API (`aulao-boas-vindas`) quando Diego decidir (`cron.alter_job(job_id := 1, active := true)`)
 - [ ] Revisar responsividade mobile da área do aluno com prints reais do Diego (98% dos alunos assistem aula pelo celular)
+- [ ] Corrigir `ContratoAlunoModal.tsx` (ver/gerar contrato + compartilhar por WhatsApp) — ainda depende do esquema antigo de assinatura remota que não existe mais (mesma decisão de simplificação já tomada pro "Novo Aluno")
+- [ ] Limpar as ~7 referências restantes à URL antiga do Lovable (`sistemasolucoesonline.lovable.app`) espalhadas pelo código

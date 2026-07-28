@@ -532,6 +532,17 @@ Várias colunas que o código já esperava sumiram na reconstrução do banco (L
 | alunos | cadastrado_por, cadastrado_por_id, menor_de_idade, responsavel_email | BUG-022 (26/07/2026) |
 | alunos | dias_prova_final | BUG-023 (26/07/2026) |
 | alunos | observacao, origem_detalhe, responsavel_nome, responsavel_telefone, responsavel_cpf | BUG-024 (26/07/2026) |
+| matriculas | observacao | BUG-025 (26/07/2026) |
+| parcelas | polo_id | BUG-025 (26/07/2026) |
+| — (tabela inteira) | matricula_pacotes | BUG-025 (26/07/2026) — não era coluna, era a tabela toda |
+
+## Contrato — Assinatura Remota Removida (26/07/2026)
+
+O recurso antigo de assinatura remota por link único (`/contrato/:token`, com validação de identidade nome+telefone+CPF) **não existe mais no banco** — nem as colunas (`contratos.matricula_id`, `conteudo_html`, `token_unico`) nem as RPCs (`get_contrato_publico` e afins) sobreviveram ao reset. A rota pública `/contrato/$token.tsx` continua no código, mas não tem mais suporte no banco.
+
+A pedido do Diego, o fluxo "Novo Aluno" (`MatriculaFlow.tsx`) foi simplificado: o contrato agora é **assinado na hora**, dentro do próprio cadastro — mesmo estilo do `/matricula` (sem link remoto, sem token). O insert usa o schema real e atual de `contratos`: `nome`, `conteudo`, `aluno_id`, `status='assinado'`, `ativo=true`.
+
+**Pendente:** `ContratoAlunoModal.tsx` (usado em outros lugares do admin pra ver/gerar contrato, com botão de compartilhar por WhatsApp) ainda depende do esquema antigo — precisa da mesma decisão de simplificação.
 
 **Lição:** sempre que uma tela ou funcionalidade parecer "quebrada do nada" sem erro visível pro usuário, o primeiro suspeito é uma coluna que o código espera mas o banco reconstruído não tem — o Supabase rejeita a query inteira nesses casos (sem mensagem clara pro usuário final).
 

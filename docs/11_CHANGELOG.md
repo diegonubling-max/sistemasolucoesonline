@@ -337,3 +337,10 @@
 - E-mail fictício corrigido em mais 2 arquivos (edição de aluno, redefinição de senha) pro padrão `{ctr}@aluno.com`
 - URL antiga do Lovable corrigida na mensagem de WhatsApp de redefinição de senha (ainda existem outras ~7 referências espalhadas, não mexidas — ver 14_BUGS_CONHECIDOS.md)
 
+### BUG-025: Guias Cursos/Pacote/Pagamentos/Contrato do "Novo Aluno"
+- Tabela inteira `matricula_pacotes` não existia — recriada (também restaura relatórios do Financeiro que dependiam dela)
+- `matriculas.observacao` e `parcelas.polo_id` recriadas
+- Descoberto que o recurso de assinatura remota de contrato (link único + token + validação de identidade) sumiu por completo — colunas e RPCs não existem mais
+- Diego decidiu simplificar: contrato do "Novo Aluno" agora é assinado na hora, mesmo estilo do `/matricula` (sem link remoto). Removido código morto e URL antiga do Lovable
+- Pendente: `ContratoAlunoModal.tsx` (outro componente que também depende do esquema antigo) ainda não foi ajustado
+
