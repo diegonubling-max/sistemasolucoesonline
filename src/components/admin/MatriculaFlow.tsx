@@ -1070,17 +1070,7 @@ export function MatriculaFlow({
                         const novasParcelas = [];
                         const hoje = new Date();
                         
-                        if (!isNegociacaoPersonalizada && pacote?.tipo === 'cartao') {
-                          // Se for cartão, gera apenas uma linha de pagamento do cartão com o valor total (sem a taxa)
-                          novasParcelas.push({
-                            id: Math.random().toString(36).substr(2, 9),
-                            tipo: 'parcela',
-                            numero: 1,
-                            descricao: "Pagamento Cartão",
-                            vencimento: hoje,
-                            valor: pacote.valor_total - pacote.valor_matricula
-                          });
-                        } else if (isNegociacaoPersonalizada) {
+                        if (isNegociacaoPersonalizada) {
                           const offsetInicial = hoje.getDate() <= dia ? 0 : 1;
                           for (let i = 1; i <= negociacao.numeroParcelas; i++) {
                             let dataVenc = addMonths(hoje, offsetInicial + (i - 1));
@@ -1122,7 +1112,7 @@ export function MatriculaFlow({
                         }
 
                         setParcelasGeradas(novasParcelas);
-                        toast.success((!isNegociacaoPersonalizada && pacote?.tipo === 'cartao') ? "Cobrança única de cartão gerada!" : "Parcelas geradas com sucesso!");
+                        toast.success("Parcelas geradas com sucesso!");
                       }}
                     >
                       Gerar parcelas
