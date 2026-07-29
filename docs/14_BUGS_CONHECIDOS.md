@@ -151,6 +151,11 @@
 - **Solução (28/07/2026):** Diego pegou a chave `service_role` em Supabase → Settings → API Keys (aba "Legacy anon, service_role API keys" → Reveal) e cadastrou como `SUPABASE_SERVICE_ROLE_KEY` na Vercel (Production), com redeploy manual em seguida.
 - **Status:** ✅ Resolvido
 
+### BUG-029: Aba "Histórico" do aluno não mostrava aulas assistidas (só sessão de login)
+- **Causa:** faltava a foreign key `aluno_aulas_assistidas.curso_id → cursos.id` no banco (só existia `aula_id → aulas.id`). A query do front (`select("*, cursos(nome), aulas(titulo)")`) depende dessa relação pro PostgREST conseguir montar o embed; sem ela, a consulta inteira falhava silenciosamente e a tela caía no fallback "Nenhuma aula assistida nesta sessão" pra toda sessão, mesmo com os dados certos no banco (confirmado com o CTR 1714 — 117 registros existentes, todos com `assistida_em` e matéria/aula corretos).
+- **Solução (29/07/2026):** criada a FK `aluno_aulas_assistidas_curso_id_fkey` e recarregado o schema cache do PostgREST (`NOTIFY pgrst, 'reload schema'`). Nenhuma mudança de código foi necessária — a query e a tela (aba Histórico e aba Progresso) já estavam certas, só faltava a relação no banco.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
