@@ -180,8 +180,29 @@ function MatriculaPublicaPage() {
 
   // Meta Pixel — rastreamento de conversão do checkout do aulão
   const META_PIXEL_ID = "2773111239702600";
+
+  // Reconstrói o cookie _fbc (click id) do próprio Meta a partir do fbclid que
+  // já carregamos (URL do /matricula ou cookie solucoes_utm gravado no /aulao).
+  // Sem isso, o Meta não teria como ligar o clique no anúncio (feito em outro
+  // subdomínio) ao evento disparado aqui — os parâmetros utm_* que mandamos
+  // no evento são só dado auxiliar nosso, não alimentam o relatório nativo
+  // de campanha/anúncio do Ads Manager. O _fbc é o que de fato faz essa ponte.
+  function reconstruirFbcSeNecessario() {
+    if (typeof document === "undefined") return;
+    const jaTemFbc = document.cookie.match(/(?:^|; )_fbc=([^;]*)/);
+    if (jaTemFbc) return; // já existe (ex: se algum dia carregar no mesmo domínio do clique) — não sobrescreve
+    const p = new URLSearchParams(window.location.search);
+    const cookieUtm = lerCookieUtmCompartilhado();
+    const fbclid = p.get("fbclid") || cookieUtm.fbclid || null;
+    if (!fbclid) return;
+    const fbc = `fb.1.${Date.now()}.${fbclid}`;
+    const maxAgeSegundos = 180 * 24 * 60 * 60; // 180 dias, igual ao padrão do Meta pro _fbc
+    document.cookie = `_fbc=${fbc}; domain=.supletivosolucoesonline.com.br; path=/; max-age=${maxAgeSegundos}; SameSite=Lax`;
+  }
+
   useEffect(() => {
     if (typeof window === "undefined" || typeof document === "undefined") return;
+    reconstruirFbcSeNecessario();
     if ((window as any).fbq) {
       (window as any).fbq("track", "PageView");
       return;
