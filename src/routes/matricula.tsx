@@ -63,8 +63,13 @@ function getUtm() {
     utm_medium: p.get("utm_medium") || cookie.utm_medium || null,
     utm_campaign: p.get("utm_campaign") || cookie.utm_campaign || null,
     utm_content: p.get("utm_content") || cookie.utm_content || null,
+    utm_term: p.get("utm_term") || cookie.utm_term || null,
     fbclid: p.get("fbclid") || cookie.fbclid || null,
   };
+}
+
+function contentCategoryFromUtm(utm: Record<string, string | null | undefined>) {
+  return utm.utm_campaign || utm.utm_source || "aulao_matricula";
 }
 
 function maskDate(value: string) {
@@ -297,8 +302,11 @@ function MatriculaPublicaPage() {
     // Meta Pixel — evento de conversão (Lead) assim que o aluno preenche os dados e avança
     (window as any).fbq?.("track", "Lead", {
       utm_source: utm.utm_source,
+      utm_medium: utm.utm_medium,
       utm_campaign: utm.utm_campaign,
       utm_content: utm.utm_content,
+      utm_term: utm.utm_term,
+      content_category: contentCategoryFromUtm(utm),
     });
 
     // Salvar dados parciais no banco (sem contrato ainda)
@@ -313,6 +321,7 @@ function MatriculaPublicaPage() {
         p_forma_pagamento: "boleto",
         p_polo_id: POLO_ID_FLORIPA,
         p_utm_source: utm.utm_source, p_utm_medium: utm.utm_medium, p_utm_campaign: utm.utm_campaign, p_utm_content: utm.utm_content,
+        p_utm_term: utm.utm_term,
         p_contrato_html: null,
         p_assinatura_nome: null,
         p_sexo: null,
@@ -394,6 +403,7 @@ function MatriculaPublicaPage() {
           p_utm_medium: utm.utm_medium,
           p_utm_campaign: utm.utm_campaign,
           p_utm_content: utm.utm_content,
+          p_utm_term: utm.utm_term,
           p_contrato_html: contratoComValidacao,
           p_assinatura_nome: dados.nome.trim() || null,
           p_sexo: null,
@@ -403,6 +413,17 @@ function MatriculaPublicaPage() {
         if (!row) throw new Error("Resposta vazia do servidor");
         matriculaId = row.id;
       }
+
+      const utmSucesso = getUtm();
+      (window as any).fbq?.("track", "CompleteRegistration", {
+        utm_source: utmSucesso.utm_source,
+        utm_medium: utmSucesso.utm_medium,
+        utm_campaign: utmSucesso.utm_campaign,
+        utm_content: utmSucesso.utm_content,
+        utm_term: utmSucesso.utm_term,
+        content_category: contentCategoryFromUtm(utmSucesso),
+        content_name: forma === "boleto" ? "matricula_aulao_boleto" : "matricula_aulao_cartao",
+      });
 
       setSucesso({ jaExistia: false, matriculaId: matriculaId!, formaPagamento: forma! });
     } catch (e: any) {
@@ -419,9 +440,25 @@ function MatriculaPublicaPage() {
   const [parcelas, setParcelas] = useState(12);
   const [copiado, setCopiado] = useState(false);
   const [acessoCriado, setAcessoCriado] = useState<{ ctr: number; senha: string } | null>(null);
+  const [purchaseFired, setPurchaseFired] = useState(false);
 
   const converterAcesso = async () => {
     if (!sucesso) return;
+    if (!purchaseFired) {
+      const utmCompra = getUtm();
+      (window as any).fbq?.("track", "Purchase", {
+        value: 69.90,
+        currency: "BRL",
+        utm_source: utmCompra.utm_source,
+        utm_medium: utmCompra.utm_medium,
+        utm_campaign: utmCompra.utm_campaign,
+        utm_content: utmCompra.utm_content,
+        utm_term: utmCompra.utm_term,
+        content_category: contentCategoryFromUtm(utmCompra),
+        content_name: "taxa_matricula_aulao",
+      });
+      setPurchaseFired(true);
+    }
     try {
       const res = await fetch("/api/public/hooks/converter-matricula-aulao", {
         method: "POST",
