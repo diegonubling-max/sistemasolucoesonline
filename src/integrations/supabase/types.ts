@@ -2589,7 +2589,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "aluno"
-      origem_aluno: "Google" | "Meta" | "Indicação" | "Outros" | "Lançamento"
+      origem_aluno: "Google" | "Meta" | "Indicação" | "Outros" | "Aulão"
       payment_status: "aberto" | "pago" | "isento" | "parcial" | "cancelado"
       payment_type: "taxa_matricula" | "parcela"
       sexo_aluno: "Masculino" | "Feminino"
@@ -2722,7 +2722,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "aluno"],
-      origem_aluno: ["Google", "Meta", "Indicação", "Outros", "Lançamento"],
+      origem_aluno: ["Google", "Meta", "Indicação", "Outros", "Aulão"],
       payment_status: ["aberto", "pago", "isento", "parcial", "cancelado"],
       payment_type: ["taxa_matricula", "parcela"],
       sexo_aluno: ["Masculino", "Feminino"],

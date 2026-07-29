@@ -17,7 +17,7 @@ import { maskCPF, maskPhone, isValidCPF, calcAge } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const ORIGENS = ["Google", "Meta", "Indicação", "Outros"] as const;
+const ORIGENS = ["Google", "Meta", "Indicação", "Outros", "Aulão"] as const;
 const SEXOS = ["Masculino", "Feminino"] as const;
 
 const schema = z

@@ -4,7 +4,7 @@ interface OrigemBadgeProps {
 }
 
 export function OrigemBadge({ origem, className }: OrigemBadgeProps) {
-  if (origem !== "Lançamento") return null;
+  if (origem !== "Aulão") return null;
   return (
     <span
       className={

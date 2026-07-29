@@ -155,7 +155,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
               cpf: matricula.cpf,
               data_nascimento: matricula.data_nascimento,
               ctr: novoCtr,
-              origem: "Lançamento",
+              origem: "Aulão",
               ativo: true,
               cadastro_completo: true,
             })
