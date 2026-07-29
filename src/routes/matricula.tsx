@@ -176,6 +176,7 @@ function MatriculaPublicaPage() {
   // Meta Pixel — rastreamento de conversão do checkout do aulão
   const META_PIXEL_ID = "2773111239702600";
   useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
     if ((window as any).fbq) {
       (window as any).fbq("track", "PageView");
       return;
@@ -195,7 +196,11 @@ function MatriculaPublicaPage() {
       t.async = true;
       t.src = v;
       s = b.getElementsByTagName(e)[0];
-      s.parentNode?.insertBefore(t, s);
+      if (s && s.parentNode) {
+        s.parentNode.insertBefore(t, s);
+      } else {
+        b.head.appendChild(t);
+      }
     })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
     (window as any).fbq("init", META_PIXEL_ID);
     (window as any).fbq("track", "PageView");
