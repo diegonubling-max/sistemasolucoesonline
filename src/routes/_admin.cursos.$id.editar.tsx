@@ -62,7 +62,9 @@ function EditarCurso() {
             descricao: curso.descricao ?? "", 
             thumbnail_url: curso.thumbnail_url,
             material_pdf_url: curso.material_pdf_url,
-            ativo: curso.ativo 
+            ativo: curso.ativo,
+            youtube_playlist_id: (curso as any).youtube_playlist_id ?? null,
+            youtube_playlist_count: (curso as any).youtube_playlist_count ?? null,
           }}
           submitting={mut.isPending}
           submitLabel="Salvar alterações"

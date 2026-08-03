@@ -21,6 +21,8 @@ const schema = z.object({
   thumbnail_url: z.string().optional().nullable(),
   material_pdf_url: z.string().optional().nullable(),
   ativo: z.boolean(),
+  youtube_playlist_id: z.string().optional().nullable(),
+  youtube_playlist_count: z.coerce.number().optional().nullable(),
 });
 export type CursoFormValues = z.infer<typeof schema>;
 
@@ -50,7 +52,7 @@ export function CursoForm({
 
   const form = useForm<CursoFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { nome: "", segmento_id: "", descricao: "", thumbnail_url: null, material_pdf_url: null, ativo: true, ...initialValues },
+    defaultValues: { nome: "", segmento_id: "", descricao: "", thumbnail_url: null, material_pdf_url: null, ativo: true, youtube_playlist_id: null, youtube_playlist_count: null, ...initialValues },
   });
   const errors = form.formState.errors;
 
@@ -108,6 +110,26 @@ export function CursoForm({
           <div className="flex items-center gap-2">
             <Switch checked={form.watch("ativo")} onCheckedChange={(v) => form.setValue("ativo", v)} />
             <span className="text-sm">{form.watch("ativo") ? "Ativo" : "Inativo"}</span>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Migração pro YouTube (opcional)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Se preenchido, as aulas cuja "ordem" for menor ou igual à quantidade abaixo tocam
+            automaticamente pelo vídeo correspondente dessa playlist do YouTube (posição 1 = 1ª aula,
+            2 = 2ª aula...). Aulas com ordem maior continuam usando o link salvo em cada aula (Panda/outro).
+          </p>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">ID da playlist do YouTube</Label>
+            <Input {...form.register("youtube_playlist_id")} placeholder="Ex: PLxxxxxxxxxxxxxxxxxxxx" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Quantidade de vídeos já disponíveis nessa playlist</Label>
+            <Input type="number" min={0} {...form.register("youtube_playlist_count")} placeholder="Ex: 30" />
           </div>
         </CardContent>
       </Card>

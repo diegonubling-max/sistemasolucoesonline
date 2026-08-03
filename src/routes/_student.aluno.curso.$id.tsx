@@ -159,6 +159,8 @@ function StudentCourse() {
           nome,
           descricao,
           material_pdf_url,
+          youtube_playlist_id,
+          youtube_playlist_count,
           aulas (
             id,
             titulo,
@@ -190,12 +192,27 @@ function StudentCourse() {
   const nextAula = curso?.aulas?.[activeAulaIndex + 1];
   const prevAula = curso?.aulas?.[activeAulaIndex - 1];
 
+  // Migração Panda -> YouTube: se o curso tem uma playlist do YouTube configurada e essa aula
+  // está dentro da quantidade de vídeos já migrados (pela ordem), usa o vídeo da playlist.
+  // Caso contrário, mantém o link salvo na própria aula (Panda ou outro).
+  const resolverUrlVideo = (aula: typeof activeAula | undefined): string => {
+    if (!aula) return "";
+    const playlistId = (curso as any)?.youtube_playlist_id;
+    const playlistCount = (curso as any)?.youtube_playlist_count;
+    if (playlistId && playlistCount && aula.ordem <= playlistCount) {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      return `https://www.youtube.com/embed/videoseries?list=${playlistId}&index=${aula.ordem - 1}&enablejsapi=1&origin=${encodeURIComponent(origin)}`;
+    }
+    return aula.url_video ?? "";
+  };
+  const activeAulaUrl = resolverUrlVideo(activeAula);
+
   // Video progress tracking (per active aula)
   const { iframeRef, percent: livePercent, currentTime, duration } = useVideoProgress({
     alunoId,
     aulaId: activeAula?.id ?? null,
     cursoId: id,
-    url: activeAula?.url_video ?? "",
+    url: activeAulaUrl,
     initialPosition: aulaProgresso?.ultima_posicao ?? 0,
   });
 
@@ -234,6 +251,19 @@ function StudentCourse() {
   const renderVideoPlayer = (url: string) => {
     if (!url) return <div className="aspect-video bg-black flex items-center justify-center text-white">URL de vídeo não fornecida</div>;
     const origin = typeof window !== "undefined" ? window.location.origin : "";
+
+    // URL já vem pronta como embed (ex: playlist do YouTube da migração Panda -> YouTube) — usar direto
+    if (url.startsWith('https://www.youtube.com/embed/')) {
+      return (
+        <iframe
+          ref={iframeRef}
+          className="w-full h-full"
+          src={url}
+          allow="autoplay; encrypted-media"
+          allowFullScreen
+        ></iframe>
+      );
+    }
 
     // YouTube
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -322,7 +352,7 @@ function StudentCourse() {
         {/* Main Content (Video + Info) */}
         <div className="lg:col-span-7 space-y-6">
           <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-black/5 group">
-            {activeAula && renderVideoPlayer(activeAula.url_video)}
+            {activeAula && renderVideoPlayer(activeAulaUrl)}
             {!activeAula && (
               <div className="w-full h-full flex items-center justify-center text-gray-500">
                 Selecione uma aula para começar
