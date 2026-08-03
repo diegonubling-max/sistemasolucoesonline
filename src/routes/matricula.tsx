@@ -171,6 +171,7 @@ function MatriculaPublicaPage() {
 
   const [forma, setForma] = useState<FormaPag | null>(null);
   const [voucherCode, setVoucherCode] = useState("");
+  const [semCodigo, setSemCodigo] = useState(false);
   const voucherValido = voucherCode.trim().toLowerCase() === VOUCHER_CODE;
   const planoCartaoAtual = voucherValido
     ? { ...PLANOS.cartao, ...PLANO_CARTAO_VOUCHER }
@@ -889,9 +890,18 @@ function MatriculaPublicaPage() {
                       ✅ Código aplicado — condição especial liberada abaixo
                     </p>
                   )}
+                  {!voucherValido && !semCodigo && (
+                    <button
+                      type="button"
+                      onClick={() => setSemCodigo(true)}
+                      className="text-xs text-muted-foreground underline"
+                    >
+                      Não tenho o código
+                    </button>
+                  )}
                 </div>
 
-                {voucherValido && (
+                {(voucherValido || semCodigo) && (
                   <>
                     <h2 className="text-xl font-semibold pt-2">Forma de pagamento</h2>
                     <p className="text-sm text-muted-foreground">
@@ -915,8 +925,14 @@ function MatriculaPublicaPage() {
                         <div className="text-3xl mb-1">💳</div>
                         <div className="font-semibold">Cartão de Crédito</div>
                         <div className="text-sm text-muted-foreground">
-                          <span className="line-through mr-1">12x de R$ {PLANOS.cartao.valorParc}</span>
-                          <span className="text-green-700 font-semibold">12x de R$ {PLANO_CARTAO_VOUCHER.valorParc}</span>
+                          {voucherValido ? (
+                            <>
+                              <span className="line-through mr-1">12x de R$ {PLANOS.cartao.valorParc}</span>
+                              <span className="text-green-700 font-semibold">12x de R$ {PLANO_CARTAO_VOUCHER.valorParc}</span>
+                            </>
+                          ) : (
+                            `12x de R$ ${PLANOS.cartao.valorParc}`
+                          )}
                         </div>
                         <div className="text-sm text-orange-700 font-medium mt-1">
                           ⚡ Nessa opção você conclui tudo em menos tempo — entre 10 e 30 dias
@@ -928,7 +944,7 @@ function MatriculaPublicaPage() {
 
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={enviando}>Voltar</Button>
-                  {voucherValido && (
+                  {(voucherValido || semCodigo) && (
                     <Button
                       onClick={handleFinalizarStep2}
                       disabled={enviando}
