@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Loader2, Radio, Users, Copy, Trash2 } from "lucide-react";
+import { Plus, Loader2, Radio, Users, Copy, Trash2, MessageSquareText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/_admin/webinars")({
   head: () => ({ meta: [{ title: "Webinars — Soluções Online" }] }),
@@ -29,6 +30,7 @@ function WebinarsList() {
   const [novoAberto, setNovoAberto] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [gravado, setGravado] = useState(false);
 
   const { data: webinars, isLoading } = useQuery({
     queryKey: ["webinars"],
@@ -45,7 +47,7 @@ function WebinarsList() {
 
   const criarMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("webinars" as any).insert({ titulo, youtube_url: youtubeUrl });
+      const { error } = await supabase.from("webinars" as any).insert({ titulo, youtube_url: youtubeUrl, gravado });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -54,6 +56,7 @@ function WebinarsList() {
       setNovoAberto(false);
       setTitulo("");
       setYoutubeUrl("");
+      setGravado(false);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -64,6 +67,15 @@ function WebinarsList() {
       if (status === "ao_vivo") patch.iniciado_em = new Date().toISOString();
       if (status === "encerrado") patch.encerrado_em = new Date().toISOString();
       const { error } = await supabase.from("webinars" as any).update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["webinars"] }),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const gravadoMutation = useMutation({
+    mutationFn: async ({ id, gravado }: { id: string; gravado: boolean }) => {
+      const { error } = await supabase.from("webinars" as any).update({ gravado }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["webinars"] }),
@@ -117,7 +129,18 @@ function WebinarsList() {
               <TableBody>
                 {(webinars ?? []).map((w: any) => (
                   <TableRow key={w.id}>
-                    <TableCell className="font-medium">{w.titulo}</TableCell>
+                    <TableCell className="font-medium">
+                      {w.titulo}
+                      <button
+                        type="button"
+                        onClick={() => gravadoMutation.mutate({ id: w.id, gravado: !w.gravado })}
+                        title={w.gravado ? "Clique pra desmarcar como gravada" : "Clique pra marcar como aula gravada"}
+                      >
+                        <Badge className={`ml-2 align-middle cursor-pointer ${w.gravado ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400"}`}>
+                          🎥 {w.gravado ? "Gravado" : "Marcar como gravado"}
+                        </Badge>
+                      </button>
+                    </TableCell>
                     <TableCell>
                       <Badge className={STATUS_LABEL[w.status]?.className}>
                         {STATUS_LABEL[w.status]?.label ?? w.status}
@@ -133,6 +156,11 @@ function WebinarsList() {
                       <Link to="/webinars/$id" params={{ id: w.id }}>
                         <Button size="icon" variant="ghost" title="Monitorar ao vivo">
                           <Users className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link to="/webinars/$id/depoimentos" params={{ id: w.id }}>
+                        <Button size="icon" variant="ghost" title="Depoimentos da aula (replay)">
+                          <MessageSquareText className="h-4 w-4" />
                         </Button>
                       </Link>
                       {w.status === "agendado" && (
@@ -182,6 +210,12 @@ function WebinarsList() {
                 onChange={(e) => setYoutubeUrl(e.target.value)}
                 placeholder="https://youtube.com/watch?v=..."
               />
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="gravado" checked={gravado} onCheckedChange={(v) => setGravado(!!v)} />
+              <Label htmlFor="gravado" className="cursor-pointer font-normal">
+                Essa é uma aula gravada (não é ao vivo de verdade) — habilita os depoimentos sincronizados por tempo
+              </Label>
             </div>
           </div>
           <DialogFooter>

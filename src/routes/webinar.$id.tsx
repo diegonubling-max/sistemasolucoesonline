@@ -36,7 +36,10 @@ function WebinarPage() {
   const [comentarios, setComentarios] = useState<any[]>([]);
   const [novoComentario, setNovoComentario] = useState("");
   const [qtdOnline, setQtdOnline] = useState(0);
+  const [videoTime, setVideoTime] = useState(0);
   const chatRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
+  const depoimentosMostradosRef = useRef<Set<string>>(new Set());
 
   const { data: webinar, isLoading } = useQuery({
     queryKey: ["webinar", id],
@@ -50,6 +53,20 @@ function WebinarPage() {
       return data as any;
     },
     refetchInterval: 15000,
+  });
+
+  const { data: depoimentosReplay } = useQuery({
+    queryKey: ["webinar-depoimentos-replay", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("webinar_depoimentos_replay" as any)
+        .select("*")
+        .eq("webinar_id", id)
+        .order("timestamp_segundos", { ascending: true });
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!webinar?.gravado,
   });
 
   // Recupera participante salvo localmente (evita re-cadastro ao atualizar a página)
@@ -146,9 +163,74 @@ function WebinarPage() {
     };
   }, [participante, id]);
 
+  const youtubeId = extrairYoutubeId(webinar?.youtube_url || "");
+
   useEffect(() => {
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
   }, [comentarios]);
+
+  // Player via YouTube IFrame API — só pra aulas gravadas, pra conseguir ler o tempo atual do vídeo
+  // e revelar os depoimentos reais no minuto certo, igual aconteceram na aula ao vivo original.
+  useEffect(() => {
+    if (!youtubeId || !webinar?.gravado || !participante) return;
+    let destruido = false;
+    let poll: any;
+
+    function criarPlayer() {
+      const el = document.getElementById(`yt-player-${id}`);
+      if (!el) {
+        if (!destruido) requestAnimationFrame(criarPlayer);
+        return;
+      }
+      playerRef.current = new (window as any).YT.Player(`yt-player-${id}`, {
+        videoId: youtubeId,
+        playerVars: { autoplay: 1, mute: 1, playsinline: 1 },
+        events: {
+          onReady: () => {
+            poll = setInterval(() => {
+              const t = playerRef.current?.getCurrentTime?.();
+              if (typeof t === "number") setVideoTime(t);
+            }, 1000);
+          },
+        },
+      });
+    }
+
+    if ((window as any).YT && (window as any).YT.Player) {
+      criarPlayer();
+    } else {
+      if (!document.getElementById("youtube-iframe-api-script")) {
+        const tag = document.createElement("script");
+        tag.id = "youtube-iframe-api-script";
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(tag);
+      }
+      const anterior = (window as any).onYouTubeIframeAPIReady;
+      (window as any).onYouTubeIframeAPIReady = () => {
+        anterior?.();
+        criarPlayer();
+      };
+    }
+
+    return () => {
+      destruido = true;
+      if (poll) clearInterval(poll);
+    };
+  }, [youtubeId, webinar?.gravado, participante, id]);
+
+  // Revela os depoimentos reais da aula original conforme o vídeo avança
+  useEffect(() => {
+    if (!webinar?.gravado || !depoimentosReplay?.length) return;
+    const novos = depoimentosReplay.filter(
+      (d: any) => d.timestamp_segundos <= videoTime && !depoimentosMostradosRef.current.has(d.id),
+    );
+    if (novos.length === 0) return;
+    novos.forEach((d: any) => depoimentosMostradosRef.current.add(d.id));
+    setComentarios((prev) => [
+      ...prev,
+      ...novos.map((d: any) => ({ id: d.id, nome: d.nome, texto: d.texto, replay: true })),
+    ]);
+  }, [videoTime, depoimentosReplay, webinar?.gravado]);
 
   const enviarComentario = async () => {
     if (!novoComentario.trim() || !participante) return;
@@ -238,7 +320,6 @@ function WebinarPage() {
     );
   }
 
-  const youtubeId = extrairYoutubeId(webinar.youtube_url || "");
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
@@ -253,15 +334,24 @@ function WebinarPage() {
         <div className="text-xs text-center bg-neutral-800 text-neutral-300 py-1">
           🔇 O vídeo inicia sem som (regra dos navegadores) — clique nele pra ativar o áudio
         </div>
+        {webinar.gravado && (
+          <div className="text-xs text-center bg-neutral-800/60 text-neutral-400 py-1">
+            🎥 Aula gravada — comente à vontade, nosso time está online pra tirar dúvidas
+          </div>
+        )}
         <div className="aspect-video w-full bg-black">
           {youtubeId ? (
-            <iframe
-              className="w-full h-full"
-              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1`}
-              title={webinar.titulo}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+            webinar.gravado ? (
+              <div id={`yt-player-${id}`} className="w-full h-full" />
+            ) : (
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1`}
+                title={webinar.titulo}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground">
               Vídeo não configurado
@@ -274,7 +364,9 @@ function WebinarPage() {
         <div ref={chatRef} className="flex-1 overflow-y-auto p-3 space-y-2">
           {comentarios.map((c) => (
             <div key={c.id} className="text-sm">
-              <span className="font-bold text-orange-400">{c.nome}: </span>
+              <span className={`font-bold ${c.replay ? "text-blue-400" : "text-orange-400"}`}>
+                {c.nome}{c.replay ? " 🎥" : ""}:{" "}
+              </span>
               <span>{c.texto}</span>
             </div>
           ))}

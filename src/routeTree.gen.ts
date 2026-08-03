@@ -48,6 +48,7 @@ import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$
 import { Route as AdminAlunosIdEditarRouteImport } from './routes/_admin.alunos.$id.editar'
 import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
 import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
+import { Route as AdminWebinarsIdDepoimentosRouteImport } from './routes/_admin.webinars.$id.depoimentos'
 import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
 import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_student.aluno.prova-final.execucao'
 import { Route as StudentAlunoProvaFinalRealizarRouteImport } from './routes/_student.aluno.prova-final.realizar'
@@ -254,6 +255,12 @@ const AdminCursosIdEditarRoute = AdminCursosIdEditarRouteImport.update({
   path: '/cursos/$id/editar',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminWebinarsIdDepoimentosRoute =
+  AdminWebinarsIdDepoimentosRouteImport.update({
+    id: '/depoimentos',
+    path: '/depoimentos',
+    getParentRoute: () => AdminWebinarsIdRoute,
+  } as any)
 const StudentAlunoCursoIdRoute = StudentAlunoCursoIdRouteImport.update({
   id: '/aluno/curso/$id',
   path: '/aluno/curso/$id',
@@ -352,7 +359,7 @@ export interface FileRoutesByFullPath {
   '/webinar/$id': typeof WebinarIdRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
-  '/webinars/$id': typeof AdminWebinarsIdRoute
+  '/webinars/$id': typeof AdminWebinarsIdRouteWithChildren
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
@@ -362,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
+  '/webinars/$id/depoimentos': typeof AdminWebinarsIdDepoimentosRoute
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
@@ -403,7 +411,7 @@ export interface FileRoutesByTo {
   '/webinar/$id': typeof WebinarIdRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
-  '/webinars/$id': typeof AdminWebinarsIdRoute
+  '/webinars/$id': typeof AdminWebinarsIdRouteWithChildren
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
@@ -413,6 +421,7 @@ export interface FileRoutesByTo {
   '/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/cursos/$id/editar': typeof AdminCursosIdEditarRoute
+  '/webinars/$id/depoimentos': typeof AdminWebinarsIdDepoimentosRoute
   '/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
@@ -457,7 +466,7 @@ export interface FileRoutesById {
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
-  '/_admin/webinars/$id': typeof AdminWebinarsIdRoute
+  '/_admin/webinars/$id': typeof AdminWebinarsIdRouteWithChildren
   '/_student/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/_student/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/_student/aluno/perfil': typeof StudentAlunoPerfilRoute
@@ -467,6 +476,7 @@ export interface FileRoutesById {
   '/_admin/alunos/$id/editar': typeof AdminAlunosIdEditarRoute
   '/_admin/cursos/$id/aulas': typeof AdminCursosIdAulasRoute
   '/_admin/cursos/$id/editar': typeof AdminCursosIdEditarRoute
+  '/_admin/webinars/$id/depoimentos': typeof AdminWebinarsIdDepoimentosRoute
   '/_student/aluno/curso/$id': typeof StudentAlunoCursoIdRoute
   '/_student/aluno/prova-final/execucao': typeof StudentAlunoProvaFinalExecucaoRoute
   '/_student/aluno/prova-final/realizar': typeof StudentAlunoProvaFinalRealizarRoute
@@ -520,6 +530,7 @@ export interface FileRouteTypes {
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
+    | '/webinars/$id/depoimentos'
     | '/aluno/curso/$id'
     | '/aluno/prova-final/execucao'
     | '/aluno/prova-final/realizar'
@@ -571,6 +582,7 @@ export interface FileRouteTypes {
     | '/alunos/$id/editar'
     | '/cursos/$id/aulas'
     | '/cursos/$id/editar'
+    | '/webinars/$id/depoimentos'
     | '/aluno/curso/$id'
     | '/aluno/prova-final/execucao'
     | '/aluno/prova-final/realizar'
@@ -624,6 +636,7 @@ export interface FileRouteTypes {
     | '/_admin/alunos/$id/editar'
     | '/_admin/cursos/$id/aulas'
     | '/_admin/cursos/$id/editar'
+    | '/_admin/webinars/$id/depoimentos'
     | '/_student/aluno/curso/$id'
     | '/_student/aluno/prova-final/execucao'
     | '/_student/aluno/prova-final/realizar'
@@ -937,6 +950,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCursosIdEditarRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/webinars/$id/depoimentos': {
+      id: '/_admin/webinars/$id/depoimentos'
+      path: '/depoimentos'
+      fullPath: '/webinars/$id/depoimentos'
+      preLoaderRoute: typeof AdminWebinarsIdDepoimentosRouteImport
+      parentRoute: typeof AdminWebinarsIdRoute
+    }
     '/_student/aluno/curso/$id': {
       id: '/_student/aluno/curso/$id'
       path: '/aluno/curso/$id'
@@ -1024,12 +1044,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminWebinarsIdRouteChildren {
+  AdminWebinarsIdDepoimentosRoute: typeof AdminWebinarsIdDepoimentosRoute
+}
+
+const AdminWebinarsIdRouteChildren: AdminWebinarsIdRouteChildren = {
+  AdminWebinarsIdDepoimentosRoute: AdminWebinarsIdDepoimentosRoute,
+}
+
+const AdminWebinarsIdRouteWithChildren = AdminWebinarsIdRoute._addFileChildren(
+  AdminWebinarsIdRouteChildren,
+)
+
 interface AdminWebinarsRouteChildren {
-  AdminWebinarsIdRoute: typeof AdminWebinarsIdRoute
+  AdminWebinarsIdRoute: typeof AdminWebinarsIdRouteWithChildren
 }
 
 const AdminWebinarsRouteChildren: AdminWebinarsRouteChildren = {
-  AdminWebinarsIdRoute: AdminWebinarsIdRoute,
+  AdminWebinarsIdRoute: AdminWebinarsIdRouteWithChildren,
 }
 
 const AdminWebinarsRouteWithChildren = AdminWebinarsRoute._addFileChildren(
