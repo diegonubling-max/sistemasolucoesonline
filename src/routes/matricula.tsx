@@ -93,8 +93,12 @@ function parseDateBR(value: string): string | null {
 
 const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; parcelasExibicao: string; valorParc: string; total: string }> = {
   boleto: { entrada: "69,90", qtdParc: "10", parcelasExibicao: "1 + 9", valorParc: "159,90", total: "1.668,90" },
-  cartao: { entrada: "69,90", qtdParc: "12", parcelasExibicao: "12", valorParc: "119,90", total: "1.508,70" },
+  cartao: { entrada: "69,90", qtdParc: "12", parcelasExibicao: "12", valorParc: "259,90", total: "3.188,70" },
 };
+
+// Voucher da aula ao vivo — quem assiste ganha condição especial no cartão (12x R$119,90 em vez de 12x R$259,90)
+const VOUCHER_CODE = "1627off";
+const PLANO_CARTAO_VOUCHER = { valorParc: "119,90", total: "1.508,70" };
 
 function getProximoEncerramento(): Date {
   const agora = new Date();
@@ -166,6 +170,11 @@ function MatriculaPublicaPage() {
   });
 
   const [forma, setForma] = useState<FormaPag | null>(null);
+  const [voucherCode, setVoucherCode] = useState("");
+  const voucherValido = voucherCode.trim().toLowerCase() === VOUCHER_CODE;
+  const planoCartaoAtual = voucherValido
+    ? { ...PLANOS.cartao, ...PLANO_CARTAO_VOUCHER }
+    : PLANOS.cartao;
   const [matriculaIdParcial, setMatriculaIdParcial] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState<Sucesso | null>(null);
@@ -272,7 +281,7 @@ function MatriculaPublicaPage() {
 
   const contratoHtml = useMemo(() => {
     if (!modelo?.conteudo_html || !forma) return "";
-    const plano = PLANOS[forma];
+    const plano = forma === "cartao" ? planoCartaoAtual : PLANOS[forma];
     const formaLabel = forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito";
     let html = modelo.conteudo_html;
     const variables: Record<string, string> = {
@@ -302,7 +311,7 @@ function MatriculaPublicaPage() {
     // remove eventual "R$ R$" duplicado do template
     html = html.replace(/R\$\s*R\$\s*/g, "R$ ");
     return html;
-  }, [modelo, dados, forma, dataISO]);
+  }, [modelo, dados, forma, dataISO, planoCartaoAtual]);
 
   function validarStep1(): string | null {
     if (!dados.nome.trim() || dados.nome.trim().split(/\s+/).length < 2)
@@ -467,8 +476,9 @@ function MatriculaPublicaPage() {
     if (!sucesso) return;
     if (!purchaseFired) {
       const utmCompra = getUtm();
+      const valorPago = typeof pagResult?.value === "number" ? pagResult.value : 69.90;
       (window as any).fbq?.("track", "Purchase", {
-        value: 69.90,
+        value: valorPago,
         currency: "BRL",
         utm_source: utmCompra.utm_source,
         utm_medium: utmCompra.utm_medium,
@@ -476,7 +486,7 @@ function MatriculaPublicaPage() {
         utm_content: utmCompra.utm_content,
         utm_term: utmCompra.utm_term,
         content_category: contentCategoryFromUtm(utmCompra),
-        content_name: "taxa_matricula_aulao",
+        content_name: pagResult?.billing_type === "CREDIT_CARD" ? "matricula_aulao_cartao" : "taxa_matricula_aulao",
       });
       setPurchaseFired(true);
     }
@@ -521,6 +531,7 @@ function MatriculaPublicaPage() {
         matricula_id: sucesso.matriculaId,
         billing_type: billingType,
         installment_count: billingType === "CREDIT_CARD" ? parcelas : undefined,
+        voucher_code: voucherCode,
       };
       if (billingType === "CREDIT_CARD" && ccData) {
         body.credit_card = ccData;
@@ -857,6 +868,22 @@ function MatriculaPublicaPage() {
                 <p className="text-sm text-muted-foreground">
                   Como prefere pagar? Nossa equipe entrará em contato para alinhar as condições.
                 </p>
+                <div className="space-y-1">
+                  <Label htmlFor="voucher">Cupom de desconto (opcional)</Label>
+                  <Input
+                    id="voucher"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value)}
+                    placeholder="Ex: 1627OFF"
+                  />
+                  {voucherCode.trim() !== "" && (
+                    voucherValido ? (
+                      <p className="text-sm text-green-600 font-medium">✅ Cupom aplicado — 12x de R$ {PLANO_CARTAO_VOUCHER.valorParc} no cartão</p>
+                    ) : (
+                      <p className="text-sm text-red-600">Cupom inválido</p>
+                    )
+                  )}
+                </div>
                 <div className="grid gap-3">
                   <button
                     type="button"
@@ -874,7 +901,16 @@ function MatriculaPublicaPage() {
                   >
                     <div className="text-3xl mb-1">💳</div>
                     <div className="font-semibold">Cartão de Crédito</div>
-                    <div className="text-sm text-muted-foreground">12x de R$ 119,90</div>
+                    <div className="text-sm text-muted-foreground">
+                      {voucherValido ? (
+                        <>
+                          <span className="line-through mr-1">12x de R$ {PLANOS.cartao.valorParc}</span>
+                          <span className="text-green-700 font-semibold">12x de R$ {PLANO_CARTAO_VOUCHER.valorParc}</span>
+                        </>
+                      ) : (
+                        `12x de R$ ${PLANOS.cartao.valorParc}`
+                      )}
+                    </div>
                     <div className="text-sm text-orange-700 font-medium mt-1">
                       ⚡ Nessa opção você conclui tudo em menos tempo — entre 10 e 30 dias
                     </div>

@@ -37,6 +37,7 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
             postalCode?: string;
             addressNumber?: string;
           };
+          voucher_code?: string;
         };
         try {
           payload = await request.json();
@@ -134,8 +135,10 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
           }
 
           // 4. Criar cobrança
-          // PIX = taxa de matrícula R$69,90 | Cartão = curso completo R$1.438,80
-          const valor = billing_type === "PIX" ? 69.90 : 1438.80;
+          // PIX = taxa de matrícula R$69,90 | Cartão = R$3.118,80 (12x R$259,90) — ou R$1.438,80 (12x R$119,90) com o voucher da aula ao vivo
+          const VOUCHER_CODE = "1627off";
+          const codigoVoucherValido = (payload.voucher_code || "").trim().toLowerCase() === VOUCHER_CODE;
+          const valor = billing_type === "PIX" ? 69.90 : (codigoVoucherValido ? 1438.80 : 3118.80);
           const dueDate = new Date();
           dueDate.setDate(dueDate.getDate() + 1);
 
@@ -204,6 +207,8 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
           const updateData: any = {
             asaas_payment_id: payData.id,
             pagamento_valor: valor,
+            voucher_code: payload.voucher_code || null,
+            voucher_aplicado: billing_type === "CREDIT_CARD" ? codigoVoucherValido : false,
           };
 
           if (billing_type === "PIX") {
@@ -229,6 +234,8 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
             payment_id: payData.id,
             billing_type,
             status: payData.status,
+            value: valor,
+            voucher_aplicado: billing_type === "CREDIT_CARD" ? codigoVoucherValido : false,
             pix_qr_code: pixQrCode,
             pix_copia_cola: pixCopiaCola,
             credit_card_status: billing_type === "CREDIT_CARD" ? payData.status : null,
