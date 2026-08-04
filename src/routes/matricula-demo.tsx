@@ -41,30 +41,14 @@ interface Sucesso {
   formaPagamento: FormaPag;
 }
 
-function lerCookieUtmCompartilhado(): Record<string, string | null> {
-  if (typeof document === "undefined") return {};
-  const match = document.cookie.match(/(?:^|; )solucoes_utm=([^;]*)/);
-  if (!match) return {};
-  try {
-    return JSON.parse(decodeURIComponent(match[1]));
-  } catch {
-    return {};
-  }
-}
-
 function getUtm() {
   if (typeof window === "undefined") return {};
   const p = new URLSearchParams(window.location.search);
-  const cookie = lerCookieUtmCompartilhado();
-  // Prioridade: parâmetro na própria URL do /matricula-demo; se não tiver, usa o cookie
-  // compartilhado entre subdomínios (gravado no /aulao, já que o WhatsApp não repassa UTM).
   return {
-    utm_source: p.get("utm_source") || cookie.utm_source || null,
-    utm_medium: p.get("utm_medium") || cookie.utm_medium || null,
-    utm_campaign: p.get("utm_campaign") || cookie.utm_campaign || null,
-    utm_content: p.get("utm_content") || cookie.utm_content || null,
-    utm_term: p.get("utm_term") || cookie.utm_term || null,
-    fbclid: p.get("fbclid") || cookie.fbclid || null,
+    utm_source: p.get("utm_source") || null,
+    utm_medium: p.get("utm_medium") || null,
+    utm_campaign: p.get("utm_campaign") || null,
+    utm_content: p.get("utm_content") || null,
   };
 }
 
@@ -220,15 +204,11 @@ function MatriculaDemoPage() {
         p_forma_pagamento: "boleto",
         p_polo_id: POLO_ID_FLORIPA,
         p_utm_source: utm.utm_source, p_utm_medium: utm.utm_medium, p_utm_campaign: utm.utm_campaign, p_utm_content: utm.utm_content,
-        p_utm_term: utm.utm_term,
         p_contrato_html: null,
         p_assinatura_nome: null,
         p_sexo: null,
       });
       const row = Array.isArray(data) ? data[0] : data;
-      if (row?.id && utm.fbclid) {
-        supabase.from("matriculas_aulao" as any).update({ fbclid: utm.fbclid }).eq("id", row.id).then(() => {});
-      }
       if (row && !row.ja_existia) {
         setMatriculaIdParcial(row.id);
       } else if (row?.ja_existia) {
@@ -302,7 +282,6 @@ function MatriculaDemoPage() {
           p_utm_medium: utm.utm_medium,
           p_utm_campaign: utm.utm_campaign,
           p_utm_content: utm.utm_content,
-          p_utm_term: utm.utm_term,
           p_contrato_html: contratoComValidacao,
           p_assinatura_nome: dados.nome.trim() || null,
           p_sexo: null,
