@@ -134,16 +134,38 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             return jsonResponse({ error: "Pagamento ainda não confirmado" }, 400);
           }
 
-          // 1. Próximo CTR disponível
+          // 1. Próximo CTR disponível — tenta criar o login incrementando o CTR caso o e-mail
+          // já exista no Auth (ex: login órfão de um aluno antigo já excluído da tabela alunos,
+          // mas cujo acesso nunca foi removido do Supabase Auth).
           const { data: ultimoAluno } = await supabase
             .from("alunos")
             .select("ctr")
             .order("ctr", { ascending: false })
             .limit(1)
             .maybeSingle();
-          const novoCtr = (ultimoAluno?.ctr ?? 1700) + 1;
-          const email = `${novoCtr}@aluno.com`;
+
+          let novoCtr = (ultimoAluno?.ctr ?? 1700) + 1;
           const senha = gerarSenha(matricula.nome);
+          let email = `${novoCtr}@aluno.com`;
+          let authUser: any = null;
+          let authError: any = null;
+
+          for (let tentativas = 0; tentativas < 50; tentativas++) {
+            email = `${novoCtr}@aluno.com`;
+            const resultado = await supabase.auth.admin.createUser({
+              email,
+              password: senha,
+              email_confirm: true,
+            });
+            authUser = resultado.data;
+            authError = resultado.error;
+
+            const jaRegistrado = authError?.message?.toLowerCase().includes("already been registered");
+            if (!authError || !jaRegistrado) break;
+
+            console.warn(`[converter-matricula-aulao] E-mail ${email} já registrado no Auth (login órfão?) — tentando CTR ${novoCtr + 1}`);
+            novoCtr++;
+          }
 
           // 2. Criar registro do aluno
           const { data: novoAluno, error: alunoError } = await supabase
@@ -167,13 +189,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             return jsonResponse({ error: alunoError?.message || "Erro ao criar aluno" }, 500);
           }
 
-          // 3. Criar acesso via Admin API (NUNCA via SQL direto em auth.users)
-          const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-            email,
-            password: senha,
-            email_confirm: true,
-          });
-
+          // 3. Acesso via Admin API já criado no loop acima (NUNCA via SQL direto em auth.users)
           if (authError || !authUser?.user) {
             console.error("[converter-matricula-aulao] Erro ao criar acesso:", authError);
             return jsonResponse({ error: authError?.message || "Erro ao criar acesso" }, 500);
