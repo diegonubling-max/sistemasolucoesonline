@@ -15,6 +15,8 @@ import {
   UserMinus,
   Wallet,
   Crown,
+  KeyRound,
+  Copy,
 } from "lucide-react";
 import { ComissoesColaboradorDialog } from "@/components/admin/colaboradores/ComissoesColaboradorDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,6 +91,7 @@ function ColaboradoresList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [ativoFilter, setAtivoFilter] = useState<"ativos" | "inativos" | "todos">("todos");
   const [comissoesVendedora, setComissoesVendedora] = useState<string | null>(null);
+  const [acessoColab, setAcessoColab] = useState<any>(null);
   const [isResponsavel, setIsResponsavel] = useState(false);
 
   const [selectedPoloId, setSelectedPoloId] = useState<string>(
@@ -662,6 +665,9 @@ function ColaboradoresList() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => setAcessoColab(c)}>
+                            <KeyRound className="h-4 w-4 mr-2 text-blue-600" /> Copiar acesso
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
                               setEditingColab(c);
@@ -712,6 +718,63 @@ function ColaboradoresList() {
         </CardContent>
       </Card>
 
+      <Dialog open={!!acessoColab} onOpenChange={(o) => !o && setAcessoColab(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Acesso de {acessoColab?.nome}</DialogTitle>
+            <DialogDescription>
+              Copie os dados abaixo para enviar o acesso ao sistema para a colaboradora.
+            </DialogDescription>
+          </DialogHeader>
+          {acessoColab && (
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Login</p>
+                <p className="font-medium break-all">{acessoColab.email}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Senha</p>
+                {acessoColab.senha ? (
+                  <p className="font-medium">{acessoColab.senha}</p>
+                ) : (
+                  <p className="text-sm text-amber-700">
+                    Senha ainda não disponível — edite a colaboradora e defina/redefina a senha
+                    uma vez para poder copiá-la aqui depois.
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Link do sistema</p>
+                <p className="font-medium break-all">https://sistema.supletivosolucoesonline.com.br/login</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAcessoColab(null)}
+            >
+              Fechar
+            </Button>
+            <Button
+              disabled={!acessoColab?.senha}
+              onClick={() => {
+                const texto = [
+                  `Login: ${acessoColab.email}`,
+                  `Senha: ${acessoColab.senha}`,
+                  `Link do sistema: https://sistema.supletivosolucoesonline.com.br/login`,
+                ].join("\n");
+                navigator.clipboard.writeText(texto);
+                toast.success("Acesso copiado! Já pode colar e enviar.");
+                setAcessoColab(null);
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Copiar tudo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ComissoesColaboradorDialog
         open={!!comissoesVendedora}
         onOpenChange={(o) => !o && setComissoesVendedora(null)}
@@ -720,3 +783,4 @@ function ColaboradoresList() {
     </div>
   );
 }
+

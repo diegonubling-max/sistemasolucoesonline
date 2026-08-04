@@ -49,6 +49,7 @@ serve(async (req) => {
           polo_id,
           setor,
           ativo: true,
+          senha: pass,
           responsavel_polo: !!responsavel_polo,
           ...(comissao_avista !== undefined ? { comissao_avista } : {}),
           ...(comissao_parcelado !== undefined ? { comissao_parcelado } : {}),
@@ -111,6 +112,7 @@ serve(async (req) => {
       if (polo_id) colabUpdates.polo_id = polo_id;
       if (setor) colabUpdates.setor = setor;
       if (ativo !== undefined) colabUpdates.ativo = ativo;
+      if (pass) colabUpdates.senha = pass;
       if (responsavel_polo !== undefined) colabUpdates.responsavel_polo = !!responsavel_polo;
       if (comissao_avista !== undefined) colabUpdates.comissao_avista = comissao_avista;
       if (comissao_parcelado !== undefined) colabUpdates.comissao_parcelado = comissao_parcelado;
@@ -176,3 +178,4 @@ serve(async (req) => {
     });
   }
 });
+
