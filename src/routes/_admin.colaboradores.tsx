@@ -600,19 +600,20 @@ function ColaboradoresList() {
                 <TableHead>Setor</TableHead>
                 <TableHead>E-mail</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Acesso</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
                   </TableCell>
                 </TableRow>
               ) : filteredColaboradores?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Nenhum colaborador encontrado.
                   </TableCell>
                 </TableRow>
@@ -640,6 +641,15 @@ function ColaboradoresList() {
                       ) : (
                         <Badge variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-50 border-red-100">
                           Inativo
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {(c as any).user_id ? (
+                        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200">🔑 Tem login</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-100 border-gray-200">
+                          Sem login ainda
                         </Badge>
                       )}
                     </TableCell>
