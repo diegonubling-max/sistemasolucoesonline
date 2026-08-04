@@ -44,7 +44,7 @@ serve(async (req) => {
       if (aluno?.telefone) {
         const primeiroNome = (aluno.nome || "").split(" ")[0];
         const cap = primeiroNome ? primeiroNome[0].toUpperCase() + primeiroNome.slice(1).toLowerCase() : "";
-        const msg = `*✅ Soluções Online — Compra confirmada!*\n\nOlá, *${cap}*! Seu pagamento foi confirmado e o curso *${curso?.nome}* já está liberado na sua área de estudos! 🎉\n\n👉 Acesse agora: https://sistemasolucoesonline.lovable.app/aluno/login`;
+        const msg = `*✅ Soluções Online — Compra confirmada!*\n\nOlá, *${cap}*! Seu pagamento foi confirmado e o curso *${curso?.nome}* já está liberado na sua área de estudos! 🎉\n\n👉 Acesse agora: https://sistema.supletivosolucoesonline.com.br/aluno/login`;
         try {
           await fetch(
             "https://api.z-api.io/instances/3F4CC1DC22AB31BDE17ECE717FF40C71/token/E55BC981D8AA6846EAFEAEE4/send-text",

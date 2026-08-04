@@ -24,12 +24,13 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    const { action, email, password, nome, polo_id, setor, id, ativo, permissoes, responsavel_polo, comissao_avista, comissao_parcelado } = body;
+    const { action, email, senha, password, nome, polo_id, setor, id, ativo, permissoes, responsavel_polo, comissao_avista, comissao_parcelado } = body;
+    const pass = password || senha;
 
     if (action === "create_colaborador") {
       const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
-        password,
+        password: pass,
         email_confirm: true,
         user_metadata: {
           nome,
@@ -86,12 +87,22 @@ serve(async (req) => {
 
       const authUpdates: any = {};
       if (email) authUpdates.email = email;
-      if (password) authUpdates.password = password;
+      if (pass) authUpdates.password = pass;
       if (nome) authUpdates.user_metadata = { nome };
 
-      if (Object.keys(authUpdates).length > 0) {
+      if (colab.user_id && Object.keys(authUpdates).length > 0) {
         const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(colab.user_id, authUpdates);
         if (authError) throw new Error(`Auth update error: ${authError.message}`);
+      } else if (!colab.user_id && pass && email) {
+        // Colaborador ainda não tem login -> cria agora
+        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password: pass,
+          email_confirm: true,
+          user_metadata: { nome, role: setor === "Admin Polo" ? "admin_polo" : "colaborador" },
+        });
+        if (authError) throw new Error(`Auth create error: ${authError.message}`);
+        await supabaseAdmin.from("colaboradores").update({ user_id: authUser.user.id }).eq("id", id);
       }
 
       const colabUpdates: any = {};
@@ -137,16 +148,13 @@ serve(async (req) => {
 
       if (findError) throw new Error(`Colaborador não encontrado: ${findError.message}`);
 
-      // Deletar do Auth (só se tiver user_id)
       if (colab.user_id) {
         const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(colab.user_id);
         if (authError) throw new Error(`Auth delete error: ${authError.message}`);
       }
 
-      // Deletar permissões manualmente
       await supabaseAdmin.from("colaborador_permissoes").delete().eq("colaborador_id", id);
 
-      // Deletar colaborador
       const { error: colabError } = await supabaseAdmin.from("colaboradores").delete().eq("id", id);
 
       if (colabError) throw new Error(`Colab delete error: ${colabError.message}`);
