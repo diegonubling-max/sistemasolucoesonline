@@ -41,14 +41,30 @@ interface Sucesso {
   formaPagamento: FormaPag;
 }
 
+function lerCookieUtmCompartilhado(): Record<string, string | null> {
+  if (typeof document === "undefined") return {};
+  const match = document.cookie.match(/(?:^|; )solucoes_utm=([^;]*)/);
+  if (!match) return {};
+  try {
+    return JSON.parse(decodeURIComponent(match[1]));
+  } catch {
+    return {};
+  }
+}
+
 function getUtm() {
   if (typeof window === "undefined") return {};
   const p = new URLSearchParams(window.location.search);
+  const cookie = lerCookieUtmCompartilhado();
+  // Prioridade: parâmetro na própria URL do /matricula-demo; se não tiver, usa o cookie
+  // compartilhado entre subdomínios (gravado no /aulao, já que o WhatsApp não repassa UTM).
   return {
-    utm_source: p.get("utm_source") || null,
-    utm_medium: p.get("utm_medium") || null,
-    utm_campaign: p.get("utm_campaign") || null,
-    utm_content: p.get("utm_content") || null,
+    utm_source: p.get("utm_source") || cookie.utm_source || null,
+    utm_medium: p.get("utm_medium") || cookie.utm_medium || null,
+    utm_campaign: p.get("utm_campaign") || cookie.utm_campaign || null,
+    utm_content: p.get("utm_content") || cookie.utm_content || null,
+    utm_term: p.get("utm_term") || cookie.utm_term || null,
+    fbclid: p.get("fbclid") || cookie.fbclid || null,
   };
 }
 
@@ -73,8 +89,12 @@ function parseDateBR(value: string): string | null {
 
 const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; parcelasExibicao: string; valorParc: string; total: string }> = {
   boleto: { entrada: "69,90", qtdParc: "10", parcelasExibicao: "1 + 9", valorParc: "159,90", total: "1.668,90" },
-  cartao: { entrada: "69,90", qtdParc: "12", parcelasExibicao: "12", valorParc: "119,90", total: "1.508,70" },
+  cartao: { entrada: "69,90", qtdParc: "12", parcelasExibicao: "12", valorParc: "259,90", total: "3.188,70" },
 };
+
+// Voucher da aula ao vivo — quem assiste ganha condição especial no cartão (12x R$119,90 em vez de 12x R$259,90)
+const VOUCHER_CODE = "1627off";
+const PLANO_CARTAO_VOUCHER = { valorParc: "119,90", total: "1.508,70" };
 
 function getProximoEncerramento(): Date {
   const agora = new Date();
@@ -103,6 +123,12 @@ function MatriculaDemoPage() {
   });
 
   const [forma, setForma] = useState<FormaPag | null>(null);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [semCodigo, setSemCodigo] = useState(false);
+  const voucherValido = voucherCode.trim().toLowerCase() === VOUCHER_CODE;
+  const planoCartaoAtual = voucherValido
+    ? { ...PLANOS.cartao, ...PLANO_CARTAO_VOUCHER }
+    : PLANOS.cartao;
   const [matriculaIdParcial, setMatriculaIdParcial] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState<Sucesso | null>(null);
@@ -134,7 +160,7 @@ function MatriculaDemoPage() {
 
   const contratoHtml = useMemo(() => {
     if (!modelo?.conteudo_html || !forma) return "";
-    const plano = PLANOS[forma];
+    const plano = forma === "cartao" ? planoCartaoAtual : PLANOS[forma];
     const formaLabel = forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito";
     let html = modelo.conteudo_html;
     const variables: Record<string, string> = {
@@ -164,7 +190,7 @@ function MatriculaDemoPage() {
     // remove eventual "R$ R$" duplicado do template
     html = html.replace(/R\$\s*R\$\s*/g, "R$ ");
     return html;
-  }, [modelo, dados, forma, dataISO]);
+  }, [modelo, dados, forma, dataISO, planoCartaoAtual]);
 
   function validarStep1(): string | null {
     if (!dados.nome.trim() || dados.nome.trim().split(/\s+/).length < 2)
@@ -179,6 +205,9 @@ function MatriculaDemoPage() {
   const handleAvancar1 = async () => {
     const err = validarStep1();
     if (err) { toast.error(err); return; }
+
+    const utm = getUtm();
+
     // Salvar dados parciais no banco (sem contrato ainda)
     try {
       const dataISO = parseDateBR(dados.data_nascimento);
@@ -190,12 +219,16 @@ function MatriculaDemoPage() {
         p_data_nascimento: dataISO,
         p_forma_pagamento: "boleto",
         p_polo_id: POLO_ID_FLORIPA,
-        p_utm_source: null, p_utm_medium: null, p_utm_campaign: null, p_utm_content: null,
+        p_utm_source: utm.utm_source, p_utm_medium: utm.utm_medium, p_utm_campaign: utm.utm_campaign, p_utm_content: utm.utm_content,
+        p_utm_term: utm.utm_term,
         p_contrato_html: null,
         p_assinatura_nome: null,
         p_sexo: null,
       });
       const row = Array.isArray(data) ? data[0] : data;
+      if (row?.id && utm.fbclid) {
+        supabase.from("matriculas_aulao" as any).update({ fbclid: utm.fbclid }).eq("id", row.id).then(() => {});
+      }
       if (row && !row.ja_existia) {
         setMatriculaIdParcial(row.id);
       } else if (row?.ja_existia) {
@@ -269,6 +302,7 @@ function MatriculaDemoPage() {
           p_utm_medium: utm.utm_medium,
           p_utm_campaign: utm.utm_campaign,
           p_utm_content: utm.utm_content,
+          p_utm_term: utm.utm_term,
           p_contrato_html: contratoComValidacao,
           p_assinatura_nome: dados.nome.trim() || null,
           p_sexo: null,
@@ -337,6 +371,7 @@ function MatriculaDemoPage() {
         matricula_id: sucesso.matriculaId,
         billing_type: billingType,
         installment_count: billingType === "CREDIT_CARD" ? parcelas : undefined,
+        voucher_code: voucherCode,
       };
       if (billingType === "CREDIT_CARD" && ccData) {
         body.credit_card = ccData;
@@ -669,43 +704,94 @@ function MatriculaDemoPage() {
 
             {step === 2 && (
               <>
-                <h2 className="text-xl font-semibold">Forma de pagamento</h2>
-                <p className="text-sm text-muted-foreground">
-                  Como prefere pagar? Nossa equipe entrará em contato para alinhar as condições.
-                </p>
-                <div className="grid gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setForma("boleto")}
-                    className={`border rounded-lg p-4 text-left transition ${forma === "boleto" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
-                  >
-                    <div className="text-3xl mb-1">📄</div>
-                    <div className="font-semibold">Boleto Bancário</div>
-                    <div className="text-sm text-muted-foreground">1 + 9 parcelas de R$ 159,90</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForma("cartao")}
-                    className={`border rounded-lg p-4 text-left transition ${forma === "cartao" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
-                  >
-                    <div className="text-3xl mb-1">💳</div>
-                    <div className="font-semibold">Cartão de Crédito</div>
-                    <div className="text-sm text-muted-foreground">12x de R$ 119,90</div>
-                    <div className="text-sm text-orange-700 font-medium mt-1">
-                      ⚡ Nessa opção você conclui tudo em menos tempo — entre 10 e 30 dias
-                    </div>
-                  </button>
+                <h2 className="text-xl font-semibold">Investimento</h2>
+                <div className="text-center bg-gray-50 border rounded-lg py-5 px-4">
+                  <p className="text-sm text-muted-foreground mb-1">Preço padrão da escola</p>
+                  <p className="text-3xl md:text-4xl font-black text-gray-800">
+                    12x de R$ {PLANOS.cartao.valorParc}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">no cartão de crédito</p>
                 </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="voucher">Recebeu um código de desconto na aula ao vivo?</Label>
+                  <Input
+                    id="voucher"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value)}
+                    placeholder="Digite seu código aqui"
+                  />
+                  {voucherCode.trim() !== "" && !voucherValido && (
+                    <p className="text-sm text-red-600">Código inválido</p>
+                  )}
+                  {voucherValido && (
+                    <p className="text-sm text-green-600 font-medium">
+                      ✅ Código aplicado — condição especial liberada abaixo
+                    </p>
+                  )}
+                  {!voucherValido && !semCodigo && (
+                    <button
+                      type="button"
+                      onClick={() => setSemCodigo(true)}
+                      className="text-xs text-muted-foreground underline"
+                    >
+                      Não tenho o código
+                    </button>
+                  )}
+                </div>
+
+                {(voucherValido || semCodigo) && (
+                  <>
+                    <h2 className="text-xl font-semibold pt-2">Forma de pagamento</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Como prefere pagar? Nossa equipe entrará em contato para alinhar as condições.
+                    </p>
+                    <div className="grid gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setForma("boleto")}
+                        className={`border rounded-lg p-4 text-left transition ${forma === "boleto" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                      >
+                        <div className="text-3xl mb-1">📄</div>
+                        <div className="font-semibold">Boleto Bancário</div>
+                        <div className="text-sm text-muted-foreground">1 + 9 parcelas de R$ 159,90</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setForma("cartao")}
+                        className={`border rounded-lg p-4 text-left transition ${forma === "cartao" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                      >
+                        <div className="text-3xl mb-1">💳</div>
+                        <div className="font-semibold">Cartão de Crédito</div>
+                        <div className="text-sm text-muted-foreground">
+                          {voucherValido ? (
+                            <>
+                              <span className="line-through mr-1">12x de R$ {PLANOS.cartao.valorParc}</span>
+                              <span className="text-green-700 font-semibold">12x de R$ {PLANO_CARTAO_VOUCHER.valorParc}</span>
+                            </>
+                          ) : (
+                            `12x de R$ ${PLANOS.cartao.valorParc}`
+                          )}
+                        </div>
+                        <div className="text-sm text-orange-700 font-medium mt-1">
+                          ⚡ Nessa opção você conclui tudo em menos tempo — entre 10 e 30 dias
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                )}
 
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={enviando}>Voltar</Button>
-                  <Button
-                    onClick={handleFinalizarStep2}
-                    disabled={enviando}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                  >
-                    {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>➡️ Ir para o pagamento</>)}
-                  </Button>
+                  {(voucherValido || semCodigo) && (
+                    <Button
+                      onClick={handleFinalizarStep2}
+                      disabled={enviando}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>✅ Garantir minha vaga</>)}
+                    </Button>
+                  )}
                 </div>
               </>
             )}
