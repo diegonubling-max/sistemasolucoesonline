@@ -640,6 +640,22 @@ function AlunoDetalhes() {
   })();
 
   const [sendingAccess, setSendingAccess] = useState(false);
+  const [showCopiarAcessoModal, setShowCopiarAcessoModal] = useState(false);
+
+  function montarMensagemAcesso(aluno: any): string {
+    const primeiroNomeRaw = aluno.nome.split(" ")[0] ?? "";
+    const primeiroNomeLower = primeiroNomeRaw.toLowerCase();
+    const primeiroNomeCap = primeiroNomeRaw.charAt(0).toUpperCase() + primeiroNomeRaw.slice(1).toLowerCase();
+    const senha = `1234${primeiroNomeLower}`;
+    return (
+      `*🔐 Soluções Online — Seus dados de acesso:*\n\n` +
+      `Olá, *${primeiroNomeCap}*! Segue seus dados de acesso à área de estudos:\n\n` +
+      `📋 *Login:* ${aluno.ctr}\n` +
+      `🔑 *Senha:* ${senha}\n\n` +
+      `👉 Acesse em: https://sistema.supletivosolucoesonline.com.br/aluno/login\n\n` +
+      `Qualquer dúvida estamos à disposição! 😊`
+    );
+  }
 
   const handleResendAccess = async () => {
     if (!aluno) return;
@@ -649,17 +665,7 @@ function AlunoDetalhes() {
     }
     try {
       setSendingAccess(true);
-      const primeiroNomeRaw = aluno.nome.split(" ")[0] ?? "";
-      const primeiroNomeLower = primeiroNomeRaw.toLowerCase();
-      const primeiroNomeCap = primeiroNomeRaw.charAt(0).toUpperCase() + primeiroNomeRaw.slice(1).toLowerCase();
-      const senha = `1234${primeiroNomeLower}`;
-      const mensagem =
-        `*🔐 Soluções Online — Seus dados de acesso:*\n\n` +
-        `Olá, *${primeiroNomeCap}*! Segue seus dados de acesso à área de estudos:\n\n` +
-        `📋 *Login:* ${aluno.ctr}\n` +
-        `🔑 *Senha:* ${senha}\n\n` +
-        `👉 Acesse em: https://sistemasolucoesonline.lovable.app/aluno/login\n\n` +
-        `Qualquer dúvida estamos à disposição! 😊`;
+      const mensagem = montarMensagemAcesso(aluno);
       const { sendWhatsApp } = await import("@/services/zApiService");
       await sendWhatsApp(aluno.telefone, mensagem, { alunoId: aluno.id, tipo: "reenvio_acesso" });
 
@@ -795,6 +801,9 @@ function AlunoDetalhes() {
             <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleResendAccess} disabled={sendingAccess}>
               {sendingAccess ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageSquare className="h-4 w-4 mr-2" />}
               {sendingAccess ? "Enviando..." : "Reenviar acesso"}
+            </Button>
+            <Button variant="outline" onClick={() => setShowCopiarAcessoModal(true)}>
+              <Copy className="h-4 w-4 mr-2" /> Copiar acesso
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -1285,6 +1294,39 @@ function AlunoDetalhes() {
       </Dialog>
       <Dialog open={showPasswordResult} onOpenChange={setShowPasswordResult}>
         <DialogContent><DialogHeader><DialogTitle>Senha Redefinida!</DialogTitle></DialogHeader><div className="bg-muted p-4 rounded text-sm"><p>Login: <b>{aluno.ctr}</b></p><p>Senha: <b>{passwordToDisplay}</b></p></div><Button onClick={() => setShowPasswordResult(false)}>Fechar</Button></DialogContent>
+      </Dialog>
+      <Dialog open={showCopiarAcessoModal} onOpenChange={setShowCopiarAcessoModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copiar acesso do aluno</DialogTitle>
+            <DialogDescription>
+              Copie o texto abaixo e cole na conversa do WhatsApp do aluno, do seu jeito.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            readOnly
+            rows={8}
+            value={montarMensagemAcesso(aluno)}
+            onFocus={(e) => e.currentTarget.select()}
+            className="text-sm"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCopiarAcessoModal(false)}>Fechar</Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(montarMensagemAcesso(aluno));
+                  toast.success("Copiado! Agora é só colar no WhatsApp.");
+                } catch {
+                  toast.error("Não consegui copiar automaticamente — selecione o texto e copie manualmente.");
+                }
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Copiar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
       <Dialog open={showVitrineModal} onOpenChange={(open) => {
         setShowVitrineModal(open);
