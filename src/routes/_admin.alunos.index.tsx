@@ -323,9 +323,16 @@ function AlunosList() {
                 return (
                 <TableRow key={a.id}>
                   <TableCell>
-                    <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
-                      #{a.ctr}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
+                        #{a.ctr}
+                      </Badge>
+                      {!temFinanceiro && (
+                        <CircleDollarSign className="h-3.5 w-3.5 text-red-500" aria-label="Financeiro não cadastrado">
+                          <title>Financeiro não cadastrado</title>
+                        </CircleDollarSign>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
@@ -336,11 +343,6 @@ function AlunosList() {
                         <ShoppingBag className="h-3.5 w-3.5 text-green-600" aria-label="Possui cursos na vitrine">
                           <title>Possui cursos na vitrine</title>
                         </ShoppingBag>
-                      )}
-                      {!temFinanceiro && (
-                        <CircleDollarSign className="h-3.5 w-3.5 text-red-500" aria-label="Financeiro não cadastrado">
-                          <title>Financeiro não cadastrado</title>
-                        </CircleDollarSign>
                       )}
                       {(a as any).cadastro_completo === false && (
                         <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] px-1.5 py-0">
