@@ -144,3 +144,36 @@
 - ✅ Termo de matrícula oculto por padrão (abre em modal), aceite só por checkbox — sem redigitar nome/CPF
 - ✅ Registro de pagamentos fora do Asaas (Pix manual, dinheiro, transferência) pelo admin, somativo com histórico
 - 🔧 Pendente: pixel Meta + Utmify
+
+## Módulo: Página Pública /matricula — atualização 04-05/08/2026
+- ✅ Meta Pixel (2773111239702600): Lead (avança do passo 1), CompleteRegistration (finaliza matrícula/assinatura), Purchase (só quando pagamento confirmado — valor real, com/sem voucher)
+- ✅ Captura utm_term e fbclid (antes só source/medium/campaign/content); cookie solucoes_utm como fallback pro WhatsApp não repassar UTM
+- ✅ Reconstrução do cookie _fbc a partir do fbclid — corrige atribuição de campanha/criativo no Gerenciador de Anúncios (senão o Meta não conseguia ligar o clique no anúncio, feito em /aulao noutro subdomínio, à conversão aqui)
+- ✅ Voucher da aula ao vivo (código "1627off", case-insensitive): preço padrão em destaque (12x R$259,90) → campo de cupom → forma de pagamento só aparece com cupom válido (ou link "Não tenho o código", preço cheio). Cartão com cupom: 12x R$119,90. Validação sempre no servidor, nunca confia no navegador
+- ✅ Botão final "Garantir minha vaga" (era "Ir para o pagamento" — trocado por texto convidativo, mas não enganoso sobre o que acontece a seguir)
+- ✅ /matricula-demo tem as mesmas mudanças de voucher/preço/UI, mas SEM pixel/UTM/cookie/fbclid (é só demonstração interna de como matricular, não deve gerar dado de rastreamento nenhum)
+
+## Módulo: Migração de vídeo Panda → YouTube
+- ✅ Cada curso pode ter youtube_playlist_id + youtube_playlist_count; aulas com ordem dentro desse limite tocam automaticamente da playlist do YouTube (não listada), o resto continua no Panda até completar o upload
+- ✅ Histórico de aulas assistidas 100% preservado (vinculado a aula_id, não ao vídeo)
+- ✅ 10 matérias já migradas: Português, Biologia, Matemática, Sociologia, Química, Filosofia, Física, Inglês, História, Geografia
+
+## Módulo: Webinar — replay com depoimentos reais (04/08/2026)
+- ✅ Aula gravada (flag `gravado` no webinar) + depoimentos reais da aula ao vivo original cadastrados manualmente (nome, texto, minuto:segundo) em /webinars/:id/depoimentos
+- ✅ Player usa YouTube IFrame API pra aulas gravadas (rastreia currentTime) e revela os depoimentos no chat no segundo exato, marcados com 🎥 pra diferenciar de comentário ao vivo real
+- ✅ Chat ao vivo dos alunos continua funcionando normalmente em paralelo, com equipe respondendo
+
+## Módulo: Perfil do Aluno (admin) — novidades
+- ✅ Botão "Copiar acesso" — modal com login/senha/link prontos num texto, pra colar manualmente no WhatsApp (sem envio automático via Z-API, por decisão do Diego)
+- ✅ Botão de baixar boleto em PDF em cada parcela tipo boleto — abre o PDF do Asaas; se ainda não tiver cobrança gerada, cria na hora antes de abrir
+- ✅ Botão "Gerar acesso (Aulão)" no menu Alunos — converte lead do /matricula em aluno completo mesmo sem pagamento confirmado
+
+## Módulo: Pós-Venda — automação (05/08/2026)
+- ✅ 1º Pós-Venda criado automaticamente 1 dia após a matrícula
+- ✅ 2º e 3º só são criados quando a etapa anterior é confirmada (2º = 5 dias após confirmar o 1º; 3º = 10 dias após confirmar o 2º)
+- ✅ Etapa não confirmada continua aparecendo indefinidamente até ser feita
+
+## Módulo: Dashboard
+- ✅ Cards de faturamento (Total Recebido/A Receber/Em Atraso) funcionando de verdade (antes sempre zerados — views não existiam)
+- ✅ Seção "Interesse na Vitrine" removida
+- 🔧 Pendente (não verificado/criado ainda): add_milhas_eja, delete_pacote, resgatar_curso_vitrine — funcionalidades de milhas/vitrine podem estar quebradas do mesmo jeito que estava o financeiro

@@ -227,3 +227,23 @@ Redefine a senha de um aluno via Admin API. Substitui a RPC `redefinir_senha_alu
 - Ao inserir progresso manualmente, sempre preencher curso_id via JOIN com aulas
 - Percentual >= 70 conta como "concluída" no frontend
 
+
+## Sessão 04-05/08/2026
+
+### Edge Functions publicadas (existiam no código, nunca deployadas — ver BUG-030 no doc de bugs)
+manage-colaboradores, asaas-api, manage-student-access, asaas-cobrar, asaas-vitrine-checkout, asaas-vitrine-status, asaas-webhook, asaas-vitrine-webhook, cancelar-boletos-migrados, gerar-boletos-migrados, panda-video-sync, send-push-notification.
+Ficaram de fora (sem uso no front): create-aluno-auth, send-push.
+
+### RPCs criadas (existiam só no código, nunca no banco)
+- **registrar_pagamento_parcela(p_parcela_id, p_valor_pago, p_data_pagamento, p_forma_pagamento, p_parcelas_cartao, p_taxa_cartao, p_valor_liquido, p_observacao)** — usada em "Dar Baixa". Insere em parcelas_pagamentos, soma valor_pago_total, decide status pago/parcial.
+- **get_contrato_publico(p_token uuid)** / **assinar_contrato_publico(p_token uuid, p_nome text, p_ip text)** — assinatura remota de contrato via link único.
+
+### Triggers novos (automação de Pós-Venda)
+- **trg_criar_pos_venda_nova_matricula** (AFTER INSERT ON matriculas) → `criar_pos_venda_nova_matricula()`: cria o 1º Pós-Venda, agendado 1 dia após a matrícula.
+- **trg_criar_proximo_pos_venda** (AFTER UPDATE ON pos_vendas) → `criar_proximo_pos_venda()`: quando `status` vira 'concluido', cria a próxima etapa (2º = +5 dias da confirmação do 1º; 3º = +10 dias da confirmação do 2º).
+
+### Views novas (Dashboard)
+view_total_recebido_mes, view_a_receber_mes, view_em_atraso — todas usando `(now() AT TIME ZONE 'America/Sao_Paulo')::date` como referência de "hoje" (CURRENT_DATE puro é UTC e adianta o dia à noite no horário de Brasília).
+
+### Pendências (RPCs chamadas no código, ainda não confirmadas/criadas no banco)
+add_milhas_eja, delete_pacote, resgatar_curso_vitrine. registrar_aula_assistida é legado (comentário no próprio código) — tracking real de progresso já funciona via aluno_aulas_assistidas, dá pra remover a chamada morta em vez de criar a função.

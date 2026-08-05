@@ -156,6 +156,53 @@
 - **Solução (29/07/2026):** criada a FK `aluno_aulas_assistidas_curso_id_fkey` e recarregado o schema cache do PostgREST (`NOTIFY pgrst, 'reload schema'`). Nenhuma mudança de código foi necessária — a query e a tela (aba Histórico e aba Progresso) já estavam certas, só faltava a relação no banco.
 - **Status:** ✅ Resolvido
 
+
+### BUG-030: Nenhuma edge function estava publicada no Supabase (grave)
+- **Causa:** as 15 edge functions do sistema existiam só no código-fonte (`supabase/functions/`), nunca tinham sido deployadas — `list_edge_functions` retornava vazio. Isso quebrava silenciosamente: `manage-colaboradores` (criar login de colaborador — foi o que travou ao dar acesso pra Gislaine), `asaas-cobrar` (cobrança avulsa por polo), `manage-student-access` (reset de senha de aluno), `asaas-vitrine-checkout`/`asaas-vitrine-status`/`asaas-vitrine-webhook` (compra de curso na vitrine), `asaas-webhook` (confirmação de pagamento do polo), `cancelar-boletos-migrados`/`gerar-boletos-migrados` (ferramentas de migração), `panda-video-sync`, `send-push-notification`.
+- **Solução (04/08/2026):** publicadas 11 (todas com uso ativo no código). `create-aluno-auth` e `send-push` ficaram de fora (0 referências no front, prováveis legado). De brinde: corrigido mismatch de nome de campo `senha`/`password` em `manage-colaboradores` (impedia dar acesso a colaborador que ainda não tinha login) e 1 URL antiga do Lovable no webhook da vitrine.
+- **Atenção:** `cancelar-boletos-migrados`, `gerar-boletos-migrados` e `panda-video-sync` têm chave de API (Asaas produção e Panda Video) hardcoded no código-fonte em vez de secret — funcionam, mas ficam expostas no repositório. `asaas-vitrine-checkout`/`status` dependem do secret `ASAAS_API_KEY_VITRINE` e `send-push-notification` do `FIREBASE_SERVICE_ACCOUNT` — não confirmado se já estão configurados no Supabase.
+- **Status:** ✅ Resolvido (funções publicadas); ⚠️ segurança das chaves hardcoded pendente
+
+### BUG-031: colaborador_permissoes/colaboradores com colunas faltando
+- **Causa:** `colaborador_permissoes` faltava 6 colunas (`cadastrar_alunos`, `fazer_matriculas`, `dar_baixa_pagamentos`, `agendar_provas`, `ver_provas_agendadas`, `ver_relatorios`) e `colaboradores` faltava `responsavel_polo` — quebrava editar/criar/resetar senha de colaborador com "Edge Function returned a non-2xx status code".
+- **Solução (04/08/2026):** todas as colunas recriadas.
+- **Status:** ✅ Resolvido
+
+### BUG-032: "Gerar acesso (Aulão)" falhava com "e-mail já registrado"
+- **Causa:** excluir aluno (`delete_aluno_completo`) nunca apagou o login dele no Supabase Auth, só o registro em `alunos`. Depois de uma limpeza em massa de alunos, sobraram dezenas de logins órfãos (`1715@aluno.com` até `1748@aluno.com`) que colidem com o cálculo de "próximo CTR" (baseado só em `max(ctr)` da tabela `alunos`, que ficou baixo após a limpeza).
+- **Solução (04/08/2026):** `converter-matricula-aulao.ts` agora tenta criar o login e, se colidir (e-mail já registrado), incrementa o CTR e tenta de novo (até 50x) em vez de falhar. Os logins órfãos em si continuam existindo (não bloqueiam mais nada, mas podem ser limpos depois via Admin API).
+- **Status:** ✅ Resolvido
+
+### BUG-033: Aluno do Aulão aparecia e sumia da lista de Alunos
+- **Causa:** `converter-matricula-aulao.ts` só salvava `polo_id` na matrícula, nunca no registro do aluno em si. A tela de Alunos filtra por `alunos.polo_id`, então o aluno some sempre que o filtro de polo não está em "Todos".
+- **Solução (05/08/2026):** aluno já recebe `polo_id` na criação; feito backfill do caso já afetado (Marcelo Fernando).
+- **Status:** ✅ Resolvido
+
+### BUG-034: RPC registrar_pagamento_parcela não existia
+- **Causa:** usada em "Dar Baixa" (perfil do aluno e tela Financeiro), mas nunca foi criada no banco — mesma categoria dos outros bugs de "feature referenciada mas nunca criada no backend".
+- **Solução (05/08/2026):** função criada — registra em `parcelas_pagamentos`, soma `valor_pago_total`, decide status pago/parcial, e pra cartão anota parcelas/taxa/valor líquido automaticamente na observação (e grava `valor_liquido` na própria parcela — ver BUG-036).
+- **Status:** ✅ Resolvido
+
+### BUG-035: Assinatura de contrato por link público completamente quebrada
+- **Causa:** faltavam colunas inteiras em `contratos` (`token_unico`, `conteudo_html`, `matricula_id`, `nome_confirmacao`, `data_assinatura`, `ip_assinatura`) e as RPCs `get_contrato_publico`/`assinar_contrato_publico` nunca existiam, mesmo com a tela (`ContratoAlunoModal.tsx`, `/contrato/:token`) já pronta há tempo.
+- **Solução (05/08/2026):** colunas e as duas RPCs criadas. De brinde: mais 3 URLs antigas do Lovable corrigidas no mesmo modal.
+- **Status:** ✅ Resolvido
+
+### BUG-036: Cards do Dashboard (Total Recebido/A Receber/Em Atraso) sempre R$0,00
+- **Causa:** dependiam de 3 views (`view_total_recebido_mes`, `view_a_receber_mes`, `view_em_atraso`) que nunca existiam no banco — erro engolido silenciosamente pelo `.maybeSingle()` do front. Faltava também a coluna `parcelas.valor_liquido`.
+- **Solução (05/08/2026):** views e coluna criadas; `registrar_pagamento_parcela` atualizada pra gravar `valor_liquido` na parcela. Depois, corrigido um segundo problema de fuso horário: as views usavam `CURRENT_DATE` (UTC do servidor), que à noite já considera "hoje" um dia à frente do horário de Brasília — fazendo parcela vencendo hoje contar como atrasada. Trocado por `(now() AT TIME ZONE 'America/Sao_Paulo')::date` nas 3 views.
+- **Status:** ✅ Resolvido
+
+### BUG-037: "Total de Matrículas" no Dashboard maior que o total de alunos
+- **Causa:** a tela "Novo Aluno" (`MatriculaFlow.tsx`) sempre criava uma matrícula nova ao salvar financeiro/pacote, mesmo quando o aluno já tinha uma (ex: criada automaticamente pelo Aulão, só com acesso) — gerando duas matrículas por aluno (uma vazia + uma com o financeiro real).
+- **Solução (05/08/2026):** consolidados no banco os casos já existentes (parcelas/comissões/pacote movidos pra matrícula original, duplicata removida); `MatriculaFlow.tsx` corrigido pra reaproveitar a matrícula existente do aluno em vez de duplicar.
+- **Status:** ✅ Resolvido
+
+### BUG-038: Menu Pós-Venda nunca mostrava matrícula nova
+- **Causa:** a tela só gerenciava registros de `pos_vendas` já existentes — nada no sistema (nem trigger, nem código) jamais criava esses registros quando uma matrícula era feita.
+- **Solução (05/08/2026):** implementados 2 triggers. `criar_pos_venda_nova_matricula` semeia o 1º Pós-Venda 1 dia após a matrícula. `criar_proximo_pos_venda` semeia a próxima etapa quando a anterior é marcada concluída (2º = 5 dias após a confirmação do 1º; 3º = 10 dias após a confirmação do 2º — se não confirmado, a etapa atual continua aparecendo indefinidamente). Feito backfill do 1º Pós-Venda pras matrículas já existentes sem nenhum registro.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

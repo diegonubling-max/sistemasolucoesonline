@@ -664,3 +664,61 @@ Uma linha por minuto por webinar ao vivo, gravada pelo cron `webinar-presenca` �
 - thumbnails-aulas (público) — thumbnails das aulas
 - thumbnails-cursos (público) — thumbnails dos cursos
 
+
+## Alterações de banco — sessão 04-05/08/2026
+
+### Colunas adicionadas em matriculas_aulao:
+- utm_term (text) — capturado via cookie solucoes_utm (fallback) ou URL
+- voucher_code (text) — código digitado no /matricula
+- voucher_aplicado (boolean DEFAULT false) — só true se o código bater com o voucher válido do momento (cartão 12x R$119,90 em vez de 12x R$259,90)
+
+### Colunas adicionadas em cursos:
+- youtube_playlist_id (text) — ID da playlist do YouTube (migração Panda→YouTube)
+- youtube_playlist_count (integer) — quantidade de vídeos já migrados; aulas com ordem <= esse valor tocam pela playlist (index = ordem-1), o resto continua no link antigo (Panda)
+
+### Colunas adicionadas em parcelas:
+- valor_liquido (numeric) — valor líquido recebido no cartão (descontada a taxa da maquininha/Asaas); usado pelo Dashboard (view_total_recebido_mes)
+
+### Colunas adicionadas em contratos (assinatura por link público):
+- token_unico (uuid UNIQUE, DEFAULT gen_random_uuid()) — usado na URL /contrato/:token
+- conteudo_html (text) — conteúdo do contrato pro fluxo de assinatura remota (separado da coluna `conteudo`, usada pelo fluxo automático do Aulão)
+- matricula_id (uuid FK matriculas)
+- nome_confirmacao (text) — nome digitado pelo aluno ao assinar
+- data_assinatura (timestamptz)
+- ip_assinatura (text)
+
+### Tabela nova: webinar_depoimentos_replay
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid PK | |
+| webinar_id | uuid FK webinars | |
+| nome | text NOT NULL | Nome de quem comentou na aula ao vivo original |
+| texto | text NOT NULL | Depoimento real |
+| timestamp_segundos | integer NOT NULL | Segundo exato do vídeo em que reaparece |
+| created_at | timestamptz | |
+
+### Coluna adicionada em webinars:
+- gravado (boolean DEFAULT false) — marca que é uma aula gravada (não ao vivo de verdade); habilita o replay sincronizado dos depoimentos e troca o player pra YouTube IFrame API (rastreia currentTime)
+
+### Views novas (Dashboard — faturamento do polo):
+- view_total_recebido_mes — soma parcelas pagas no mês corrente (usa valor_liquido se cartão, senão valor)
+- view_a_receber_mes — soma parcelas em aberto/parcial vencendo no mês corrente
+- view_em_atraso — soma parcelas em aberto/parcial já vencidas
+- Todas as 3 usam `(now() AT TIME ZONE 'America/Sao_Paulo')::date` como "hoje" (não CURRENT_DATE puro, que é UTC e adianta o dia à noite no horário de Brasília)
+
+### RPCs criadas nesta sessão (existiam só no código, nunca no banco):
+- registrar_pagamento_parcela(p_parcela_id, p_valor_pago, p_data_pagamento, p_forma_pagamento, p_parcelas_cartao, p_taxa_cartao, p_valor_liquido, p_observacao) — "Dar Baixa"
+- get_contrato_publico(p_token) / assinar_contrato_publico(p_token, p_nome, p_ip) — assinatura remota de contrato
+- Ainda pendentes de verificar/criar (chamadas no código, não confirmadas no banco): add_milhas_eja, delete_pacote, resgatar_curso_vitrine. registrar_aula_assistida é legado (comentado como tal no código) e pode ser removida em vez de criada — o tracking real de progresso já funciona via aluno_aulas_assistidas (use-video-progress.ts)
+
+### Triggers criados (automação de Pós-Venda):
+- criar_pos_venda_nova_matricula (AFTER INSERT em matriculas) — semeia o 1º Pós-Venda, agendado 1 dia após a matrícula
+- criar_proximo_pos_venda (AFTER UPDATE em pos_vendas) — quando uma etapa é marcada 'concluido', semeia a próxima: 2º = 5 dias após a confirmação do 1º; 3º = 10 dias após a confirmação do 2º
+
+### Limpeza de dados (colaboradores/alunos):
+- alunos: mantida só Marcia Antoneli (CTR 1714); demais alunos antigos (pré-migração, sem financeiro, movidos pra plataforma antiga do Diego) excluídos via delete_aluno_completo
+- colaboradores: mantidos só Diego (dono) e Gislaine da Silva Borba; demais excluídos (matrículas que apontavam pra eles foram desvinculadas antes — colaborador_id=NULL, matrícula em si intacta)
+- user_roles: Felipe Borba e Gislaine da Silva Borba receberam role='admin' (acesso total, igual ao Diego — sem isso, "Responsável" sozinho não libera itens adminOnly do menu como Cursos/Colaboradores/Webinars)
+
+### Edge Functions publicadas (existiam só no código-fonte — ver BUG-030):
+manage-colaboradores, asaas-api, manage-student-access, asaas-cobrar, asaas-vitrine-checkout, asaas-vitrine-status, asaas-webhook, asaas-vitrine-webhook, cancelar-boletos-migrados, gerar-boletos-migrados, panda-video-sync, send-push-notification

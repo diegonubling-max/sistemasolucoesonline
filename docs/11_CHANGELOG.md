@@ -375,3 +375,27 @@
 - Diego pediu pra preencher automaticamente a coluna `previsao_pagamento` de todos os alunos que já tinham valor recebido, usando a data em que o pagamento foi registrado
 - 6 registros atualizados: usou `pagamento_confirmado_em` quando disponível, senão `updated_at` como fallback
 
+
+## Sessão 04-05/08/2026 — Auditoria geral de features "fantasma" + automações novas
+
+### 04/08/2026
+- Publicadas 11 edge functions que nunca tinham sido deployadas (ver BUG-030)
+- Recriadas colunas faltando em colaborador_permissoes/colaboradores (ver BUG-031)
+- Colaboradores: excluídos todos exceto Diego e Gislaine; alunos: mantida só Marcia CTR 1714
+- Felipe Borba e Gislaine com role='admin' em user_roles (acesso total)
+- Webinar: replay com depoimentos reais sincronizados por tempo (aula gravada + YouTube IFrame API)
+- Migração de vídeo Panda→YouTube por playlist indexada (10 matérias já ativas)
+
+### 05/08/2026
+- Corrigido cálculo de próximo CTR (retry em vez de falhar em e-mail duplicado — BUG-032)
+- Corrigido polo_id faltando no aluno criado via Aulão (BUG-033)
+- Botão "Copiar acesso" (login/senha/link em texto pra colar no WhatsApp) no perfil do aluno
+- Botão de baixar boleto em PDF por parcela
+- Voucher "1627off" no /matricula (preço 259,90→119,90 no cartão) + réplica no /matricula-demo sem tracking
+- Criada RPC registrar_pagamento_parcela, que nunca existia (BUG-034)
+- Criada estrutura completa de assinatura de contrato por link público (BUG-035)
+- Criadas as 3 views do Dashboard (Total Recebido/A Receber/Em Atraso), que nunca existiam (BUG-036); corrigido fuso horário (America/Sao_Paulo em vez de UTC)
+- Removida seção "Interesse na Vitrine" do Dashboard
+- Consolidadas matrículas duplicadas + corrigido MatriculaFlow.tsx pra reaproveitar matrícula existente (BUG-037)
+- Criada automação de Pós-Venda via triggers (1º/2º/3º com regra de dias após confirmação) — nunca existia (BUG-038)
+- **A partir desta sessão: toda alteração feita no sistema deve atualizar os arquivos .md correspondentes no mesmo momento, não só ao final.**
