@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { startOfMonth, endOfMonth, format, isBefore, parseISO, startOfDay, differenceInDays } from "date-fns";
-import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, UserX, BarChart3 } from "lucide-react";
+import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, UserX, BarChart3, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -28,6 +28,7 @@ import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { confirmarPagamentoAsaas } from "@/services/asaas";
 import { SalesReport } from "@/components/admin/financeiro/SalesReport";
 import { ComissoesReport } from "@/components/admin/financeiro/ComissoesReport";
+import { FechamentoSemanalReport } from "@/components/admin/financeiro/FechamentoSemanalReport";
 import { useAuth } from "@/hooks/use-auth";
 import { useVendedoras } from "@/hooks/use-vendedoras";
 import { notifyPagamentoRecebido } from "@/lib/notify";
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/_admin/financeiro")({
   component: Financeiro,
 });
 
-type FilterType = "recebimentos" | "a_receber" | "atraso" | "vendedora" | "vendas" | "comissoes" | null;
+type FilterType = "recebimentos" | "a_receber" | "atraso" | "vendedora" | "vendas" | "comissoes" | "fechamento_semanal" | null;
 
 
 function Financeiro() {
@@ -463,6 +464,7 @@ function Financeiro() {
     { id: "vendedora", label: "Matrículas por", sub: "Vendedora", icon: Wallet },
     { id: "vendas", label: "Relatório de", sub: "Vendas", icon: BarChart3 },
     { id: "comissoes", label: "Comissões", sub: "Vendedoras", icon: Wallet },
+    { id: "fechamento_semanal", label: "Fechamento", sub: "Semanal", icon: CalendarCheck },
   ];
 
 
@@ -492,7 +494,7 @@ function Financeiro() {
         })}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         {filterButtons.map((btn) => {
           const Icon = btn.icon;
           const isSelected = activeFilter === btn.id;
@@ -833,6 +835,8 @@ function Financeiro() {
       {activeFilter === "vendas" && <SalesReport />}
 
       {activeFilter === "comissoes" && <ComissoesReport poloId={selectedPoloId} />}
+
+      {activeFilter === "fechamento_semanal" && <FechamentoSemanalReport />}
 
 
 

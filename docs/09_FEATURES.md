@@ -47,6 +47,8 @@
 - ✅ Financeiro: Matrículas por Vendedora (colunas: Data, Aluno, CTR, Forma Pgto, Telefone, Vendedora; cards ativas/inativas)
 - ✅ Financeiro: Relatório de Vendas (cards ativas/inativas)
 - ✅ Financeiro: Comissões Vendedoras
+- ✅ Financeiro: Fechamento Semanal (05/08/2026) — por colaborador/polo (ex: Felipe), período sexta a quinta (fecha toda sexta, semana anterior completa), soma parcelas pagas excluindo taxa de matrícula, exporta CSV
+- ✅ Dashboard/Financeiro: card "Recebido de Parcelas no Mês" separado de "Taxas de Matrícula no Mês" (05/08/2026) — taxa é reinvestimento em tráfego, não entra no fechamento com responsável de polo
 - ✅ Histórico de Condições Canceladas (parcelas canceladas visíveis para consulta)
 - ✅ Reativar condições anteriores / criar novo pacote
 - ✅ Integração Asaas: confirmar recebimento ao dar baixa
