@@ -11,7 +11,6 @@ import { formatDate } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { VitrineInteresse } from "@/components/admin/VitrineInteresse";
 import { Input } from "@/components/ui/input";
 
 
@@ -321,8 +320,6 @@ function Dashboard() {
           </CardContent>
         </Card>
       )}
-
-      <VitrineInteresse selectedPoloId={selectedPoloId} colabPoloId={colabData?.polo_id} isSuperAdmin={isSuperAdmin} />
 
       {/* Cards por Polo - ocultos temporariamente
       {selectedPoloId === 'all' && stats?.statsByPolo && stats.statsByPolo.length > 0 && (
