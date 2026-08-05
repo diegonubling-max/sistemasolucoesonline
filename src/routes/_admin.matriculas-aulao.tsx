@@ -54,7 +54,7 @@ function MatriculasAulaoList() {
   const [filtroForma, setFiltroForma] = useState<"todos" | "boleto" | "cartao">("todos");
   const [filtroContrato, setFiltroContrato] = useState<"todos" | "sim" | "nao">("todos");
   const [filtroPagamento, setFiltroPagamento] = useState<"todos" | "pago" | "aguardando">("todos");
-  const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativos" | "cancelados">("todos");
+  const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativos" | "cancelados">("ativos");
   const [contratoAberto, setContratoAberto] = useState<string | null>(null);
   const [pagamentoManual, setPagamentoManual] = useState<any>(null);
   const [pagamentoManualForma, setPagamentoManualForma] = useState("Pix");
