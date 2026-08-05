@@ -180,6 +180,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
               origem: "Aulão",
               ativo: true,
               cadastro_completo: true,
+              polo_id: matricula.polo_id || POLO_ID_FLORIPA,
             })
             .select("id, ctr")
             .single();
