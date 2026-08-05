@@ -1044,7 +1044,7 @@ function AlunoDetalhes() {
                         <td className="py-3">{(p as any).data_pagamento ? formatDate((p as any).data_pagamento) : '—'}</td>
                         <td className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
                           {(p.status === 'aberto' || p.status === 'parcial') && (
-                            <Button size="sm" variant="ghost" className="text-green-600" onClick={() => { setSelectedParcelaId(p.id); setSelectedParcelaValor(Number(p.valor)); setSelectedParcelaPagoAtual(pagoTot); setShowBaixaModal(true); }}>Baixa</Button>
+                            <Button size="sm" variant="ghost" className="text-green-600" onClick={() => { setSelectedParcelaId(p.id); setSelectedParcelaValor(Number(p.valor)); setSelectedParcelaPagoAtual(pagoTot); setShowBaixaModal(true); }}>Dar Baixa</Button>
                           )}
                           {(p as any).forma_pagamento === 'boleto' && (
                             <Button
