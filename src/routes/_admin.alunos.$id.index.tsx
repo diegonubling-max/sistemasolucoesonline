@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText, MoreHorizontal, Sparkles, Eye, Star } from "lucide-react";
+import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText, MoreHorizontal, Sparkles, Eye, Star, Download } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -409,6 +409,31 @@ function AlunoDetalhes() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const [baixandoBoletoId, setBaixandoBoletoId] = useState<string | null>(null);
+  const handleBaixarBoleto = async (parcela: any) => {
+    try {
+      setBaixandoBoletoId(parcela.id);
+      let url = parcela.asaas_url;
+      if (!url && parcela.asaas_id) {
+        const { data, error } = await supabase.functions.invoke("asaas-cobrar", {
+          body: { parcela_id: parcela.id, action: "fetch" },
+        });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).error);
+        url = (data as any)?.updateParcela?.asaas_url || (data as any)?.payment?.bankSlipUrl || (data as any)?.payment?.invoiceUrl;
+      }
+      if (!url) {
+        toast.error("Boleto ainda não foi gerado no Asaas para esta parcela.");
+        return;
+      }
+      window.open(url, "_blank");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao buscar o boleto.");
+    } finally {
+      setBaixandoBoletoId(null);
+    }
+  };
 
   const excluirParcela = useMutation({
     mutationFn: async (parcela: any) => {
@@ -1017,6 +1042,18 @@ function AlunoDetalhes() {
                         <td className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
                           {(p.status === 'aberto' || p.status === 'parcial') && (
                             <Button size="sm" variant="ghost" className="text-green-600" onClick={() => { setSelectedParcelaId(p.id); setSelectedParcelaValor(Number(p.valor)); setSelectedParcelaPagoAtual(pagoTot); setShowBaixaModal(true); }}>Baixa</Button>
+                          )}
+                          {(p as any).forma_pagamento === 'boleto' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              title="Baixar boleto em PDF"
+                              disabled={baixandoBoletoId === p.id}
+                              onClick={() => handleBaixarBoleto(p)}
+                            >
+                              {baixandoBoletoId === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                            </Button>
                           )}
                           <Button
                             size="icon"
