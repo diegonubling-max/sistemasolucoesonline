@@ -203,6 +203,11 @@
 - **Solução (05/08/2026):** implementados 2 triggers. `criar_pos_venda_nova_matricula` semeia o 1º Pós-Venda 1 dia após a matrícula. `criar_proximo_pos_venda` semeia a próxima etapa quando a anterior é marcada concluída (2º = 5 dias após a confirmação do 1º; 3º = 10 dias após a confirmação do 2º — se não confirmado, a etapa atual continua aparecendo indefinidamente). Feito backfill do 1º Pós-Venda pras matrículas já existentes sem nenhum registro.
 - **Status:** ✅ Resolvido
 
+### BUG-039: Área do Aluno (Financeiro) não mostrava nenhuma parcela (aberta ou paga)
+- **Causa:** `src/routes/_student.aluno.financeiro.tsx` faz `select("id, asaas_customer_id")` na tabela `alunos`, mas a coluna `asaas_customer_id` nunca existia no banco — mesma categoria dos outros bugs de "coluna referenciada no código mas nunca criada". O `select` falhava, `aluno` vinha `null`, e o passo seguinte (`.eq("aluno_id", aluno.id)`) lançava exceção — a query inteira caía em erro silencioso e a tela sempre mostrava "Nenhuma cobrança encontrada", mesmo com parcelas existindo no banco. Mesma coluna também é usada (e seria afetada) pela edge function `asaas-cobrar` e por `src/services/asaas.ts` ao cachear o customer do Asaas.
+- **Solução (05/08/2026):** coluna `alunos.asaas_customer_id` (text) criada. Nenhuma mudança de código foi necessária — a tela já tinha toda a lógica pronta (cards Pago/Em Aberto/Total do Contrato, tabela de parcelas com status, botão "Ver PDF do Boleto" que abre `parcelas.asaas_url`, botões "Gerar Boleto"/"Gerar PIX" quando a parcela ainda não tem cobrança gerada).
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
