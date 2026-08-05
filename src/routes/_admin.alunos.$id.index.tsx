@@ -415,21 +415,24 @@ function AlunoDetalhes() {
     try {
       setBaixandoBoletoId(parcela.id);
       let url = parcela.asaas_url;
-      if (!url && parcela.asaas_id) {
+      if (!url) {
         const { data, error } = await supabase.functions.invoke("asaas-cobrar", {
-          body: { parcela_id: parcela.id, action: "fetch" },
+          body: parcela.asaas_id
+            ? { parcela_id: parcela.id, action: "fetch" }
+            : { parcela_id: parcela.id, tipo: "BOLETO" },
         });
         if (error) throw error;
         if ((data as any)?.error) throw new Error((data as any).error);
         url = (data as any)?.updateParcela?.asaas_url || (data as any)?.payment?.bankSlipUrl || (data as any)?.payment?.invoiceUrl;
       }
       if (!url) {
-        toast.error("Boleto ainda não foi gerado no Asaas para esta parcela.");
+        toast.error("Não consegui gerar o boleto no Asaas para esta parcela.");
         return;
       }
       window.open(url, "_blank");
+      qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
     } catch (e: any) {
-      toast.error(e?.message || "Erro ao buscar o boleto.");
+      toast.error(e?.message || "Erro ao gerar/buscar o boleto.");
     } finally {
       setBaixandoBoletoId(null);
     }
