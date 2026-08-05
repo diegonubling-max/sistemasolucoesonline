@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Search, Pencil, Eye, Power, Trash2, AlertTriangle, Loader2, FileText, FileCheck, FileWarning, ShoppingBag, KeyRound } from "lucide-react";
+import { Plus, Search, Pencil, Eye, Power, Trash2, AlertTriangle, Loader2, FileText, FileCheck, FileWarning, ShoppingBag, KeyRound, CircleDollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,7 +134,7 @@ function AlunosList() {
 
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, origem, cadastro_completo, matriculas(id), contratos(id, status), cursos_vitrine(id)", { count: "exact" })
+        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, origem, cadastro_completo, matriculas(id, parcelas(id)), contratos(id, status), cursos_vitrine(id)", { count: "exact" })
         .order("ctr", { ascending: false });
 
       if (statusFilter !== "all") {
@@ -286,6 +286,21 @@ function AlunosList() {
             </Select>
           </div>
 
+          <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground mb-3">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" /> Ativo
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> Inativo
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ShoppingBag className="h-3.5 w-3.5 text-green-600" /> Possui cursos na vitrine
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CircleDollarSign className="h-3.5 w-3.5 text-red-500" /> Financeiro não cadastrado
+            </span>
+          </div>
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -307,7 +322,11 @@ function AlunosList() {
                   </TableCell>
                 </TableRow>
               )}
-              {data?.rows.map((a) => (
+              {data?.rows.map((a) => {
+                const temFinanceiro = Array.isArray((a as any).matriculas) && (a as any).matriculas.some(
+                  (m: any) => Array.isArray(m.parcelas) && m.parcelas.length > 0
+                );
+                return (
                 <TableRow key={a.id}>
                   <TableCell>
                     <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
@@ -328,6 +347,11 @@ function AlunosList() {
                         <ShoppingBag className="h-3.5 w-3.5 text-green-600" aria-label="Possui cursos na vitrine">
                           <title>Possui cursos na vitrine</title>
                         </ShoppingBag>
+                      )}
+                      {!temFinanceiro && (
+                        <CircleDollarSign className="h-3.5 w-3.5 text-red-500" aria-label="Financeiro não cadastrado">
+                          <title>Financeiro não cadastrado</title>
+                        </CircleDollarSign>
                       )}
                       {(a as any).cadastro_completo === false && (
                         <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-[10px] px-1.5 py-0">
@@ -405,7 +429,7 @@ function AlunosList() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              );})}
               {!isLoading && data?.rows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
