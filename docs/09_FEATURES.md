@@ -47,7 +47,7 @@
 - ✅ Financeiro: Matrículas por Vendedora (colunas: Data, Aluno, CTR, Forma Pgto, Telefone, Vendedora; cards ativas/inativas)
 - ✅ Financeiro: Relatório de Vendas (cards ativas/inativas)
 - ✅ Financeiro: Comissões Vendedoras
-- ✅ Financeiro: Fechamento Semanal (05/08/2026) — por colaborador/polo (ex: Felipe), período sexta a quinta (fecha toda sexta, semana anterior completa), soma parcelas pagas excluindo taxa de matrícula, exporta CSV
+- ✅ Financeiro: Fechamento Semanal (05/08/2026) — por colaborador/polo (ex: Felipe), período sexta a quinta (fecha toda sexta, semana anterior completa), soma parcelas pagas excluindo taxa de matrícula, exporta CSV. Divide automaticamente o total entre Matriz e o colaborador por percentual (`colaboradores.percentual_repasse`, padrão 30% — editável na própria tela com o lápis)
 - ✅ Dashboard/Financeiro: card "Recebido de Parcelas no Mês" separado de "Taxas de Matrícula no Mês" (05/08/2026) — taxa é reinvestimento em tráfego, não entra no fechamento com responsável de polo
 - ✅ Histórico de Condições Canceladas (parcelas canceladas visíveis para consulta)
 - ✅ Reativar condições anteriores / criar novo pacote

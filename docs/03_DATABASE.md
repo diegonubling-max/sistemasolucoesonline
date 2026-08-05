@@ -73,6 +73,7 @@
 | senha | text | Senha de acesso |
 | comissao_avista | decimal(10,2) | Valor comissão avista (default 120) |
 | comissao_parcelado | decimal(10,2) | Valor comissão parcelado (default 50) |
+| percentual_repasse | numeric(5,2) | % do fechamento semanal que fica com o colaborador (default 30 — ex: Felipe/Admin Polo, resto é da Matriz) — 05/08/2026 |
 | created_at | timestamptz | Data de criação |
 
 **Regra:** Colaboradores inativos não aparecem nos selects de vendedora ao criar matrícula, mas aparecem em filtros históricos com "(inativa)".

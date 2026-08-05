@@ -647,6 +647,7 @@ export type Database = {
           id: string
           nome: string
           polo_id: string | null
+          percentual_repasse: number | null
           primeiro_acesso: boolean
           responsavel_polo: boolean
           setor: string
@@ -661,6 +662,7 @@ export type Database = {
           id?: string
           nome: string
           polo_id?: string | null
+          percentual_repasse?: number | null
           primeiro_acesso?: boolean
           responsavel_polo?: boolean
           setor: string
@@ -675,6 +677,7 @@ export type Database = {
           id?: string
           nome?: string
           polo_id?: string | null
+          percentual_repasse?: number | null
           primeiro_acesso?: boolean
           responsavel_polo?: boolean
           setor?: string

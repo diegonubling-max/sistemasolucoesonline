@@ -1,14 +1,16 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarCheck, ChevronLeft, ChevronRight, Loader2, FileDown } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ChevronRight, Loader2, FileDown, Pencil, Check } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { format, addDays, subDays } from "date-fns";
+import { toast } from "sonner";
 
 interface ParcelaFechamento {
   id: string;
@@ -31,8 +33,11 @@ function getClosingFriday(ref: Date): Date {
 }
 
 export function FechamentoSemanalReport() {
+  const qc = useQueryClient();
   const [closingFriday, setClosingFriday] = useState<Date>(() => getClosingFriday(new Date()));
   const [colaboradorId, setColaboradorId] = useState<string>("");
+  const [editandoPercentual, setEditandoPercentual] = useState(false);
+  const [percentualInput, setPercentualInput] = useState("30");
 
   const periodStart = format(subDays(closingFriday, 7), "yyyy-MM-dd");
   const periodEnd = format(subDays(closingFriday, 1), "yyyy-MM-dd");
@@ -42,7 +47,7 @@ export function FechamentoSemanalReport() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("colaboradores")
-        .select("id, nome, polo_id, ativo")
+        .select("id, nome, polo_id, ativo, percentual_repasse")
         .not("polo_id", "is", null)
         .order("nome");
       if (error) throw error;
@@ -59,6 +64,12 @@ export function FechamentoSemanalReport() {
   }, [colaboradores, colaboradorId]);
 
   const colaboradorSelecionado = colaboradores?.find((c) => c.id === colaboradorId);
+
+  useMemo(() => {
+    if (colaboradorSelecionado) {
+      setPercentualInput(String(Number(colaboradorSelecionado.percentual_repasse ?? 30)));
+    }
+  }, [colaboradorSelecionado?.id]);
 
   const { data: parcelas, isLoading } = useQuery({
     queryKey: ["fechamento-semanal", colaboradorSelecionado?.polo_id, periodStart, periodEnd],
@@ -85,6 +96,27 @@ export function FechamentoSemanalReport() {
       return acc + val;
     }, 0);
   }, [parcelas]);
+
+  const percentualColaborador = Number(colaboradorSelecionado?.percentual_repasse ?? 30);
+  const valorColaborador = total * (percentualColaborador / 100);
+  const valorMatriz = total - valorColaborador;
+
+  const salvarPercentual = useMutation({
+    mutationFn: async (novoPercentual: number) => {
+      if (!colaboradorSelecionado) return;
+      const { error } = await supabase
+        .from("colaboradores")
+        .update({ percentual_repasse: novoPercentual })
+        .eq("id", colaboradorSelecionado.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Percentual de repasse atualizado!");
+      qc.invalidateQueries({ queryKey: ["colaboradores-fechamento-semanal"] });
+      setEditandoPercentual(false);
+    },
+    onError: (e: Error) => toast.error("Erro ao salvar percentual", { description: e.message }),
+  });
 
   const exportCSV = () => {
     const headers = ["Aluno", "CTR", "Forma de Pagamento", "Data do Pagamento", "Valor"];
@@ -183,13 +215,59 @@ export function FechamentoSemanalReport() {
               </TableBody>
             </Table>
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between mt-6 pt-4 border-t gap-4">
-              <Button variant="outline" size="sm" onClick={exportCSV} disabled={!parcelas || parcelas.length === 0}>
-                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
-              </Button>
-              <div className="text-sm">
-                <span className="text-muted-foreground">Total do fechamento (sem taxas): </span>
-                <strong className="text-lg text-green-700">{formatCurrency(total)}</strong>
+            <div className="flex flex-col gap-4 mt-6 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="sm" onClick={exportCSV} disabled={!parcelas || parcelas.length === 0}>
+                  <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
+                </Button>
+                <div className="text-sm text-right">
+                  <span className="text-muted-foreground">Total do fechamento (sem taxas): </span>
+                  <strong className="text-lg text-green-700">{formatCurrency(total)}</strong>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <p className="text-sm text-muted-foreground">
+                    Matriz ({(100 - percentualColaborador).toFixed(0)}%)
+                  </p>
+                  <p className="text-2xl font-bold text-blue-700">{formatCurrency(valorMatriz)}</p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      {colaboradorSelecionado?.nome ?? "Colaborador"}
+                      {!editandoPercentual && ` (${percentualColaborador.toFixed(0)}%)`}
+                    </p>
+                    {editandoPercentual ? (
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          className="w-16 h-7 text-sm"
+                          value={percentualInput}
+                          onChange={(e) => setPercentualInput(e.target.value)}
+                          min={0}
+                          max={100}
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          disabled={salvarPercentual.isPending}
+                          onClick={() => salvarPercentual.mutate(Number(percentualInput))}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditandoPercentual(true)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-2xl font-bold text-emerald-700">{formatCurrency(valorColaborador)}</p>
+                </div>
               </div>
             </div>
           </>
