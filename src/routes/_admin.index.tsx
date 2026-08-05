@@ -91,12 +91,13 @@ function Dashboard() {
       const lastDay = endOfMonth(today);
 
 
-      const [a, c, m, aa, vRecebido, vAReceber, vAtraso, totalAberto, origensData, colabAtivos] = await Promise.all([
+      const [a, c, m, aa, vRecebido, vTaxas, vAReceber, vAtraso, totalAberto, origensData, colabAtivos] = await Promise.all([
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true })),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         filterByPolo(supabase.from("matriculas").select("*", { count: "exact", head: true })),
         filterByPolo(supabase.from("alunos").select("*", { count: "exact", head: true }).eq("ativo", true)),
         supabase.from("view_total_recebido_mes").select("total").maybeSingle(),
+        supabase.from("view_taxas_recebidas_mes").select("total").maybeSingle(),
         supabase.from("view_a_receber_mes").select("total").maybeSingle(),
         supabase.from("view_em_atraso").select("total").maybeSingle(),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
@@ -105,6 +106,7 @@ function Dashboard() {
       ]);
 
       const recebidoTotal = Number((vRecebido.data as any)?.total ?? 0);
+      const taxasTotal = Number((vTaxas.data as any)?.total ?? 0);
       const aReceberTotal = Number((vAReceber.data as any)?.total ?? 0);
       const atrasoTotal = Number((vAtraso.data as any)?.total ?? 0);
 
@@ -138,7 +140,7 @@ function Dashboard() {
         const poloPromises = polos.map(async (p) => {
           const [alunosPolo, recebidoPolo, matriculasMesPolo] = await Promise.all([
             supabase.from("alunos").select("*", { count: "exact", head: true }).eq("polo_id", p.id),
-            supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").eq("polo_id", p.id).gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")),
+            supabase.from("parcelas").select("valor, valor_liquido, forma_pagamento").eq("status", "pago").neq("tipo", "taxa_matricula").eq("polo_id", p.id).gte("data_pagamento", format(firstDay, "yyyy-MM-dd")).lte("data_pagamento", format(lastDay, "yyyy-MM-dd")),
             supabase.from("matriculas").select("*", { count: "exact", head: true }).eq("polo_id", p.id).gte("created_at", format(firstDay, "yyyy-MM-dd"))
           ]);
 
@@ -161,6 +163,7 @@ function Dashboard() {
         origens,
         faturamento: {
           recebido: recebidoTotal,
+          taxas: taxasTotal,
           aReceberMes: aReceberTotal,
           atrasado: atrasoTotal,
 
@@ -266,7 +269,8 @@ function Dashboard() {
   ];
 
   const faturamentoCards = [
-    { label: "Total Recebido no Mês", value: formatCurrency(stats?.faturamento?.recebido ?? 0), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Recebido de Parcelas no Mês", value: formatCurrency(stats?.faturamento?.recebido ?? 0), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Taxas de Matrícula no Mês", value: formatCurrency(stats?.faturamento?.taxas ?? 0), icon: Wallet, color: "text-purple-500", bg: "bg-purple-500/10", sub: "Reinvestimento em tráfego" },
     { label: "A Receber no Mês", value: formatCurrency(stats?.faturamento?.aReceberMes ?? 0), icon: Landmark, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Em Atraso", value: formatCurrency(stats?.faturamento?.atrasado ?? 0), icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10" },
   ];
@@ -374,6 +378,7 @@ function Dashboard() {
                   <div>
                     <p className="text-sm text-muted-foreground">{c.label}</p>
                     <p className="text-2xl font-bold mt-1 tracking-tight">{c.value}</p>
+                    {(c as any).sub && <p className="text-[10px] text-muted-foreground mt-1">{(c as any).sub}</p>}
                   </div>
                   <div className={`p-2.5 rounded-xl ${c.bg}`}>
                     <Icon className={`h-6 w-6 ${c.color}`} />

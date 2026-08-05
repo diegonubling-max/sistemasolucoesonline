@@ -138,8 +138,9 @@ function Financeiro() {
   const { data: globalStats } = useQuery({
     queryKey: ["financeiro-global-stats", selectedPoloId, userRole, colabData],
     queryFn: async () => {
-      const [vRecebido, vAReceber, vAtraso, totalAberto] = await Promise.all([
+      const [vRecebido, vTaxas, vAReceber, vAtraso, totalAberto] = await Promise.all([
         supabase.from("view_total_recebido_mes").select("total").maybeSingle(),
+        supabase.from("view_taxas_recebidas_mes").select("total").maybeSingle(),
         supabase.from("view_a_receber_mes").select("total").maybeSingle(),
         supabase.from("view_em_atraso").select("total").maybeSingle(),
         filterByPolo(supabase.from("parcelas").select("valor").neq("status", "isento")),
@@ -149,6 +150,7 @@ function Financeiro() {
 
       return {
         recebido: Number((vRecebido.data as any)?.total ?? 0),
+        taxas: Number((vTaxas.data as any)?.total ?? 0),
         aReceberMes: Number((vAReceber.data as any)?.total ?? 0),
         atrasado: Number((vAtraso.data as any)?.total ?? 0),
         totalGeral: sum(totalAberto.data),
@@ -436,7 +438,8 @@ function Financeiro() {
   };
 
   const summaryCards = [
-    { label: "Total Recebido no Mês", value: formatCurrency(globalStats?.recebido), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Recebido de Parcelas no Mês", value: formatCurrency(globalStats?.recebido), icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Taxas de Matrícula no Mês", value: formatCurrency(globalStats?.taxas), icon: Wallet, color: "text-purple-500", bg: "bg-purple-500/10", sub: "Reinvestimento em tráfego" },
     { label: "A Receber no Mês", value: formatCurrency(globalStats?.aReceberMes), icon: Landmark, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Em Atraso", value: formatCurrency(globalStats?.atrasado), icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10" },
   ];
@@ -477,6 +480,7 @@ function Financeiro() {
                   <div>
                     <p className="text-sm text-muted-foreground">{c.label}</p>
                     <p className="text-2xl font-bold mt-1">{c.value}</p>
+                    {(c as any).sub && <p className="text-[10px] text-muted-foreground mt-1">{(c as any).sub}</p>}
                   </div>
                   <div className={`p-2 rounded-full ${c.bg}`}>
                     <Icon className={`h-6 w-6 ${c.color}`} />

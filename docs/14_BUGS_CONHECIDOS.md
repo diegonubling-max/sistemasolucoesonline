@@ -215,6 +215,12 @@
 - **Solução (05/08/2026):** view `view_recebimentos_periodo` criada (join `parcelas_pagamentos` → `parcelas` → `matriculas` → `alunos`). `EditarParcelas` corrigido pra herdar `polo_id` da matrícula ao criar parcela avulsa. `converter-matricula-aulao.ts` corrigido pra gravar `colaborador_id` = Diego (vendedor padrão do Aulão, já que o checkout público não escolhe vendedora). Backfill: todas as matrículas com `colaborador_id` nulo (7 alunos) atualizadas pra Diego; as 2 parcelas com `polo_id` nulo (ambas da Margie) corrigidas herdando o polo da matrícula.
 - **Status:** ✅ Resolvido
 
+### BUG-041: Dashboard/Financeiro misturava taxa de matrícula com recebimento de parcelas
+- **Pedido do Diego:** taxa de matrícula (reinvestimento em tráfego) precisa ficar separada do total recebido de parcelas — é o valor que ele usa no fechamento com o responsável de cada polo, e taxa não entra nessa conta.
+- **Solução (05/08/2026):** `view_total_recebido_mes` agora exclui `tipo = 'taxa_matricula'` (fica só parcelas). Nova view `view_taxas_recebidas_mes` soma só as taxas do mês. Dashboard e Financeiro ganharam um card novo "Taxas de Matrícula no Mês" ao lado de "Recebido de Parcelas no Mês". Cálculo por polo (`statsByPolo`, hoje oculto no Dashboard) também ajustado pra excluir taxa.
+- **Achado no caminho:** a taxa de R$69,90 da Margie Dewites (paga 04/08) estava classificada como `tipo='parcela'` em vez de `tipo='taxa_matricula'` (inconsistência pontual, provavelmente lançamento manual) — corrigida a pedido do Diego.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

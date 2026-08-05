@@ -2355,6 +2355,12 @@ export type Database = {
         }
         Relationships: []
       }
+      view_taxas_recebidas_mes: {
+        Row: {
+          total: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_business_days: {
