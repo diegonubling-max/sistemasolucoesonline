@@ -288,12 +288,6 @@ function AlunosList() {
 
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground mb-3">
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" /> Ativo
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> Inativo
-            </span>
-            <span className="flex items-center gap-1.5">
               <ShoppingBag className="h-3.5 w-3.5 text-green-600" /> Possui cursos na vitrine
             </span>
             <span className="flex items-center gap-1.5">
@@ -335,11 +329,6 @@ function AlunosList() {
                   </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${a.ativo ? "bg-green-500" : "bg-red-500"}`}
-                        title={a.ativo ? "Ativo" : "Inativo"}
-                        aria-label={a.ativo ? "Ativo" : "Inativo"}
-                      />
                       <span>{a.nome}</span>
                       <OrigemBadge origem={(a as any).origem} />
 
