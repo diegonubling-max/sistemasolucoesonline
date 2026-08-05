@@ -200,23 +200,46 @@ export function MatriculaFlow({
 
       const colaboradorId = await resolveColaboradorId();
 
-      // 1. Create matricula
-      const { data: m, error: me } = await supabase
+      // 1. Reaproveita matrícula já existente pro aluno (ex: criada automaticamente pelo
+      // fluxo do Aulão) em vez de criar uma nova e duplicar — evita duas matrículas pro
+      // mesmo aluno (uma "vazia" de acesso + outra com o financeiro).
+      const { data: matriculaExistente } = await supabase
         .from("matriculas")
-        .insert({ aluno_id: alunoId, polo_id: aluno?.polo_id, colaborador_id: colaboradorId })
         .select("id")
-        .single();
-      if (me) throw me;
+        .eq("aluno_id", alunoId)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      let matriculaIdAtual: string;
+      if (matriculaExistente?.id) {
+        matriculaIdAtual = matriculaExistente.id;
+        const { error: ue } = await supabase
+          .from("matriculas")
+          .update({ polo_id: aluno?.polo_id, colaborador_id: colaboradorId, status: "ativa" })
+          .eq("id", matriculaIdAtual);
+        if (ue) throw ue;
+        // Remove cursos vinculados antes, pra não duplicar com a seleção feita agora
+        await supabase.from("matricula_cursos").delete().eq("matricula_id", matriculaIdAtual);
+      } else {
+        const { data: m, error: me } = await supabase
+          .from("matriculas")
+          .insert({ aluno_id: alunoId, polo_id: aluno?.polo_id, colaborador_id: colaboradorId, status: "ativa" })
+          .select("id")
+          .single();
+        if (me) throw me;
+        matriculaIdAtual = m.id;
+      }
 
       // 2. Add cursos
       const coursesToInsert = selectedCursos.map(cid => ({
-        matricula_id: m.id,
+        matricula_id: matriculaIdAtual,
         curso_id: cid
       }));
       const { error: ce } = await supabase.from("matricula_cursos").insert(coursesToInsert);
       if (ce) throw ce;
 
-      return m.id;
+      return matriculaIdAtual;
     },
     onSuccess: (id) => {
       setMatriculaId(id);
