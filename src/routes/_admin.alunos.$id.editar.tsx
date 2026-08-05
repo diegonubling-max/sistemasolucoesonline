@@ -679,8 +679,16 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
       || localParcelas.find((p: any) => p.forma_pagamento)?.forma_pagamento
       || 'boleto';
 
+    // Herda o polo_id da matrícula (evita parcela órfã de polo — ver BUG-040)
+    const { data: matriculaAtual } = await supabase
+      .from("matriculas")
+      .select("polo_id")
+      .eq("id", matriculaId)
+      .maybeSingle();
+
     const newParcela = {
       matricula_id: matriculaId,
+      polo_id: matriculaAtual?.polo_id ?? null,
       tipo: 'parcela' as const,
       numero: maxNum + 1,
       valor: 0,

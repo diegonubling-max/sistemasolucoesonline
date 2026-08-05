@@ -208,6 +208,13 @@
 - **Solução (05/08/2026):** coluna `alunos.asaas_customer_id` (text) criada. Nenhuma mudança de código foi necessária — a tela já tinha toda a lógica pronta (cards Pago/Em Aberto/Total do Contrato, tabela de parcelas com status, botão "Ver PDF do Boleto" que abre `parcelas.asaas_url`, botões "Gerar Boleto"/"Gerar PIX" quando a parcela ainda não tem cobrança gerada).
 - **Status:** ✅ Resolvido
 
+### BUG-040: Financeiro admin (Recebimentos/A Receber/Relatório de Vendas) com dados faltando
+- **Recebimentos por Período (sempre vazio):** dependia da view `view_recebimentos_periodo`, que nunca existia no banco.
+- **A Receber (faltavam parcelas de Margie e Gleci):** causa raiz dupla. (1) `EditarParcelas` (`_admin.alunos.$id.editar.tsx`, botão de adicionar parcela avulsa) nunca gravava `polo_id` na parcela nova — a parcela de cartão da Margie (R$1.438,80) tinha `polo_id` nulo e o filtro de polo da tela a excluía. (2) Nenhuma tela de "A Receber" trava por isso normalmente, mas ficou registrado pra não repetir.
+- **Relatório de Vendas (vendas do Diego/admin não apareciam):** `converter-matricula-aulao.ts` (fluxo público `/matricula`) nunca gravava `colaborador_id` na matrícula — não tem seleção de vendedora no checkout público. A seção "Vendas por Vendedora" só soma matrículas com `colaborador_id` preenchido, então toda venda do Aulão ficava de fora do relatório.
+- **Solução (05/08/2026):** view `view_recebimentos_periodo` criada (join `parcelas_pagamentos` → `parcelas` → `matriculas` → `alunos`). `EditarParcelas` corrigido pra herdar `polo_id` da matrícula ao criar parcela avulsa. `converter-matricula-aulao.ts` corrigido pra gravar `colaborador_id` = Diego (vendedor padrão do Aulão, já que o checkout público não escolhe vendedora). Backfill: todas as matrículas com `colaborador_id` nulo (7 alunos) atualizadas pra Diego; as 2 parcelas com `polo_id` nulo (ambas da Margie) corrigidas herdando o polo da matrícula.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

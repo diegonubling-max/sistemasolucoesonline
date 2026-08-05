@@ -73,6 +73,8 @@ async function enviarWhatsappCredenciais(telefone: string, nome: string, ctr: nu
 
 const EJA_SEGMENTO_ID = "85acf7ef-ff16-421a-abdf-4c0a368d6ada";
 const POLO_ID_FLORIPA = "32671c78-9076-4f88-8161-bfd5ee8e866b";
+// Vendedor padrão pras matrículas do Aulão (checkout público não tem seleção de vendedora/colaborador) — BUG-040
+const COLABORADOR_ID_ADMIN = "18fb028e-607a-44dc-a4e0-eca1caf6e0b8";
 
 export const Route = createFileRoute("/api/public/hooks/converter-matricula-aulao")({
   server: {
@@ -204,6 +206,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             .insert({
               aluno_id: novoAluno.id,
               polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+              colaborador_id: COLABORADOR_ID_ADMIN,
               status: "ativa",
               contrato_assinado: true,
               contrato_data: matricula.assinado_em,
