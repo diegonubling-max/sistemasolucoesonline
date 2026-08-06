@@ -10,7 +10,7 @@
 
 ### Menu Lateral
 1. **Dashboard** — visão geral, busca por nome/CTR/telefone, cliques na vitrine com botão WhatsApp
-2. **Alunos** — listagem com filtros (Todos/Ativos/Inativos/Sistema/Aulão), busca por nome/CTR/telefone, badges de status
+2. **Alunos** — listagem com filtros (Todos/Ativos/Inativos/Sistema/Aulão), busca por nome/CTR/telefone, badges de status. Ícone 💲 vermelho na célula do CTR quando o aluno não tem nenhuma parcela cadastrada (financeiro pendente); sacola verde = possui cursos na vitrine; legenda fixa acima da tabela (05/08/2026 — a bolinha verde/vermelha de ativo/inativo que ficava ao lado do nome foi removida, é redundante com a coluna Status)
 3. **Cursos** — gerenciamento de cursos EJA e Vitrine
 4. **Segmentos** — categorias dos cursos vitrine
 5. **Pacotes** — pacotes de matrícula disponíveis
@@ -18,7 +18,7 @@
 7. **Documentação** — 3 guias: Documentação, Envios para Certificadora, Certificados
 8. **Provas Agendadas** — 4 guias: Agendadas, Aprovados, Reprovados, Reagendar
 9. **Pós-Venda** — follow-up D+1, D+5, D+15 (exclui inativos)
-10. **Financeiro** — Recebimentos, A Receber, Alunos em Atraso, Matrículas por Vendedora, Relatório de Vendas, Comissões
+10. **Financeiro** — Recebimentos, A Receber, Alunos em Atraso, Matrículas por Vendedora, Relatório de Vendas, Comissões, Fechamento Semanal (05/08/2026)
 11. **Configurações** — toggle Z-API, disparos WhatsApp
 
 ### Página de Detalhes do Aluno
@@ -73,6 +73,16 @@
 
 **Alunos em Atraso:**
 - Exclui: parcelas canceladas, isento, alunos inativos
+
+**Fechamento Semanal (05/08/2026):**
+- Componente `FechamentoSemanalReport.tsx` — pra fechamento periódico com um colaborador responsável de polo (ex: Felipe)
+- Semana sempre sexta-feira 00:00 até quinta-feira 23:59:59 (fecha toda sexta, cobrindo a semana anterior completa); navegação com setas anterior/próxima
+- Seletor de colaborador (só lista quem tem `polo_id` preenchido); soma parcelas pagas do polo do colaborador, excluindo taxa de matrícula
+- Divide automaticamente o total: Matriz vs. colaborador, por `colaboradores.percentual_repasse` (padrão 30% pro colaborador, editável na própria tela com o ícone de lápis)
+- Botão de exportar CSV com a lista de recebimentos do período
+
+**Cards do Dashboard e do topo do Financeiro (05/08/2026):**
+- "Recebido de Parcelas no Mês" separado de "Taxas de Matrícula no Mês" — taxa é reinvestimento em tráfego, não entra no fechamento de polo
 
 ## Área do Aluno
 
@@ -195,7 +205,7 @@
 | 🗑️ | Vermelho | Sempre | Excluir |
 
 - Opção "À Vista (PIX)" removida do seletor de forma de pagamento no edit
-- Filtros disponíveis: Forma (Boleto/Cartão), Contrato (Assinado/Não assinado), Pagamento (Pago/Aguardando), Status (Todos/Ativos/Cancelados) — adicionado 24/07/2026
+- Filtros disponíveis: Forma (Boleto/Cartão), Contrato (Assinado/Não assinado), Pagamento (Pago/Aguardando), Status (Todos/Ativos/Cancelados) — adicionado 24/07/2026. **Padrão do filtro Status mudado pra "Ativos" em 05/08/2026** (antes abria em "Todos", misturando com cancelados) — pra ver os cancelados, trocar manualmente o filtro
 - Coluna Pagamento mostra o total real pago (soma de todos os lançamentos), com a forma entre parênteses (ex: "Pago (R$ 229,80 via Pix)")
 - Coluna "Previsão de Pagamento" (28/07/2026) — campo de data editável direto na tabela, sem precisar abrir o modal de edição. Usado quando o aluno faz a matrícula mas pede pra pagar depois (taxa ou cartão) — a equipe registra a data combinada por telefone. Fica vermelho se a data já passou e o pagamento ainda não foi confirmado.
 
