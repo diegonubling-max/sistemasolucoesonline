@@ -6,8 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Send, Users } from "lucide-react";
+import { Loader2, Send, Users, Clock, PhoneCall } from "lucide-react";
 import { maskPhone } from "@/lib/format";
+
+const TOLERANCIA_MINUTOS = 10;
 
 export const Route = createFileRoute("/webinar/$id")({
   component: WebinarPage,
@@ -33,6 +35,8 @@ function WebinarPage() {
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [entrando, setEntrando] = useState(false);
+  const [bloqueado, setBloqueado] = useState<{ minutosAtraso: number } | null>(null);
+  const [aindaNaoComecou, setAindaNaoComecou] = useState(false);
   const [comentarios, setComentarios] = useState<any[]>([]);
   const [novoComentario, setNovoComentario] = useState("");
   const [qtdOnline, setQtdOnline] = useState(0);
@@ -84,10 +88,50 @@ function WebinarPage() {
   const handleEntrar = async () => {
     if (!nome.trim() || telefone.replace(/\D/g, "").length < 10) return;
     setEntrando(true);
+    setBloqueado(null);
+    setAindaNaoComecou(false);
     try {
+      // 1) Já teve acesso liberado antes nessa aula (ex: caiu o sinal e voltou)? Reconhece pelo telefone e libera na hora, sem checar horário.
+      const { data: existente } = await supabase
+        .from("webinar_participantes" as any)
+        .select("id, nome, telefone")
+        .eq("webinar_id", id)
+        .eq("telefone", telefone)
+        .eq("acesso_liberado", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existente) {
+        const p = existente as any as Participante;
+        await supabase
+          .from("webinar_participantes" as any)
+          .update({ saiu_em: null, ultimo_heartbeat: new Date().toISOString() })
+          .eq("id", p.id);
+        setParticipante(p);
+        localStorage.setItem(`webinar_${id}_participante`, JSON.stringify(p));
+        return;
+      }
+
+      // 2) Primeira tentativa dessa pessoa nessa aula — só libera se a aula já está ao vivo e dentro da tolerância de 10 min
+      if (webinar?.status !== "ao_vivo" || !webinar?.iniciado_em) {
+        setAindaNaoComecou(true);
+        return;
+      }
+
+      const minutosDesdeInicio = (Date.now() - new Date(webinar.iniciado_em).getTime()) / 60000;
+
+      if (minutosDesdeInicio > TOLERANCIA_MINUTOS) {
+        await supabase
+          .from("webinar_participantes" as any)
+          .insert({ webinar_id: id, nome: nome.trim(), telefone, acesso_liberado: false });
+        setBloqueado({ minutosAtraso: Math.round(minutosDesdeInicio) });
+        return;
+      }
+
       const { data, error } = await supabase
         .from("webinar_participantes" as any)
-        .insert({ webinar_id: id, nome: nome.trim(), telefone })
+        .insert({ webinar_id: id, nome: nome.trim(), telefone, acesso_liberado: true })
         .select("id, nome, telefone")
         .single();
       if (error) throw error;
@@ -256,6 +300,45 @@ function WebinarPage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <p className="text-muted-foreground">Aula não encontrada.</p>
+      </div>
+    );
+  }
+
+  // Tela de bloqueio — passou dos 10 min de tolerância na primeira tentativa
+  if (bloqueado) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-8 pb-6 space-y-3 text-center">
+            <Clock className="h-10 w-10 text-orange-500 mx-auto" />
+            <h1 className="text-xl font-bold">Infelizmente não dá mais pra entrar agora</h1>
+            <p className="text-muted-foreground text-sm">
+              A aula já começou há {bloqueado.minutosAtraso} minutos e o acesso pra quem chega depois desse tempo
+              fica bloqueado, pra você não perder a parte mais importante da explicação.
+            </p>
+            <p className="text-muted-foreground text-sm flex items-center justify-center gap-1.5">
+              <PhoneCall className="h-4 w-4" /> Nossa equipe vai entrar em contato com você em breve.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Tela de espera — aula ainda não foi iniciada pelo admin
+  if (aindaNaoComecou) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-8 pb-6 space-y-3 text-center">
+            <Loader2 className="h-8 w-8 text-orange-500 mx-auto animate-spin" />
+            <h1 className="text-xl font-bold">A aula ainda não começou</h1>
+            <p className="text-muted-foreground text-sm">
+              Assim que ela iniciar, clique em "Tentar entrar" de novo aqui embaixo.
+            </p>
+            <Button variant="outline" onClick={() => setAindaNaoComecou(false)}>Tentar entrar</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

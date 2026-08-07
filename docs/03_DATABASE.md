@@ -612,6 +612,7 @@ Sistema de aula ao vivo com chat e monitoramento de presença. Vídeo em si é i
 | saiu_em | timestamptz | Hora de saída (manual via beforeunload, ou automática por timeout de heartbeat) |
 | saida_automatica | boolean | true se detectado por timeout, não por fechamento explícito da aba |
 | ultimo_heartbeat | timestamptz | Atualizado a cada 20s pelo navegador do aluno enquanto a aba está aberta |
+| acesso_liberado | boolean (default true) | Portaria dos 10 min (05/08/2026) — false quando a pessoa tentou entrar pela 1ª vez mais de 10 min depois de `webinars.iniciado_em` e foi bloqueada. Quem já teve `acesso_liberado=true` antes é reconhecido pelo telefone e reentra a qualquer momento (ex: caiu o sinal), sem checar o horário de novo |
 
 ### webinar_comentarios
 Chat ao vivo — `webinar_id`, `participante_id`, `nome`, `texto`, `created_at`. Distribuído em tempo real via Supabase Realtime (Postgres Changes).

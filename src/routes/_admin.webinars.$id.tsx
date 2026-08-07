@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { Users, LogOut, Loader2 } from "lucide-react";
+import { Users, LogOut, Loader2, PhoneCall } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export const Route = createFileRoute("/_admin/webinars/$id")({
@@ -111,6 +111,8 @@ function WebinarMonitor() {
   }, [webinar, id, onlineAgora]);
 
   const saidos = (participantes ?? []).filter((p) => p.saiu_em);
+  const bloqueados = (participantes ?? []).filter((p) => p.acesso_liberado === false);
+  const liberados = (participantes ?? []).filter((p) => p.acesso_liberado !== false);
 
   useEffect(() => {
     participantesRef.current = participantes ?? [];
@@ -130,7 +132,7 @@ function WebinarMonitor() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
@@ -147,11 +149,60 @@ function WebinarMonitor() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Total de entradas</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Total liberados</CardTitle>
           </CardHeader>
-          <CardContent><p className="text-3xl font-bold">{(participantes ?? []).length}</p></CardContent>
+          <CardContent><p className="text-3xl font-bold">{liberados.length}</p></CardContent>
+        </Card>
+        <Card className={bloqueados.length > 0 ? "border-orange-300" : ""}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <PhoneCall className="h-4 w-4" /> Bloqueados (chegaram tarde)
+            </CardTitle>
+          </CardHeader>
+          <CardContent><p className="text-3xl font-bold text-orange-600">{bloqueados.length}</p></CardContent>
         </Card>
       </div>
+
+      {bloqueados.length > 0 && (
+        <Card className="border-orange-300">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 text-orange-700">
+              <PhoneCall className="h-4 w-4" /> Chegaram depois dos 10 min — ligar/chamar no WhatsApp
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>WhatsApp</TableHead>
+                  <TableHead>Tentou entrar às</TableHead>
+                  <TableHead className="text-right">Ação</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bloqueados.map((p: any) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.nome}</TableCell>
+                    <TableCell>{p.telefone}</TableCell>
+                    <TableCell className="text-sm">{new Date(p.created_at).toLocaleTimeString("pt-BR")}</TableCell>
+                    <TableCell className="text-right">
+                      <a
+                        href={`https://wa.me/55${p.telefone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sm text-green-700 hover:underline"
+                      >
+                        <PhoneCall className="h-3.5 w-3.5" /> Chamar no WhatsApp
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -191,7 +242,7 @@ function WebinarMonitor() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(participantes ?? []).map((p: any) => (
+                {liberados.map((p: any) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.nome}</TableCell>
                     <TableCell>{p.telefone}</TableCell>

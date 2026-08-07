@@ -167,6 +167,15 @@
 - ✅ Player usa YouTube IFrame API pra aulas gravadas (rastreia currentTime) e revela os depoimentos no chat no segundo exato, marcados com 🎥 pra diferenciar de comentário ao vivo real
 - ✅ Chat ao vivo dos alunos continua funcionando normalmente em paralelo, com equipe respondendo
 
+## Módulo: Webinar — portaria dos 10 minutos (05/08/2026)
+- ✅ Objetivo: evitar que quem entra atrasado na aula ao vivo (sem ver a explicação) vá pro pitch sem entender o valor e enxergue só o preço
+- ✅ Regra: 1ª tentativa de uma pessoa (identificada por telefone) só é liberada se estiver até 10 min depois do horário real que o admin clicou em "Iniciar" (`webinars.iniciado_em`, não um horário fixo cravado). Passou de 10 min → bloqueado, mostra mensagem de que não dá mais pra entrar
+- ✅ Reentrada: quem já teve acesso liberado antes (mesmo telefone) é reconhecido e entra na hora, sem checar horário de novo — cobre queda de sinal/conexão
+- ✅ Se a pessoa tenta entrar antes do admin clicar em "Iniciar", mostra tela de espera com botão "Tentar entrar" (sem bloquear, sem contar como tentativa)
+- ✅ Painel admin do webinar (`/webinars/:id`) ganhou card "Bloqueados (chegaram tarde)" + tabela com nome/telefone/horário da tentativa e um botão "Chamar no WhatsApp" (wa.me), pra equipe já ir chamando durante a própria aula
+- ✅ Tabela de participantes "liberados" (os que realmente assistiram) separada dos bloqueados
+- ⚠️ Limitação conhecida: o reconhecimento por telefone é por igualdade exata da máscara digitada — se a pessoa digitar o número diferente da 1ª vez (com/sem 9º dígito, etc), não reconhece como reentrada e trata como tentativa nova
+
 ## Módulo: Perfil do Aluno (admin) — novidades
 - ✅ Botão "Copiar acesso" — modal com login/senha/link prontos num texto, pra colar manualmente no WhatsApp (sem envio automático via Z-API, por decisão do Diego)
 - ✅ Botão de baixar boleto em PDF em cada parcela tipo boleto — abre o PDF do Asaas; se ainda não tiver cobrança gerada, cria na hora antes de abrir
