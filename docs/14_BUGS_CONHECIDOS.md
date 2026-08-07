@@ -227,7 +227,7 @@
 - **Solução (05/08/2026):**
   1. `key={activeAula?.id}` em todos os `<iframe>` do player (YouTube playlist, YouTube avulso, Vimeo, Pandavideo) — força remount completo a cada troca de aula.
   2. Reforço via API: `useVideoProgress` (hook `use-video-progress.ts`) ganhou o parâmetro `youtubePlaylistIndex`. Quando o vídeo é de uma playlist, o hook manda o comando `playVideoAt` pela IFrame API do YouTube via `postMessage` (3 tentativas, em 1.2s/2s/3s depois do handshake `listening`), forçando o player a pular pro índice certo mesmo se o parâmetro da URL for ignorado.
-- **Status:** ✅ Resolvido (aguardando confirmação do Diego após o reforço via API)
+- **Status:** ✅ Resolvido — Diego confirmou que funcionou após o reforço via `playVideoAt`. Verificação cruzada nos 10 cursos migrados (Biologia, Filosofia, Física, Geografia, História, Inglês, Matemática, Português, Química, Sociologia): nenhum tem `ordem` duplicado ou com buraco na sequência dentro da faixa migrada pro YouTube — a correção (feita em componente/hook compartilhado) vale pra todos igual, não precisou de ajuste curso a curso
 
 ## Conhecidos / Não Resolvidos ⚠️
 
