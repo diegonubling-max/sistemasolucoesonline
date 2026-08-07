@@ -207,6 +207,15 @@ function StudentCourse() {
   };
   const activeAulaUrl = resolverUrlVideo(activeAula);
 
+  // Índice (0-based) da aula dentro da playlist do YouTube, quando aplicável — usado pra forçar
+  // via API o player a pular pro vídeo certo (o parâmetro ?index= na URL sozinho não é confiável).
+  const activeAulaPlaylistIndex = (() => {
+    const playlistId = (curso as any)?.youtube_playlist_id;
+    const playlistCount = (curso as any)?.youtube_playlist_count;
+    if (!activeAula || !playlistId || !playlistCount || activeAula.ordem > playlistCount) return null;
+    return activeAula.ordem - 1;
+  })();
+
   // Video progress tracking (per active aula)
   const { iframeRef, percent: livePercent, currentTime, duration } = useVideoProgress({
     alunoId,
@@ -214,6 +223,7 @@ function StudentCourse() {
     cursoId: id,
     url: activeAulaUrl,
     initialPosition: aulaProgresso?.ultima_posicao ?? 0,
+    youtubePlaylistIndex: activeAulaPlaylistIndex,
   });
 
   if (loadingCurso) {

@@ -30,6 +30,10 @@ interface UseVideoProgressOpts {
   url: string;
   initialPosition?: number;
   onCompleted?: () => void;
+  // Índice (0-based) do vídeo dentro de uma playlist do YouTube. Quando informado, força o player
+  // a pular pra esse vídeo via comando da API (o parâmetro ?index= sozinho na URL não é confiável —
+  // ver BUG-042/043).
+  youtubePlaylistIndex?: number | null;
 }
 
 interface ProgressState {
@@ -49,6 +53,7 @@ export function useVideoProgress({
   url,
   initialPosition = 0,
   onCompleted,
+  youtubePlaylistIndex = null,
 }: UseVideoProgressOpts) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [state, setState] = useState<ProgressState>({ currentTime: 0, duration: 0 });
@@ -254,8 +259,26 @@ export function useVideoProgress({
       post({ event: "listening", id: 1, channel: "widget" });
       post({ event: "command", func: "addEventListener", args: ["onStateChange"] });
     }, 800);
-    return () => clearTimeout(t);
-  }, [provider, aulaId, post]);
+
+    // Reforço contra o bug do índice de playlist não sendo respeitado no carregamento inicial
+    // (BUG-042/043): manda o comando playVideoAt explicitamente pela API, algumas vezes seguidas
+    // pra cobrir o player ainda não estar 100% pronto na primeira tentativa.
+    let retries: ReturnType<typeof setTimeout>[] = [];
+    if (typeof youtubePlaylistIndex === "number" && youtubePlaylistIndex >= 0) {
+      [1200, 2000, 3000].forEach((delay) => {
+        retries.push(
+          setTimeout(() => {
+            post({ event: "command", func: "playVideoAt", args: [youtubePlaylistIndex] });
+          }, delay),
+        );
+      });
+    }
+
+    return () => {
+      clearTimeout(t);
+      retries.forEach(clearTimeout);
+    };
+  }, [provider, aulaId, post, youtubePlaylistIndex]);
 
   // Initialize Vimeo listeners
   useEffect(() => {

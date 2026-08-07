@@ -221,11 +221,13 @@
 - **Achado no caminho:** a taxa de R$69,90 da Margie Dewites (paga 04/08) estava classificada como `tipo='parcela'` em vez de `tipo='taxa_matricula'` (inconsistência pontual, provavelmente lançamento manual) — corrigida a pedido do Diego.
 - **Status:** ✅ Resolvido
 
-### BUG-042: Área do Aluno — trocar de aula sempre voltava pra Aula 01 (cursos migrados pro YouTube)
+### BUG-042/043: Área do Aluno — trocar de aula sempre voltava pra Aula 01 (cursos migrados pro YouTube)
 - **Sintoma:** aluno assiste a Aula 01, clica na Aula 02 (ou qualquer outra), e o player volta a tocar a Aula 01 de novo. Reportado no curso de Português, mas afeta em algum grau todos os cursos migrados do Panda pro YouTube (praticamente todos: Biologia, Filosofia, Física, Geografia, História, Inglês, Matemática, Português, Química, Sociologia).
-- **Causa:** os cursos migrados usam um embed de playlist do YouTube (`youtube.com/embed/videoseries?list=...&index=N`), onde `N` é a posição da aula dentro da playlist. O `<iframe>` que toca o vídeo, em `_student.aluno.curso.$id.tsx`, não tinha `key` — então ao trocar de aula, o React reaproveitava o mesmo elemento `<iframe>` só trocando o atributo `src`. Pra embeds de playlist do YouTube isso é sabidamente não confiável: o player não obedece a mudança do parâmetro `index` num iframe já carregado, e continua tocando o vídeo que já estava carregado (a Aula 01, geralmente a primeira que o aluno assiste).
-- **Solução (05/08/2026):** adicionado `key={activeAula?.id}` em todos os `<iframe>` do player (YouTube playlist, YouTube avulso, Vimeo, Pandavideo). Isso força o React a destruir e recriar o iframe do zero a cada troca de aula, garantindo uma navegação nova de verdade em vez de só trocar o atributo `src` num player que já estava rodando.
-- **Status:** ✅ Resolvido
+- **Causa:** os cursos migrados usam um embed de playlist do YouTube (`youtube.com/embed/videoseries?list=...&index=N`), onde `N` é a posição da aula dentro da playlist. Duas causas empilhadas: (1) o `<iframe>` que toca o vídeo, em `_student.aluno.curso.$id.tsx`, não tinha `key` — então ao trocar de aula, o React reaproveitava o mesmo elemento `<iframe>` só trocando o atributo `src`, sem forçar navegação nova. (2) Mesmo depois de corrigir isso com `key` (forçando remount completo), o Diego confirmou em teste real (com hard refresh) que o problema continuava — o parâmetro `?index=N` na URL de um embed de playlist do YouTube é, na prática, não confiável mesmo numa carga 100% nova do iframe: o player às vezes simplesmente ignora e começa do vídeo 1.
+- **Solução (05/08/2026):**
+  1. `key={activeAula?.id}` em todos os `<iframe>` do player (YouTube playlist, YouTube avulso, Vimeo, Pandavideo) — força remount completo a cada troca de aula.
+  2. Reforço via API: `useVideoProgress` (hook `use-video-progress.ts`) ganhou o parâmetro `youtubePlaylistIndex`. Quando o vídeo é de uma playlist, o hook manda o comando `playVideoAt` pela IFrame API do YouTube via `postMessage` (3 tentativas, em 1.2s/2s/3s depois do handshake `listening`), forçando o player a pular pro índice certo mesmo se o parâmetro da URL for ignorado.
+- **Status:** ✅ Resolvido (aguardando confirmação do Diego após o reforço via API)
 
 ## Conhecidos / Não Resolvidos ⚠️
 
