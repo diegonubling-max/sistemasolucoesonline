@@ -256,6 +256,7 @@ function StudentCourse() {
     if (url.startsWith('https://www.youtube.com/embed/')) {
       return (
         <iframe
+          key={activeAula?.id}
           ref={iframeRef}
           className="w-full h-full"
           src={url}
@@ -271,6 +272,7 @@ function StudentCourse() {
       const src = `https://www.youtube.com/embed/${vid}?enablejsapi=1&origin=${encodeURIComponent(origin)}`;
       return (
         <iframe
+          key={activeAula?.id}
           ref={iframeRef}
           className="w-full h-full"
           src={src}
@@ -285,6 +287,7 @@ function StudentCourse() {
       const vid = url.split('/').pop();
       return (
         <iframe
+          key={activeAula?.id}
           ref={iframeRef}
           className="w-full h-full"
           src={`https://player.vimeo.com/video/${vid}?api=1`}
@@ -299,6 +302,7 @@ function StudentCourse() {
       const src = url.includes('smartAutoPlay') ? url : `${url}${sep}smartAutoPlay=1`;
       return (
         <iframe
+          key={activeAula?.id}
           ref={iframeRef}
           className="w-full h-full"
           src={src}
