@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Send, Users, Clock, PhoneCall } from "lucide-react";
 import { maskPhone } from "@/lib/format";
 
-const TOLERANCIA_MINUTOS = 10;
+const TOLERANCIA_MINUTOS = 3; // TEMPORÁRIO — teste do Diego. Voltar pra 10 depois do teste.
 
 export const Route = createFileRoute("/webinar/$id")({
   component: WebinarPage,
