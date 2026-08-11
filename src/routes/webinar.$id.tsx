@@ -23,6 +23,21 @@ function extrairYoutubeId(url: string): string | null {
   return match ? match[1] : null;
 }
 
+// Monta o link de destino certo por plataforma, pra sempre abrir no APP do YouTube (não no navegador).
+// - Android: link https:// normal costuma abrir no navegador (depende de config do aparelho) — o
+//   esquema intent:// força a abertura no app do YouTube quando ele está instalado.
+// - iOS: o link https:// padrão já abre direto no app (Universal Links), sem precisar de truque.
+// - Sem videoId reconhecido (ou sem app) ou noutra plataforma: usa a URL original como veio.
+function montarLinkYoutubeApp(youtubeUrl: string): string {
+  if (typeof navigator === "undefined") return youtubeUrl;
+  const videoId = extrairYoutubeId(youtubeUrl);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid && videoId) {
+    return `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(youtubeUrl)};end`;
+  }
+  return youtubeUrl;
+}
+
 interface Participante {
   id: string;
   nome: string;
@@ -88,7 +103,7 @@ function WebinarPage() {
   // Acesso liberado (novo ou reentrada) — por enquanto manda direto pro YouTube em vez do player interno
   useEffect(() => {
     if (participante && webinar?.youtube_url) {
-      window.location.href = webinar.youtube_url;
+      window.location.href = montarLinkYoutubeApp(webinar.youtube_url);
     }
   }, [participante, webinar?.youtube_url]);
 
@@ -399,7 +414,7 @@ function WebinarPage() {
             <h1 className="text-xl font-bold">Acesso liberado!</h1>
             <p className="text-muted-foreground text-sm">Te levando pra aula ao vivo no YouTube...</p>
             {webinar?.youtube_url && (
-              <a href={webinar.youtube_url} className="text-orange-600 text-sm underline">
+              <a href={montarLinkYoutubeApp(webinar.youtube_url)} className="text-orange-600 text-sm underline">
                 Não foi redirecionado? Clique aqui
               </a>
             )}
