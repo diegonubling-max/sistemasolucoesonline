@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2, Link2, Send, UserX, UserCheck, DollarSign } from "lucide-react";
+import { Pencil, Loader2, FileText, CheckCircle2, XCircle, Trash2, Link2, Send, UserX, UserCheck, DollarSign, Ticket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -335,6 +335,7 @@ function MatriculasAulaoList() {
                 <TableHead>Nome</TableHead>
                 <TableHead>Telefone</TableHead>
                 <TableHead>Forma Pgto</TableHead>
+                <TableHead>Voucher</TableHead>
                 <TableHead>Contrato</TableHead>
                 <TableHead>Pagamento</TableHead>
                 <TableHead>Previsão de Pagamento</TableHead>
@@ -345,7 +346,7 @@ function MatriculasAulaoList() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-6 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
@@ -359,6 +360,15 @@ function MatriculasAulaoList() {
                   <TableCell className="font-medium">{m.nome}</TableCell>
                   <TableCell>{m.telefone}</TableCell>
                   <TableCell>{FORMA_LABEL[m.forma_pagamento] ?? m.forma_pagamento}</TableCell>
+                  <TableCell>
+                    {m.voucher_code ? (
+                      <span className={`inline-flex items-center gap-1 font-medium ${m.voucher_aplicado ? "text-green-700" : "text-orange-600"}`} title={m.voucher_aplicado ? "Voucher válido, aplicado no pagamento" : "Preencheu um código, mas não é o voucher válido"}>
+                        <Ticket className="h-4 w-4" /> {m.voucher_code}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {m.assinatura_nome ? (
                       <button
@@ -488,7 +498,7 @@ function MatriculasAulaoList() {
               ))}
               {!isLoading && filtrados.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     Nenhuma matrícula encontrada.
                   </TableCell>
                 </TableRow>
