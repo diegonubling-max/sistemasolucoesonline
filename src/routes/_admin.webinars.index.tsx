@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export const Route = createFileRoute("/_admin/webinars")({
+export const Route = createFileRoute("/_admin/webinars/")({
   head: () => ({ meta: [{ title: "Webinars — Soluções Online" }] }),
   component: WebinarsList,
 });
