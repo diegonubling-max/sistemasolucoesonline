@@ -133,6 +133,7 @@ SELECT content, status_code FROM net._http_response WHERE id = N;
 - Isso já aconteceu (23/07/2026): várias rotas novas (`/matricula-demo`, `/webinar/:id`, `/webinars`, `/webinars/:id`, `/api/public/hooks/converter-matricula-aulao`) foram criadas via commit direto pela API do GitHub (sem rodar `vite dev`/`vite build` localmente), e o `routeTree.gen.ts` nunca foi atualizado — ficaram todas invisíveis pro roteador em produção até serem descobertas e corrigidas.
 - **Sempre que criar um arquivo novo em `src/routes/`:** rodar `npm install --legacy-peer-deps` (há conflito de peer deps com valibot/@hookform/resolvers) e depois `npx vite build` no sandbox antes de finalizar a sessão — isso regenera o `routeTree.gen.ts` automaticamente. Commitar esse arquivo junto com as rotas novas.
 - Não é preciso rodar isso pra edições em arquivos de rota já existentes — só quando um arquivo novo é criado (ou removido/renomeado).
+- **Nomenclatura de página de lista (BUG-044, 05/08/2026):** toda página que é uma "lista" (ex: `/webinars`, `/alunos`) e que tem rotas filhas com parâmetro (ex: `/webinars/$id`) **precisa** usar o sufixo `.index.tsx` no nome do arquivo (ex: `_admin.webinars.index.tsx`, igual `_admin.alunos.index.tsx`). Sem o `.index`, o TanStack Router trata esse arquivo como layout-pai da rota filha — e como a página de lista não tem `<Outlet />`, a rota filha nunca aparece na tela (só a lista, mesmo com a URL e o título corretos). Sintoma: clica no botão pra abrir o detalhe, a URL muda, mas a tela continua mostrando a lista.
 
 ---
 
