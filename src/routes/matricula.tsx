@@ -413,6 +413,8 @@ function MatriculaPublicaPage() {
         // Atualizar registro parcial com forma de pagamento, termo e assinatura
         const { error } = await supabase.from("matriculas_aulao" as any).update({
           forma_pagamento: forma,
+          voucher_code: voucherCode.trim() || null,
+          voucher_aplicado: voucherValido,
           contrato_html: contratoComValidacao,
           assinatura_nome: dados.nome.trim(),
           assinado_em: agora.toISOString(),
