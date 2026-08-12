@@ -111,7 +111,7 @@
 | cpf | text | CPF com máscara |
 | data_nascimento | date | Data de nascimento |
 | sexo | sexo_aluno | Masculino ou Feminino |
-| ctr | integer | Código do aluno (gerado por sequence + trigger) |
+| ctr | integer | Código do aluno (gerado por sequence + trigger). **UNIQUE** desde 12/08/2026 (BUG-049) |
 | senha | text | Senha (1234 + primeiro nome) |
 | polo_id | uuid FK→polos | Polo vinculado |
 | ativo | boolean | Se está ativo |
@@ -739,6 +739,7 @@ Uma linha por minuto por webinar ao vivo, gravada pelo cron `webinar-presenca` �
 ### RPCs criadas nesta sessão (existiam só no código, nunca no banco):
 - registrar_pagamento_parcela(p_parcela_id, p_valor_pago, p_data_pagamento, p_forma_pagamento, p_parcelas_cartao, p_taxa_cartao, p_valor_liquido, p_observacao) — "Dar Baixa"
 - get_contrato_publico(p_token) / assinar_contrato_publico(p_token, p_nome, p_ip) — assinatura remota de contrato
+- proximo_ctr_aluno() — 12/08/2026, BUG-049. Fonte única de CTR novo (puxa de `alunos_ctr_seq`, pulando terminados em 13) — usada tanto pelo trigger do cadastro manual quanto por `converter-matricula-aulao.ts`, pra nunca mais ficarem fora de sincronia
 - Ainda pendentes de verificar/criar (chamadas no código, não confirmadas no banco): add_milhas_eja, delete_pacote, resgatar_curso_vitrine. registrar_aula_assistida é legado (comentado como tal no código) e pode ser removida em vez de criada — o tracking real de progresso já funciona via aluno_aulas_assistidas (use-video-progress.ts)
 
 ### Triggers criados (automação de Pós-Venda):

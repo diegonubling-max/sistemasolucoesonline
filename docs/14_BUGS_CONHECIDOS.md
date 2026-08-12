@@ -263,6 +263,22 @@
 - **Correção pontual:** senha da Iosney (CTR 1749, e-mail `1749@aluno.com`) corrigida direto no banco (`1234iosney`) — login já está funcionando.
 - **Status:** ✅ Resolvido
 
+### BUG-049 (grave): CTR duplicado entre dois alunos diferentes — dois caminhos de geração de CTR fora de sincronia
+- **Como foi descoberto:** Diego perguntou por que a Iosney (recadastrada manualmente em 12/08) ficou com CTR 1749 em vez de 1756 (sequência depois do Wendel, CTR 1755).
+- **Causa raiz:** existem dois jeitos diferentes de gerar CTR no sistema, que nunca estiveram sincronizados:
+  1. Cadastro manual ("Novo Aluno", `MatriculaFlow.tsx`) — usa o trigger `trg_ajustar_ctr` do banco, que puxa de `nextval('alunos_ctr_seq')`.
+  2. Conversão do Aulão (`converter-matricula-aulao.ts`) — calculava `SELECT MAX(ctr)+1 FROM alunos` manualmente e inseria o CTR explícito, **sem nunca tocar na sequence**.
+  Como o Aulão é o fluxo mais usado ultimamente, ele foi avançando o "maior CTR real" (até 1755) sem a sequence saber — a sequence ficou parada lá atrás (~1748). Quando o cadastro manual (via trigger/sequence) foi usado de novo, ele devolveu um número menor que já tinha sido "pulado" pelo outro caminho.
+  Sem isso, ainda seria só um número fora de ordem, inofensivo — só que a tabela `alunos` **nunca teve uma constraint de unicidade no CTR**, e isso já causou uma colisão real: **Cristina Aparecida Costa e Gracilene da Conceição Madeira de Carvalho ficaram com o mesmo CTR (1750) e o mesmo login (`1750@aluno.com`)**, a Gracilene pegando o CTR pelo caminho do trigger logo depois da correção da Iosney.
+- **Efeito colateral:** a correção do BUG-048 (feita mais cedo na mesma sessão, que reaproveita conta de e-mail já registrado) tratou essa colisão real como se fosse uma "conta órfã" e **sobrescreveu a senha da Cristina** com a senha gerada pra Gracilene — sem querer, quebrando o acesso dela.
+- **Solução (12/08/2026):**
+  1. Senha da Cristina restaurada (`1234cristina`) — acesso dela voltou ao normal.
+  2. Gracilene recebeu um CTR novo e correto (1756) e um login próprio criado do zero (`1756@aluno.com` / `1234gracilene`).
+  3. `alunos.ctr` ganhou uma constraint **UNIQUE** — trava de vez contra qualquer duplicidade futura, mesmo que outro bug de geração apareça.
+  4. A sequence `alunos_ctr_seq` foi sincronizada com o maior CTR realmente em uso.
+  5. Criada a função `proximo_ctr_aluno()` (puxa da mesma sequence, pulando terminados em 13) — **os dois fluxos agora usam a mesma fonte**. `converter-matricula-aulao.ts` não calcula mais `MAX(ctr)+1` manualmente, chama essa função.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

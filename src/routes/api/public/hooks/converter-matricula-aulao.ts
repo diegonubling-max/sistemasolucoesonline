@@ -136,17 +136,19 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             return jsonResponse({ error: "Pagamento ainda não confirmado" }, 400);
           }
 
-          // 1. Próximo CTR disponível — tenta criar o login incrementando o CTR caso o e-mail
-          // já exista no Auth (ex: login órfão de um aluno antigo já excluído da tabela alunos,
-          // mas cujo acesso nunca foi removido do Supabase Auth).
-          const { data: ultimoAluno } = await supabase
-            .from("alunos")
-            .select("ctr")
-            .order("ctr", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+          // 1. Próximo CTR disponível — pega da MESMA fonte usada pelo cadastro manual
+          // (função proximo_ctr_aluno(), que puxa da sequence alunos_ctr_seq), pra nunca mais
+          // ficar fora de sincronia entre os dois fluxos (isso já causou CTR duplicado de
+          // verdade entre dois alunos — BUG-049, 12/08/2026). Se o e-mail já existir no Auth
+          // (login órfão de um aluno antigo excluído da tabela alunos, mas cujo acesso nunca
+          // foi removido do Supabase Auth), pula pro próximo CTR da sequence e tenta de novo.
+          const { data: primeiroCtr, error: ctrError } = await supabase.rpc("proximo_ctr_aluno");
+          if (ctrError || !primeiroCtr) {
+            console.error("[converter-matricula-aulao] Erro ao gerar CTR:", ctrError);
+            return jsonResponse({ error: "Erro ao gerar CTR para o aluno" }, 500);
+          }
 
-          let novoCtr = (ultimoAluno?.ctr ?? 1700) + 1;
+          let novoCtr = primeiroCtr as number;
           const senha = gerarSenha(matricula.nome);
           let email = `${novoCtr}@aluno.com`;
           let authUser: any = null;
@@ -165,8 +167,9 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             const jaRegistrado = authError?.message?.toLowerCase().includes("already been registered");
             if (!authError || !jaRegistrado) break;
 
-            console.warn(`[converter-matricula-aulao] E-mail ${email} já registrado no Auth (login órfão?) — tentando CTR ${novoCtr + 1}`);
-            novoCtr++;
+            console.warn(`[converter-matricula-aulao] E-mail ${email} já registrado no Auth (login órfão?) — tentando próximo CTR da sequence`);
+            const { data: proximoCtr } = await supabase.rpc("proximo_ctr_aluno");
+            novoCtr = (proximoCtr as number) ?? novoCtr + 1;
           }
 
           // 2. Criar registro do aluno
