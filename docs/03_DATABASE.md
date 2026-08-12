@@ -80,6 +80,26 @@
 
 ---
 
+### fechamentos_semanais_pagamentos (12/08/2026)
+**Objetivo:** Registra se o Fechamento Semanal (Financeiro → aba Fechamento Semanal) de um colaborador numa semana específica já foi pago, e quando.
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| colaborador_id | uuid FK→colaboradores | Colaborador do fechamento |
+| semana_inicio | date | Sexta-feira de início do período (00:00) |
+| semana_fim | date | Quinta-feira de fim do período |
+| pago | boolean | Se já foi pago |
+| data_pagamento | date | Data em que o pagamento foi feito |
+| valor_total | numeric(10,2) | Total do fechamento no momento de marcar como pago |
+| valor_matriz | numeric(10,2) | Parte da Matriz |
+| valor_colaborador | numeric(10,2) | Parte do colaborador |
+| observacao | text | Livre, não usado pela UI ainda |
+| created_at / updated_at | timestamptz | — |
+
+**Regra:** único registro por `(colaborador_id, semana_inicio, semana_fim)` — usa upsert.
+
+---
+
 ### alunos
 **Objetivo:** Alunos matriculados (regulares e de aulão)
 | Campo | Tipo | Descrição |

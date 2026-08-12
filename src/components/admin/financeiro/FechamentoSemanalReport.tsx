@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarCheck, ChevronLeft, ChevronRight, Loader2, FileDown, Pencil, Check } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ChevronRight, Loader2, FileDown, Pencil, Check, CircleDollarSign, Undo2 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { format, addDays, subDays } from "date-fns";
 import { toast } from "sonner";
@@ -100,6 +100,70 @@ export function FechamentoSemanalReport() {
   const percentualColaborador = Number(colaboradorSelecionado?.percentual_repasse ?? 30);
   const valorColaborador = total * (percentualColaborador / 100);
   const valorMatriz = total - valorColaborador;
+
+  const { data: statusPagamento } = useQuery({
+    queryKey: ["fechamento-semanal-status", colaboradorId, periodStart, periodEnd],
+    enabled: !!colaboradorId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("fechamentos_semanais_pagamentos")
+        .select("*")
+        .eq("colaborador_id", colaboradorId)
+        .eq("semana_inicio", periodStart)
+        .eq("semana_fim", periodEnd)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const [editandoPagamento, setEditandoPagamento] = useState(false);
+  const [dataPagamentoInput, setDataPagamentoInput] = useState(format(new Date(), "yyyy-MM-dd"));
+
+  const marcarComoPago = useMutation({
+    mutationFn: async (dataPagamento: string) => {
+      const { error } = await supabase
+        .from("fechamentos_semanais_pagamentos")
+        .upsert(
+          {
+            colaborador_id: colaboradorId,
+            semana_inicio: periodStart,
+            semana_fim: periodEnd,
+            pago: true,
+            data_pagamento: dataPagamento,
+            valor_total: total,
+            valor_matriz: valorMatriz,
+            valor_colaborador: valorColaborador,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "colaborador_id,semana_inicio,semana_fim" },
+        );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Fechamento marcado como pago!");
+      qc.invalidateQueries({ queryKey: ["fechamento-semanal-status", colaboradorId, periodStart, periodEnd] });
+      setEditandoPagamento(false);
+    },
+    onError: (e: Error) => toast.error("Erro ao registrar pagamento", { description: e.message }),
+  });
+
+  const desmarcarPago = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("fechamentos_semanais_pagamentos")
+        .update({ pago: false, data_pagamento: null, updated_at: new Date().toISOString() })
+        .eq("colaborador_id", colaboradorId)
+        .eq("semana_inicio", periodStart)
+        .eq("semana_fim", periodEnd);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Marcação de pagamento desfeita.");
+      qc.invalidateQueries({ queryKey: ["fechamento-semanal-status", colaboradorId, periodStart, periodEnd] });
+    },
+    onError: (e: Error) => toast.error("Erro ao desfazer", { description: e.message }),
+  });
 
   const salvarPercentual = useMutation({
     mutationFn: async (novoPercentual: number) => {
@@ -268,6 +332,67 @@ export function FechamentoSemanalReport() {
                   </div>
                   <p className="text-2xl font-bold text-emerald-700">{formatCurrency(valorColaborador)}</p>
                 </div>
+              </div>
+
+              <div className={`rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${statusPagamento?.pago ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}`}>
+                {statusPagamento?.pago ? (
+                  <>
+                    <div className="flex items-center gap-2 text-green-700 font-medium">
+                      <CircleDollarSign className="h-5 w-5" />
+                      Pago em {statusPagamento.data_pagamento ? formatDate(statusPagamento.data_pagamento) : "—"}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground"
+                      onClick={() => desmarcarPago.mutate()}
+                      disabled={desmarcarPago.isPending}
+                    >
+                      <Undo2 className="h-3.5 w-3.5 mr-1.5" /> Desfazer
+                    </Button>
+                  </>
+                ) : editandoPagamento ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-amber-700">Data do pagamento:</span>
+                      <Input
+                        type="date"
+                        className="w-40 h-8"
+                        value={dataPagamentoInput}
+                        onChange={(e) => setDataPagamentoInput(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => setEditandoPagamento(false)}>Cancelar</Button>
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                        disabled={marcarComoPago.isPending || !dataPagamentoInput}
+                        onClick={() => marcarComoPago.mutate(dataPagamentoInput)}
+                      >
+                        {marcarComoPago.isPending ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Check className="h-4 w-4 mr-1.5" />}
+                        Confirmar
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 text-amber-700 text-sm">
+                      <CircleDollarSign className="h-5 w-5" />
+                      Esse fechamento ainda não foi marcado como pago
+                    </div>
+                    <Button
+                      size="sm"
+                      className="bg-amber-600 hover:bg-amber-700"
+                      onClick={() => {
+                        setDataPagamentoInput(format(new Date(), "yyyy-MM-dd"));
+                        setEditandoPagamento(true);
+                      }}
+                    >
+                      Marcar como pago
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </>
