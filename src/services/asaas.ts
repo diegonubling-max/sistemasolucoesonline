@@ -7,7 +7,20 @@ export const generateAsaasCobrar = async (parcelaId: string, tipo: 'PIX' | 'BOLE
 
   if (error) {
     console.error('Erro ao gerar cobrança via Edge Function:', error);
-    throw new Error(error.message || 'Erro ao gerar cobrança no Asaas');
+    // O supabase-js só dá uma mensagem genérica ("Edge Function returned a non-2xx status
+    // code") por padrão — o motivo real do erro (ex: problema com o cadastro do aluno no
+    // Asaas, chave da API do polo, etc) vem no corpo da resposta, em error.context.
+    // Sem isso, o usuário só vê a mensagem genérica e não sabe o que de fato aconteceu.
+    let mensagemReal = error.message || 'Erro ao gerar cobrança no Asaas';
+    try {
+      if (error.context && typeof error.context.json === 'function') {
+        const corpo = await error.context.json();
+        if (corpo?.error) mensagemReal = corpo.error;
+      }
+    } catch {
+      // corpo não era JSON ou já foi consumido — mantém a mensagem genérica
+    }
+    throw new Error(mensagemReal);
   }
 
   return data;

@@ -242,6 +242,12 @@
 - **Ação pendente do Diego:** reativar a sincronização do webhook mais uma vez no painel do Asaas (a última vez, depois disso não deve mais cair sozinha).
 - **Status:** ✅ Resolvido — aguardando o Diego confirmar que não caiu mais depois de reativar uma última vez
 
+### BUG-046: Erro ao gerar boleto/PIX mostrava só "Edge Function returned a non-2xx status code" (sem dizer o motivo real)
+- **Sintoma:** ao tentar gerar boleto/PIX pra uma parcela (ex: aluna Francine, CTR 1741) que ainda não tinha cobrança no Asaas, o sistema mostrava só essa mensagem genérica, sem indicar o motivo real do erro.
+- **Causa:** `supabase.functions.invoke()` (usado em `generateAsaasCobrar`, `src/services/asaas.ts`) só extrai automaticamente uma mensagem genérica quando a Edge Function responde com erro (status fora de 2xx) — o motivo real, que a função `asaas-cobrar` monta com cuidado (ex: "Erro ao criar cobrança: [motivo específico do Asaas]", problema no cadastro do aluno, chave da API do polo faltando, etc), fica no corpo (JSON) da resposta, em `error.context`, e o código não estava lendo esse corpo.
+- **Solução (12/08/2026):** `generateAsaasCobrar` agora lê `error.context` e extrai a mensagem real do corpo da resposta antes de mostrar o erro pro usuário — a mensagem genérica só aparece como último recurso, se o corpo não puder ser lido.
+- **Status:** ✅ Resolvido (a extração da mensagem foi corrigida; falta o Diego tentar gerar o boleto da Francine de novo pra a gente ver o motivo real do erro original e corrigir a causa raiz, se for algo além de mensagem genérica)
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
