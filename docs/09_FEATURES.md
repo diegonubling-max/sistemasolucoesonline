@@ -23,7 +23,7 @@
 - ✅ Log de exclusão de alunos
 - ✅ Histórico de acesso (login/logout, duração, aulas assistidas com tempo e percentual) — corrigido 23/07/2026, ver BUG-020
 - ✅ Botão "Gerar acesso (Aulão)" — lista cadastros do `/matricula` sem login ainda e gera na hora, mesmo sem pagamento confirmado (28/07/2026)
-- ✅ Matrículas Aulão: filtro Status abre em "Ativos" por padrão (05/08/2026) — antes abria em "Todos" e misturava com cancelados; toggle Todos/Ativos/Cancelados já existia, só mudou o padrão
+- ✅ Matrículas Aulão: reorganizado em 3 guias (12/08/2026) — "Ativos — ainda não pagaram" (padrão ao abrir), "Pagos e matriculados", "Inativados", cada uma com contador. Substituem os antigos filtros de Status (Todos/Ativos/Cancelados) e Pagamento (Todos/Pago/Aguardando), que foram removidos por ficarem redundantes; os filtros de Forma e Contrato continuam, agora refinando dentro de cada guia
 - ✅ Matrículas Aulão: coluna "Voucher" nova (05/08/2026) — mostra o código que o aluno preencheu no `/matricula` (verde se é o voucher válido e foi aplicado no pagamento, laranja se preencheu um código errado, "—" se não preencheu nada). Dá pra ver de relance quem completou o cadastro mas não usou voucher
 - ✅ Ícone 💲 (vermelho, na célula do CTR — entre CTR e Nome) quando o aluno não tem nenhuma parcela cadastrada em nenhuma matrícula — sinaliza financeiro pendente de configurar. Legenda dos ícones (vitrine, financeiro) fixada acima da tabela (05/08/2026) — removida a bolinha verde/vermelha ao lado do nome (redundante com a coluna Status/Badge Ativo-Inativo já existente)
 

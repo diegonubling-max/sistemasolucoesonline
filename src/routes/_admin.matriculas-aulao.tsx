@@ -53,8 +53,7 @@ function MatriculasAulaoList() {
   const [busca, setBusca] = useState("");
   const [filtroForma, setFiltroForma] = useState<"todos" | "boleto" | "cartao">("todos");
   const [filtroContrato, setFiltroContrato] = useState<"todos" | "sim" | "nao">("todos");
-  const [filtroPagamento, setFiltroPagamento] = useState<"todos" | "pago" | "aguardando">("todos");
-  const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativos" | "cancelados">("ativos");
+  const [aba, setAba] = useState<"pagos" | "ativos_sem_pagamento" | "inativados">("ativos_sem_pagamento");
   const [contratoAberto, setContratoAberto] = useState<string | null>(null);
   const [pagamentoManual, setPagamentoManual] = useState<any>(null);
   const [pagamentoManualForma, setPagamentoManualForma] = useState("Pix");
@@ -85,12 +84,21 @@ function MatriculasAulaoList() {
     if (filtroForma !== "todos" && m.forma_pagamento !== filtroForma) return false;
     if (filtroContrato === "sim" && !m.assinatura_nome) return false;
     if (filtroContrato === "nao" && m.assinatura_nome) return false;
-    if (filtroPagamento === "pago" && m.pagamento_status !== "confirmado") return false;
-    if (filtroPagamento === "aguardando" && m.pagamento_status === "confirmado") return false;
-    if (filtroStatus === "ativos" && m.status === "cancelado") return false;
-    if (filtroStatus === "cancelados" && m.status !== "cancelado") return false;
+    if (aba === "inativados") {
+      if (m.status !== "cancelado") return false;
+    } else if (aba === "pagos") {
+      if (m.status === "cancelado" || m.pagamento_status !== "confirmado") return false;
+    } else if (aba === "ativos_sem_pagamento") {
+      if (m.status === "cancelado" || m.pagamento_status === "confirmado") return false;
+    }
     return true;
   });
+
+  const contagemAbas = {
+    pagos: (data ?? []).filter((m) => m.status !== "cancelado" && m.pagamento_status === "confirmado").length,
+    ativos_sem_pagamento: (data ?? []).filter((m) => m.status !== "cancelado" && m.pagamento_status !== "confirmado").length,
+    inativados: (data ?? []).filter((m) => m.status === "cancelado").length,
+  };
 
   const { data: historicoPagamentos } = useQuery({
     queryKey: ["matricula-aulao-pagamentos", pagamentoManual?.id],
@@ -276,6 +284,28 @@ function MatriculasAulaoList() {
         description={`${data?.length ?? 0} matrícula(s) recebida(s) pelo link público`}
       />
 
+      <div className="flex flex-wrap gap-2 mb-4 border-b">
+        {([
+          ["ativos_sem_pagamento", "Ativos — ainda não pagaram", UserCheck],
+          ["pagos", "Pagos e matriculados", CheckCircle2],
+          ["inativados", "Inativados", UserX],
+        ] as const).map(([v, label, Icon]) => (
+          <button
+            key={v}
+            onClick={() => setAba(v)}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition ${
+              aba === v
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+            <Badge variant="outline" className="ml-1">{contagemAbas[v]}</Badge>
+          </button>
+        ))}
+      </div>
+
       <div className="mb-4 space-y-3">
         <Input
           placeholder="Buscar por nome, e-mail, telefone ou CPF..."
@@ -300,26 +330,6 @@ function MatriculasAulaoList() {
               key={v}
               onClick={() => setFiltroContrato(v)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition ${filtroContrato === v ? "bg-primary text-primary-foreground" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-            >{label}</button>
-          ))}
-
-          <div className="w-px h-5 bg-gray-300 mx-1" />
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mr-1">Pagamento:</div>
-          {([["todos", "Todos"], ["pago", "Pago"], ["aguardando", "Aguardando"]] as const).map(([v, label]) => (
-            <button
-              key={v}
-              onClick={() => setFiltroPagamento(v)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition ${filtroPagamento === v ? "bg-primary text-primary-foreground" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-            >{label}</button>
-          ))}
-
-          <div className="w-px h-5 bg-gray-300 mx-1" />
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mr-1">Status:</div>
-          {([["todos", "Todos"], ["ativos", "Ativos"], ["cancelados", "Cancelados"]] as const).map(([v, label]) => (
-            <button
-              key={v}
-              onClick={() => setFiltroStatus(v)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition ${filtroStatus === v ? "bg-primary text-primary-foreground" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
             >{label}</button>
           ))}
         </div>
