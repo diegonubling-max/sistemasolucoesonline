@@ -235,6 +235,13 @@
 - **Solução (05/08/2026):** renomeado `_admin.webinars.tsx` → `_admin.webinars.index.tsx` (mesmo padrão do resto do sistema), o que remove a relação pai/filho acidental — `/webinars`, `/webinars/$id` e `/webinars/$id/depoimentos` passam a ser rotas irmãs, todas filhas diretas do layout `_admin.tsx` (que já tem `<Outlet />` correto). `routeTree.gen.ts` regenerado do zero rodando o build completo do projeto (clone + `npm install` + `vite build`), não editado manualmente, pra garantir consistência. Testado ao vivo no navegador: o painel abre corretamente agora, com dados reais.
 - **Status:** ✅ Resolvido
 
+### BUG-045: Webhook do Asaas se desativava sozinho no painel do Asaas (pagamentos não confirmavam no sistema)
+- **Sintoma:** Diego via no painel do Asaas que a "sincronização" do webhook aparecia como interrompida. Ele reativava, uma fila de eventos pendentes aparecia e processava, mas pouco depois a sincronização voltava a ficar interrompida sozinha — enquanto isso, alunos que pagavam (Aulão) não tinham o pagamento refletido no sistema.
+- **Causa:** o Asaas tem um mecanismo automático de proteção: se o endpoint do webhook responder erro (qualquer status HTTP fora da faixa 2xx) repetidas vezes, ele desativa a sincronização sozinho pra não ficar tentando entregar pra um endpoint que parece estar quebrado. Os dois endpoints (`asaas-webhook-aulao.ts`, usado no Aulão, e a edge function `asaas-webhook`, usada pelas parcelas dos alunos matriculados) respondiam com erro HTTP 500 sempre que um erro interno acontecia ao salvar no banco (mesmo um erro raro e pontual) — e alguns desses erros pontuais foram suficientes pra disparar a proteção automática do Asaas.
+- **Solução (05/08/2026):** os dois webhooks agora **sempre respondem 200 pro Asaas**, mesmo quando um erro interno acontece — o erro fica só registrado no log (`console.error`) pra investigação, mas nunca é repassado como falha de entrega pro Asaas. Isso segue a prática recomendada pra endpoints de webhook (confirmar recebimento rápido, tratar erros internamente). Deploy feito tanto no Vercel (`asaas-webhook-aulao.ts`) quanto na edge function do Supabase (`asaas-webhook`, redeployada manualmente — essa não sobe sozinha só com o push no GitHub).
+- **Ação pendente do Diego:** reativar a sincronização do webhook mais uma vez no painel do Asaas (a última vez, depois disso não deve mais cair sozinha).
+- **Status:** ✅ Resolvido — aguardando o Diego confirmar que não caiu mais depois de reativar uma última vez
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
