@@ -50,20 +50,65 @@ export const Route = createFileRoute("/api/public/hooks/criar-acesso-aluno")({
             email_confirm: true,
           });
 
-          if (authError || !authUser?.user) {
-            console.error("[criar-acesso-aluno] Erro ao criar acesso:", authError);
-            return jsonResponse({ error: authError?.message || "Erro ao criar acesso" }, 500);
+          let userId: string | null = authUser?.user?.id ?? null;
+
+          if (authError || !userId) {
+            const jaExiste = /already.*registered|already been registered|email_exists/i.test(authError?.message || "");
+
+            if (!jaExiste) {
+              console.error("[criar-acesso-aluno] Erro ao criar acesso:", authError);
+              return jsonResponse({ error: authError?.message || "Erro ao criar acesso" }, 500);
+            }
+
+            // BUG-048: o e-mail já tem uma conta de auth (ex: sobra de uma tentativa anterior
+            // que falhou/foi abandonada, deixando um login "órfão" sem aluno correspondente).
+            // Em vez de desistir e deixar o aluno sem conseguir entrar, localiza essa conta
+            // pelo e-mail e atualiza a senha dela pra senha atual — corrige sozinho.
+            console.warn(`[criar-acesso-aluno] E-mail ${email} já registrado — tentando reaproveitar a conta existente`);
+
+            let page = 1;
+            while (!userId) {
+              const { data: listData, error: listError } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+              if (listError) {
+                console.error("[criar-acesso-aluno] Erro ao listar usuários:", listError);
+                return jsonResponse({ error: authError?.message || "Erro ao criar acesso" }, 500);
+              }
+              const found = listData.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+              if (found) { userId = found.id; break; }
+              if (listData.users.length < 200) break;
+              page++;
+            }
+
+            if (!userId) {
+              return jsonResponse({ error: authError?.message || "Erro ao criar acesso" }, 500);
+            }
+
+            const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+              password: senha,
+              email_confirm: true,
+            });
+            if (updateError) {
+              console.error("[criar-acesso-aluno] Erro ao atualizar conta existente:", updateError);
+              return jsonResponse({ error: updateError.message }, 500);
+            }
           }
 
-          const { error: roleError } = await supabase
+          const { data: roleExistente } = await supabase
             .from("user_roles")
-            .insert({ user_id: authUser.user.id, role: "aluno" });
+            .select("id")
+            .eq("user_id", userId)
+            .maybeSingle();
 
-          if (roleError) {
-            console.error("[criar-acesso-aluno] Erro ao criar user_role:", roleError);
+          if (!roleExistente) {
+            const { error: roleError } = await supabase
+              .from("user_roles")
+              .insert({ user_id: userId, role: "aluno" });
+            if (roleError) {
+              console.error("[criar-acesso-aluno] Erro ao criar user_role:", roleError);
+            }
           }
 
-          return jsonResponse({ ok: true, user_id: authUser.user.id });
+          return jsonResponse({ ok: true, user_id: userId });
         } catch (e: any) {
           console.error("[criar-acesso-aluno] Erro geral:", e);
           return jsonResponse({ error: e?.message || String(e) }, 500);

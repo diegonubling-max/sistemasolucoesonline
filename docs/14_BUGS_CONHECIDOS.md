@@ -255,6 +255,14 @@
 - **Impacto:** no momento da correção, havia 3 outras parcelas na mesma situação (vencidas, sem cobrança gerada ainda) — agora também podem ter boleto/PIX gerado normalmente.
 - **Status:** ✅ Resolvido
 
+### BUG-048: Cadastro manual falhava em criar o acesso quando o e-mail já tinha login órfão ("A user with this email address has already been registered")
+- **Sintoma:** ao cadastrar um aluno manualmente ("Novo Aluno"), aparecia o toast "Aluno salvo, mas erro ao criar acesso: A user with this email address has already been registered", mas o fluxo continuava normalmente pras próximas etapas (cursos, contrato) sem mais nenhum erro. No final, tudo parecia ter dado certo (aluno, matrícula, parcelas e contrato salvos) — só que o aluno **não conseguia fazer login**, porque a conta de acesso nunca foi criada nem corrigida.
+- **Caso real:** Iosney Andrade Feitosa (CTR 1749) — existia uma conta em `auth.users` com o e-mail `1749@aluno.com` desde 05/08 (sobra órfã de uma tentativa de cadastro anterior que não deu certo), sem nenhum aluno correspondente. Ao recadastrar ela em 12/08, o e-mail colidiu com essa conta órfã, `criar-acesso-aluno` desistiu, e o resto do fluxo (matrícula, parcelas, cursos, contrato) seguiu e salvou normalmente, deixando a impressão de que só faltou "salvar o aluno" — na real faltou só o acesso.
+- **Causa:** `criar-acesso-aluno.ts` só tentava `auth.admin.createUser` uma vez; se desse erro de e-mail duplicado, retornava erro e nunca tentava reaproveitar a conta existente.
+- **Solução (12/08/2026):** quando o erro é de e-mail já registrado, a função agora localiza a conta existente pelo e-mail (mesma técnica já usada em `redefinir-senha-aluno.ts`) e atualiza a senha dela pra senha atual, em vez de desistir — o aluno passa a ter acesso funcionando de qualquer forma. `user_roles` também passou a checar se já existe antes de inserir (evita duplicar).
+- **Correção pontual:** senha da Iosney (CTR 1749, e-mail `1749@aluno.com`) corrigida direto no banco (`1234iosney`) — login já está funcionando.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
