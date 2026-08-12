@@ -31,6 +31,7 @@ function WebinarsList() {
   const [titulo, setTitulo] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [gravado, setGravado] = useState(false);
+  const [excluirAlvo, setExcluirAlvo] = useState<{ id: string; titulo: string } | null>(null);
 
   const { data: webinars, isLoading } = useQuery({
     queryKey: ["webinars"],
@@ -90,6 +91,7 @@ function WebinarsList() {
     onSuccess: () => {
       toast.success("Webinar excluído");
       qc.invalidateQueries({ queryKey: ["webinars"] });
+      setExcluirAlvo(null);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -181,7 +183,7 @@ function WebinarsList() {
                           Encerrar
                         </Button>
                       )}
-                      <Button size="icon" variant="ghost" title="Excluir" onClick={() => excluirMutation.mutate(w.id)}>
+                      <Button size="icon" variant="ghost" title="Excluir" onClick={() => setExcluirAlvo({ id: w.id, titulo: w.titulo })}>
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </TableCell>
@@ -223,6 +225,29 @@ function WebinarsList() {
             <Button onClick={() => criarMutation.mutate()} disabled={!titulo.trim() || criarMutation.isPending}>
               {criarMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!excluirAlvo} onOpenChange={(v) => !v && setExcluirAlvo(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir webinar?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground py-2">
+            Tem certeza que deseja excluir <strong>{excluirAlvo?.titulo}</strong>? Isso apaga também todo o histórico de
+            participantes, chat e presença dessa aula. Essa ação não pode ser desfeita.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExcluirAlvo(null)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              onClick={() => excluirAlvo && excluirMutation.mutate(excluirAlvo.id)}
+              disabled={excluirMutation.isPending}
+            >
+              {excluirMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Excluir
             </Button>
           </DialogFooter>
         </DialogContent>
