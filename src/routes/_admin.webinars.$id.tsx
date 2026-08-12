@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { Users, LogOut, Loader2, PhoneCall } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, LogOut, Loader2, PhoneCall, FileSpreadsheet } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/_admin/webinars/$id")({
   head: () => ({ meta: [{ title: "Monitorar Webinar — Soluções Online" }] }),
@@ -118,11 +120,47 @@ function WebinarMonitor() {
     participantesRef.current = participantes ?? [];
   }, [participantes]);
 
+  const exportarExcel = () => {
+    const fmtHora = (v: string | null) => (v ? new Date(v).toLocaleString("pt-BR") : "—");
+
+    const linhasLiberados = liberados.map((p: any) => ({
+      Nome: p.nome,
+      WhatsApp: p.telefone,
+      "Entrou às": fmtHora(p.entrou_em),
+      "Saiu às": fmtHora(p.saiu_em),
+      Status: p.saiu_em ? "Saiu" : "Online",
+    }));
+
+    const linhasBloqueados = bloqueados.map((p: any) => ({
+      Nome: p.nome,
+      WhatsApp: p.telefone,
+      "Tentou entrar às": fmtHora(p.created_at),
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const wsLiberados = XLSX.utils.json_to_sheet(linhasLiberados);
+    wsLiberados["!cols"] = [{ wch: 28 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 10 }];
+    XLSX.utils.book_append_sheet(wb, wsLiberados, "Conseguiu entrar");
+
+    const wsBloqueados = XLSX.utils.json_to_sheet(linhasBloqueados);
+    wsBloqueados["!cols"] = [{ wch: 28 }, { wch: 18 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, wsBloqueados, "Não conseguiu (atraso)");
+
+    const dataArquivo = webinar?.iniciado_em ? new Date(webinar.iniciado_em) : new Date();
+    const nomeArquivo = `webinar-${dataArquivo.toISOString().slice(0, 10)}-${(webinar?.titulo ?? "aula").replace(/[^a-zA-Z0-9]+/g, "-")}.xlsx`;
+    XLSX.writeFile(wb, nomeArquivo);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <PageHeader
         title={webinar?.titulo ?? "Webinar"}
         description="Acompanhamento ao vivo de entradas, saídas e presença"
+        actions={
+          <Button variant="outline" onClick={exportarExcel} disabled={!participantes || participantes.length === 0}>
+            <FileSpreadsheet className="h-4 w-4 mr-2" /> Exportar Excel
+          </Button>
+        }
       />
 
       {ultimaSaida && (
