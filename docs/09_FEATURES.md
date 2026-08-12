@@ -177,6 +177,7 @@
 - ✅ Tabela de participantes "liberados" (os que realmente assistiram) separada dos bloqueados
 - ⚠️ Limitação conhecida: o reconhecimento por telefone é por igualdade exata da máscara digitada — se a pessoa digitar o número diferente da 1ª vez (com/sem 9º dígito, etc), não reconhece como reentrada e trata como tentativa nova
 - ⚠️ **Mudança temporária (05/08/2026, a pedido do Diego):** ao ser liberado (novo ou reentrada), a página `/webinar/:id` não mostra mais o player interno — redireciona direto pro link do YouTube (`webinars.youtube_url`). O player interno com chat/depoimentos/contador continua no código (não foi removido), só ficou inacessível por enquanto; é fácil reverter tirando o redirect quando o Diego quiser voltar a usar a página própria
+- ✅ Botão "Exportar Excel" no painel de monitoramento (`/webinars/:id`, 05/08/2026) — baixa um `.xlsx` (biblioteca `xlsx`/SheetJS) com 2 abas: "Conseguiu entrar" (nome, WhatsApp, horário que entrou/saiu, status) e "Não conseguiu (atraso)" (nome, WhatsApp, horário que tentou). Nome do arquivo já vem com a data da aula
 
 ## Módulo: Perfil do Aluno (admin) — novidades
 - ✅ Botão "Copiar acesso" — modal com login/senha/link prontos num texto, pra colar manualmente no WhatsApp (sem envio automático via Z-API, por decisão do Diego)
