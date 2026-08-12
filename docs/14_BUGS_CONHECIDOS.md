@@ -248,6 +248,13 @@
 - **Solução (12/08/2026):** `generateAsaasCobrar` agora lê `error.context` e extrai a mensagem real do corpo da resposta antes de mostrar o erro pro usuário — a mensagem genérica só aparece como último recurso, se o corpo não puder ser lido.
 - **Status:** ✅ Resolvido (a extração da mensagem foi corrigida; falta o Diego tentar gerar o boleto da Francine de novo pra a gente ver o motivo real do erro original e corrigir a causa raiz, se for algo além de mensagem genérica)
 
+### BUG-047: Erro real ao gerar boleto de parcela já vencida (causa raiz do caso da Francine, CTR 1741)
+- **Sintoma:** ao gerar boleto (ou PIX) pela 1ª vez pra uma parcela cuja data de vencimento já passou, dava erro. Antes do BUG-046 ser corrigido, o sistema só mostrava a mensagem genérica "Edge Function returned a non-2xx status code" — depois do BUG-046, passou a mostrar a mensagem real: "Erro ao criar cobrança: Não é permitido data de vencimento inferior a hoje."
+- **Causa:** a edge function `asaas-cobrar` mandava a `data_vencimento` original da parcela pro Asaas sem checar se já tinha passado. O Asaas rejeita a criação de qualquer cobrança (boleto ou PIX) com `dueDate` no passado — mesmo pra parcelas legitimamente atrasadas.
+- **Solução (12/08/2026):** se `data_vencimento` da parcela já passou, `asaas-cobrar` agora manda a data de **hoje** pro Asaas na criação da cobrança — a `data_vencimento` da parcela no banco **não muda**, continua com a data original, então os relatórios de "em atraso" continuam corretos. Instrumentação temporária de debug (tabela `debug_logs`) usada só pra diagnosticar esse caso já foi removida do código da função (a tabela ficou no banco, pode ser reaproveitada em debugs futuros).
+- **Impacto:** no momento da correção, havia 3 outras parcelas na mesma situação (vencidas, sem cobrança gerada ainda) — agora também podem ter boleto/PIX gerado normalmente.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

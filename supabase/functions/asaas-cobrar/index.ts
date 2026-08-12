@@ -27,7 +27,6 @@ serve(async (req) => {
       throw new Error("ID da parcela é obrigatório.");
     }
 
-    // 1. Buscar dados da parcela e do polo através do aluno
     const { data: parcela, error: parcelaError } = await supabaseClient
       .from("parcelas")
       .select(`
@@ -63,7 +62,6 @@ serve(async (req) => {
       ? "https://www.asaas.com/api/v3" 
       : "https://sandbox.asaas.com/api/v3";
 
-    // SE AÇÃO FOR CONFIRMAR PAGAMENTO EM DINHEIRO (para o Asaas parar de cobrar)
     if (action === 'receive_in_cash') {
       if (!parcela.asaas_id) {
         console.log(`Parcela ${parcela_id} sem asaas_id — nada a confirmar.`);
@@ -85,7 +83,6 @@ serve(async (req) => {
       console.log("RETORNO ASAAS (RECEIVE_IN_CASH):", JSON.stringify(receiveData));
 
       if (!receiveResponse.ok) {
-        // 400 quando já está confirmado — tratar como sucesso silencioso
         const desc = receiveData.errors?.[0]?.description || "";
         if (receiveResponse.status === 400 && /confirmad|receb/i.test(desc)) {
           return new Response(JSON.stringify({ success: true, already: true, payment: receiveData }), {
@@ -102,7 +99,6 @@ serve(async (req) => {
       });
     }
 
-    // SE AÇÃO FOR BUSCAR COBRANÇA EXISTENTE
     if (action === 'fetch' || (parcela.asaas_id && action !== 'create')) {
       console.log(`Buscando cobrança existente no Asaas para parcela ${parcela_id} (Asaas ID: ${parcela.asaas_id})`);
       
@@ -121,7 +117,6 @@ serve(async (req) => {
         throw new Error(`Erro ao buscar cobrança no Asaas: ${paymentData.errors?.[0]?.description || fetchResponse.statusText}`);
       }
 
-      // Atualizar no banco com os dados mais recentes
       const updateData: any = {
         asaas_url: paymentData.bankSlipUrl || paymentData.invoiceUrl,
       };
@@ -137,7 +132,6 @@ serve(async (req) => {
         updateData.asaas_barcode = barcodeData.identificationField;
         paymentData.identificationField = barcodeData.identificationField;
         
-        // Garantir que a URL do PDF esteja correta
         if (!updateData.asaas_url) {
           updateData.asaas_url = `${asaas_ambiente === "producao" ? "https://www.asaas.com" : "https://sandbox.asaas.com"}/b/pdf/${parcela.asaas_id}`;
           paymentData.bankSlipUrl = updateData.asaas_url;
@@ -146,7 +140,6 @@ serve(async (req) => {
         console.log(`Atualizando código de barras para: ${updateData.asaas_barcode}`);
       }
 
-      // Se for PIX, buscar QR Code também
       let pixData = null;
       if (paymentData.billingType === 'PIX') {
         const pixResponse = await fetch(`${asaasBaseUrl}/payments/${paymentData.id}/pixQrCode`, {
@@ -175,7 +168,6 @@ serve(async (req) => {
       });
     }
 
-    // SE FOR CRIAÇÃO (FLUXO ORIGINAL)
     if (!tipo) throw new Error("Tipo de cobrança é obrigatório para criação.");
 
     if (!aluno) throw new Error("Aluno não encontrado para esta parcela.");
@@ -213,11 +205,18 @@ serve(async (req) => {
     let dueDate = parcela.data_vencimento;
     if (dueDate && dueDate.includes('T')) dueDate = dueDate.split('T')[0];
 
+    // O Asaas não permite criar cobrança com vencimento no passado ("Não é permitido data de
+    // vencimento inferior a hoje"). Se a parcela já estava vencida quando o boleto/PIX foi gerado
+    // pela primeira vez (BUG-047), usamos a data de hoje pro Asaas, mas mantemos data_vencimento
+    // original da parcela intacta no banco (pros relatórios de atraso continuarem corretos).
+    const hojeStr = new Date().toISOString().split('T')[0];
+    const dueDateParaAsaas = dueDate && dueDate < hojeStr ? hojeStr : dueDate;
+
     const paymentPayload = {
       customer: asaas_customer_id,
       billingType: tipo === 'PIX' ? 'PIX' : 'BOLETO',
       value: Number(parcela.valor),
-      dueDate: dueDate,
+      dueDate: dueDateParaAsaas,
       description: parcela.descricao || `Parcela ${parcela.numero || ''}`,
       externalReference: parcela.id,
     };
@@ -232,7 +231,7 @@ serve(async (req) => {
     const paymentData = await paymentResponse.json();
     console.log("RETORNO ASAAS (CREATE):", JSON.stringify(paymentData));
 
-    if (!paymentResponse.ok) throw new Error(`Erro ao criar cobrança: ${paymentData.errors?.[0]?.description}`);
+    if (!paymentResponse.ok) throw new Error(`Erro ao criar cobrança: ${paymentData.errors?.[0]?.description || JSON.stringify(paymentData)}`);
 
     let paymentDetail = { ...paymentData };
     if (tipo === 'BOLETO') {
@@ -250,7 +249,6 @@ serve(async (req) => {
         console.error(`Erro ao buscar identificationField (${barcodeResponse.status}): ${errorText}`);
       }
 
-      // Garantir que a URL do PDF esteja preenchida
       if (!paymentDetail.bankSlipUrl) {
         paymentDetail.bankSlipUrl = `${asaas_ambiente === "producao" ? "https://www.asaas.com" : "https://sandbox.asaas.com"}/b/pdf/${paymentData.id}`;
       }
@@ -274,7 +272,6 @@ serve(async (req) => {
       updateParcela.asaas_pix_chave = pixData.payload;
       updateParcela.asaas_pix_qrcode = pixData.encodedImage;
     } else if (tipo === 'BOLETO') {
-      // Garantindo identificationField (47 dígitos)
       updateParcela.asaas_barcode = paymentDetail.identificationField || paymentDetail.fullCycleCode;
       console.log(`Salvando código de barras: ${updateParcela.asaas_barcode}`);
     }
