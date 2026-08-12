@@ -122,8 +122,14 @@ serve(async (req) => {
       .eq("id", parcela.id);
 
     if (updateError) {
+      // IMPORTANTE: nunca responder erro (status != 200) pro Asaas — ele conta falhas de entrega
+      // e desativa a sincronização do webhook sozinho no painel depois de falhas repetidas
+      // (mesmo problema identificado no webhook do Aulão, BUG-045). Só loga aqui.
       console.error("Erro ao atualizar parcela:", updateError);
-      throw updateError;
+      return new Response(JSON.stringify({ received: true, error: updateError.message, note: "erro interno registrado, respondendo 200 pro Asaas não pausar o webhook" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     console.log(`Parcela ${parcela.id} atualizada via webhook (${event}).`);
@@ -133,10 +139,11 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error: any) {
+    // Mesmo raciocínio: sempre 200 pro Asaas, mesmo em erro interno inesperado.
     console.error("Erro no webhook:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error.message, note: "erro interno registrado, respondendo 200 pro Asaas não pausar o webhook" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: 200,
     });
   }
 });

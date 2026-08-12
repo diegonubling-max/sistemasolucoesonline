@@ -62,8 +62,13 @@ export const Route = createFileRoute("/api/public/hooks/asaas-webhook-aulao")({
             .eq("id", externalReference);
 
           if (error) {
+            // IMPORTANTE: sempre responder 200 pro Asaas, mesmo em erro interno nosso.
+            // Se responder erro (4xx/5xx), o Asaas conta como falha de entrega e, depois de
+            // falhas repetidas, DESATIVA a sincronização do webhook sozinho no painel dele —
+            // foi exatamente isso que aconteceu (BUG-045). O erro fica só logado aqui pra
+            // investigação, sem derrubar a fila de webhooks do Asaas.
             console.error("[asaas-webhook-aulao] Erro ao atualizar:", error);
-            return jsonResponse({ ok: false, error: error.message }, 500);
+            return jsonResponse({ ok: false, error: error.message, note: "erro interno registrado, respondendo 200 pro Asaas não pausar o webhook" });
           }
 
           console.log(`[asaas-webhook-aulao] Pagamento confirmado para matrícula ${externalReference}`);
@@ -82,8 +87,9 @@ export const Route = createFileRoute("/api/public/hooks/asaas-webhook-aulao")({
 
           return jsonResponse({ ok: true, matricula_id: externalReference, event });
         } catch (e: any) {
+          // Mesmo raciocínio: nunca deixar o Asaas ver uma resposta de erro daqui.
           console.error("[asaas-webhook-aulao] Erro:", e);
-          return jsonResponse({ ok: false, error: e?.message }, 500);
+          return jsonResponse({ ok: false, error: e?.message, note: "erro interno registrado, respondendo 200 pro Asaas não pausar o webhook" });
         }
       },
     },
