@@ -448,24 +448,24 @@ function WebinarPage() {
 
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
-      <div className="flex-1 flex flex-col">
-        <div className="flex items-center justify-between px-4 py-2 bg-neutral-900">
+    <div className="h-dvh bg-black text-white flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex flex-col flex-none min-h-0 lg:flex-1">
+        <div className="flex items-center justify-between px-4 py-2 bg-neutral-900 shrink-0">
           <h1 className="font-bold truncate">{webinar.titulo}</h1>
           <div className="flex items-center gap-1 text-sm bg-red-600 px-2 py-1 rounded-full">
             <Users className="h-4 w-4" />
             {qtdOnline}
           </div>
         </div>
-        <div className="text-xs text-center bg-neutral-800 text-neutral-300 py-1">
+        <div className="text-xs text-center bg-neutral-800 text-neutral-300 py-1 shrink-0">
           🔇 O vídeo inicia sem som (regra dos navegadores) — clique nele pra ativar o áudio
         </div>
         {webinar.gravado && (
-          <div className="text-xs text-center bg-neutral-800/60 text-neutral-400 py-1">
+          <div className="text-xs text-center bg-neutral-800/60 text-neutral-400 py-1 shrink-0">
             🎥 Aula gravada — comente à vontade, nosso time está online pra tirar dúvidas
           </div>
         )}
-        <div className="aspect-video w-full bg-black">
+        <div className="aspect-video w-full bg-black shrink-0">
           {youtubeId ? (
             webinar.gravado ? (
               <div id={`yt-player-${id}`} className="w-full h-full" />
@@ -474,7 +474,7 @@ function WebinarPage() {
                 className="w-full h-full"
                 src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1`}
                 title={webinar.titulo}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
               />
             )
@@ -486,8 +486,8 @@ function WebinarPage() {
         </div>
       </div>
 
-      <div className="w-full lg:w-80 flex flex-col bg-neutral-900 border-t lg:border-t-0 lg:border-l border-neutral-800 h-[45vh] lg:h-screen">
-        <div ref={chatRef} className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="w-full lg:w-80 flex flex-col bg-neutral-900 border-t lg:border-t-0 lg:border-l border-neutral-800 flex-1 min-h-0 lg:flex-none">
+        <div ref={chatRef} className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
           {comentarios.map((c) => (
             <div key={c.id} className="text-sm">
               <span className={`font-bold ${c.replay ? "text-blue-400" : "text-orange-400"}`}>
@@ -497,7 +497,7 @@ function WebinarPage() {
             </div>
           ))}
         </div>
-        <div className="p-2 border-t border-neutral-800 space-y-2">
+        <div className="p-2 border-t border-neutral-800 space-y-2 shrink-0">
           <div className="flex gap-1 flex-wrap">
             {EMOJIS.map((e) => (
               <button
