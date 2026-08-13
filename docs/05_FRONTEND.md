@@ -178,8 +178,10 @@
 ### Menus Admin (admin only):
 - **Dashboard Aulão** (`/dashboard-aulao`) — Cards: Total Matrículas, Faturamento Total; Detalhamento Boleto/Cartão com barras de progresso. "Recebido" soma o `pagamento_valor` real de cada matrícula paga (corrigido 22/07/2026 — antes multiplicava quantidade × valor fixo e não refletia pagamentos extras/parciais)
 - **Matrículas Aulão** (`/matriculas-aulao`) — Lista com:
-  - Coluna # (numeração), Data, Nome, Telefone, Forma Pgto, Contrato, Pagamento, Status, Ações
-  - Filtros: Forma (Todos/Boleto/Cartão), Contrato (Todos/Assinado/Não), Pagamento (Todos/Pago/Aguardando)
+  - Coluna # (numeração), Data, Nome, Telefone, Forma Pgto, Voucher, Contrato, Pagamento, Status, Ações
+  - **3 guias no topo (12/08/2026), cada uma com contador** — "Ativos — ainda não pagaram" (padrão ao abrir), "Pagos e matriculados", "Inativados". Substituem os antigos filtros de Status e Pagamento
+  - Filtros restantes (refinam dentro de cada guia): Forma (Todos/Boleto/Cartão), Contrato (Todos/Assinado/Não)
+  - Coluna Voucher (05/08/2026): código que o aluno preencheu no `/matricula` — verde se válido e aplicado, laranja se código errado, "—" se não preencheu
   - Ações: Ver contrato, Copiar link pagamento (cartão), Copiar link contrato, Enviar contrato WhatsApp, Editar, Excluir
 
 ### Componentes:
@@ -205,7 +207,7 @@
 | 🗑️ | Vermelho | Sempre | Excluir |
 
 - Opção "À Vista (PIX)" removida do seletor de forma de pagamento no edit
-- Filtros disponíveis: Forma (Boleto/Cartão), Contrato (Assinado/Não assinado), Pagamento (Pago/Aguardando), Status (Todos/Ativos/Cancelados) — adicionado 24/07/2026. **Padrão do filtro Status mudado pra "Ativos" em 05/08/2026** (antes abria em "Todos", misturando com cancelados) — pra ver os cancelados, trocar manualmente o filtro
+- **(12/08/2026) Filtros de Pagamento e Status removidos** (viraram as 3 guias descritas acima); Forma e Contrato continuam como filtro dentro de cada guia
 - Coluna Pagamento mostra o total real pago (soma de todos os lançamentos), com a forma entre parênteses (ex: "Pago (R$ 229,80 via Pix)")
 - Coluna "Previsão de Pagamento" (28/07/2026) — campo de data editável direto na tabela, sem precisar abrir o modal de edição. Usado quando o aluno faz a matrícula mas pede pra pagar depois (taxa ou cartão) — a equipe registra a data combinada por telefone. Fica vermelho se a data já passou e o pagamento ainda não foi confirmado.
 

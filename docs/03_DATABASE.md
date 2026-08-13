@@ -100,6 +100,17 @@
 
 ---
 
+### debug_logs (12/08/2026, BUG-046/047)
+**Objetivo:** Tabela de apoio pra investigar erros de edge functions quando os logs nativos do Supabase estão indisponíveis (aconteceu mais de uma vez nesta sessão). Instrumentação temporária escreve aqui direto; não é uma tabela de auditoria permanente, mas ficou no banco pra reaproveitar em debugs futuros.
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | uuid PK | Identificador |
+| contexto | text | Identificador livre de onde veio o log (ex: `"asaas-cobrar:erro_final"`) |
+| payload | jsonb | Dados livres do momento do erro |
+| created_at | timestamptz | — |
+
+---
+
 ### alunos
 **Objetivo:** Alunos matriculados (regulares e de aulão)
 | Campo | Tipo | Descrição |

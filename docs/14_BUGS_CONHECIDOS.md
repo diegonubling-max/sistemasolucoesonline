@@ -288,6 +288,24 @@
 - **Reforço adicional (mesma sessão, resposta à pergunta "vai acontecer com outros que ainda vão vencer?"):** criada `reconciliar-pagamentos` (edge function nova), agendada via `pg_cron` pra rodar toda manhã (6h Brasília) — confere automaticamente TODA parcela em aberto com cobrança já gerada, direto na API do Asaas, e dá baixa sozinha se já estiver paga. Cobre qualquer aluno futuro na mesma situação da Gleci, sem precisar de ninguém notar o problema. Testada rodando manualmente antes de agendar (2 parcelas verificadas, 0 corrigidas — as duas realmente ainda não pagas).
 - **Status:** ✅ Resolvido (caso pontual + reforço estrutural + reconciliação automática diária). Deploy manual da função feito (v4)
 
+### BUG-051: Voucher não aparecia na coluna nova (Matrículas Aulão) mesmo quando digitado
+- **Sintoma:** aluno preenchia o voucher (certo ou errado) no `/matricula`, mas a coluna "Voucher" continuava mostrando "—".
+- **Causa:** `voucher_code`/`voucher_aplicado` só eram salvos no `matriculas_aulao` no momento de **gerar o pagamento** de verdade (clicar em PIX/Cartão), não quando a pessoa preenchia e avançava. Se o teste (ou o próprio aluno) parasse no botão "Finalizar" sem chegar a gerar o pagamento, o voucher nunca era gravado.
+- **Solução (05/08/2026):** `voucher_code` e `voucher_aplicado` agora são salvos junto com `forma_pagamento`, no mesmo momento (botão "Finalizar" do step 2).
+- **Status:** ✅ Resolvido
+
+### BUG-052: link do webinar abria o YouTube no navegador em vez do app, no Android
+- **Sintoma:** ao ser liberado na "portaria" do webinar, no iPhone o link já abria certo no app do YouTube; no Android, abria no navegador.
+- **Causa:** um link `https://` comum pro YouTube nem sempre abre no app no Android (depende de configuração do aparelho); no iOS já funciona via Universal Links.
+- **Solução (05/08/2026):** detecção de Android via `navigator.userAgent`; nesse caso o link é montado no formato `intent://` (força abrir no app do YouTube instalado, com fallback pro navegador se não tiver o app). iOS continua com o link `https://` normal.
+- **Status:** ✅ Resolvido
+
+### BUG-053: player interno do webinar (aula gravada) — vídeo sumia da tela no mobile ao comentar
+- **Sintoma:** no navegador do WhatsApp (in-app browser) no iPhone, ao tocar no campo de comentário pra digitar, o vídeo "subia" e desaparecia da visão.
+- **Causa:** a tela usava `min-h-screen` (100vh fixo) — quando o teclado do celular abria, o espaço realmente visível diminuía, mas a altura da página continuava "grande demais", e o navegador rolava a tela toda pra mostrar o campo de texto, levando o vídeo junto pra fora.
+- **Solução (05/08/2026):** trocado pra `h-dvh` (altura dinâmica, que já considera o teclado aberto) + `overflow-hidden` no container principal, com o vídeo travado numa altura fixa (`shrink-0`) — só a lista de comentários rola internamente agora, o vídeo fica parado no lugar. De brinde, a rotação automática pra paisagem em tela cheia dentro do navegador do WhatsApp é uma limitação do próprio app (in-app browser), não resolvível 100% pelo código — abrir no Safari/Chrome resolve.
+- **Status:** ✅ Resolvido (layout) / ⚠️ limitação de plataforma (rotação em tela cheia dentro do WhatsApp)
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
