@@ -61,6 +61,8 @@ function WebinarPage() {
   const chatRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const depoimentosMostradosRef = useRef<Set<string>>(new Set());
+  const liveIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [audioAtivo, setAudioAtivo] = useState(false);
 
   const { data: webinar, isLoading } = useQuery({
     queryKey: ["webinar", id],
@@ -435,10 +437,6 @@ function WebinarPage() {
       </div>
     );
   }
-
-
-  const liveIframeRef = useRef<HTMLIFrameElement | null>(null);
-  const [audioAtivo, setAudioAtivo] = useState(false);
 
   const ativarAudio = () => {
     try {
