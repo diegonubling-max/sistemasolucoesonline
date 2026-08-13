@@ -279,6 +279,14 @@
   5. Criada a função `proximo_ctr_aluno()` (puxa da mesma sequence, pulando terminados em 13) — **os dois fluxos agora usam a mesma fonte**. `converter-matricula-aulao.ts` não calcula mais `MAX(ctr)+1` manualmente, chama essa função.
 - **Status:** ✅ Resolvido
 
+### BUG-050: Pagamento confirmado no Asaas não deu baixa automática — caso da Gleci (CTR 1721)
+- **Sintoma:** aluna paga o boleto (Gleci, parcela 1, dia 12/08), mas a parcela continuou aparecendo como "aberto" no sistema.
+- **Diagnóstico:** consultei a cobrança direto na API do Asaas (usando `pg_net` do próprio Postgres, já que os logs de edge function do Supabase estavam com falha técnica na hora) — o Asaas confirma `status: RECEIVED`, `paymentDate: 2026-08-12`, `externalReference` batendo com o id da parcela certinha. Ou seja: o pagamento existe e está corretamente vinculado, mas o **webhook de confirmação nunca chegou** no sistema (mesma causa-raiz de fundo do BUG-045: a sincronização do webhook no painel do Asaas cai sozinha depois de falhas de entrega — mesmo já corrigido pra sempre responder 200, pode ter caído numa janela antes do fix, ou por outro motivo pontual do lado do Asaas).
+- **Verificação:** rodei a mesma consulta pra todas as outras parcelas com boleto gerado e ainda "aberto" no sistema (Marcia Adriana Barbosa Machado CTR 1751, Francine Eliseu Serafim CTR 1741) — as duas realmente **não pagaram ainda** (Asaas confirma `OVERDUE`), não é o mesmo problema. Só a Gleci estava com pagamento perdido.
+- **Solução pontual:** parcela da Gleci corrigida manualmente (status pago, data 12/08, valor líquido).
+- **Solução estrutural (12/08/2026):** a ação "fetch" (usada no botão de verificar/atualizar cobrança) do `asaas-cobrar` só atualizava o link do boleto/PIX — nunca conferia se o Asaas já mostrava a cobrança como paga. Agora, toda vez que essa ação roda e o Asaas diz que já foi recebida, a parcela é marcada como paga também — funciona como uma segunda camada de segurança além do webhook, útil pra casos futuros em que a sincronização do Asaas falhar de novo.
+- **Status:** ✅ Resolvido (caso pontual + reforço estrutural). Deploy manual da função feito (v4)
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

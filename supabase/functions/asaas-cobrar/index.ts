@@ -121,6 +121,19 @@ serve(async (req) => {
         asaas_url: paymentData.bankSlipUrl || paymentData.invoiceUrl,
       };
 
+      // BUG-050 (12/08/2026): esse "fetch" só atualizava o link do boleto/PIX — nunca conferia
+      // se o Asaas já marcava a cobrança como paga, mesmo quando o webhook de confirmação
+      // não chegou (ex: sincronização do webhook interrompida no painel do Asaas). Agora,
+      // sempre que o Asaas mostrar a cobrança como recebida, a parcela é dada como paga aqui
+      // também — funciona como uma segunda camada de segurança além do webhook.
+      const statusPago = ["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH"].includes(paymentData.status);
+      if (statusPago && parcela.status !== "pago") {
+        updateData.status = "pago";
+        updateData.data_pagamento = paymentData.paymentDate || paymentData.confirmedDate || paymentData.clientPaymentDate || new Date().toISOString().split("T")[0];
+        if (paymentData.netValue != null) updateData.valor_liquido = Number(paymentData.netValue);
+        console.log(`Cobrança ${parcela.asaas_id} já está paga no Asaas (status ${paymentData.status}) mas a parcela ainda estava em aberto — corrigindo.`);
+      }
+
       if (paymentData.billingType === 'BOLETO') {
         console.log("Buscando identificationField do boleto (FETCH)...");
         const barcodeResponse = await fetch(`${asaasBaseUrl}/payments/${parcela.asaas_id}/identificationField`, {
