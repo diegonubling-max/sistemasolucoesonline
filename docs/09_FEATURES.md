@@ -178,7 +178,7 @@
 - ✅ Painel admin do webinar (`/webinars/:id`) ganhou card "Bloqueados (chegaram tarde)" + tabela com nome/telefone/horário da tentativa e um botão "Chamar no WhatsApp" (wa.me), pra equipe já ir chamando durante a própria aula
 - ✅ Tabela de participantes "liberados" (os que realmente assistiram) separada dos bloqueados
 - ⚠️ Limitação conhecida: o reconhecimento por telefone é por igualdade exata da máscara digitada — se a pessoa digitar o número diferente da 1ª vez (com/sem 9º dígito, etc), não reconhece como reentrada e trata como tentativa nova
-- ⚠️ **Mudança temporária (05/08/2026, a pedido do Diego):** ao ser liberado (novo ou reentrada), a página `/webinar/:id` não mostra mais o player interno — redireciona direto pro link do YouTube (`webinars.youtube_url`). O player interno com chat/depoimentos/contador continua no código (não foi removido), só ficou inacessível por enquanto; é fácil reverter tirando o redirect quando o Diego quiser voltar a usar a página própria
+- ✅ **(12/08/2026) Redirect direto pro YouTube revertido, a pedido do Diego** — a página `/webinar/:id` voltou a mostrar o player interno do sistema (chat + vídeo) pra quem é liberado, em vez de mandar direto pro YouTube. A função `montarLinkYoutubeApp` (Android via `intent://`) continua no código, sem uso — fica pronta caso o redirect direto seja reativado no futuro
 - ✅ Botão "Exportar Excel" no painel de monitoramento (`/webinars/:id`, 05/08/2026) — baixa um `.xlsx` (biblioteca `xlsx`/SheetJS) com 2 abas: "Conseguiu entrar" (nome, WhatsApp, horário que entrou/saiu, status) e "Não conseguiu (atraso)" (nome, WhatsApp, horário que tentou). Nome do arquivo já vem com a data da aula
 
 ## Módulo: Perfil do Aluno (admin) — novidades

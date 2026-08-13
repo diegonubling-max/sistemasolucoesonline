@@ -23,7 +23,9 @@ function extrairYoutubeId(url: string): string | null {
   return match ? match[1] : null;
 }
 
-// Monta o link de destino certo por plataforma, pra sempre abrir no APP do YouTube (não no navegador).
+// Monta o link de destino certo por plataforma, pra abrir no APP do YouTube (não no navegador).
+// Não está em uso agora (o player interno do sistema voltou a ser o padrão), mas fica aqui
+// pronta caso o Diego queira reativar o redirect direto pro YouTube no futuro.
 // - Android: link https:// normal costuma abrir no navegador (depende de config do aparelho) — o
 //   esquema intent:// força a abertura no app do YouTube quando ele está instalado.
 // - iOS: o link https:// padrão já abre direto no app (Universal Links), sem precisar de truque.
@@ -100,12 +102,8 @@ function WebinarPage() {
     }
   }, [id]);
 
-  // Acesso liberado (novo ou reentrada) — por enquanto manda direto pro YouTube em vez do player interno
-  useEffect(() => {
-    if (participante && webinar?.youtube_url) {
-      window.location.href = montarLinkYoutubeApp(webinar.youtube_url);
-    }
-  }, [participante, webinar?.youtube_url]);
+  // Acesso liberado (novo ou reentrada) — volta a mostrar o player interno do sistema (chat +
+  // vídeo), em vez de redirecionar pro YouTube. O redirect direto foi removido a pedido do Diego.
 
   const handleEntrar = async () => {
     if (!nome.trim() || telefone.replace(/\D/g, "").length < 10) return;
@@ -397,27 +395,6 @@ function WebinarPage() {
                 {entrando ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Entrando...</> : "Entrar na aula"}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Acesso liberado — redireciona direto pro YouTube (ver useEffect acima). Essa tela só aparece
-  // no instante entre a liberação e o redirect acontecer de fato.
-  if (participante) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-8 pb-6 space-y-3 text-center">
-            <Loader2 className="h-8 w-8 text-orange-500 mx-auto animate-spin" />
-            <h1 className="text-xl font-bold">Acesso liberado!</h1>
-            <p className="text-muted-foreground text-sm">Te levando pra aula ao vivo no YouTube...</p>
-            {webinar?.youtube_url && (
-              <a href={montarLinkYoutubeApp(webinar.youtube_url)} className="text-orange-600 text-sm underline">
-                Não foi redirecionado? Clique aqui
-              </a>
-            )}
           </CardContent>
         </Card>
       </div>
