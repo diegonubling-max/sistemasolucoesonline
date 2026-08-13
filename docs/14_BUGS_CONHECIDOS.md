@@ -312,6 +312,12 @@
 - **Solução (12/08/2026):** botão próprio "🔇 Ativar áudio" sobreposto no canto do vídeo (nos dois modos, ao vivo e gravado) — desaparece assim que clicado. No modo gravado usa a API do player (`unMute`/`setVolume`); no modo ao vivo manda o comando via `postMessage` pro iframe (precisou adicionar `enablejsapi=1` na URL do embed, que não estava lá).
 - **Status:** ✅ Resolvido
 
+### BUG-055 (crítico): tela travava com "Something went wrong!" logo depois de entrar na aula
+- **Sintoma:** aluno preenchia nome e telefone pra entrar no webinar e, assim que era liberado, a tela toda quebrava mostrando o erro genérico do framework ("Something went wrong! Show Error"), em vez do player/chat.
+- **Causa:** na correção anterior (BUG-054, botão "Ativar áudio"), dois hooks do React (`useRef` e `useState` pro controle do áudio) foram declarados **depois** de vários `return` condicionais da tela (aula não encontrada, bloqueado, aguardando início, tela de entrada, agendado, encerrado). Isso viola uma regra fundamental do React: hooks têm que ser chamados sempre na mesma ordem, em todo render, nunca depois de um retorno condicional. Enquanto a pessoa estava na tela de entrada (preenchendo nome/telefone), esses hooks nunca chegavam a ser executados; assim que ela era liberada e o componente tentava renderizar o player, a ordem dos hooks mudava de um render pro outro — o React detecta isso e quebra a tela inteira, sempre, de forma garantida (não é intermitente).
+- **Solução (12/08/2026):** os dois hooks foram movidos pro topo do componente, junto com todos os outros — antes de qualquer `return` condicional.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
