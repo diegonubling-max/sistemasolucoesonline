@@ -39,7 +39,6 @@ import { Route as AdminAlunosNovoRouteImport } from './routes/_admin.alunos.novo
 import { Route as AdminCursosIndexRouteImport } from './routes/_admin.cursos.index'
 import { Route as AdminCursosNovoRouteImport } from './routes/_admin.cursos.novo'
 import { Route as AdminWebinarsIndexRouteImport } from './routes/_admin.webinars.index'
-import { Route as AdminWebinarsIdRouteImport } from './routes/_admin.webinars.$id'
 import { Route as StudentAlunoDashboardRouteImport } from './routes/_student.aluno.dashboard'
 import { Route as StudentAlunoFinanceiroRouteImport } from './routes/_student.aluno.financeiro'
 import { Route as StudentAlunoPerfilRouteImport } from './routes/_student.aluno.perfil'
@@ -48,6 +47,7 @@ import { Route as AdminAlunosIdIndexRouteImport } from './routes/_admin.alunos.$
 import { Route as AdminAlunosIdEditarRouteImport } from './routes/_admin.alunos.$id.editar'
 import { Route as AdminCursosIdAulasRouteImport } from './routes/_admin.cursos.$id.aulas'
 import { Route as AdminCursosIdEditarRouteImport } from './routes/_admin.cursos.$id.editar'
+import { Route as AdminWebinarsIdIndexRouteImport } from './routes/_admin.webinars.$id.index'
 import { Route as AdminWebinarsIdDepoimentosRouteImport } from './routes/_admin.webinars.$id.depoimentos'
 import { Route as StudentAlunoCursoIdRouteImport } from './routes/_student.aluno.curso.$id'
 import { Route as StudentAlunoProvaFinalExecucaoRouteImport } from './routes/_student.aluno.prova-final.execucao'
@@ -210,11 +210,6 @@ const AdminWebinarsIndexRoute = AdminWebinarsIndexRouteImport.update({
   path: '/webinars/',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminWebinarsIdRoute = AdminWebinarsIdRouteImport.update({
-  id: '/webinars/$id',
-  path: '/webinars/$id',
-  getParentRoute: () => AdminRoute,
-} as any)
 const StudentAlunoDashboardRoute = StudentAlunoDashboardRouteImport.update({
   id: '/aluno/dashboard',
   path: '/aluno/dashboard',
@@ -255,11 +250,16 @@ const AdminCursosIdEditarRoute = AdminCursosIdEditarRouteImport.update({
   path: '/cursos/$id/editar',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminWebinarsIdIndexRoute = AdminWebinarsIdIndexRouteImport.update({
+  id: '/webinars/$id/',
+  path: '/webinars/$id/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminWebinarsIdDepoimentosRoute =
   AdminWebinarsIdDepoimentosRouteImport.update({
-    id: '/depoimentos',
-    path: '/depoimentos',
-    getParentRoute: () => AdminWebinarsIdRoute,
+    id: '/webinars/$id/depoimentos',
+    path: '/webinars/$id/depoimentos',
+    getParentRoute: () => AdminRoute,
   } as any)
 const StudentAlunoCursoIdRoute = StudentAlunoCursoIdRouteImport.update({
   id: '/aluno/curso/$id',
@@ -358,7 +358,6 @@ export interface FileRoutesByFullPath {
   '/webinar/$id': typeof WebinarIdRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
-  '/webinars/$id': typeof AdminWebinarsIdRouteWithChildren
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
@@ -383,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
   '/api/public/hooks/zapi-send': typeof ApiPublicHooksZapiSendRoute
   '/alunos/$id/': typeof AdminAlunosIdIndexRoute
+  '/webinars/$id/': typeof AdminWebinarsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AdminIndexRoute
@@ -410,7 +410,6 @@ export interface FileRoutesByTo {
   '/webinar/$id': typeof WebinarIdRoute
   '/alunos/novo': typeof AdminAlunosNovoRoute
   '/cursos/novo': typeof AdminCursosNovoRoute
-  '/webinars/$id': typeof AdminWebinarsIdRouteWithChildren
   '/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/aluno/perfil': typeof StudentAlunoPerfilRoute
@@ -435,6 +434,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
   '/api/public/hooks/zapi-send': typeof ApiPublicHooksZapiSendRoute
   '/alunos/$id': typeof AdminAlunosIdIndexRoute
+  '/webinars/$id': typeof AdminWebinarsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -465,7 +465,6 @@ export interface FileRoutesById {
   '/_admin/': typeof AdminIndexRoute
   '/_admin/alunos/novo': typeof AdminAlunosNovoRoute
   '/_admin/cursos/novo': typeof AdminCursosNovoRoute
-  '/_admin/webinars/$id': typeof AdminWebinarsIdRouteWithChildren
   '/_student/aluno/dashboard': typeof StudentAlunoDashboardRoute
   '/_student/aluno/financeiro': typeof StudentAlunoFinanceiroRoute
   '/_student/aluno/perfil': typeof StudentAlunoPerfilRoute
@@ -490,6 +489,7 @@ export interface FileRoutesById {
   '/api/public/hooks/zapi-jobs-diarios': typeof ApiPublicHooksZapiJobsDiariosRoute
   '/api/public/hooks/zapi-send': typeof ApiPublicHooksZapiSendRoute
   '/_admin/alunos/$id/': typeof AdminAlunosIdIndexRoute
+  '/_admin/webinars/$id/': typeof AdminWebinarsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -519,7 +519,6 @@ export interface FileRouteTypes {
     | '/webinar/$id'
     | '/alunos/novo'
     | '/cursos/novo'
-    | '/webinars/$id'
     | '/aluno/dashboard'
     | '/aluno/financeiro'
     | '/aluno/perfil'
@@ -544,6 +543,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/zapi-jobs-diarios'
     | '/api/public/hooks/zapi-send'
     | '/alunos/$id/'
+    | '/webinars/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -571,7 +571,6 @@ export interface FileRouteTypes {
     | '/webinar/$id'
     | '/alunos/novo'
     | '/cursos/novo'
-    | '/webinars/$id'
     | '/aluno/dashboard'
     | '/aluno/financeiro'
     | '/aluno/perfil'
@@ -596,6 +595,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/zapi-jobs-diarios'
     | '/api/public/hooks/zapi-send'
     | '/alunos/$id'
+    | '/webinars/$id'
   id:
     | '__root__'
     | '/_admin'
@@ -625,7 +625,6 @@ export interface FileRouteTypes {
     | '/_admin/'
     | '/_admin/alunos/novo'
     | '/_admin/cursos/novo'
-    | '/_admin/webinars/$id'
     | '/_student/aluno/dashboard'
     | '/_student/aluno/financeiro'
     | '/_student/aluno/perfil'
@@ -650,6 +649,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/zapi-jobs-diarios'
     | '/api/public/hooks/zapi-send'
     | '/_admin/alunos/$id/'
+    | '/_admin/webinars/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -887,13 +887,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWebinarsIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/webinars/$id': {
-      id: '/_admin/webinars/$id'
-      path: '/webinars/$id'
-      fullPath: '/webinars/$id'
-      preLoaderRoute: typeof AdminWebinarsIdRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/_student/aluno/dashboard': {
       id: '/_student/aluno/dashboard'
       path: '/aluno/dashboard'
@@ -950,12 +943,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCursosIdEditarRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/webinars/$id/': {
+      id: '/_admin/webinars/$id/'
+      path: '/webinars/$id'
+      fullPath: '/webinars/$id/'
+      preLoaderRoute: typeof AdminWebinarsIdIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/webinars/$id/depoimentos': {
       id: '/_admin/webinars/$id/depoimentos'
-      path: '/depoimentos'
+      path: '/webinars/$id/depoimentos'
       fullPath: '/webinars/$id/depoimentos'
       preLoaderRoute: typeof AdminWebinarsIdDepoimentosRouteImport
-      parentRoute: typeof AdminWebinarsIdRoute
+      parentRoute: typeof AdminRoute
     }
     '/_student/aluno/curso/$id': {
       id: '/_student/aluno/curso/$id'
@@ -1044,18 +1044,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AdminWebinarsIdRouteChildren {
-  AdminWebinarsIdDepoimentosRoute: typeof AdminWebinarsIdDepoimentosRoute
-}
-
-const AdminWebinarsIdRouteChildren: AdminWebinarsIdRouteChildren = {
-  AdminWebinarsIdDepoimentosRoute: AdminWebinarsIdDepoimentosRoute,
-}
-
-const AdminWebinarsIdRouteWithChildren = AdminWebinarsIdRoute._addFileChildren(
-  AdminWebinarsIdRouteChildren,
-)
-
 interface AdminRouteChildren {
   AdminColaboradoresRoute: typeof AdminColaboradoresRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
@@ -1073,14 +1061,15 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAlunosNovoRoute: typeof AdminAlunosNovoRoute
   AdminCursosNovoRoute: typeof AdminCursosNovoRoute
-  AdminWebinarsIdRoute: typeof AdminWebinarsIdRouteWithChildren
   AdminAlunosIndexRoute: typeof AdminAlunosIndexRoute
   AdminCursosIndexRoute: typeof AdminCursosIndexRoute
   AdminWebinarsIndexRoute: typeof AdminWebinarsIndexRoute
   AdminAlunosIdEditarRoute: typeof AdminAlunosIdEditarRoute
   AdminCursosIdAulasRoute: typeof AdminCursosIdAulasRoute
   AdminCursosIdEditarRoute: typeof AdminCursosIdEditarRoute
+  AdminWebinarsIdDepoimentosRoute: typeof AdminWebinarsIdDepoimentosRoute
   AdminAlunosIdIndexRoute: typeof AdminAlunosIdIndexRoute
+  AdminWebinarsIdIndexRoute: typeof AdminWebinarsIdIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -1100,14 +1089,15 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminAlunosNovoRoute: AdminAlunosNovoRoute,
   AdminCursosNovoRoute: AdminCursosNovoRoute,
-  AdminWebinarsIdRoute: AdminWebinarsIdRouteWithChildren,
   AdminAlunosIndexRoute: AdminAlunosIndexRoute,
   AdminCursosIndexRoute: AdminCursosIndexRoute,
   AdminWebinarsIndexRoute: AdminWebinarsIndexRoute,
   AdminAlunosIdEditarRoute: AdminAlunosIdEditarRoute,
   AdminCursosIdAulasRoute: AdminCursosIdAulasRoute,
   AdminCursosIdEditarRoute: AdminCursosIdEditarRoute,
+  AdminWebinarsIdDepoimentosRoute: AdminWebinarsIdDepoimentosRoute,
   AdminAlunosIdIndexRoute: AdminAlunosIdIndexRoute,
+  AdminWebinarsIdIndexRoute: AdminWebinarsIdIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

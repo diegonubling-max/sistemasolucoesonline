@@ -11,7 +11,7 @@ import { Users, LogOut, Loader2, PhoneCall, FileSpreadsheet } from "lucide-react
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import * as XLSX from "xlsx";
 
-export const Route = createFileRoute("/_admin/webinars/$id")({
+export const Route = createFileRoute("/_admin/webinars/$id/")({
   head: () => ({ meta: [{ title: "Monitorar Webinar — Soluções Online" }] }),
   component: WebinarMonitor,
 });
