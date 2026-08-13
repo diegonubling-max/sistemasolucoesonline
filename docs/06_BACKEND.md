@@ -111,6 +111,7 @@
 | zapi-jobs-dom-g0 a g9 | 13:00-14:30 UTC | 10:00-11:30 | /api/public/hooks/zapi-jobs-diarios | Mensagens FDS domingo |
 | whatsapp-cobranca-diaria | 12:00 UTC | 09:00 | /api/public/hooks/whatsapp-cobranca | Cobrança de parcelas vencidas |
 | lembrete-prova-30min | */30 * * * * | A cada 30 min | /api/public/hooks/lembrete-prova | Lembrete 30 min antes da prova |
+| reconciliar-pagamentos-diario (pg_cron) | 09:00 UTC | 06:00 | edge function `reconciliar-pagamentos` (chamada via `net.http_post`, não é rota da Vercel) | BUG-050, 12/08/2026 — confere toda parcela em aberto com cobrança já gerada direto na API do Asaas, dá baixa sozinha se já estiver paga (pega webhook que não chegou) |
 
 ### Filtros nos Disparos
 - **Motivacionais/Aulas:** excluir alunos inativos + alunos com prova finalizada

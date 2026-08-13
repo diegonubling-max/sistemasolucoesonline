@@ -285,7 +285,8 @@
 - **Verificação:** rodei a mesma consulta pra todas as outras parcelas com boleto gerado e ainda "aberto" no sistema (Marcia Adriana Barbosa Machado CTR 1751, Francine Eliseu Serafim CTR 1741) — as duas realmente **não pagaram ainda** (Asaas confirma `OVERDUE`), não é o mesmo problema. Só a Gleci estava com pagamento perdido.
 - **Solução pontual:** parcela da Gleci corrigida manualmente (status pago, data 12/08, valor líquido).
 - **Solução estrutural (12/08/2026):** a ação "fetch" (usada no botão de verificar/atualizar cobrança) do `asaas-cobrar` só atualizava o link do boleto/PIX — nunca conferia se o Asaas já mostrava a cobrança como paga. Agora, toda vez que essa ação roda e o Asaas diz que já foi recebida, a parcela é marcada como paga também — funciona como uma segunda camada de segurança além do webhook, útil pra casos futuros em que a sincronização do Asaas falhar de novo.
-- **Status:** ✅ Resolvido (caso pontual + reforço estrutural). Deploy manual da função feito (v4)
+- **Reforço adicional (mesma sessão, resposta à pergunta "vai acontecer com outros que ainda vão vencer?"):** criada `reconciliar-pagamentos` (edge function nova), agendada via `pg_cron` pra rodar toda manhã (6h Brasília) — confere automaticamente TODA parcela em aberto com cobrança já gerada, direto na API do Asaas, e dá baixa sozinha se já estiver paga. Cobre qualquer aluno futuro na mesma situação da Gleci, sem precisar de ninguém notar o problema. Testada rodando manualmente antes de agendar (2 parcelas verificadas, 0 corrigidas — as duas realmente ainda não pagas).
+- **Status:** ✅ Resolvido (caso pontual + reforço estrutural + reconciliação automática diária). Deploy manual da função feito (v4)
 
 ## Conhecidos / Não Resolvidos ⚠️
 
