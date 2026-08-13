@@ -318,6 +318,12 @@
 - **Solução (12/08/2026):** os dois hooks foram movidos pro topo do componente, junto com todos os outros — antes de qualquer `return` condicional.
 - **Status:** ✅ Resolvido
 
+### BUG-056: Botão "Depoimentos" do webinar abria a mesma tela do "Monitorar ao vivo"
+- **Sintoma:** clicar no botão de Depoimentos (`/webinars/:id/depoimentos`) mostrava exatamente a mesma tela do Monitorar — sem dar pra ver os depoimentos reais que os alunos foram escrevendo ao vivo durante a aula original (usados depois pra sincronizar com o replay).
+- **Causa:** o mesmo padrão do BUG-044, numa camada mais funda: `_admin.webinars.$id.tsx` (a tela de monitoramento) não seguia a convenção `.index.tsx`, então o TanStack Router passou a tratá-la como **layout-pai** de `_admin.webinars.$id.depoimentos.tsx` — e como a tela de monitoramento não tem `<Outlet />`, a rota de Depoimentos nunca tinha onde ser desenhada, então só a tela do Monitorar aparecia (mesmo a URL e o título mudando certinho).
+- **Solução (12/08/2026):** renomeado `_admin.webinars.$id.tsx` → `_admin.webinars.$id.index.tsx` (mesmo padrão de `_admin.alunos.$id.index.tsx`), removendo a relação pai/filho acidental — `/webinars/$id` e `/webinars/$id/depoimentos` viram rotas irmãs, ambas filhas diretas do layout `_admin.tsx`. `routeTree.gen.ts` regenerado rodando o build completo do projeto, não editado à mão.
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
