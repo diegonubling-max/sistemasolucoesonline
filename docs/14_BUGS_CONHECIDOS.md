@@ -306,6 +306,12 @@
 - **Solução (05/08/2026):** trocado pra `h-dvh` (altura dinâmica, que já considera o teclado aberto) + `overflow-hidden` no container principal, com o vídeo travado numa altura fixa (`shrink-0`) — só a lista de comentários rola internamente agora, o vídeo fica parado no lugar. De brinde, a rotação automática pra paisagem em tela cheia dentro do navegador do WhatsApp é uma limitação do próprio app (in-app browser), não resolvível 100% pelo código — abrir no Safari/Chrome resolve.
 - **Status:** ✅ Resolvido (layout) / ⚠️ limitação de plataforma (rotação em tela cheia dentro do WhatsApp)
 
+### BUG-054: Sem áudio e sem como ativar, depois de travar os controles do YouTube (BUG do ajuste anterior)
+- **Sintoma:** ao travar o player pra impedir avançar o vídeo (`controls=0`), o aviso "clique no vídeo pra ativar o áudio" parou de funcionar — sem os controles nativos do YouTube visíveis, não sobrou nenhum botão de volume pra clicar.
+- **Causa:** consequência direta da trava anterior — `controls=0` esconde literalmente todos os controles do player, incluindo o de volume, mas o vídeo continua começando mudo (regra dos navegadores pra autoplay).
+- **Solução (12/08/2026):** botão próprio "🔇 Ativar áudio" sobreposto no canto do vídeo (nos dois modos, ao vivo e gravado) — desaparece assim que clicado. No modo gravado usa a API do player (`unMute`/`setVolume`); no modo ao vivo manda o comando via `postMessage` pro iframe (precisou adicionar `enablejsapi=1` na URL do embed, que não estava lá).
+- **Status:** ✅ Resolvido
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

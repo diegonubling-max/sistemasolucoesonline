@@ -437,6 +437,30 @@ function WebinarPage() {
   }
 
 
+  const liveIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [audioAtivo, setAudioAtivo] = useState(false);
+
+  const ativarAudio = () => {
+    try {
+      if (webinar?.gravado) {
+        playerRef.current?.unMute?.();
+        playerRef.current?.setVolume?.(100);
+      } else {
+        liveIframeRef.current?.contentWindow?.postMessage(
+          JSON.stringify({ event: "command", func: "unMute", args: [] }),
+          "*"
+        );
+        liveIframeRef.current?.contentWindow?.postMessage(
+          JSON.stringify({ event: "command", func: "setVolume", args: [100] }),
+          "*"
+        );
+      }
+      setAudioAtivo(true);
+    } catch (e) {
+      console.error("Erro ao ativar áudio:", e);
+    }
+  };
+
   return (
     <div className="h-dvh bg-black text-white flex flex-col lg:flex-row overflow-hidden">
       <div className="flex flex-col flex-none min-h-0 lg:flex-1">
@@ -448,21 +472,22 @@ function WebinarPage() {
           </div>
         </div>
         <div className="text-xs text-center bg-neutral-800 text-neutral-300 py-1 shrink-0">
-          🔇 O vídeo inicia sem som (regra dos navegadores) — clique nele pra ativar o áudio
+          🔇 O vídeo inicia sem som (regra dos navegadores) — toque no botão "Ativar áudio" no vídeo
         </div>
         {webinar.gravado && (
           <div className="text-xs text-center bg-neutral-800/60 text-neutral-400 py-1 shrink-0">
             🎥 Aula gravada — comente à vontade, nosso time está online pra tirar dúvidas
           </div>
         )}
-        <div className="aspect-video w-full bg-black shrink-0">
+        <div className="aspect-video w-full bg-black shrink-0 relative">
           {youtubeId ? (
             webinar.gravado ? (
               <div id={`yt-player-${id}`} className="w-full h-full" />
             ) : (
               <iframe
+                ref={liveIframeRef}
                 className="w-full h-full"
-                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&controls=0&disablekb=1&rel=0&modestbranding=1&fs=0&iv_load_policy=3`}
+                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&controls=0&disablekb=1&rel=0&modestbranding=1&fs=0&iv_load_policy=3&enablejsapi=1&origin=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin : "")}`}
                 title={webinar.titulo}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               />
@@ -471,6 +496,14 @@ function WebinarPage() {
             <div className="w-full h-full flex items-center justify-center text-muted-foreground">
               Vídeo não configurado
             </div>
+          )}
+          {youtubeId && !audioAtivo && (
+            <button
+              onClick={ativarAudio}
+              className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium px-3 py-2 rounded-full shadow-lg z-10"
+            >
+              🔇 Ativar áudio
+            </button>
           )}
         </div>
       </div>
