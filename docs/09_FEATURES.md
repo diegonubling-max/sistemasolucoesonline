@@ -179,6 +179,7 @@
 - ✅ Tabela de participantes "liberados" (os que realmente assistiram) separada dos bloqueados
 - ⚠️ Limitação conhecida: o reconhecimento por telefone é por igualdade exata da máscara digitada — se a pessoa digitar o número diferente da 1ª vez (com/sem 9º dígito, etc), não reconhece como reentrada e trata como tentativa nova
 - ✅ **(12/08/2026) Redirect direto pro YouTube revertido, a pedido do Diego** — a página `/webinar/:id` voltou a mostrar o player interno do sistema (chat + vídeo) pra quem é liberado, em vez de mandar direto pro YouTube. A função `montarLinkYoutubeApp` (Android via `intent://`) continua no código, sem uso — fica pronta caso o redirect direto seja reativado no futuro
+- ✅ **(12/08/2026) Player travado — aluno não avança o vídeo nem vê opções do YouTube** — nos dois modos (ao vivo e gravado): sem barra de progresso/controles (`controls=0`), sem atalhos de teclado pra pular (`disablekb=1`), sem sugestões de outros vídeos (`rel=0`), sem tela cheia (`fs=0`), sem anotações (`iv_load_policy=3`), marca d'água discreta (`modestbranding=1`). O aluno só assiste, sem navegar dentro do vídeo
 - ✅ Botão "Exportar Excel" no painel de monitoramento (`/webinars/:id`, 05/08/2026) — baixa um `.xlsx` (biblioteca `xlsx`/SheetJS) com 2 abas: "Conseguiu entrar" (nome, WhatsApp, horário que entrou/saiu, status) e "Não conseguiu (atraso)" (nome, WhatsApp, horário que tentou). Nome do arquivo já vem com a data da aula
 
 ## Módulo: Perfil do Aluno (admin) — novidades

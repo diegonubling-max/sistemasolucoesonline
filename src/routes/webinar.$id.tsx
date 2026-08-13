@@ -248,7 +248,20 @@ function WebinarPage() {
       }
       playerRef.current = new (window as any).YT.Player(`yt-player-${id}`, {
         videoId: youtubeId,
-        playerVars: { autoplay: 1, mute: 1, playsinline: 1 },
+        // Sem barra de progresso/controles, sem atalhos de teclado, sem tela cheia, sem
+        // sugestões de outros vídeos — o aluno só assiste, não navega dentro do vídeo (pedido
+        // do Diego: impedir avançar o vídeo e esconder outras opções do YouTube).
+        playerVars: {
+          autoplay: 1,
+          mute: 1,
+          playsinline: 1,
+          controls: 0,
+          disablekb: 1,
+          rel: 0,
+          modestbranding: 1,
+          fs: 0,
+          iv_load_policy: 3,
+        },
         events: {
           onReady: () => {
             poll = setInterval(() => {
@@ -449,10 +462,9 @@ function WebinarPage() {
             ) : (
               <iframe
                 className="w-full h-full"
-                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1`}
+                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&controls=0&disablekb=1&rel=0&modestbranding=1&fs=0&iv_load_policy=3`}
                 title={webinar.titulo}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               />
             )
           ) : (
