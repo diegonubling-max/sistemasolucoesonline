@@ -205,7 +205,7 @@ function WebinarMonitor() {
         <Card className="border-orange-300">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2 text-orange-700">
-              <PhoneCall className="h-4 w-4" /> Chegaram depois dos 10 min — ligar/chamar no WhatsApp
+              <PhoneCall className="h-4 w-4" /> Chegaram depois dos 20 min — ligar/chamar no WhatsApp
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">

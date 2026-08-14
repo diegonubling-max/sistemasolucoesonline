@@ -135,7 +135,7 @@ function WebinarPage() {
         return;
       }
 
-      // 2) Primeira tentativa dessa pessoa nessa aula — só libera se a aula já está ao vivo e dentro da tolerância de 10 min
+      // 2) Primeira tentativa dessa pessoa nessa aula — só libera se a aula já está ao vivo e dentro da tolerância de TOLERANCIA_MINUTOS
       if (webinar?.status !== "ao_vivo" || !webinar?.iniciado_em) {
         setAindaNaoComecou(true);
         return;
@@ -339,7 +339,7 @@ function WebinarPage() {
     );
   }
 
-  // Tela de bloqueio — passou dos 10 min de tolerância na primeira tentativa
+  // Tela de bloqueio — passou da tolerância (TOLERANCIA_MINUTOS) na primeira tentativa
   if (bloqueado) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
