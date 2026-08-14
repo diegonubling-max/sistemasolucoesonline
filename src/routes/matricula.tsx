@@ -24,7 +24,7 @@ export const Route = createFileRoute("/matricula")({
   component: MatriculaPublicaPage,
 });
 
-type Step = 1 | 2;
+type Step = 0 | 1 | 2;
 type FormaPag = "boleto" | "cartao";
 
 interface DadosAluno {
@@ -164,7 +164,7 @@ const NOMES_PROVA_SOCIAL: { nome: string; cidade: string }[] = [
 ];
 
 function MatriculaPublicaPage() {
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<Step>(0);
   const [assistiuAula, setAssistiuAula] = useState<boolean | null>(null);
   const [dados, setDados] = useState<DadosAluno>({
     nome: "", telefone: "", cpf: "", data_nascimento: "",
@@ -172,7 +172,6 @@ function MatriculaPublicaPage() {
 
   const [forma, setForma] = useState<FormaPag | null>(null);
   const [voucherCode, setVoucherCode] = useState("");
-  const [semCodigo, setSemCodigo] = useState(false);
   const voucherValido = voucherCode.trim().toLowerCase() === VOUCHER_CODE;
   const planoCartaoAtual = voucherValido
     ? { ...PLANOS.cartao, ...PLANO_CARTAO_VOUCHER }
@@ -865,13 +864,47 @@ function MatriculaPublicaPage() {
         </div>
 
         <div className="flex justify-center gap-2 mb-6">
-          {[1, 2].map((n) => (
+          {[0, 1, 2].map((n) => (
             <div key={n} className={`h-2 w-16 rounded-full ${step >= n ? "bg-orange-500" : "bg-gray-200"}`} />
           ))}
         </div>
 
         <Card>
           <CardContent className="pt-6 space-y-4">
+            {step === 0 && (
+              <>
+                <h2 className="text-xl font-semibold text-center">Comprove sua presença na aula</h2>
+                <p className="text-sm text-muted-foreground text-center">
+                  Se você realmente esteve presente na aula ao vivo, você recebeu um <strong>código</strong> pra
+                  usar aqui. Ele dá direito à bolsa de estudo da Escola Soluções Online pra você concluir seus
+                  estudos.
+                </p>
+                <div className="space-y-1">
+                  <Label htmlFor="voucher">Código recebido na aula ao vivo</Label>
+                  <Input
+                    id="voucher"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value)}
+                    placeholder="Digite seu código aqui"
+                    onKeyDown={(e) => e.key === "Enter" && voucherValido && setStep(1)}
+                  />
+                  {voucherCode.trim() !== "" && !voucherValido && (
+                    <p className="text-sm text-red-600">Código inválido — confira e tente de novo</p>
+                  )}
+                  {voucherValido && (
+                    <p className="text-sm text-green-600 font-medium">✅ Código confirmado!</p>
+                  )}
+                </div>
+                <Button
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                  disabled={!voucherValido}
+                  onClick={() => setStep(1)}
+                >
+                  Confirmar código
+                </Button>
+              </>
+            )}
+
             {step === 1 && (
               <>
                 <h2 className="text-xl font-semibold">Seus dados</h2>
@@ -921,91 +954,52 @@ function MatriculaPublicaPage() {
                 <h2 className="text-xl font-semibold">Investimento</h2>
                 <div className="text-center bg-gray-50 border rounded-lg py-5 px-4">
                   <p className="text-sm text-muted-foreground mb-1">Preço padrão da escola</p>
-                  <p className="text-3xl md:text-4xl font-black text-gray-800">
+                  <p className="text-lg text-muted-foreground line-through">
                     12x de R$ {PLANOS.cartao.valorParc}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">no cartão de crédito</p>
+                  <p className="text-sm text-green-700 font-semibold mt-1">✅ Bolsa de estudo aplicada</p>
                 </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="voucher">Recebeu um código de desconto na aula ao vivo?</Label>
-                  <Input
-                    id="voucher"
-                    value={voucherCode}
-                    onChange={(e) => setVoucherCode(e.target.value)}
-                    placeholder="Digite seu código aqui"
-                  />
-                  {voucherCode.trim() !== "" && !voucherValido && (
-                    <p className="text-sm text-red-600">Código inválido</p>
-                  )}
-                  {voucherValido && (
-                    <p className="text-sm text-green-600 font-medium">
-                      ✅ Código aplicado — condição especial liberada abaixo
-                    </p>
-                  )}
-                  {!voucherValido && !semCodigo && (
-                    <button
-                      type="button"
-                      onClick={() => setSemCodigo(true)}
-                      className="text-xs text-muted-foreground underline"
-                    >
-                      Não tenho o código
-                    </button>
-                  )}
-                </div>
-
-                {(voucherValido || semCodigo) && (
-                  <>
-                    <h2 className="text-xl font-semibold pt-2">Forma de pagamento</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Como prefere pagar? Nossa equipe entrará em contato para alinhar as condições.
-                    </p>
-                    <div className="grid gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setForma("boleto")}
-                        className={`border rounded-lg p-4 text-left transition ${forma === "boleto" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
-                      >
-                        <div className="text-3xl mb-1">📄</div>
-                        <div className="font-semibold">Boleto Bancário</div>
-                        <div className="text-sm text-muted-foreground">1 + 9 parcelas de R$ 159,90</div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setForma("cartao")}
-                        className={`border rounded-lg p-4 text-left transition ${forma === "cartao" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
-                      >
-                        <div className="text-3xl mb-1">💳</div>
-                        <div className="font-semibold">Cartão de Crédito</div>
-                        <div className="text-sm text-muted-foreground">
-                          {voucherValido ? (
-                            <>
-                              <span className="line-through mr-1">12x de R$ {PLANOS.cartao.valorParc}</span>
-                              <span className="text-green-700 font-semibold">12x de R$ {PLANO_CARTAO_VOUCHER.valorParc}</span>
-                            </>
-                          ) : (
-                            `12x de R$ ${PLANOS.cartao.valorParc}`
-                          )}
-                        </div>
-                        <div className="text-sm text-orange-700 font-medium mt-1">
-                          ⚡ Nessa opção você conclui tudo em menos tempo — entre 10 e 30 dias
-                        </div>
-                      </button>
+                <h2 className="text-xl font-semibold pt-2">Forma de pagamento</h2>
+                <p className="text-sm text-muted-foreground">
+                  Como prefere pagar? Nossa equipe entrará em contato para alinhar as condições.
+                </p>
+                <div className="grid gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setForma("boleto")}
+                    className={`border rounded-lg p-4 text-left transition ${forma === "boleto" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <div className="text-3xl mb-1">📄</div>
+                    <div className="font-semibold">Boleto Bancário</div>
+                    <div className="text-sm text-muted-foreground">1 + 9 parcelas de R$ 159,90</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForma("cartao")}
+                    className={`border rounded-lg p-4 text-left transition ${forma === "cartao" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <div className="text-3xl mb-1">💳</div>
+                    <div className="font-semibold">Cartão de Crédito</div>
+                    <div className="text-sm text-muted-foreground">
+                      <span className="line-through mr-1">12x de R$ {PLANOS.cartao.valorParc}</span>
+                      <span className="text-green-700 font-semibold">12x de R$ {PLANO_CARTAO_VOUCHER.valorParc}</span>
                     </div>
-                  </>
-                )}
+                    <div className="text-sm text-orange-700 font-medium mt-1">
+                      ⚡ Nessa opção você conclui tudo em menos tempo — entre 10 e 30 dias
+                    </div>
+                  </button>
+                </div>
 
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={enviando}>Voltar</Button>
-                  {(voucherValido || semCodigo) && (
-                    <Button
-                      onClick={handleFinalizarStep2}
-                      disabled={enviando}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                    >
-                      {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>✅ Garantir minha vaga</>)}
-                    </Button>
-                  )}
+                  <Button
+                    onClick={handleFinalizarStep2}
+                    disabled={enviando}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>✅ Garantir minha vaga</>)}
+                  </Button>
                 </div>
               </>
             )}
