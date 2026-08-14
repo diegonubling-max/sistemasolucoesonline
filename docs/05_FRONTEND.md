@@ -132,7 +132,7 @@
 ## Página Pública: /matricula (Checkout Aulão)
 - Mobile-first
 - Banner 1080x600px no topo
-- 2 etapas (atualizado 28/07/2026): Dados → Pagamento
+- **Fluxo atual (12/08/2026):** Modal de acesso (Sim/Não assistiu à aula + tem o voucher) → tela do Voucher (sozinha, sem preço, só libera com código certo) → Dados pessoais → Forma de pagamento
 - Data de nascimento: campo texto com máscara (não calendário)
 - Sexo: select (Masculino/Feminino)
 - Pagamento: 2 cards (Boleto, Cartão) com checkout real via Asaas
@@ -165,7 +165,7 @@
 ## Novas Páginas e Menus (Sessão Jul/2026)
 
 ### Páginas Públicas (sem login):
-- `/matricula` — Checkout do Aulão: cadastro → forma pagamento → contrato → assinatura digital → pagamento (PIX ou cartão via Asaas)
+- `/matricula` — Checkout do Aulão (fluxo atual 12/08/2026: modal de acesso → voucher → dados → contrato/assinatura em segundo plano → pagamento PIX/cartão via Asaas)
   - Cronômetro regressivo vermelho (encerra 19:30, reinicia 24h)
   - Notificações de prova social rotativas (nomes fictícios, 8-12s, estados variados)
   - Banner "Matrículas Abertas" no topo
