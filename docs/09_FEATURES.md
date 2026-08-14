@@ -159,6 +159,7 @@
 - ✅ Voucher da aula ao vivo (código "1627off", case-insensitive): preço padrão em destaque (12x R$259,90) → campo de cupom → forma de pagamento só aparece com cupom válido (ou link "Não tenho o código", preço cheio). Cartão com cupom: 12x R$119,90. Validação sempre no servidor, nunca confia no navegador
 - ✅ Botão final "Garantir minha vaga" (era "Ir para o pagamento" — trocado por texto convidativo, mas não enganoso sobre o que acontece a seguir)
 - ✅ /matricula-demo tem as mesmas mudanças de voucher/preço/UI, mas SEM pixel/UTM/cookie/fbclid (é só demonstração interna de como matricular, não deve gerar dado de rastreamento nenhum)
+- ✅ **(12/08/2026) Modal de acesso antes de tudo** — assim que a página `/matricula` carrega, antes do formulário de dados, mostra uma pergunta: "Você assistiu à aula ao vivo completa e tem o voucher que foi liberado nela?" com botões Sim/Não. **Sim** → segue pro fluxo normal de matrícula (dados → voucher → forma de pagamento). **Não** → mostra uma segunda tela avisando que as vagas são exclusivas pra quem assistiu à aula ao vivo, sem opção de continuar. Não salva nada no banco nessa etapa (é só um filtro de entrada, antes de qualquer dado do aluno)
 
 ## Módulo: Migração de vídeo Panda → YouTube
 - ✅ Cada curso pode ter youtube_playlist_id + youtube_playlist_count; aulas com ordem dentro desse limite tocam automaticamente da playlist do YouTube (não listada), o resto continua no Panda até completar o upload
