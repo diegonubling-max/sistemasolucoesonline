@@ -165,6 +165,7 @@ const NOMES_PROVA_SOCIAL: { nome: string; cidade: string }[] = [
 
 function MatriculaPublicaPage() {
   const [step, setStep] = useState<Step>(1);
+  const [assistiuAula, setAssistiuAula] = useState<boolean | null>(null);
   const [dados, setDados] = useState<DadosAluno>({
     nome: "", telefone: "", cpf: "", data_nascimento: "",
   });
@@ -565,6 +566,56 @@ function MatriculaPublicaPage() {
   };
 
   const WHATSAPP_LINK = `https://wa.me/55${WHATSAPP_EQUIPE}?text=${encodeURIComponent("Olá! Acabei de fazer minha matrícula no Aulão e preciso de ajuda.")}`;
+
+  // Pergunta de acesso: só quem assistiu a aula ao vivo (dono do voucher) pode se matricular
+  // agora — as vagas dessa leva foram liberadas só pra quem participou.
+  if (assistiuAula === null) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-8 pb-6 space-y-5 text-center">
+            <h1 className="text-xl md:text-2xl font-bold">
+              Você assistiu à aula ao vivo completa e tem o voucher que foi liberado nela?
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              As vagas dessa matrícula são exclusivas pra quem participou da aula do início ao fim.
+            </p>
+            <div className="flex gap-3 justify-center pt-2">
+              <Button
+                variant="outline"
+                className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                onClick={() => setAssistiuAula(false)}
+              >
+                Não
+              </Button>
+              <Button
+                className="flex-1 bg-orange-600 hover:bg-orange-700"
+                onClick={() => setAssistiuAula(true)}
+              >
+                Sim
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (assistiuAula === false) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-8 pb-6 space-y-4 text-center">
+            <h1 className="text-xl font-bold">Infelizmente não é possível fazer a matrícula agora</h1>
+            <p className="text-muted-foreground text-sm">
+              As vagas dessa turma foram liberadas exclusivamente pra quem assistiu à aula ao vivo e recebeu o
+              voucher nela. Fique de olho no nosso grupo/canal pra não perder a próxima aula e garantir sua vaga!
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (sucesso) {
     const isBoleto = sucesso.formaPagamento === "boleto";
