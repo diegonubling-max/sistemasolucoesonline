@@ -104,8 +104,13 @@ function WebinarPage() {
     }
   }, [id]);
 
-  // Acesso liberado (novo ou reentrada) — volta a mostrar o player interno do sistema (chat +
-  // vídeo), em vez de redirecionar pro YouTube. O redirect direto foi removido a pedido do Diego.
+  // Acesso liberado (novo ou reentrada) — manda direto pro YouTube (app, quando possível), em
+  // vez de mostrar o player interno do sistema. Reativado a pedido do Diego (18/08/2026).
+  useEffect(() => {
+    if (participante && webinar?.youtube_url) {
+      window.location.href = montarLinkYoutubeApp(webinar.youtube_url);
+    }
+  }, [participante, webinar?.youtube_url]);
 
   const handleEntrar = async () => {
     if (!nome.trim() || telefone.replace(/\D/g, "").length < 10) return;
@@ -410,6 +415,27 @@ function WebinarPage() {
                 {entrando ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Entrando...</> : "Entrar na aula"}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Acesso liberado — redireciona direto pro YouTube (ver useEffect acima). Essa tela só aparece
+  // no instante entre a liberação e o redirect acontecer de fato.
+  if (participante) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-8 pb-6 space-y-3 text-center">
+            <Loader2 className="h-8 w-8 text-orange-500 mx-auto animate-spin" />
+            <h1 className="text-xl font-bold">Acesso liberado!</h1>
+            <p className="text-muted-foreground text-sm">Te levando pra aula ao vivo no YouTube...</p>
+            {webinar?.youtube_url && (
+              <a href={montarLinkYoutubeApp(webinar.youtube_url)} className="text-orange-600 text-sm underline">
+                Não foi redirecionado? Clique aqui
+              </a>
+            )}
           </CardContent>
         </Card>
       </div>
