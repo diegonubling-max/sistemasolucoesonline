@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { maskPhone } from "@/lib/format";
-import { CheckCircle2, Info } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/matricula-demo")({
   head: () => ({
@@ -93,21 +93,11 @@ function MatriculaDemoPage() {
     setStep(2);
   };
 
-  const faixaAviso = (
-    <div className="mb-4 rounded-lg border-2 border-blue-500 bg-blue-50 px-4 py-2 text-center flex items-center justify-center gap-2">
-      <Info className="h-4 w-4 text-blue-700 shrink-0" />
-      <span className="text-xs md:text-sm font-semibold text-blue-800">
-        Página de demonstração — nada aqui é salvo ou cobrado de verdade
-      </span>
-    </div>
-  );
-
   // Modal de acesso (Sim/Não assistiu à aula)
   if (assistiuAula === null) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
-          {faixaAviso}
           <Card>
             <CardContent className="pt-8 pb-6 space-y-5 text-center">
               <h1 className="text-xl md:text-2xl font-bold">
@@ -142,7 +132,6 @@ function MatriculaDemoPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
-          {faixaAviso}
           <Card>
             <CardContent className="pt-8 pb-6 space-y-4 text-center">
               <h1 className="text-xl font-bold">Infelizmente não é possível fazer a matrícula agora</h1>
@@ -162,7 +151,6 @@ function MatriculaDemoPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
-          {faixaAviso}
           <Card>
             <CardContent className="pt-8 pb-6 text-center space-y-4">
               <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
@@ -198,7 +186,6 @@ function MatriculaDemoPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white px-4 py-6 md:py-10">
       <div className="max-w-2xl mx-auto">
-        {faixaAviso}
         <img
           src="/banner-matriculas.png"
           alt="Matrículas Abertas — Faça sua matrícula e garanta sua vaga. Vagas limitadas."
