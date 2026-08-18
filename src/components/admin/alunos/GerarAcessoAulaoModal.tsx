@@ -36,10 +36,33 @@ export function GerarAcessoAulaoModal({ open, onOpenChange }: Props) {
     setGerandoId(m.id);
     setAcessoGerado(null);
     try {
+      // Identifica quem clicou em "Gerar acesso" — mesma lógica usada no cadastro manual
+      // (MatriculaFlow.tsx), pra ficar registrado no perfil do aluno quem liberou o acesso.
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      let cadastradoPorNome: string | null = null;
+      const cadastradoPorId: string | null = currentUser?.id ?? null;
+      if (currentUser) {
+        if (currentUser.email === 'diegonubling@gmail.com') {
+          cadastradoPorNome = 'Diego (Admin)';
+        } else {
+          const { data: colab } = await supabase
+            .from('colaboradores')
+            .select('nome')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+          cadastradoPorNome = colab?.nome ?? currentUser.email ?? null;
+        }
+      }
+
       const res = await fetch("/api/public/hooks/converter-matricula-aulao", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matricula_aulao_id: m.id, force: true }),
+        body: JSON.stringify({
+          matricula_aulao_id: m.id,
+          force: true,
+          cadastrado_por: cadastradoPorNome,
+          cadastrado_por_id: cadastradoPorId,
+        }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {

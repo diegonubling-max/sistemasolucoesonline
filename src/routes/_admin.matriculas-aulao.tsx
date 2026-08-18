@@ -227,10 +227,31 @@ function MatriculasAulaoList() {
 
       // Dispara a criação do acesso do aluno (idempotente — não faz nada se já foi criado)
       try {
+        // Mesma lógica de identificação usada no botão "Gerar acesso (Aulão)"
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        let cadastradoPorNome: string | null = null;
+        const cadastradoPorId: string | null = currentUser?.id ?? null;
+        if (currentUser) {
+          if (currentUser.email === 'diegonubling@gmail.com') {
+            cadastradoPorNome = 'Diego (Admin)';
+          } else {
+            const { data: colab } = await supabase
+              .from('colaboradores')
+              .select('nome')
+              .eq('user_id', currentUser.id)
+              .maybeSingle();
+            cadastradoPorNome = colab?.nome ?? currentUser.email ?? null;
+          }
+        }
+
         const res = await fetch("/api/public/hooks/converter-matricula-aulao", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ matricula_aulao_id: id }),
+          body: JSON.stringify({
+            matricula_aulao_id: id,
+            cadastrado_por: cadastradoPorNome,
+            cadastrado_por_id: cadastradoPorId,
+          }),
         });
         const conversao = await res.json();
         return conversao;

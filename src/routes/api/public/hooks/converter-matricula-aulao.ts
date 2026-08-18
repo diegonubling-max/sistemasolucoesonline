@@ -81,7 +81,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
       POST: async ({ request }) => {
-        let payload: { matricula_aulao_id?: string; force?: boolean };
+        let payload: { matricula_aulao_id?: string; force?: boolean; cadastrado_por?: string; cadastrado_por_id?: string };
         try {
           payload = await request.json();
         } catch {
@@ -92,6 +92,13 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
         if (!matriculaAulaoId) {
           return jsonResponse({ error: "matricula_aulao_id obrigatório" }, 400);
         }
+
+        // Quando gerado manualmente pelo botão "Gerar acesso (Aulão)" no admin, quem clicou vem
+        // no payload (nome já resolvido no cliente). Quando gerado automaticamente (webhook de
+        // pagamento confirmado no Asaas, sem ninguém logado envolvido), fica null — o aluno fez
+        // a própria matrícula sozinho, sem intervenção de um colaborador.
+        const cadastradoPorNome = payload?.cadastrado_por || null;
+        const cadastradoPorId = payload?.cadastrado_por_id || null;
 
         const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "https://qhvsveedougwymxjhbgi.supabase.co";
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -186,6 +193,8 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
               ativo: true,
               cadastro_completo: true,
               polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+              cadastrado_por: cadastradoPorNome,
+              cadastrado_por_id: cadastradoPorId,
             })
             .select("id, ctr")
             .single();
