@@ -1,18 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { maskCPF, maskPhone, isValidCPF } from "@/lib/format";
-import { format } from "date-fns";
-import { Loader2, CheckCircle2 } from "lucide-react";
-
-const POLO_ID_FLORIPA = "32671c78-9076-4f88-8161-bfd5ee8e866b";
-const WHATSAPP_EQUIPE = "48984393047";
+import { maskPhone } from "@/lib/format";
+import { CheckCircle2, Info } from "lucide-react";
 
 export const Route = createFileRoute("/matricula-demo")({
   head: () => ({
@@ -24,33 +18,25 @@ export const Route = createFileRoute("/matricula-demo")({
   component: MatriculaDemoPage,
 });
 
-type Step = 1 | 2;
+// Página 100% de demonstração — usada durante a aula ao vivo pra mostrar o passo a passo do
+// /matricula pro público. Espelha o fluxo real (modal de acesso → voucher → dados → forma de
+// pagamento), mas SEM CPF e SEM tocar em banco de dados, Asaas ou qualquer API real: nada aqui
+// gera cadastro, cobrança ou aparece no menu Matrículas Aulão.
+type Step = 0 | 1 | 2;
 type FormaPag = "boleto" | "cartao";
 
 interface DadosAluno {
   nome: string;
   telefone: string;
-  cpf: string;
   data_nascimento: string; // dd/mm/aaaa
 }
 
-
-interface Sucesso {
-  jaExistia: boolean;
-  matriculaId: string;
-  formaPagamento: FormaPag;
-}
-
-function getUtm() {
-  if (typeof window === "undefined") return {};
-  const p = new URLSearchParams(window.location.search);
-  return {
-    utm_source: p.get("utm_source") || null,
-    utm_medium: p.get("utm_medium") || null,
-    utm_campaign: p.get("utm_campaign") || null,
-    utm_content: p.get("utm_content") || null,
-  };
-}
+const VOUCHER_CODE = "1627off";
+const PLANOS: Record<FormaPag, { valorParc: string; parcelasExibicao: string }> = {
+  boleto: { parcelasExibicao: "1 + 9", valorParc: "159,90" },
+  cartao: { parcelasExibicao: "12", valorParc: "259,90" },
+};
+const PLANO_CARTAO_VOUCHER = { valorParc: "119,90" };
 
 function maskDate(value: string) {
   const d = value.replace(/\D/g, "").slice(0, 8);
@@ -59,34 +45,11 @@ function maskDate(value: string) {
   return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
 }
 
-function parseDateBR(value: string): string | null {
-  const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!m) return null;
-  const [, dd, mm, yyyy] = m;
-  const day = Number(dd), month = Number(mm), year = Number(yyyy);
-  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-  if (year < 1900 || year > new Date().getFullYear()) return null;
-  const d = new Date(year, month - 1, day);
-  if (d.getDate() !== day || d.getMonth() !== month - 1) return null;
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; parcelasExibicao: string; valorParc: string; total: string }> = {
-  boleto: { entrada: "69,90", qtdParc: "10", parcelasExibicao: "1 + 9", valorParc: "159,90", total: "1.668,90" },
-  cartao: { entrada: "69,90", qtdParc: "12", parcelasExibicao: "12", valorParc: "259,90", total: "3.188,70" },
-};
-
-// Voucher da aula ao vivo — quem assiste ganha condição especial no cartão (12x R$119,90 em vez de 12x R$259,90)
-const VOUCHER_CODE = "1627off";
-const PLANO_CARTAO_VOUCHER = { valorParc: "119,90", total: "1.508,70" };
-
 function getProximoEncerramento(): Date {
   const agora = new Date();
   const meta = new Date(agora);
   meta.setHours(19, 30, 0, 0);
-  if (agora >= meta) {
-    meta.setDate(meta.getDate() + 1);
-  }
+  if (agora >= meta) meta.setDate(meta.getDate() + 1);
   return meta;
 }
 
@@ -101,21 +64,13 @@ function formatContagem(ms: number): string {
 }
 
 function MatriculaDemoPage() {
-  const [step, setStep] = useState<Step>(1);
-  const [dados, setDados] = useState<DadosAluno>({
-    nome: "", telefone: "", cpf: "", data_nascimento: "",
-  });
-
+  const [assistiuAula, setAssistiuAula] = useState<boolean | null>(null);
+  const [step, setStep] = useState<Step>(0);
+  const [dados, setDados] = useState<DadosAluno>({ nome: "", telefone: "", data_nascimento: "" });
   const [forma, setForma] = useState<FormaPag | null>(null);
   const [voucherCode, setVoucherCode] = useState("");
-  const [semCodigo, setSemCodigo] = useState(false);
+  const [concluido, setConcluido] = useState(false);
   const voucherValido = voucherCode.trim().toLowerCase() === VOUCHER_CODE;
-  const planoCartaoAtual = voucherValido
-    ? { ...PLANOS.cartao, ...PLANO_CARTAO_VOUCHER }
-    : PLANOS.cartao;
-  const [matriculaIdParcial, setMatriculaIdParcial] = useState<string | null>(null);
-  const [enviando, setEnviando] = useState(false);
-  const [sucesso, setSucesso] = useState<Sucesso | null>(null);
 
   const [tempoRestante, setTempoRestante] = useState(() => getProximoEncerramento().getTime() - Date.now());
   useEffect(() => {
@@ -125,495 +80,125 @@ function MatriculaDemoPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const { data: modelo } = useQuery({
-    queryKey: ["contrato-publico"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("modelos_contrato" as any)
-        .select("id, conteudo_html")
-        .eq("ativo", true)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data as { id: string; conteudo_html: string } | null;
-    },
-    enabled: step === 2,
-  });
-
-  const dataISO = useMemo(() => parseDateBR(dados.data_nascimento), [dados.data_nascimento]);
-
-  const contratoHtml = useMemo(() => {
-    if (!modelo?.conteudo_html || !forma) return "";
-    const plano = forma === "cartao" ? planoCartaoAtual : PLANOS[forma];
-    const formaLabel = forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito";
-    let html = modelo.conteudo_html;
-    const variables: Record<string, string> = {
-      "[NOME_ALUNO]": dados.nome,
-      "[CPF_ALUNO]": dados.cpf,
-      "[TELEFONE_ALUNO]": dados.telefone,
-      "[DATA_NASCIMENTO]": dataISO ? format(new Date(dataISO + "T00:00:00"), "dd/MM/yyyy") : dados.data_nascimento,
-      "[PACOTE_NOME]": "Aulão - Lançamento",
-      "[FORMA_PAGAMENTO]": formaLabel,
-      "[VALOR_ENTRADA]": `R$ ${plano.entrada}`,
-      "[VALOR_PARCELA]": `R$ ${plano.valorParc}`,
-      "[NUMERO_PARCELAS]": plano.parcelasExibicao,
-      "[VALOR_TOTAL]": `R$ ${plano.total}`,
-      "[DATA_MATRICULA]": format(new Date(), "dd/MM/yyyy"),
-      "[NOME_ESCOLA]": "Soluções Online",
-      "[DATA_CONTRATO]": format(new Date(), "dd/MM/yyyy"),
-      "[DATA_HOJE]": format(new Date(), "dd/MM/yyyy"),
-      "[DATA_PRIMEIRA_PARCELA]": (() => {
-        const d = new Date();
-        if (forma === "boleto") d.setDate(d.getDate() + 30);
-        return format(d, "dd/MM/yyyy");
-      })(),
-    };
-    Object.entries(variables).forEach(([k, v]) => {
-      html = html.replaceAll(k, v);
-    });
-    // remove eventual "R$ R$" duplicado do template
-    html = html.replace(/R\$\s*R\$\s*/g, "R$ ");
-    return html;
-  }, [modelo, dados, forma, dataISO, planoCartaoAtual]);
-
-  function validarStep1(): string | null {
-    if (!dados.nome.trim() || dados.nome.trim().split(/\s+/).length < 2)
-      return "Informe nome completo";
+  function validarDados(): string | null {
+    if (!dados.nome.trim() || dados.nome.trim().split(/\s+/).length < 2) return "Informe nome completo";
     if (dados.telefone.replace(/\D/g, "").length < 10) return "Telefone inválido";
-    if (!isValidCPF(dados.cpf)) return "CPF inválido";
-    if (!parseDateBR(dados.data_nascimento)) return "Data de nascimento inválida (use dd/mm/aaaa)";
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dados.data_nascimento)) return "Data de nascimento inválida (use dd/mm/aaaa)";
     return null;
-
   }
 
-  const handleAvancar1 = async () => {
-    const err = validarStep1();
+  const handleAvancarDados = () => {
+    const err = validarDados();
     if (err) { toast.error(err); return; }
-
-    const utm = getUtm();
-
-    // Salvar dados parciais no banco (sem contrato ainda)
-    try {
-      const dataISO = parseDateBR(dados.data_nascimento);
-      const { data, error } = await supabase.rpc("criar_matricula_lancamento" as any, {
-        p_nome: dados.nome.trim(),
-        p_email: null,
-        p_telefone: dados.telefone,
-        p_cpf: dados.cpf,
-        p_data_nascimento: dataISO,
-        p_forma_pagamento: "boleto",
-        p_polo_id: POLO_ID_FLORIPA,
-        p_utm_source: utm.utm_source, p_utm_medium: utm.utm_medium, p_utm_campaign: utm.utm_campaign, p_utm_content: utm.utm_content,
-        p_contrato_html: null,
-        p_assinatura_nome: null,
-        p_sexo: null,
-      });
-      const row = Array.isArray(data) ? data[0] : data;
-      if (row && !row.ja_existia) {
-        setMatriculaIdParcial(row.id);
-      } else if (row?.ja_existia) {
-        setMatriculaIdParcial(row.id);
-      }
-    } catch (e) {
-      console.warn("Erro ao salvar dados parciais:", e);
-    }
     setStep(2);
   };
 
-  const handleFinalizarStep2 = async () => {
-    if (!forma) { toast.error("Selecione uma forma de pagamento"); return; }
-    if (!dataISO) { toast.error("Data de nascimento inválida"); return; }
+  const faixaAviso = (
+    <div className="mb-4 rounded-lg border-2 border-blue-500 bg-blue-50 px-4 py-2 text-center flex items-center justify-center gap-2">
+      <Info className="h-4 w-4 text-blue-700 shrink-0" />
+      <span className="text-xs md:text-sm font-semibold text-blue-800">
+        Página de demonstração — nada aqui é salvo ou cobrado de verdade
+      </span>
+    </div>
+  );
 
-    setEnviando(true);
-    try {
-      let matriculaId = matriculaIdParcial;
-
-      // Gerar bloco de validação da assinatura digital
-      const agora = new Date();
-      const dataHoraAssinatura = agora.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-      const hashBase = `${dados.cpf}-${dados.nome.trim()}-${agora.toISOString()}`;
-      const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(hashBase));
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("").substring(0, 16).toUpperCase();
-      const codigoValidacao = `SOL-${hashHex}`;
-
-      const blocoValidacao = `
-<div style="margin-top:40px;padding:16px;border:2px solid #1a1a2e;border-radius:8px;background:#f8f9fa;font-size:12px;line-height:1.6;">
-  <div style="text-align:center;margin-bottom:12px;">
-    <strong style="font-size:14px;color:#1a1a2e;">✅ TERMO ACEITO DIGITALMENTE</strong>
-  </div>
-  <table style="width:100%;border-collapse:collapse;">
-    <tr><td style="padding:4px 8px;color:#555;width:40%;">Aceito por:</td><td style="padding:4px 8px;"><strong>${dados.nome.trim()}</strong></td></tr>
-    <tr><td style="padding:4px 8px;color:#555;">CPF do signatário:</td><td style="padding:4px 8px;"><strong>${dados.cpf}</strong></td></tr>
-    <tr><td style="padding:4px 8px;color:#555;">Data e hora:</td><td style="padding:4px 8px;"><strong>${dataHoraAssinatura}</strong></td></tr>
-    <tr><td style="padding:4px 8px;color:#555;">Código de validação:</td><td style="padding:4px 8px;font-family:monospace;"><strong>${codigoValidacao}</strong></td></tr>
-    <tr><td style="padding:4px 8px;color:#555;">Forma de pagamento:</td><td style="padding:4px 8px;"><strong>${forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito"}</strong></td></tr>
-  </table>
-  <div style="margin-top:12px;padding-top:8px;border-top:1px solid #ddd;color:#777;font-size:10px;text-align:center;">
-    Este termo foi aceito eletronicamente conforme MP 2.200-2/2001 e art. 784, §4º do CPC.<br>
-    A autenticidade pode ser verificada pelo código acima junto à Escola Soluções Online.
-  </div>
-</div>`;
-
-      const contratoComValidacao = (contratoHtml || "") + blocoValidacao;
-
-      if (matriculaId) {
-        // Atualizar registro parcial com forma de pagamento, termo e assinatura
-        const { error } = await supabase.from("matriculas_aulao" as any).update({
-          forma_pagamento: forma,
-          contrato_html: contratoComValidacao,
-          assinatura_nome: dados.nome.trim(),
-          assinado_em: agora.toISOString(),
-          boas_vindas_agendado_para: new Date(Date.now() + (120 + Math.floor(Math.random() * 120)) * 1000).toISOString(),
-        }).eq("id", matriculaId);
-        if (error) throw error;
-      } else {
-        // Fallback: criar novo registro se por algum motivo não salvou antes
-        const utm = getUtm();
-        const { data, error } = await supabase.rpc("criar_matricula_lancamento" as any, {
-          p_nome: dados.nome.trim(),
-          p_email: null,
-          p_telefone: dados.telefone,
-          p_cpf: dados.cpf,
-          p_data_nascimento: dataISO,
-          p_forma_pagamento: forma,
-          p_polo_id: POLO_ID_FLORIPA,
-          p_utm_source: utm.utm_source,
-          p_utm_medium: utm.utm_medium,
-          p_utm_campaign: utm.utm_campaign,
-          p_utm_content: utm.utm_content,
-          p_contrato_html: contratoComValidacao,
-          p_assinatura_nome: dados.nome.trim() || null,
-          p_sexo: null,
-        });
-        if (error) throw error;
-        const row = Array.isArray(data) ? data[0] : data;
-        if (!row) throw new Error("Resposta vazia do servidor");
-        matriculaId = row.id;
-      }
-
-      setSucesso({ jaExistia: false, matriculaId: matriculaId!, formaPagamento: forma! });
-    } catch (e: any) {
-      toast.error(e.message || "Erro ao processar matrícula");
-    } finally {
-      setEnviando(false);
-    }
-  };
-
-  const [pagLoading, setPagLoading] = useState(false);
-  const [pagResult, setPagResult] = useState<any>(null);
-  const [pagErro, setPagErro] = useState<string | null>(null);
-  const [cartao, setCartao] = useState({ holderName: "", number: "", expiryMonth: "", expiryYear: "", ccv: "" });
-  const [parcelas, setParcelas] = useState(12);
-  const [copiado, setCopiado] = useState(false);
-  const [acessoCriado, setAcessoCriado] = useState<{ ctr: number; senha: string } | null>(null);
-
-  const converterAcesso = async () => {
-    if (!sucesso) return;
-    try {
-      const res = await fetch("/api/public/hooks/converter-matricula-aulao", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matricula_aulao_id: sucesso.matriculaId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.ok && data.ctr && data.senha) {
-        setAcessoCriado({ ctr: data.ctr, senha: data.senha });
-      }
-    } catch {
-      // silencioso — o webhook do Asaas também tenta converter em paralelo
-    }
-  };
-
-  useEffect(() => {
-    if (!sucesso || !pagResult || pagResult.billing_type !== "PIX" || acessoCriado) return;
-    const interval = setInterval(async () => {
-      const { data } = await supabase
-        .from("matriculas_aulao" as any)
-        .select("pagamento_status")
-        .eq("id", sucesso.matriculaId)
-        .single();
-      if ((data as any)?.pagamento_status === "confirmado") {
-        clearInterval(interval);
-        converterAcesso();
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [sucesso, pagResult, acessoCriado]);
-
-  const gerarPagamento = async (billingType: "PIX" | "CREDIT_CARD", ccData?: any) => {
-    if (!sucesso) return;
-    setPagLoading(true);
-    setPagErro(null);
-    try {
-      const body: any = {
-        matricula_id: sucesso.matriculaId,
-        billing_type: billingType,
-        installment_count: billingType === "CREDIT_CARD" ? parcelas : undefined,
-        voucher_code: voucherCode,
-      };
-      if (billingType === "CREDIT_CARD" && ccData) {
-        body.credit_card = ccData;
-        body.credit_card_holder_info = {
-          name: dados.nome,
-          cpfCnpj: dados.cpf.replace(/\D/g, ""),
-          phone: dados.telefone.replace(/\D/g, ""),
-          postalCode: "88058512",
-          addressNumber: "65",
-        };
-      }
-      const res = await fetch("/api/public/hooks/asaas-aulao", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || "Erro ao processar pagamento");
-      setPagResult(data);
-      if (billingType === "CREDIT_CARD" && (data.credit_card_status === "CONFIRMED" || data.credit_card_status === "RECEIVED")) {
-        converterAcesso();
-      }
-    } catch (e: any) {
-      setPagErro(e.message || "Erro ao processar pagamento");
-    } finally {
-      setPagLoading(false);
-    }
-  };
-
-  const WHATSAPP_LINK = `https://wa.me/55${WHATSAPP_EQUIPE}?text=${encodeURIComponent("Olá! Acabei de fazer minha matrícula no Aulão e preciso de ajuda.")}`;
-
-  if (sucesso) {
-    const isBoleto = sucesso.formaPagamento === "boleto";
-
-    if (pagResult) {
-      return (
-        <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
-          <Card className="w-full max-w-md">
-            <CardContent className="pt-8 pb-6 text-center space-y-4">
-              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
+  // Modal de acesso (Sim/Não assistiu à aula)
+  if (assistiuAula === null) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          {faixaAviso}
+          <Card>
+            <CardContent className="pt-8 pb-6 space-y-5 text-center">
+              <h1 className="text-xl md:text-2xl font-bold">
+                Você assistiu à aula ao vivo completa e tem o voucher que foi liberado nela?
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                As vagas dessa matrícula são exclusivas pra quem participou da aula do início ao fim.
+              </p>
+              <div className="flex gap-3 justify-center pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                  onClick={() => setAssistiuAula(false)}
+                >
+                  Não
+                </Button>
+                <Button
+                  className="flex-1 bg-orange-600 hover:bg-orange-700"
+                  onClick={() => setAssistiuAula(true)}
+                >
+                  Sim
+                </Button>
               </div>
-
-              {acessoCriado ? (
-                <>
-                  <h1 className="text-2xl font-bold">Seu acesso já está liberado! 🎉</h1>
-                  <p className="text-muted-foreground text-sm">Guarde seus dados de acesso:</p>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2 text-left">
-                    <div>
-                      <p className="text-xs text-green-700 uppercase font-bold tracking-wider">Login</p>
-                      <p className="text-lg font-mono font-bold">{acessoCriado.ctr}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-green-700 uppercase font-bold tracking-wider">Senha</p>
-                      <p className="text-lg font-mono font-bold">{acessoCriado.senha}</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Enviamos esses dados também pelo WhatsApp.</p>
-                  <Button
-                    onClick={() => window.open("https://sistema.supletivosolucoesonline.com.br", "_blank")}
-                    className="w-full bg-green-600 hover:bg-green-700"
-                  >
-                    Acessar minhas aulas
-                  </Button>
-                </>
-              ) : pagResult.billing_type === "PIX" && pagResult.pix_qr_code ? (
-                <>
-                  <h1 className="text-2xl font-bold">Escaneie o QR Code para pagar</h1>
-                  <p className="text-muted-foreground text-sm">Taxa de matrícula: <strong>R$ 69,90</strong></p>
-                  <div className="flex justify-center">
-                    <img
-                      src={`data:image/png;base64,${pagResult.pix_qr_code}`}
-                      alt="QR Code PIX"
-                      className="w-56 h-56 border rounded-lg"
-                    />
-                  </div>
-                  {pagResult.pix_copia_cola && (
-                    <div className="space-y-2">
-                      <div className="bg-gray-50 border rounded px-3 py-2 text-xs font-mono text-muted-foreground truncate">
-                        {pagResult.pix_copia_cola}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => {
-                          navigator.clipboard.writeText(pagResult.pix_copia_cola);
-                          setCopiado(true);
-                          setTimeout(() => setCopiado(false), 3000);
-                        }}
-                      >
-                        {copiado ? "✅ Copiado!" : "📋 Copiar código PIX"}
-                      </Button>
-                    </div>
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    Assim que o pagamento cair, seu login e senha aparecem aqui automaticamente (e também vão pro seu WhatsApp).
-                  </p>
-                </>
-              ) : pagResult.credit_card_status ? (
-                <>
-                  <h1 className="text-2xl font-bold">
-                    {pagResult.credit_card_status === "CONFIRMED" || pagResult.credit_card_status === "RECEIVED"
-                      ? "Pagamento aprovado! 🎉"
-                      : "Pagamento em processamento"}
-                  </h1>
-                  <p className="text-muted-foreground">
-                    {pagResult.credit_card_status === "CONFIRMED" || pagResult.credit_card_status === "RECEIVED"
-                      ? "Seu pagamento foi aprovado — liberando seu acesso às aulas..."
-                      : "O pagamento está sendo processado. Você receberá a confirmação em breve pelo WhatsApp."}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h1 className="text-2xl font-bold">Pagamento registrado!</h1>
-                  <p className="text-muted-foreground">Nossa equipe entrará em contato pelo WhatsApp.</p>
-                </>
-              )}
-
-              <a
-                href={WHATSAPP_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-xs text-muted-foreground hover:text-green-700 underline mt-2"
-              >
-                Precisa de ajuda? Fale com nossa equipe
-              </a>
             </CardContent>
           </Card>
         </div>
-      );
-    }
-
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-8 pb-6 space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-center">Bem-vindo(a) à Soluções Online! 🎓</h1>
-            <p className="text-muted-foreground text-center text-sm">
-              Parabéns pela decisão! Você está a um passo de realizar o sonho de concluir seus estudos
-              em <strong>menos de 6 meses</strong>. Falta pouco — efetue o pagamento abaixo para garantir sua vaga.
-            </p>
-
-            {pagErro && (
-              <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">{pagErro}</div>
-            )}
-
-            {isBoleto ? (
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-center">Pague a taxa de matrícula via PIX — rápido e seguro:</p>
-                <Button
-                  className="w-full bg-green-600 hover:bg-green-700 text-base py-5"
-                  onClick={() => gerarPagamento("PIX")}
-                  disabled={pagLoading}
-                >
-                  {pagLoading ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PIX...</>
-                  ) : (
-                    "💰 Pagar Taxa de Matrícula — R$ 69,90"
-                  )}
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-center">Pague com cartão de crédito em até 12x:</p>
-                <div className="space-y-2">
-                  <div>
-                    <Label>Nome no cartão</Label>
-                    <Input
-                      value={cartao.holderName}
-                      onChange={(e) => setCartao({ ...cartao, holderName: e.target.value })}
-                      placeholder="Nome como está no cartão"
-                    />
-                  </div>
-                  <div>
-                    <Label>Número do cartão</Label>
-                    <Input
-                      value={cartao.number}
-                      onChange={(e) => setCartao({ ...cartao, number: e.target.value.replace(/\D/g, "").slice(0, 16) })}
-                      placeholder="0000 0000 0000 0000"
-                      inputMode="numeric"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <Label>Mês</Label>
-                      <Input
-                        value={cartao.expiryMonth}
-                        onChange={(e) => setCartao({ ...cartao, expiryMonth: e.target.value.replace(/\D/g, "").slice(0, 2) })}
-                        placeholder="MM"
-                        inputMode="numeric"
-                      />
-                    </div>
-                    <div>
-                      <Label>Ano</Label>
-                      <Input
-                        value={cartao.expiryYear}
-                        onChange={(e) => setCartao({ ...cartao, expiryYear: e.target.value.replace(/\D/g, "").slice(0, 4) })}
-                        placeholder="AAAA"
-                        inputMode="numeric"
-                      />
-                    </div>
-                    <div>
-                      <Label>CVV</Label>
-                      <Input
-                        value={cartao.ccv}
-                        onChange={(e) => setCartao({ ...cartao, ccv: e.target.value.replace(/\D/g, "").slice(0, 4) })}
-                        placeholder="123"
-                        inputMode="numeric"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Parcelas</Label>
-                    <select
-                      value={parcelas}
-                      onChange={(e) => setParcelas(Number(e.target.value))}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      {[12,11,10,9,8,7,6,5,4,3,2,1].map((n) => {
-                        const valorParcela = (1438.80 / n).toFixed(2).replace(".", ",");
-                        return <option key={n} value={n}>{n}x de R$ {valorParcela} — Sem Juros</option>;
-                      })}
-                    </select>
-                  </div>
-                </div>
-                <Button
-                  className="w-full text-base py-5"
-                  onClick={() => gerarPagamento("CREDIT_CARD", cartao)}
-                  disabled={pagLoading || !cartao.holderName || !cartao.number || !cartao.expiryMonth || !cartao.expiryYear || !cartao.ccv}
-                >
-                  {pagLoading ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processando...</>
-                  ) : (
-                    "✅ Confirmar Matrícula"
-                  )}
-                </Button>
-              </div>
-            )}
-
-            <div className="text-center pt-2">
-              <a
-                href={WHATSAPP_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-muted-foreground hover:text-green-700 underline"
-              >
-                Precisa de ajuda? Fale com nossa equipe
-              </a>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
+  if (assistiuAula === false) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          {faixaAviso}
+          <Card>
+            <CardContent className="pt-8 pb-6 space-y-4 text-center">
+              <h1 className="text-xl font-bold">Infelizmente não é possível fazer a matrícula agora</h1>
+              <p className="text-muted-foreground text-sm">
+                As vagas dessa turma foram liberadas exclusivamente pra quem assistiu à aula ao vivo e recebeu o
+                voucher nela. Fique de olho no nosso grupo/canal pra não perder a próxima aula e garantir sua vaga!
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Tela final (demonstração) — não processa pagamento nenhum de verdade
+  if (concluido) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          {faixaAviso}
+          <Card>
+            <CardContent className="pt-8 pb-6 text-center space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle2 className="h-10 w-10 text-green-600" />
+              </div>
+              <h1 className="text-2xl font-bold">Fim da demonstração! 🎉</h1>
+              <p className="text-muted-foreground text-sm">
+                Aqui, no link de verdade (<code>/matricula</code>), apareceria a tela de pagamento
+                de {forma === "boleto" ? "boleto" : "cartão de crédito"} — e assim que confirmado, o acesso às
+                aulas já é liberado na hora, automaticamente.
+              </p>
+              <Button
+                onClick={() => {
+                  setAssistiuAula(null);
+                  setStep(0);
+                  setDados({ nome: "", telefone: "", data_nascimento: "" });
+                  setForma(null);
+                  setVoucherCode("");
+                  setConcluido(false);
+                }}
+                className="w-full"
+                variant="outline"
+              >
+                Reiniciar demonstração
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white px-4 py-6 md:py-10">
       <div className="max-w-2xl mx-auto">
+        {faixaAviso}
         <img
           src="/banner-matriculas.png"
           alt="Matrículas Abertas — Faça sua matrícula e garanta sua vaga. Vagas limitadas."
@@ -630,13 +215,47 @@ function MatriculaDemoPage() {
         </div>
 
         <div className="flex justify-center gap-2 mb-6">
-          {[1, 2].map((n) => (
+          {[0, 1, 2].map((n) => (
             <div key={n} className={`h-2 w-16 rounded-full ${step >= n ? "bg-orange-500" : "bg-gray-200"}`} />
           ))}
         </div>
 
         <Card>
           <CardContent className="pt-6 space-y-4">
+            {step === 0 && (
+              <>
+                <h2 className="text-xl font-semibold text-center">Comprove sua presença na aula</h2>
+                <p className="text-sm text-muted-foreground text-center">
+                  Se você realmente esteve presente na aula ao vivo, você recebeu um <strong>código</strong> pra
+                  usar aqui. Ele dá direito à bolsa de estudo da Escola Soluções Online pra você concluir seus
+                  estudos.
+                </p>
+                <div className="space-y-1">
+                  <Label htmlFor="voucher">Código recebido na aula ao vivo</Label>
+                  <Input
+                    id="voucher"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value)}
+                    placeholder="Digite seu código aqui"
+                    onKeyDown={(e) => e.key === "Enter" && voucherValido && setStep(1)}
+                  />
+                  {voucherCode.trim() !== "" && !voucherValido && (
+                    <p className="text-sm text-red-600">Código inválido — confira e tente de novo</p>
+                  )}
+                  {voucherValido && (
+                    <p className="text-sm text-green-600 font-medium">✅ Código confirmado!</p>
+                  )}
+                </div>
+                <Button
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                  disabled={!voucherValido}
+                  onClick={() => setStep(1)}
+                >
+                  Confirmar código
+                </Button>
+              </>
+            )}
+
             {step === 1 && (
               <>
                 <h2 className="text-xl font-semibold">Seus dados</h2>
@@ -659,15 +278,6 @@ function MatriculaDemoPage() {
                     />
                   </div>
                   <div>
-                    <Label>CPF *</Label>
-                    <Input
-                      value={dados.cpf}
-                      onChange={(e) => setDados({ ...dados, cpf: maskCPF(e.target.value) })}
-                      placeholder="000.000.000-00"
-                      inputMode="numeric"
-                    />
-                  </div>
-                  <div>
                     <Label>Data de nascimento (dd/mm/aaaa) *</Label>
                     <Input
                       value={dados.data_nascimento}
@@ -677,7 +287,7 @@ function MatriculaDemoPage() {
                     />
                   </div>
                 </div>
-                <Button className="w-full" onClick={handleAvancar1}>Avançar</Button>
+                <Button className="w-full" onClick={handleAvancarDados}>Avançar</Button>
               </>
             )}
 
@@ -686,91 +296,54 @@ function MatriculaDemoPage() {
                 <h2 className="text-xl font-semibold">Investimento</h2>
                 <div className="text-center bg-gray-50 border rounded-lg py-5 px-4">
                   <p className="text-sm text-muted-foreground mb-1">Preço padrão da escola</p>
-                  <p className="text-3xl md:text-4xl font-black text-gray-800">
+                  <p className="text-lg text-muted-foreground line-through">
                     12x de R$ {PLANOS.cartao.valorParc}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">no cartão de crédito</p>
+                  <p className="text-sm text-green-700 font-semibold mt-1">✅ Bolsa de estudo aplicada</p>
                 </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="voucher">Recebeu um código de desconto na aula ao vivo?</Label>
-                  <Input
-                    id="voucher"
-                    value={voucherCode}
-                    onChange={(e) => setVoucherCode(e.target.value)}
-                    placeholder="Digite seu código aqui"
-                  />
-                  {voucherCode.trim() !== "" && !voucherValido && (
-                    <p className="text-sm text-red-600">Código inválido</p>
-                  )}
-                  {voucherValido && (
-                    <p className="text-sm text-green-600 font-medium">
-                      ✅ Código aplicado — condição especial liberada abaixo
-                    </p>
-                  )}
-                  {!voucherValido && !semCodigo && (
-                    <button
-                      type="button"
-                      onClick={() => setSemCodigo(true)}
-                      className="text-xs text-muted-foreground underline"
-                    >
-                      Não tenho o código
-                    </button>
-                  )}
-                </div>
-
-                {(voucherValido || semCodigo) && (
-                  <>
-                    <h2 className="text-xl font-semibold pt-2">Forma de pagamento</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Como prefere pagar? Nossa equipe entrará em contato para alinhar as condições.
-                    </p>
-                    <div className="grid gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setForma("boleto")}
-                        className={`border rounded-lg p-4 text-left transition ${forma === "boleto" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
-                      >
-                        <div className="text-3xl mb-1">📄</div>
-                        <div className="font-semibold">Boleto Bancário</div>
-                        <div className="text-sm text-muted-foreground">1 + 9 parcelas de R$ 159,90</div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setForma("cartao")}
-                        className={`border rounded-lg p-4 text-left transition ${forma === "cartao" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
-                      >
-                        <div className="text-3xl mb-1">💳</div>
-                        <div className="font-semibold">Cartão de Crédito</div>
-                        <div className="text-sm text-muted-foreground">
-                          {voucherValido ? (
-                            <>
-                              <span className="line-through mr-1">12x de R$ {PLANOS.cartao.valorParc}</span>
-                              <span className="text-green-700 font-semibold">12x de R$ {PLANO_CARTAO_VOUCHER.valorParc}</span>
-                            </>
-                          ) : (
-                            `12x de R$ ${PLANOS.cartao.valorParc}`
-                          )}
-                        </div>
-                        <div className="text-sm text-orange-700 font-medium mt-1">
-                          ⚡ Nessa opção você conclui tudo em menos tempo — entre 10 e 30 dias
-                        </div>
-                      </button>
+                <h2 className="text-xl font-semibold pt-2">Forma de pagamento</h2>
+                <p className="text-sm text-muted-foreground">
+                  Como prefere pagar? Nossa equipe entrará em contato para alinhar as condições.
+                </p>
+                <div className="grid gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setForma("boleto")}
+                    className={`border rounded-lg p-4 text-left transition ${forma === "boleto" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <div className="text-3xl mb-1">📄</div>
+                    <div className="font-semibold">Boleto Bancário</div>
+                    <div className="text-sm text-muted-foreground">1 + 9 parcelas de R$ 159,90</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForma("cartao")}
+                    className={`border rounded-lg p-4 text-left transition ${forma === "cartao" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <div className="text-3xl mb-1">💳</div>
+                    <div className="font-semibold">Cartão de Crédito</div>
+                    <div className="text-sm text-muted-foreground">
+                      <span className="line-through mr-1">12x de R$ {PLANOS.cartao.valorParc}</span>
+                      <span className="text-green-700 font-semibold">12x de R$ {PLANO_CARTAO_VOUCHER.valorParc}</span>
                     </div>
-                  </>
-                )}
+                    <div className="text-sm text-orange-700 font-medium mt-1">
+                      ⚡ Nessa opção você conclui tudo em menos tempo — entre 10 e 30 dias
+                    </div>
+                  </button>
+                </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={enviando}>Voltar</Button>
-                  {(voucherValido || semCodigo) && (
-                    <Button
-                      onClick={handleFinalizarStep2}
-                      disabled={enviando}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                    >
-                      {enviando ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>) : (<>✅ Garantir minha vaga</>)}
-                    </Button>
-                  )}
+                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Voltar</Button>
+                  <Button
+                    onClick={() => {
+                      if (!forma) { toast.error("Selecione uma forma de pagamento"); return; }
+                      setConcluido(true);
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    ✅ Garantir minha vaga
+                  </Button>
                 </div>
               </>
             )}
