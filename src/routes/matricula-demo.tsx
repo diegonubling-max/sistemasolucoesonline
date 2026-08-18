@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { maskPhone } from "@/lib/format";
-import { CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/matricula-demo")({
   head: () => ({
@@ -69,7 +68,6 @@ function MatriculaDemoPage() {
   const [dados, setDados] = useState<DadosAluno>({ nome: "", telefone: "", data_nascimento: "" });
   const [forma, setForma] = useState<FormaPag | null>(null);
   const [voucherCode, setVoucherCode] = useState("");
-  const [concluido, setConcluido] = useState(false);
   const voucherValido = voucherCode.trim().toLowerCase() === VOUCHER_CODE;
 
   const [tempoRestante, setTempoRestante] = useState(() => getProximoEncerramento().getTime() - Date.now());
@@ -139,43 +137,6 @@ function MatriculaDemoPage() {
                 As vagas dessa turma foram liberadas exclusivamente pra quem assistiu à aula ao vivo e recebeu o
                 voucher nela. Fique de olho no nosso grupo/canal pra não perder a próxima aula e garantir sua vaga!
               </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  // Tela final (demonstração) — não processa pagamento nenhum de verdade
-  if (concluido) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardContent className="pt-8 pb-6 text-center space-y-4">
-              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
-              </div>
-              <h1 className="text-2xl font-bold">Fim da demonstração! 🎉</h1>
-              <p className="text-muted-foreground text-sm">
-                Aqui, no link de verdade (<code>/matricula</code>), apareceria a tela de pagamento
-                de {forma === "boleto" ? "boleto" : "cartão de crédito"} — e assim que confirmado, o acesso às
-                aulas já é liberado na hora, automaticamente.
-              </p>
-              <Button
-                onClick={() => {
-                  setAssistiuAula(null);
-                  setStep(0);
-                  setDados({ nome: "", telefone: "", data_nascimento: "" });
-                  setForma(null);
-                  setVoucherCode("");
-                  setConcluido(false);
-                }}
-                className="w-full"
-                variant="outline"
-              >
-                Reiniciar demonstração
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -325,7 +286,8 @@ function MatriculaDemoPage() {
                   <Button
                     onClick={() => {
                       if (!forma) { toast.error("Selecione uma forma de pagamento"); return; }
-                      setConcluido(true);
+                      // Demonstração — não gera cobrança nenhuma, a tela permanece a mesma
+                      // (evita quebrar o fluxo visual pro público assistindo ao vivo).
                     }}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                   >
