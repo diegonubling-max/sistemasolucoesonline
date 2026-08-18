@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { maskPhone } from "@/lib/format";
+import { CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/matricula-demo")({
   head: () => ({
@@ -67,6 +68,9 @@ function MatriculaDemoPage() {
   const [step, setStep] = useState<Step>(0);
   const [dados, setDados] = useState<DadosAluno>({ nome: "", telefone: "", data_nascimento: "" });
   const [forma, setForma] = useState<FormaPag | null>(null);
+  const [printCartao, setPrintCartao] = useState(false);
+  const [cartao, setCartao] = useState({ holderName: "", number: "", expiryMonth: "", expiryYear: "", ccv: "" });
+  const [parcelasCartao, setParcelasCartao] = useState(12);
   const [voucherCode, setVoucherCode] = useState("");
   const voucherValido = voucherCode.trim().toLowerCase() === VOUCHER_CODE;
 
@@ -140,6 +144,103 @@ function MatriculaDemoPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+    );
+  }
+
+  // "Print" da tela real de pagamento no cartão — só pra mostrar como fica pro aluno durante a
+  // aula. Os campos são digitáveis (fica mais real na demonstração), mas o botão não processa
+  // nada de verdade nem sai dessa tela.
+  if (printCartao) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-8 pb-6 space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-center">Bem-vindo(a) à Soluções Online! 🎓</h1>
+            <p className="text-muted-foreground text-center text-sm">
+              Parabéns pela decisão! Você está a um passo de realizar o sonho de concluir seus estudos
+              em <strong>menos de 6 meses</strong>. Falta pouco — efetue o pagamento abaixo para garantir sua vaga.
+            </p>
+
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-center">Pague com cartão de crédito em até 12x:</p>
+              <div className="space-y-2">
+                <div>
+                  <Label>Nome no cartão</Label>
+                  <Input
+                    value={cartao.holderName}
+                    onChange={(e) => setCartao({ ...cartao, holderName: e.target.value })}
+                    placeholder="Nome como está no cartão"
+                  />
+                </div>
+                <div>
+                  <Label>Número do cartão</Label>
+                  <Input
+                    value={cartao.number}
+                    onChange={(e) => setCartao({ ...cartao, number: e.target.value.replace(/\D/g, "").slice(0, 16) })}
+                    placeholder="0000 0000 0000 0000"
+                    inputMode="numeric"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label>Mês</Label>
+                    <Input
+                      value={cartao.expiryMonth}
+                      onChange={(e) => setCartao({ ...cartao, expiryMonth: e.target.value.replace(/\D/g, "").slice(0, 2) })}
+                      placeholder="MM"
+                      inputMode="numeric"
+                    />
+                  </div>
+                  <div>
+                    <Label>Ano</Label>
+                    <Input
+                      value={cartao.expiryYear}
+                      onChange={(e) => setCartao({ ...cartao, expiryYear: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                      placeholder="AAAA"
+                      inputMode="numeric"
+                    />
+                  </div>
+                  <div>
+                    <Label>CVV</Label>
+                    <Input
+                      value={cartao.ccv}
+                      onChange={(e) => setCartao({ ...cartao, ccv: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                      placeholder="123"
+                      inputMode="numeric"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Parcelas</Label>
+                  <select
+                    value={parcelasCartao}
+                    onChange={(e) => setParcelasCartao(Number(e.target.value))}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    {[12,11,10,9,8,7,6,5,4,3,2,1].map((n) => {
+                      const valorParcela = (1438.80 / n).toFixed(2).replace(".", ",");
+                      return <option key={n} value={n}>{n}x de R$ {valorParcela} — Sem Juros</option>;
+                    })}
+                  </select>
+                </div>
+              </div>
+              <Button className="w-full text-base py-5">
+                ✅ Confirmar Matrícula
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Assim que confirmado, o acesso às aulas já é liberado na hora, automaticamente.
+              </p>
+            </div>
+
+            <Button variant="ghost" className="w-full" onClick={() => setPrintCartao(false)}>
+              ← Voltar
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -286,7 +387,13 @@ function MatriculaDemoPage() {
                   <Button
                     onClick={() => {
                       if (!forma) { toast.error("Selecione uma forma de pagamento"); return; }
-                      // Demonstração — não gera cobrança nenhuma, a tela permanece a mesma
+                      if (forma === "cartao") {
+                        // Mostra o "print" de como fica a tela real de pagamento no cartão —
+                        // só pra visualização durante a aula, não processa nada de verdade.
+                        setPrintCartao(true);
+                        return;
+                      }
+                      // Boleto: demonstração — não gera cobrança nenhuma, a tela permanece a mesma
                       // (evita quebrar o fluxo visual pro público assistindo ao vivo).
                     }}
                     className="flex-1 bg-green-600 hover:bg-green-700"
