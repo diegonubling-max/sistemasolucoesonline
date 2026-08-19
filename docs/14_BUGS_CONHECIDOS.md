@@ -324,6 +324,21 @@
 - **Solução (12/08/2026):** renomeado `_admin.webinars.$id.tsx` → `_admin.webinars.$id.index.tsx` (mesmo padrão de `_admin.alunos.$id.index.tsx`), removendo a relação pai/filho acidental — `/webinars/$id` e `/webinars/$id/depoimentos` viram rotas irmãs, ambas filhas diretas do layout `_admin.tsx`. `routeTree.gen.ts` regenerado rodando o build completo do projeto, não editado à mão.
 - **Status:** ✅ Resolvido
 
+### BUG-057 (CRÍTICO — falha de segurança real): alunos com acesso a dados de admin
+- **Como foi descoberto:** a aluna Marli mandou print mostrando que estava conseguindo acessar o sistema como admin.
+- **Causa raiz:** as tabelas `alunos`, `matriculas`, `parcelas`, `user_roles` e `matriculas_aulao` tinham uma regra de segurança do banco (`RLS policy`) chamada `authenticated_full_access` com a condição `true` — ou seja, **qualquer usuário logado no sistema (inclusive um aluno) tinha leitura E escrita completa em TODOS os registros de TODOS os alunos**, não só os próprios. A proteção que existia (o "guard" que redireciona quem não é admin/colaborador) era só na tela — roda no navegador, depois que a página já carregou — e não protegia as consultas que o app faz direto no banco.
+- **Gravidade extra:** a mesma falha valia pra tabela `user_roles` (que define quem é admin) — na teoria, um aluno poderia ter feito uma chamada direta pra se auto-promover a admin. Testei esse cenário especificamente depois da correção e confirmei que agora é bloqueado.
+- **Solução (18/08/2026):**
+  - Criadas duas funções auxiliares no banco (`is_admin()`, `is_admin_or_staff()`) que checam se quem está logado é admin ou colaborador.
+  - `alunos`, `matriculas`, `parcelas`, `matriculas_aulao`: staff (admin/colaborador) mantém acesso total; aluno passa a só enxergar/editar os **próprios** registros (batendo pelo e-mail — mesmo padrão que as próprias telas do aluno já usavam pra buscar os dados).
+  - `user_roles`: só admin pode ler/escrever tudo; qualquer usuário só enxerga a própria linha, e **ninguém além de admin consegue mais escrever nessa tabela pela API** (a criação de acesso de aluno já usava a chave de serviço do servidor, que não passa pela RLS — não foi afetada).
+- **Testes feitos antes de considerar resolvido:**
+  1. Simulei o login de uma aluna real: só via 1 aluno (ela mesma) em vez de todos.
+  2. Tentei fazer essa aluna se promover a admin via `user_roles` — bloqueado pela regra do banco.
+  3. Confirmei que ela ainda vê certinho as próprias parcelas (financeiro dela não quebrou).
+  4. Confirmei que o Diego (admin) continua vendo todos os 28 alunos normalmente.
+- **Status:** ✅ Resolvido — mas recomendo fortemente **pedir pra Marli confirmar** que não consegue mais acessar nada de admin, e trocar a senha dela por precaução.
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
