@@ -751,6 +751,7 @@ Uma linha por minuto por webinar ao vivo, gravada pelo cron `webinar-presenca` �
 - registrar_pagamento_parcela(p_parcela_id, p_valor_pago, p_data_pagamento, p_forma_pagamento, p_parcelas_cartao, p_taxa_cartao, p_valor_liquido, p_observacao) — "Dar Baixa"
 - get_contrato_publico(p_token) / assinar_contrato_publico(p_token, p_nome, p_ip) — assinatura remota de contrato
 - proximo_ctr_aluno() — 12/08/2026, BUG-049. Fonte única de CTR novo (puxa de `alunos_ctr_seq`, pulando terminados em 13) — usada tanto pelo trigger do cadastro manual quanto por `converter-matricula-aulao.ts`, pra nunca mais ficarem fora de sincronia
+- is_admin() / is_admin_or_staff() — 18/08/2026, BUG-057 (falha de segurança crítica). `SECURITY DEFINER`, usadas dentro das policies de RLS de `alunos`, `matriculas`, `parcelas`, `matriculas_aulao`, `user_roles` e `colaboradores`, pra checar se quem está logado é admin/colaborador sem cair em recursão infinita (uma policy de `user_roles` não pode consultar `user_roles` diretamente dentro de si mesma — por isso a função)
 - Ainda pendentes de verificar/criar (chamadas no código, não confirmadas no banco): add_milhas_eja, delete_pacote, resgatar_curso_vitrine. registrar_aula_assistida é legado (comentado como tal no código) e pode ser removida em vez de criada — o tracking real de progresso já funciona via aluno_aulas_assistidas (use-video-progress.ts)
 
 ### Triggers criados (automação de Pós-Venda):
@@ -764,3 +765,12 @@ Uma linha por minuto por webinar ao vivo, gravada pelo cron `webinar-presenca` �
 
 ### Edge Functions publicadas (existiam só no código-fonte — ver BUG-030):
 manage-colaboradores, asaas-api, manage-student-access, asaas-cobrar, asaas-vitrine-checkout, asaas-vitrine-status, asaas-webhook, asaas-vitrine-webhook, cancelar-boletos-migrados, gerar-boletos-migrados, panda-video-sync, send-push-notification
+
+### Segurança / RLS — estado atual (18/08/2026, pós BUG-057)
+**Regra geral:** staff (admin via `user_roles.role='admin'`, ou qualquer `colaboradores`) tem acesso total; aluno (usuário `authenticated` comum) só enxerga/edita os **próprios** registros. Nunca usar `qual: true` liberando geral pra `authenticated` numa tabela que tem dado de aluno — foi exatamente isso que causou o BUG-057.
+- `alunos`: staff = ALL; aluno = ALL no próprio registro (`email = auth.email()`)
+- `matriculas`: staff = ALL; aluno = SELECT nas próprias (via `aluno_id` → `alunos.email = auth.email()`)
+- `parcelas`: staff = ALL; aluno = SELECT nas próprias (via `matricula_id` → `matriculas` → `alunos.email = auth.email()`)
+- `matriculas_aulao`: staff = ALL; **sem policy pra aluno** (dado de lead/venda, aluno não precisa acessar) — mantém `anon_select`/`anon_update` só pro fluxo público `/matricula`
+- `user_roles`: só admin (`is_admin()`) tem ALL; qualquer usuário só faz SELECT da própria linha (`user_id = auth.uid()`) — **ninguém além de admin escreve nessa tabela via API**, mesmo o próprio dono da linha
+- `colaboradores`: SELECT = próprio registro ou admin; sem policy de escrita pra `authenticated` (gestão de colaborador passa por edge function com service role)
