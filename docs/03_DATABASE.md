@@ -632,6 +632,8 @@ Sistema de aula ao vivo com chat e monitoramento de presença. Vídeo em si é i
 | youtube_url | text | Link do YouTube (ao vivo, não listado) |
 | status | text | `agendado` / `ao_vivo` / `encerrado` |
 | iniciado_em / encerrado_em | timestamptz | Preenchidos ao trocar o status |
+| gravado | boolean | Aula gravada (replay) — habilita depoimentos sincronizados por tempo |
+| modo_acesso | text | 19/08/2026. `'youtube'` (padrão) ou `'interno'` — destino do aluno depois de preencher nome/telefone: direto pro app do YouTube, ou pro player interno do sistema. Editável na listagem (badge 📺/💻 ao lado do título) a qualquer momento, inclusive já com o webinar ao vivo |
 
 ### webinar_participantes
 | Coluna | Tipo | Descrição |
