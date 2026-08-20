@@ -31,6 +31,7 @@ function WebinarsList() {
   const [titulo, setTitulo] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [gravado, setGravado] = useState(false);
+  const [modoAcesso, setModoAcesso] = useState<"youtube" | "interno">("youtube");
   const [excluirAlvo, setExcluirAlvo] = useState<{ id: string; titulo: string } | null>(null);
 
   const { data: webinars, isLoading } = useQuery({
@@ -48,7 +49,7 @@ function WebinarsList() {
 
   const criarMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("webinars" as any).insert({ titulo, youtube_url: youtubeUrl, gravado });
+      const { error } = await supabase.from("webinars" as any).insert({ titulo, youtube_url: youtubeUrl, gravado, modo_acesso: modoAcesso });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -58,6 +59,7 @@ function WebinarsList() {
       setTitulo("");
       setYoutubeUrl("");
       setGravado(false);
+      setModoAcesso("youtube");
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -77,6 +79,15 @@ function WebinarsList() {
   const gravadoMutation = useMutation({
     mutationFn: async ({ id, gravado }: { id: string; gravado: boolean }) => {
       const { error } = await supabase.from("webinars" as any).update({ gravado }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["webinars"] }),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const modoAcessoMutation = useMutation({
+    mutationFn: async ({ id, modo_acesso }: { id: string; modo_acesso: "youtube" | "interno" }) => {
+      const { error } = await supabase.from("webinars" as any).update({ modo_acesso }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["webinars"] }),
@@ -140,6 +151,15 @@ function WebinarsList() {
                       >
                         <Badge className={`ml-2 align-middle cursor-pointer ${w.gravado ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400"}`}>
                           🎥 {w.gravado ? "Gravado" : "Marcar como gravado"}
+                        </Badge>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => modoAcessoMutation.mutate({ id: w.id, modo_acesso: w.modo_acesso === "interno" ? "youtube" : "interno" })}
+                        title="Clique pra trocar entre app do YouTube e player interno do sistema"
+                      >
+                        <Badge className={`ml-2 align-middle cursor-pointer ${w.modo_acesso === "interno" ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}>
+                          {w.modo_acesso === "interno" ? "💻 Sistema" : "📺 App YouTube"}
                         </Badge>
                       </button>
                     </TableCell>
@@ -218,6 +238,27 @@ function WebinarsList() {
               <Label htmlFor="gravado" className="cursor-pointer font-normal">
                 Essa é uma aula gravada (não é ao vivo de verdade) — habilita os depoimentos sincronizados por tempo
               </Label>
+            </div>
+            <div>
+              <Label>Depois de colocar nome e telefone, o aluno vai para:</Label>
+              <div className="flex gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setModoAcesso("youtube")}
+                  className={`flex-1 border rounded-lg p-3 text-left text-sm transition ${modoAcesso === "youtube" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                >
+                  <div className="font-semibold">📺 App do YouTube</div>
+                  <div className="text-xs text-muted-foreground">Abre direto no app (Android e iPhone)</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModoAcesso("interno")}
+                  className={`flex-1 border rounded-lg p-3 text-left text-sm transition ${modoAcesso === "interno" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                >
+                  <div className="font-semibold">💻 Dentro do sistema</div>
+                  <div className="text-xs text-muted-foreground">Vídeo + chat na própria página</div>
+                </button>
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -23,21 +23,35 @@ function extrairYoutubeId(url: string): string | null {
   return match ? match[1] : null;
 }
 
-// Monta o link de destino certo por plataforma, pra abrir no APP do YouTube (não no navegador).
-// Não está em uso agora (o player interno do sistema voltou a ser o padrão), mas fica aqui
-// pronta caso o Diego queira reativar o redirect direto pro YouTube no futuro.
-// - Android: link https:// normal costuma abrir no navegador (depende de config do aparelho) — o
-//   esquema intent:// força a abertura no app do YouTube quando ele está instalado.
-// - iOS: o link https:// padrão já abre direto no app (Universal Links), sem precisar de truque.
-// - Sem videoId reconhecido (ou sem app) ou noutra plataforma: usa a URL original como veio.
-function montarLinkYoutubeApp(youtubeUrl: string): string {
-  if (typeof navigator === "undefined") return youtubeUrl;
+// Monta/dispara a abertura no app do YouTube — configurável por webinar (modo_acesso).
+// - Android: o esquema intent:// força a abertura no app do YouTube quando ele está instalado,
+//   com fallback automático pro navegador se não tiver o app.
+// - iOS: o link https:// padrão (Universal Links) nem sempre abre o app de fato (depende de
+//   configuração do aparelho/app) — por isso usamos o esquema próprio do app (youtube://) com
+//   um fallback por tempo: se o app não abrir em ~1,5s (a aba continua visível), cai pro link
+//   normal.
+function abrirYoutubeApp(youtubeUrl: string) {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return;
   const videoId = extrairYoutubeId(youtubeUrl);
   const isAndroid = /Android/i.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
   if (isAndroid && videoId) {
-    return `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(youtubeUrl)};end`;
+    window.location.href = `intent://www.youtube.com/watch?v=${videoId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(youtubeUrl)};end`;
+    return;
   }
-  return youtubeUrl;
+
+  if (isIOS && videoId) {
+    const fallbackTimer = setTimeout(() => {
+      window.location.href = youtubeUrl;
+    }, 1500);
+    const cancelarFallback = () => clearTimeout(fallbackTimer);
+    document.addEventListener("visibilitychange", cancelarFallback, { once: true });
+    window.location.href = `youtube://www.youtube.com/watch?v=${videoId}`;
+    return;
+  }
+
+  window.location.href = youtubeUrl;
 }
 
 interface Participante {
@@ -104,13 +118,13 @@ function WebinarPage() {
     }
   }, [id]);
 
-  // Acesso liberado (novo ou reentrada) — manda direto pro YouTube (app, quando possível), em
-  // vez de mostrar o player interno do sistema. Reativado a pedido do Diego (18/08/2026).
+  // Acesso liberado (novo ou reentrada) — manda direto pro YouTube (app, quando possível) ou
+  // mostra o player interno, conforme o "modo_acesso" configurado nesse webinar (19/08/2026).
   useEffect(() => {
-    if (participante && webinar?.youtube_url) {
-      window.location.href = montarLinkYoutubeApp(webinar.youtube_url);
+    if (participante && webinar?.youtube_url && webinar?.modo_acesso !== "interno") {
+      abrirYoutubeApp(webinar.youtube_url);
     }
-  }, [participante, webinar?.youtube_url]);
+  }, [participante, webinar?.youtube_url, webinar?.modo_acesso]);
 
   const handleEntrar = async () => {
     if (!nome.trim() || telefone.replace(/\D/g, "").length < 10) return;
@@ -421,9 +435,10 @@ function WebinarPage() {
     );
   }
 
-  // Acesso liberado — redireciona direto pro YouTube (ver useEffect acima). Essa tela só aparece
-  // no instante entre a liberação e o redirect acontecer de fato.
-  if (participante) {
+  // Acesso liberado — redireciona direto pro YouTube (ver useEffect acima) quando modo_acesso
+  // for "youtube". Essa tela só aparece no instante entre a liberação e o redirect acontecer.
+  // Quando modo_acesso for "interno", cai direto pro player interno mais abaixo.
+  if (participante && webinar?.modo_acesso !== "interno") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4 py-8">
         <Card className="w-full max-w-md">
@@ -432,7 +447,11 @@ function WebinarPage() {
             <h1 className="text-xl font-bold">Acesso liberado!</h1>
             <p className="text-muted-foreground text-sm">Te levando pra aula ao vivo no YouTube...</p>
             {webinar?.youtube_url && (
-              <a href={montarLinkYoutubeApp(webinar.youtube_url)} className="text-orange-600 text-sm underline">
+              <a
+                href={webinar.youtube_url}
+                onClick={(e) => { e.preventDefault(); abrirYoutubeApp(webinar.youtube_url); }}
+                className="text-orange-600 text-sm underline"
+              >
                 Não foi redirecionado? Clique aqui
               </a>
             )}
