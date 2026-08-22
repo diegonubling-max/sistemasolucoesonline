@@ -223,9 +223,10 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
               const { data: msgRow } = await supabaseAdmin
                 .from("zapi_mensagens_fds")
                 .select("mensagem")
-                .eq("dia", diaLabel)
+                .eq("dia_semana", diaLabel)
                 .eq("ciclo", ciclo)
-                .eq("assistiu", assistiu)
+                .eq("tipo", assistiu ? "assistiu" : "nao_assistiu")
+                .eq("ativo", true)
                 .maybeSingle();
               if (!msgRow?.mensagem) continue;
 
@@ -235,7 +236,7 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                 ? primeiroNome.charAt(0).toUpperCase() +
                   primeiroNome.slice(1).toLowerCase()
                 : "";
-              const mensagem = msgRow.mensagem.replace(/\[nome\]/gi, nomeFmt);
+              const mensagem = msgRow.mensagem.replace(/\{nome\}/gi, nomeFmt);
 
               await sendWhatsApp(aluno.telefone, mensagem, {
                 alunoId: aluno.id,
