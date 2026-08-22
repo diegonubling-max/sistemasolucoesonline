@@ -61,6 +61,17 @@ async function sendWhatsApp(
 }
 
 
+async function isDisparoEnabled(chave: string): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("configuracoes")
+    .select("valor")
+    .eq("chave", `zapi_disparo_${chave}`)
+    .maybeSingle();
+  if (!data) return true;
+  return data.valor !== "false";
+}
+
 function addDays(date: Date, days: number) {
   const d = new Date(date);
   d.setUTCDate(d.getUTCDate() + days);
@@ -80,8 +91,11 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-cobranca")({
 
         const result = { lembretes: 0, atrasos: 0, erros: [] as string[] };
 
+        const lembreteHabilitado = await isDisparoEnabled("lembrete_vencimento");
+        const atrasoHabilitado = await isDisparoEnabled("aviso_atraso");
+
         // 1) Lembretes 3 dias antes do vencimento
-        try {
+        if (lembreteHabilitado) try {
           const { data: vencendo, error } = await supabaseAdmin
             .from("parcelas")
             .select(
@@ -109,7 +123,7 @@ Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
         }
 
         // 2) Avisos de atraso (vencidas há mais de 1 dia, não pagas)
-        try {
+        if (atrasoHabilitado) try {
           const { data: atrasadas, error } = await supabaseAdmin
             .from("parcelas")
             .select(

@@ -24,6 +24,7 @@ import { confirmarPagamentoAsaas } from "@/services/asaas";
 import { AgendamentoProvaFinal } from "@/components/admin/AgendamentoProvaFinal";
 import { formatCurrency } from "@/lib/format";
 import { notifyPagamentoRecebido } from "@/lib/notify";
+import { sendConfirmacaoPagamento } from "@/services/zApiService";
 
 export const Route = createFileRoute("/_admin/alunos/$id/editar")({
   head: () => ({ meta: [{ title: "Editar aluno — Soluções Online" }] }),
@@ -310,6 +311,7 @@ function EditarAluno() {
           <EditarParcelas 
             matriculaId={matricula?.id}
             alunoId={id}
+            aluno={aluno}
             parcelas={parcelasAtuais || []}
             onSuccess={() => {
               refetchParcelas();
@@ -583,7 +585,7 @@ function EditarCursos({ matriculaId, alunoId, cursosDisponiveis, cursosAtuais, o
   );
 }
 
-function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
+function EditarParcelas({ matriculaId, alunoId, aluno, parcelas, onSuccess }: any) {
   const [localParcelas, setLocalParcelas] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
@@ -721,6 +723,18 @@ function EditarParcelas({ matriculaId, alunoId, parcelas, onSuccess }: any) {
       if (error) throw error;
       notifyPagamentoRecebido(baixaData.id, baixaData.valor, data.forma_pagamento);
       confirmarPagamentoAsaas(baixaData.id, data.valor_pago ?? baixaData.valor, data.data_pagamento);
+
+      // BUG-059 (19/08/2026): a confirmação de pagamento por WhatsApp existia como opção na
+      // tela de Configurações, mas não estava ligada em nenhum lugar do sistema — dar baixa
+      // nunca disparava essa mensagem. Corrigido: dispara aqui, no momento real da baixa.
+      if (aluno?.telefone) {
+        sendConfirmacaoPagamento({
+          telefone: aluno.telefone,
+          nome: aluno.nome,
+          valor: Number(data.valor_pago ?? baixaData.valor),
+          alunoId,
+        });
+      }
       
       
       
