@@ -339,6 +339,26 @@
   4. Confirmei que o Diego (admin) continua vendo todos os 28 alunos normalmente.
 - **Status:** ✅ Resolvido — mas recomendo fortemente **pedir pra Marli confirmar** que não consegue mais acessar nada de admin, e trocar a senha dela por precaução.
 
+### BUG-058: enviar_boas_vindas_aulao_pendentes() quebrada por credencial fixa do Z-API no SQL
+- **Sintoma:** aparente ao testar o novo número do Z-API (19/08/2026) — a função de boas-vindas do Aulão não checava o interruptor "Boas-vindas ao matricular" e tinha o Client-Token ANTIGO do Z-API fixo direto no código SQL, que ficou inválido assim que o Diego gerou um Client-Token novo.
+- **Causa:** a função `enviar_boas_vindas_aulao_pendentes()` chamava a API do Z-API diretamente, com URL/credenciais fixas no `CREATE FUNCTION` — nunca em sincronia com o que estava configurado na Vercel.
+- **Solução (19/08/2026):** a função agora chama o próprio endpoint `/api/public/hooks/zapi-send` do sistema (que lê as credenciais das variáveis de ambiente da Vercel, sempre atualizadas), e passou a checar o interruptor `zapi_disparo_boas_vindas` antes de mandar (não checava antes).
+- **Status:** ✅ Resolvido — testado com envio real (liguei o interruptor temporariamente, mandei pra um número de teste, confirmei recebimento, desliguei de volta)
+
+### BUG-059: 3 dos 10 disparos automáticos de WhatsApp nunca funcionavam de verdade
+- **Como foi descoberto:** pedido do Diego pra testar se todas as opções de "Disparos WhatsApp" (Configurações) estavam funcionando.
+- **Achados:**
+  1. **"Confirmação de pagamento"** nunca era chamada em NENHUM lugar do código — nem na tela de "Dar Baixa", nem nos webhooks do Asaas. O interruptor existia na tela, mas não tinha efeito nenhum porque não tinha nada ligado a ele.
+  2. **"Lembrete 3 dias antes do vencimento"** e **"Aviso de atraso"** (endpoint `whatsapp-cobranca.ts`) mandavam a mensagem sempre, **ignorando completamente** o estado do interruptor — diferente do padrão usado no resto do sistema (`zApiService.ts`), que sempre checa o interruptor antes de mandar.
+- **Solução (19/08/2026):**
+  1. "Confirmação de pagamento" agora dispara no momento real da baixa manual de uma parcela (`_admin.alunos.$id.editar.tsx`).
+  2. `whatsapp-cobranca.ts` passou a checar os interruptores `zapi_disparo_lembrete_vencimento` e `zapi_disparo_aviso_atraso` antes de mandar cada tipo de mensagem.
+- **Achado maior, à parte (mesma investigação):** 6 dos 10 disparos (`nunca_acessou`, `4_dias_sem_acessar`, `sabado`, `domingo`, `lembrete_vencimento`, `aviso_atraso`) **nunca rodavam sozinhos** porque não existia nenhum `pg_cron` chamando os endpoints `zapi-jobs-diarios` e `whatsapp-cobranca` — o código sempre esteve certo (na maior parte), só faltava alguém "apertar o play" todo dia. Agendados agora: `whatsapp-cobranca-diario` (9h Brasília) e `zapi-jobs-diarios` (9h15, roda por grupo de CTR pra distribuir os disparos ao longo dos 10 dias).
+- **Testado com envio real:** rodei os dois endpoints manualmente — `whatsapp-cobranca` mandou avisos reais pra alunos com parcela atrasada, `zapi-jobs-diarios` mandou mensagens reais de "nunca acessou" pro grupo de teste. Confirmei depois, com o log (`zapi_mensagens_log`), que o toggle desligado bloqueia o envio corretamente.
+- **Incidente durante o teste:** testei `whatsapp-cobranca` rápido demais na primeira vez (antes do deploy da correção terminar de verdade no Vercel) — isso fez o código ANTIGO (sem checagem de interruptor) rodar uma vez e mandar 3 avisos de atraso reais pra alunos de verdade, mesmo com o interruptor desligado nas configurações. Já avisei o Diego. Reforça a lição: sempre esperar o deploy terminar antes de testar endpoints que enviam mensagens reais.
+- **Confirmados OK desde antes (sem bug):** `agendamento_prova` (dispara ao agendar a prova) e `motivacional_primeiro_login` (dispara no primeiro login do aluno) — os dois já checavam o interruptor corretamente.
+- **Status:** ✅ Resolvido — todos os 10 interruptores hoje estão desligados por decisão do Diego; o código e os agendamentos estão prontos, só falta ligar os que ele quiser usar
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
