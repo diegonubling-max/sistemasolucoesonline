@@ -54,6 +54,27 @@
 - ✅ Financeiro: Fechamento Semanal (05/08/2026) — por colaborador/polo (ex: Felipe), período sexta a quinta (fecha toda sexta, semana anterior completa), soma parcelas pagas excluindo taxa de matrícula, exporta CSV. Divide automaticamente o total entre Matriz e o colaborador por percentual (`colaboradores.percentual_repasse`, padrão 30% — editável na própria tela com o lápis)
 - ✅ Financeiro: Fechamento Semanal ganhou botão "Marcar como pago" (12/08/2026) — registra que aquele fechamento (colaborador + semana específica) foi pago, com a data do pagamento; fica visível como badge verde "Pago em DD/MM/AAAA" e dá pra desfazer. Guardado na tabela `fechamentos_semanais_pagamentos` (um registro único por colaborador+semana)
 - ✅ Financeiro: reconciliação diária automática de pagamentos (12/08/2026, BUG-050) — edge function `reconciliar-pagamentos`, agendada via `pg_cron` (job `reconciliar-pagamentos-diario`, todo dia 6h da manhã de Brasília). Confere toda parcela em aberto com cobrança já gerada direto na API do Asaas e dá baixa sozinha se já estiver paga lá — pega casos em que o webhook de confirmação não chegou, sem precisar de ninguém notar ou clicar em nada. **(18/08/2026) Estendida pra também cobrir `matriculas_aulao`** — antes só cobria alunos já matriculados (tabela `parcelas`), deixando o funil do Aulão sem essa rede de segurança. Agora confere também todo lead do Aulão com `pagamento_status='pendente'` que já tem cobrança gerada; se o Asaas mostrar como pago, atualiza pra "confirmado" e dispara a criação do acesso do aluno automaticamente
+
+### Disparos automáticos de WhatsApp — auditoria e reconstrução (19/08/2026)
+Depois de conectar um número novo no Z-API (ver `/areas/whatsapp-automation.md` — instância + tokens configurados na Vercel), o Diego pediu pra auditar as 10 opções da tela "Configurações → Disparos WhatsApp" (boas-vindas, confirmação de pagamento, lembrete de vencimento, aviso de atraso, motivacional 1º login, agendamento de prova, nunca acessou, 4 dias sem acessar, sábado, domingo). A auditoria achou tantos problemas empilhados (BUG-058 a BUG-062, ver `14_BUGS_CONHECIDOS.md`) que o Diego decidiu reconstruir do zero em vez de remendar, um disparo de cada vez, testando com envio real antes de considerar pronto.
+
+**Fundação reconstruída (commit 299bc0a):**
+- `zApiService.ts` virou a **fonte única** de envio de WhatsApp — uma função (`sendWhatsApp`) usada por todos os 10 disparos, sem implementações duplicadas espalhadas pelo sistema
+- Uma única forma de checar o interruptor (`isDisparoEnabled`) — e agora, se der erro checando, trata como **desligado** por segurança (antes tratava como ligado)
+- Log de envio (`zapi_mensagens_log`) corrigido — grava telefone e detalhe do erro certinho (a tabela real não tinha as colunas que o código tentava usar)
+- Link antigo do Lovable (`sistemasolucoesonline.lovable.app`) trocado pelo domínio atual em toda mensagem que leva o aluno pra área de estudos
+- `whatsapp-cobranca.ts` parou de ter sua própria cópia da lógica de envio — usa a mesma fundação agora
+- Contadores de resultado só incrementam quando a mensagem **realmente** é enviada (antes contavam mesmo quando bloqueada pelo interruptor ou quando falhava)
+- Endpoint de envio (`zapi-send`) passou a ser chamado sempre por URL absoluta — antes usava caminho relativo, que falha em silêncio quando chamado de dentro de um cron do servidor (causa raiz do BUG-060)
+
+**Progresso disparo por disparo:**
+- ✅ **Boas-vindas ao matricular** (Aulão) — testado com envio real, confirmado
+- ✅ **Lembrete de vencimento** — testado com envio real, confirmado
+- 🟡 **Aviso de atraso** — mecanismo de envio confirmado (por um teste anterior), trava do interruptor confirmada; não retestado de ponta a ponta depois da reconstrução final
+- 🔧 **Confirmação de pagamento** — ligada no fluxo real de "Dar Baixa"; testando revelou e já corrigiu dois bugs à parte (BUG-061, BUG-062, sem relação direta com WhatsApp); envio confirmado, mas ainda falta reconfirmar com um clique único depois da correção do BUG-062
+- ⏳ **Motivacional 1º login**, **Agendamento de prova**, **Nunca acessou**, **4 dias sem acessar**, **Sábado**, **Domingo** — ainda não retestados de ponta a ponta com a fundação nova (sábado especificamente já teve 3 causas de bug corrigidas, ver BUG-060, mas falta reconfirmar com envio real)
+
+**Todos os 10 interruptores estão desligados** nas Configurações até essa auditoria terminar — é decisão deliberada do Diego, não esquecimento.
 - ✅ Dashboard/Financeiro: card "Recebido de Parcelas no Mês" separado de "Taxas de Matrícula no Mês" (05/08/2026) — taxa é reinvestimento em tráfego, não entra no fechamento com responsável de polo
 - ✅ Histórico de Condições Canceladas (parcelas canceladas visíveis para consulta)
 - ✅ Reativar condições anteriores / criar novo pacote

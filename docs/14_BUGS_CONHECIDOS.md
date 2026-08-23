@@ -359,6 +359,27 @@
 - **Confirmados OK desde antes (sem bug):** `agendamento_prova` (dispara ao agendar a prova) e `motivacional_primeiro_login` (dispara no primeiro login do aluno) — os dois já checavam o interruptor corretamente.
 - **Status:** ✅ Resolvido — todos os 10 interruptores hoje estão desligados por decisão do Diego; o código e os agendamentos estão prontos, só falta ligar os que ele quiser usar
 
+### BUG-060: "Sábado"/"Domingo" e outros disparos automáticos nunca funcionavam de verdade — 3 causas empilhadas
+- **Como foi descoberto:** continuação da auditoria dos disparos automáticos, testando "Sábado" especificamente com o interruptor ligado.
+- **Causas encontradas, uma atrás da outra:**
+  1. `zapi-jobs-diarios.ts` buscava a mensagem do dia numa tabela (`zapi_mensagens_fds`) usando nomes de coluna que não existem (`dia`, `assistiu`) — o nome real é `dia_semana`/`tipo`. A busca sempre voltava vazia, então nunca tinha mensagem pra mandar.
+  2. O placeholder do nome no texto da mensagem usava `{nome}` no banco, mas o código só substituía `[nome]` (colchetes) — nunca batia.
+  3. A função de envio compartilhada (`zApiService.ts`) usava uma URL relativa (`/api/...`) pro endpoint que manda a mensagem de verdade — funciona certinho quando chamada do navegador, mas falha em silêncio quando chamada de dentro de um cron do servidor (que é exatamente o caso do sábado/domingo/nunca-acessou/4-dias). Além disso, o registro de log (`zapi_mensagens_log`) tentava gravar numa coluna (`erro_detalhe`) que também não existia, escondendo até o erro.
+- **Solução (19/08/2026):** todas as 3 causas corrigidas juntas na reconstrução da fundação (ver item "Fundação dos disparos WhatsApp reconstruída" em 09_FEATURES.md) — nomes de coluna certos, placeholder `{nome}`, URL sempre absoluta, coluna `erro_detalhe` criada.
+- **Status:** ✅ Resolvido (correção de código). ⚠️ Ainda não reconfirmado com um envio real de "Sábado"/"Domingo" depois da correção — próximo passo da auditoria
+
+### BUG-061 (crítico): "Dar Baixa" quebrava sempre com erro de banco
+- **Como foi descoberto:** ao testar o disparo #1 (Confirmação de pagamento) usando a tela real de "Dar Baixa".
+- **Causa:** o código pegava o objeto inteiro vindo do formulário (`BaixaModal`) e jogava direto num `.update()` da tabela `parcelas`, incluindo campos que não são colunas reais dessa tabela (`valor_pago`, `parcelas_cartao`, `taxa_cartao` — os nomes certos são `valor_pago_total` e `valor_liquido`). Isso quebrava a baixa **sempre**, com a mensagem "Could not find the 'valor_pago' column of 'parcelas'".
+- **Solução (19/08/2026):** mapeados explicitamente os campos certos antes do update, em vez de espalhar o objeto cru.
+- **Status:** ✅ Resolvido e testado ao vivo (baixa realizada com sucesso, financeiro atualizado certinho)
+
+### BUG-062: "Dar Baixa" sem trava de clique duplo
+- **Como foi descoberto:** logo depois de corrigir o BUG-061, testando de novo — a confirmação de pagamento chegou 2x no WhatsApp de teste pro mesmo clique em "Confirmar Baixa".
+- **Causa:** o botão nunca ficava desabilitado durante o processamento (diferente dos outros botões da mesma tela, que já tinham essa trava) — um clique duplo (ou clique repetido por lentidão de rede) disparava a baixa e o envio da confirmação duas vezes.
+- **Solução (19/08/2026):** botão agora trava (`saving`) durante o processamento, igual às outras ações da tela.
+- **Status:** ✅ Resolvido (correção de código) — ainda não reconfirmado com um clique único depois da correção (a conexão com o navegador caiu na hora de retestar)
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting

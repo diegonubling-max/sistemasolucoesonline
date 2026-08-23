@@ -176,7 +176,8 @@
 | tipo_pacote | text | Nome do pacote |
 | data_vencimento | date | Data de vencimento |
 | data_pagamento | date | Data efetiva do pagamento |
-| valor_pago_total | decimal(10,2) | Total pago (para pagamento parcial) |
+| valor_pago_total | decimal(10,2) | Total pago (para pagamento parcial). **Atenção (BUG-061, 19/08/2026):** o formulário de "Dar Baixa" usa o nome `valor_pago` internamente — precisa mapear pra essa coluna manualmente, nunca espalhar o objeto do formulário direto no update |
+| valor_liquido | decimal(10,2) | Valor líquido após taxa de cartão (quando aplicável) |
 | asaas_id | text | ID da cobrança no Asaas |
 | asaas_url | text | URL da cobrança no Asaas |
 | asaas_barcode | text | Código de barras do boleto |
@@ -422,6 +423,7 @@
 | mensagem | text | Conteúdo |
 | telefone | text | Telefone destino |
 | status | text | Status do envio |
+| erro_detalhe | text | 19/08/2026, BUG-060. Detalhe do erro quando `status='erro'` — coluna adicionada depois de descobrir que o código já tentava gravar ela sem ela existir, o que fazia todo log falhar em silêncio |
 | created_at | timestamptz | Data de envio |
 
 ---
