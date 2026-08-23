@@ -711,6 +711,12 @@ function EditarParcelas({ matriculaId, alunoId, aluno, parcelas, onSuccess }: an
 
   const confirmBaixa = async (data: any) => {
     if (!baixaData) return;
+    // BUG-062 (19/08/2026): esse handler nunca travava o botão durante o processamento —
+    // um clique duplo (ou clique repetido por lentidão de rede) disparava a baixa e o envio
+    // da confirmação de pagamento duas vezes. Corrigido: trava o botão via "saving" enquanto
+    // processa, igual às outras ações desse componente.
+    if (saving) return;
+    setSaving(true);
     try {
       // BUG-061 (19/08/2026): o código espalhava o objeto inteiro do formulário direto no
       // update, incluindo campos que não são colunas reais da tabela parcelas (valor_pago,
@@ -764,6 +770,8 @@ function EditarParcelas({ matriculaId, alunoId, aluno, parcelas, onSuccess }: an
       onSuccess();
     } catch (e: any) {
       toast.error("Erro ao dar baixa", { description: e.message });
+    } finally {
+      setSaving(false);
     }
   };
 
