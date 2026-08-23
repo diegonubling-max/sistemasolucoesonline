@@ -1,9 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const ZAPI_SEND_ENDPOINT =
-  typeof window === "undefined"
-    ? "https://sistema.supletivosolucoesonline.com.br/api/public/hooks/zapi-send"
-    : "/api/public/hooks/zapi-send";
+// URL do próprio sistema — sempre absoluta, funciona tanto chamada do navegador
+// quanto de dentro de um endpoint rodando no servidor (cron jobs, webhooks).
+const ZAPI_SEND_ENDPOINT = "https://sistema.supletivosolucoesonline.com.br/api/public/hooks/zapi-send";
+
+// Link da área do aluno — domínio atual do sistema (18/02/2026: trocado do
+// domínio antigo do Lovable, que ficou fora do ar).
+const SITE_URL = "https://sistema.supletivosolucoesonline.com.br/aluno/login";
 
 export type ZapiTipoDisparo =
   | "boas_vindas"
@@ -20,48 +23,25 @@ export type ZapiTipoDisparo =
   | "agendamento_prova"
   | "outro";
 
+// Checa o interruptor de "Configurações → Disparos WhatsApp" pra esse tipo de disparo.
+// Sem registro na tabela = habilitado por padrão (comportamento antigo preservado).
 export async function isDisparoEnabled(nome: string): Promise<boolean> {
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("configuracoes")
       .select("valor")
       .eq("chave", `zapi_disparo_${nome}`)
       .maybeSingle();
-    if (!data) return true; // default enabled when não existir
+    if (error) {
+      console.warn("[zApi] Erro ao checar toggle (tratando como desabilitado por segurança):", nome, error);
+      return false;
+    }
+    if (!data) return true;
     return data.valor !== "false";
   } catch (e) {
-    console.warn("[zApi] Falha ao checar toggle:", nome, e);
-    return true;
+    console.warn("[zApi] Falha ao checar toggle (tratando como desabilitado por segurança):", nome, e);
+    return false;
   }
-}
-
-export async function sendAgendamentoProva(params: {
-  telefone: string;
-  nome: string;
-  dataProva: string; // YYYY-MM-DD
-  horaProva: string; // HH:mm[:ss]
-  alunoId?: string | null;
-}) {
-  if (!(await isDisparoEnabled('agendamento_prova'))) { console.log('[zApi] disparo desativado:', 'agendamento_prova'); return; }
-  const nomeExibicao = (params.nome || "").trim().split(/\s+/)[0] || "";
-  const nomeFmt = nomeExibicao
-    ? nomeExibicao.charAt(0).toUpperCase() + nomeExibicao.slice(1).toLowerCase()
-    : "";
-  const [y, m, d] = params.dataProva.split("-");
-  const dataFmt = `${d}/${m}/${y}`;
-  const horaFmt = (params.horaProva || "").substring(0, 5);
-  const msg = `*📝 Prova Agendada!*
-
-Olá, *${nomeFmt}*! Sua prova final foi agendada com sucesso! ✅
-
-📅 *Data:* ${dataFmt}
-🕐 *Horário:* ${horaFmt}
-
-Acesse a plataforma no dia e horário agendado para realizar sua prova.
-👉 https://sistemasolucoesonline.lovable.app/aluno/login
-
-Qualquer dúvida estamos à disposição! 😊`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "agendamento_prova" });
 }
 
 export type LogCtx = { alunoId?: string | null; tipo: ZapiTipoDisparo };
@@ -82,57 +62,95 @@ function getNomeExibicao(nome: string): string {
 
 async function registrarLog(
   log: LogCtx,
+  telefone: string,
   mensagem: string,
   status: "enviado" | "erro",
   erroDetalhe?: string,
 ) {
   try {
-    await supabase.from("zapi_mensagens_log").insert({
+    const { error } = await supabase.from("zapi_mensagens_log").insert({
       aluno_id: log.alunoId ?? null,
       tipo: log.tipo,
+      telefone,
       mensagem,
       status,
       erro_detalhe: erroDetalhe ?? null,
     });
+    if (error) console.warn("[zApi] Falha ao registrar log:", error);
   } catch (e) {
     console.warn("[zApi] Falha ao registrar log:", e);
   }
 }
 
+// Função única de envio — usada por TODOS os disparos, sem duplicação.
 export async function sendWhatsApp(
   telefone: string,
   mensagem: string,
   log?: LogCtx,
-): Promise<void> {
-  console.log("[zApi] sendWhatsApp chamado | telefone bruto:", telefone);
+): Promise<boolean> {
   const ctx: LogCtx = log ?? { tipo: "outro" };
   if (!telefone) {
-    console.warn("[zApi] Telefone vazio, pulando envio");
-    await registrarLog(ctx, mensagem, "erro", "telefone vazio");
-    return;
+    console.warn("[zApi] Telefone vazio, pulando envio:", ctx.tipo);
+    await registrarLog(ctx, telefone, mensagem, "erro", "telefone vazio");
+    return false;
   }
   const phone = formatPhone(telefone);
-  const payload = { phone, message: mensagem };
+  console.log(`[zApi] Enviando '${ctx.tipo}' para ${phone}...`);
   try {
     const res = await fetch(ZAPI_SEND_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ phone, message: mensagem }),
     });
     const text = await res.text();
-    console.log("[zApi] Status HTTP:", res.status, "| Resposta:", text);
+    console.log(`[zApi] '${ctx.tipo}' -> HTTP ${res.status}:`, text);
     if (!res.ok) {
-      await registrarLog(ctx, mensagem, "erro", `HTTP ${res.status}: ${text}`);
-      return;
+      await registrarLog(ctx, phone, mensagem, "erro", `HTTP ${res.status}: ${text}`);
+      return false;
     }
-    await registrarLog(ctx, mensagem, "enviado");
+    await registrarLog(ctx, phone, mensagem, "enviado");
+    return true;
   } catch (e: any) {
-    console.error("[zApi] Erro ao enviar WhatsApp:", e);
-    await registrarLog(ctx, mensagem, "erro", e?.message || String(e));
+    console.error(`[zApi] Erro ao enviar '${ctx.tipo}':`, e);
+    await registrarLog(ctx, phone, mensagem, "erro", e?.message || String(e));
+    return false;
   }
 }
 
-const SITE_URL = "https://sistemasolucoesonline.lovable.app/aluno/login";
+function formatBRL(valor: number) {
+  return Number(valor).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDateBR(dateISO: string) {
+  const [y, m, d] = dateISO.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+export async function sendAgendamentoProva(params: {
+  telefone: string;
+  nome: string;
+  dataProva: string; // YYYY-MM-DD
+  horaProva: string; // HH:mm[:ss]
+  alunoId?: string | null;
+}) {
+  if (!(await isDisparoEnabled("agendamento_prova"))) { console.log("[zApi] disparo desativado: agendamento_prova"); return false; }
+  const nomeFmt = getNomeExibicao(params.nome);
+  const [y, m, d] = params.dataProva.split("-");
+  const dataFmt = `${d}/${m}/${y}`;
+  const horaFmt = (params.horaProva || "").substring(0, 5);
+  const msg = `*📝 Prova Agendada!*
+
+Olá, *${nomeFmt}*! Sua prova final foi agendada com sucesso! ✅
+
+📅 *Data:* ${dataFmt}
+🕐 *Horário:* ${horaFmt}
+
+Acesse a plataforma no dia e horário agendado para realizar sua prova.
+👉 ${SITE_URL}
+
+Qualquer dúvida estamos à disposição! 😊`;
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "agendamento_prova" });
+}
 
 export async function sendBoasVindasMatricula(params: {
   telefone: string;
@@ -140,7 +158,7 @@ export async function sendBoasVindasMatricula(params: {
   ctr: number | string;
   alunoId?: string | null;
 }) {
-  if (!(await isDisparoEnabled('boas_vindas'))) { console.log('[zApi] disparo desativado:', 'boas_vindas'); return; }
+  if (!(await isDisparoEnabled("boas_vindas"))) { console.log("[zApi] disparo desativado: boas_vindas"); return false; }
   const primeiroNome = getPrimeiroNome(params.nome);
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🎓 Bem-vindo(a) à Soluções Online!*
@@ -155,16 +173,7 @@ Acesse sua área de estudos em:
 👉 ${SITE_URL}
 
 Qualquer dúvida estamos à disposição! 😊`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "boas_vindas" });
-}
-
-function formatBRL(valor: number) {
-  return Number(valor).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function formatDateBR(dateISO: string) {
-  const [y, m, d] = dateISO.split("-");
-  return `${d}/${m}/${y}`;
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "boas_vindas" });
 }
 
 export async function sendLembreteVencimento(params: {
@@ -174,16 +183,14 @@ export async function sendLembreteVencimento(params: {
   dataVencimento: string;
   alunoId?: string | null;
 }) {
-  if (!(await isDisparoEnabled('lembrete_vencimento'))) { console.log('[zApi] disparo desativado:', 'lembrete_vencimento'); return; }
+  if (!(await isDisparoEnabled("lembrete_vencimento"))) { console.log("[zApi] disparo desativado: lembrete_vencimento"); return false; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*⚠️ Soluções Online — Lembrete de Pagamento*
 
-Olá, *${nomeExibicao}*! Sua parcela de *R$ ${formatBRL(params.valor)}* vence em *3 dias* (${formatDateBR(
-    params.dataVencimento,
-  )}).
+Olá, *${nomeExibicao}*! Sua parcela de *R$ ${formatBRL(params.valor)}* vence em *3 dias* (${formatDateBR(params.dataVencimento)}).
 
 Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "lembrete_vencimento" });
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "lembrete_vencimento" });
 }
 
 export async function sendAvisoAtraso(params: {
@@ -193,16 +200,14 @@ export async function sendAvisoAtraso(params: {
   dataVencimento: string;
   alunoId?: string | null;
 }) {
-  if (!(await isDisparoEnabled('aviso_atraso'))) { console.log('[zApi] disparo desativado:', 'aviso_atraso'); return; }
+  if (!(await isDisparoEnabled("aviso_atraso"))) { console.log("[zApi] disparo desativado: aviso_atraso"); return false; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🔴 Soluções Online — Parcela em Atraso*
 
-Olá, *${nomeExibicao}*! Identificamos que sua parcela de *R$ ${formatBRL(params.valor)}* está em atraso desde ${formatDateBR(
-    params.dataVencimento,
-  )}.
+Olá, *${nomeExibicao}*! Identificamos que sua parcela de *R$ ${formatBRL(params.valor)}* está em atraso desde ${formatDateBR(params.dataVencimento)}.
 
 Regularize agora para manter seu acesso! Entre em contato conosco.`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "aviso_atraso" });
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "aviso_atraso" });
 }
 
 export async function sendConfirmacaoPagamento(params: {
@@ -211,7 +216,7 @@ export async function sendConfirmacaoPagamento(params: {
   valor: number;
   alunoId?: string | null;
 }) {
-  if (!(await isDisparoEnabled('confirmacao_pagamento'))) { console.log('[zApi] disparo desativado:', 'confirmacao_pagamento'); return; }
+  if (!(await isDisparoEnabled("confirmacao_pagamento"))) { console.log("[zApi] disparo desativado: confirmacao_pagamento"); return false; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*✅ Soluções Online — Pagamento Confirmado!*
 
@@ -219,7 +224,7 @@ Olá, *${nomeExibicao}*! Recebemos seu pagamento de *R$ ${formatBRL(params.valor
 
 Continue seus estudos acessando:
 👉 ${SITE_URL} 📚`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "confirmacao_pagamento" });
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "confirmacao_pagamento" });
 }
 
 export async function sendBoasVindasPrimeiroAcesso(params: {
@@ -227,7 +232,7 @@ export async function sendBoasVindasPrimeiroAcesso(params: {
   nome: string;
   alunoId?: string | null;
 }) {
-  if (!(await isDisparoEnabled('motivacional_primeiro_login'))) { console.log('[zApi] disparo desativado:', 'motivacional_primeiro_login'); return; }
+  if (!(await isDisparoEnabled("motivacional_primeiro_login"))) { console.log("[zApi] disparo desativado: motivacional_primeiro_login"); return false; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const msg = `*🎓 Soluções Online*
 
@@ -239,7 +244,7 @@ Saiba que você não está sozinho nessa jornada. Nossa equipe acredita no seu p
 
 Bons estudos e conte sempre conosco!
 _Equipe Soluções Online_ 📚`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "motivacional_primeiro_login" });
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "motivacional_primeiro_login" });
 }
 
 export async function sendNuncaAcessou(params: {
@@ -248,7 +253,7 @@ export async function sendNuncaAcessou(params: {
   ctr: number | string;
   alunoId?: string | null;
 }) {
-  if (!(await isDisparoEnabled('nunca_acessou'))) { console.log('[zApi] disparo desativado:', 'nunca_acessou'); return; }
+  if (!(await isDisparoEnabled("nunca_acessou"))) { console.log("[zApi] disparo desativado: nunca_acessou"); return false; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const primeiroNome = getPrimeiroNome(params.nome);
   const msg = `Olá, *${nomeExibicao}*! 👋
@@ -257,7 +262,7 @@ Sabemos que dar o primeiro passo pode parecer difícil, mas o mais importante é
 Seu diploma está esperando por você.
 👉 Acesse agora: ${SITE_URL}
 📋 Login: ${params.ctr} | 🔑 Senha: 1234${primeiroNome}`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "nunca_acessou" });
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "nunca_acessou" });
 }
 
 export async function sendSemAcesso4Dias(params: {
@@ -268,7 +273,7 @@ export async function sendSemAcesso4Dias(params: {
   materia: string | null;
   alunoId?: string | null;
 }) {
-  if (!(await isDisparoEnabled('4_dias_sem_acessar'))) { console.log('[zApi] disparo desativado:', '4_dias_sem_acessar'); return; }
+  if (!(await isDisparoEnabled("4_dias_sem_acessar"))) { console.log("[zApi] disparo desativado: 4_dias_sem_acessar"); return false; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const aula = params.ultimaAula || "suas aulas";
   const materia = params.materia || "seus cursos";
@@ -280,7 +285,7 @@ Cada dia de estudo te aproxima do seu diploma.
 Não deixa o caminho esfriar! 🎓
 
 👉 Continue de onde parou: ${SITE_URL}`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "4_dias_sem_acessar" });
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "4_dias_sem_acessar" });
 }
 
 export async function sendMensagemSabado(params: {
@@ -290,7 +295,7 @@ export async function sendMensagemSabado(params: {
   materia: string | null;
   alunoId?: string | null;
 }) {
-  if (!(await isDisparoEnabled('sabado'))) { console.log('[zApi] disparo desativado:', 'sabado'); return; }
+  if (!(await isDisparoEnabled("sabado"))) { console.log("[zApi] disparo desativado: sabado"); return false; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const semAula = !params.ultimaAula || !params.materia;
   const msg = semAula
@@ -306,7 +311,7 @@ Você está na aula *${params.ultimaAula}* de *${params.materia}*. Que tal avan�
 Com a família por perto e o celular na mão, é o momento perfeito para estudar com calma e sem pressa. 📚
 Seu diploma agradece cada minuto dedicado hoje!
 👉 ${SITE_URL}`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "sabado" });
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "sabado" });
 }
 
 export async function sendMensagemDomingo(params: {
@@ -316,7 +321,7 @@ export async function sendMensagemDomingo(params: {
   materia: string | null;
   alunoId?: string | null;
 }) {
-  if (!(await isDisparoEnabled('domingo'))) { console.log('[zApi] disparo desativado:', 'domingo'); return; }
+  if (!(await isDisparoEnabled("domingo"))) { console.log("[zApi] disparo desativado: domingo"); return false; }
   const nomeExibicao = getNomeExibicao(params.nome);
   const semAula = !params.ultimaAula || !params.materia;
   const msg = semAula
@@ -331,5 +336,5 @@ Domingo é dia de recarregar as energias — e também de dar um passo rumo ao s
 Você estava na aula *${params.ultimaAula}* de *${params.materia}* — cada aula assistida é uma conquista real. 🎓
 Dedica uns minutinhos a você hoje. Seu futuro agradece!
 👉 ${SITE_URL}`;
-  await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "domingo" });
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "domingo" });
 }

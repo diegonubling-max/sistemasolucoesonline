@@ -1,76 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-
-function getZapiCreds() {
-  const instanceId = process.env.ZAPI_INSTANCE_ID;
-  const token = process.env.ZAPI_TOKEN;
-  const clientToken = process.env.ZAPI_CLIENT_TOKEN;
-  if (!instanceId || !token || !clientToken) throw new Error("Z-API não configurada");
-  return {
-    base: `https://api.z-api.io/instances/${instanceId}/token/${token}`,
-    clientToken,
-  };
-}
-
-function formatPhone(telefone: string) {
-  const numero = (telefone || "").replace(/\D/g, "");
-  return numero.startsWith("55") ? numero : "55" + numero;
-}
-
-function formatBRL(v: number) {
-  return Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function formatDateBR(iso: string) {
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
-}
-
-async function sendWhatsApp(
-  telefone: string,
-  mensagem: string,
-  log?: { alunoId?: string | null; tipo: string },
-) {
-  if (!telefone) return;
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const tipo = log?.tipo ?? "outro";
-  const alunoId = log?.alunoId ?? null;
-  try {
-    const { base, clientToken } = getZapiCreds();
-    const res = await fetch(`${base}/send-text`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Client-Token": clientToken },
-      body: JSON.stringify({ phone: formatPhone(telefone), message: mensagem }),
-    });
-    const body = await res.text().catch(() => "");
-    console.log("[zApi cron]", res.status, body);
-    if (!res.ok) {
-      await supabaseAdmin
-        .from("zapi_mensagens_log")
-        .insert({ aluno_id: alunoId, tipo, mensagem, status: "erro", erro_detalhe: `HTTP ${res.status}: ${body}` });
-    } else {
-      await supabaseAdmin
-        .from("zapi_mensagens_log")
-        .insert({ aluno_id: alunoId, tipo, mensagem, status: "enviado" });
-    }
-  } catch (e: any) {
-    console.error("[zApi cron] erro envio:", e);
-    await supabaseAdmin
-      .from("zapi_mensagens_log")
-      .insert({ aluno_id: alunoId, tipo, mensagem, status: "erro", erro_detalhe: e?.message || String(e) });
-  }
-}
-
-
-async function isDisparoEnabled(chave: string): Promise<boolean> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
-    .from("configuracoes")
-    .select("valor")
-    .eq("chave", `zapi_disparo_${chave}`)
-    .maybeSingle();
-  if (!data) return true;
-  return data.valor !== "false";
-}
+import { sendLembreteVencimento, sendAvisoAtraso } from "@/services/zApiService";
 
 function addDays(date: Date, days: number) {
   const d = new Date(date);
@@ -91,11 +20,8 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-cobranca")({
 
         const result = { lembretes: 0, atrasos: 0, erros: [] as string[] };
 
-        const lembreteHabilitado = await isDisparoEnabled("lembrete_vencimento");
-        const atrasoHabilitado = await isDisparoEnabled("aviso_atraso");
-
         // 1) Lembretes 3 dias antes do vencimento
-        if (lembreteHabilitado) try {
+        try {
           const { data: vencendo, error } = await supabaseAdmin
             .from("parcelas")
             .select(
@@ -109,21 +35,21 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp-cobranca")({
           for (const p of vencendo ?? []) {
             const aluno = (p as any)?.matriculas?.alunos;
             if (!aluno?.telefone) continue;
-            const msg = `*⚠️ Soluções Online — Lembrete de Pagamento*
-
-Olá, *${aluno.nome}*! Sua parcela de *R$ ${formatBRL(Number(p.valor))}* vence em *3 dias* (${formatDateBR(p.data_vencimento as string)}).
-
-Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
-            await sendWhatsApp(aluno.telefone, msg, { alunoId: aluno.id, tipo: "lembrete_vencimento" });
-
-            result.lembretes++;
+            const enviado = await sendLembreteVencimento({
+              telefone: aluno.telefone,
+              nome: aluno.nome,
+              valor: Number(p.valor),
+              dataVencimento: p.data_vencimento as string,
+              alunoId: aluno.id,
+            });
+            if (enviado) result.lembretes++;
           }
         } catch (e: any) {
           result.erros.push("lembretes: " + e.message);
         }
 
         // 2) Avisos de atraso (vencidas há mais de 1 dia, não pagas)
-        if (atrasoHabilitado) try {
+        try {
           const { data: atrasadas, error } = await supabaseAdmin
             .from("parcelas")
             .select(
@@ -137,14 +63,14 @@ Evite a interrupção do seu acesso aos estudos. Regularize em dia! 📚`;
           for (const p of atrasadas ?? []) {
             const aluno = (p as any)?.matriculas?.alunos;
             if (!aluno?.telefone) continue;
-            const msg = `*🔴 Soluções Online — Parcela em Atraso*
-
-Olá, *${aluno.nome}*! Identificamos que sua parcela de *R$ ${formatBRL(Number(p.valor))}* está em atraso desde ${formatDateBR(p.data_vencimento as string)}.
-
-Regularize agora para manter seu acesso! Entre em contato conosco.`;
-            await sendWhatsApp(aluno.telefone, msg, { alunoId: aluno.id, tipo: "aviso_atraso" });
-
-            result.atrasos++;
+            const enviado = await sendAvisoAtraso({
+              telefone: aluno.telefone,
+              nome: aluno.nome,
+              valor: Number(p.valor),
+              dataVencimento: p.data_vencimento as string,
+              alunoId: aluno.id,
+            });
+            if (enviado) result.atrasos++;
           }
         } catch (e: any) {
           result.erros.push("atrasos: " + e.message);

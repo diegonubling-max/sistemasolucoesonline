@@ -132,15 +132,17 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                   .select("id", { count: "exact", head: true })
                   .eq("aluno_id", aluno.id);
                 if ((count ?? 0) === 0) {
-                  await sendNuncaAcessou({
+                  const enviado = await sendNuncaAcessou({
                     telefone: aluno.telefone,
                     nome: aluno.nome,
                     ctr: aluno.ctr,
                     alunoId: aluno.id,
                   });
 
-                  await marcar(aluno.id, "nunca_acessou");
-                  result.nunca_acessou++;
+                  if (enviado) {
+                    await marcar(aluno.id, "nunca_acessou");
+                    result.nunca_acessou++;
+                  }
                   continue; // não enviar 2 mensagens no mesmo job
                 }
               }
@@ -168,7 +170,7 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                   const diasCorridos = Math.floor(
                     (hojeBR.getTime() - ultimoAcesso.getTime()) / 86400000,
                   );
-                  await sendSemAcesso4Dias({
+                  const enviado = await sendSemAcesso4Dias({
                     telefone: aluno.telefone,
                     nome: aluno.nome,
                     dias: diasCorridos,
@@ -177,8 +179,10 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                     alunoId: aluno.id,
                   });
 
-                  await marcar(aluno.id, "4_dias_uteis");
-                  result.quatro_dias++;
+                  if (enviado) {
+                    await marcar(aluno.id, "4_dias_uteis");
+                    result.quatro_dias++;
+                  }
                   continue;
                 }
               }
@@ -238,13 +242,15 @@ export const Route = createFileRoute("/api/public/hooks/zapi-jobs-diarios")({
                 : "";
               const mensagem = msgRow.mensagem.replace(/\{nome\}/gi, nomeFmt);
 
-              await sendWhatsApp(aluno.telefone, mensagem, {
+              const enviado = await sendWhatsApp(aluno.telefone, mensagem, {
                 alunoId: aluno.id,
                 tipo: `${diaLabel}_ciclo_${ciclo}` as any,
               });
 
-              if (diaLabel === "sabado") result.sabado++;
-              else result.domingo++;
+              if (enviado) {
+                if (diaLabel === "sabado") result.sabado++;
+                else result.domingo++;
+              }
             } catch (e: any) {
               result.erros.push(`${diaLabel} ${aluno.id}: ${e.message}`);
             }
