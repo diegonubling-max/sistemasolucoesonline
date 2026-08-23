@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const ZAPI_SEND_ENDPOINT = "/api/public/hooks/zapi-send";
+const ZAPI_SEND_ENDPOINT =
+  typeof window === "undefined"
+    ? "https://sistema.supletivosolucoesonline.com.br/api/public/hooks/zapi-send"
+    : "/api/public/hooks/zapi-send";
 
 export type ZapiTipoDisparo =
   | "boas_vindas"
