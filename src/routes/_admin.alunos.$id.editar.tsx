@@ -712,12 +712,20 @@ function EditarParcelas({ matriculaId, alunoId, aluno, parcelas, onSuccess }: an
   const confirmBaixa = async (data: any) => {
     if (!baixaData) return;
     try {
+      // BUG-061 (19/08/2026): o código espalhava o objeto inteiro do formulário direto no
+      // update, incluindo campos que não são colunas reais da tabela parcelas (valor_pago,
+      // parcelas_cartao, taxa_cartao) — quebrava TODO "Dar Baixa" com erro de schema.
+      const updatePayload: any = {
+        status: "pago",
+        data_pagamento: data.data_pagamento,
+        forma_pagamento: data.forma_pagamento,
+        valor_pago_total: data.valor_pago,
+      };
+      if (data.valor_liquido != null) updatePayload.valor_liquido = data.valor_liquido;
+
       const { error } = await supabase
         .from("parcelas")
-        .update({
-          status: 'pago',
-          ...data
-        })
+        .update(updatePayload)
         .eq("id", baixaData.id);
       
       if (error) throw error;
