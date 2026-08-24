@@ -232,6 +232,32 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             return jsonResponse({ error: matriculaNovaError?.message || "Erro ao criar matrícula" }, 500);
           }
 
+          // 4.1 Registrar a parcela da taxa de matrícula já paga (BUG-0XX, 24/08/2026).
+          // Sem isso a matrícula fica sem NENHUM registro em `parcelas`, mesmo com o pagamento
+          // já confirmado no Asaas (a informação de pagamento só existia em `matriculas_aulao`).
+          // Telas como "Matrículas por Vendedora" e o Financeiro do aluno leem a forma de
+          // pagamento a partir da parcela nº1 — sem essa parcela, "Forma Pgto" fica em branco
+          // mesmo quando o aluno pagou normalmente.
+          const formaPagamentoConfirmada = (matricula.forma_pagamento || matricula.pagamento_forma_manual || "boleto").toLowerCase();
+          const { error: parcelaError } = await supabase.from("parcelas").insert({
+            matricula_id: novaMatricula.id,
+            polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+            numero: 1,
+            tipo: "parcela",
+            descricao: "Taxa de Matrícula (Aulão)",
+            valor: matricula.pagamento_valor ?? 69.9,
+            status: "pago",
+            forma_pagamento: formaPagamentoConfirmada,
+            data_vencimento: (matricula.pagamento_confirmado_em || matricula.created_at || new Date().toISOString()).slice(0, 10),
+            data_pagamento: (matricula.pagamento_confirmado_em || matricula.created_at || new Date().toISOString()).slice(0, 10),
+            asaas_id: matricula.asaas_payment_id || null,
+          });
+          if (parcelaError) {
+            // Não bloqueia o fluxo (aluno já pagou e precisa do acesso liberado), só loga pra
+            // investigação depois — igual ao padrão adotado nos webhooks do Asaas (BUG-XXX).
+            console.error("[converter-matricula-aulao] Erro ao registrar parcela da taxa de matrícula:", parcelaError);
+          }
+
           // 5. Liberar acesso aos cursos EJA (a Prova Final é vinculada automaticamente por trigger)
           const { data: cursosEja } = await supabase
             .from("cursos")
