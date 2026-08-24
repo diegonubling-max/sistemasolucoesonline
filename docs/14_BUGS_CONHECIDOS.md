@@ -380,6 +380,16 @@
 - **Solução (19/08/2026):** botão agora trava (`saving`) durante o processamento, igual às outras ações da tela.
 - **Status:** ✅ Resolvido (correção de código) — ainda não reconfirmado com um clique único depois da correção (a conexão com o navegador caiu na hora de retestar)
 
+### BUG-063: "Forma Pgto" em branco no Financeiro > Matrículas por Vendedora pra matrículas vindas do Aulão
+- **Como foi descoberto:** Diego notou que Leila Hilton Gonçalves e Vanilson Ferreira Gandra apareciam sem nenhuma forma de pagamento (só "—") na tela "Matrículas por Vendedora", mesmo com o pagamento confirmado no Asaas.
+- **Causa:** `converter-matricula-aulao.ts` (webhook automático disparado quando o Asaas confirma o pagamento do checkout público do Aulão) cria o aluno, a matrícula, os `matricula_cursos` e o contrato ("Termo de Matrícula (Aulão)") — mas **nunca gravava nada em `parcelas`**. A informação do pagamento (valor, forma, status) ficava só em `matriculas_aulao`. Toda tela financeira (Matrículas por Vendedora, Financeiro do aluno, Relatório de Vendas) lê a forma de pagamento a partir da parcela nº1 (`tipo = 'parcela'` e `numero = 1`) — sem essa parcela, a coluna fica em branco mesmo o aluno tendo pago normalmente. É o mesmo ponto cego do BUG-040 (que resolveu o `colaborador_id` faltando), só que pro lado das `parcelas`.
+- **Alcance:** 6 de 28 matrículas do Aulão estavam sem nenhuma parcela (checado em 24/08/2026): Carla Regina Borba Alves, Leila Hilton Gonçalves, Vanilson Ferreira Gandra, Gabriel Dos Santos, Silvina Rosa Alencar e Aline Soares de Oliveira.
+- **Solução (24/08/2026):**
+  1. **Código:** `converter-matricula-aulao.ts` agora grava a parcela nº1 (`tipo='parcela'`, `status='pago'`, valor/forma de pagamento espelhados de `matriculas_aulao`) logo depois de criar a matrícula — igual ao que o `MatriculaFlow.tsx` já fazia pro fluxo manual. Se essa gravação falhar, só loga o erro e segue o fluxo (não trava a liberação de acesso do aluno).
+  2. **Backfill:** 5 dos 6 alunos tinham pagamento confirmado e rastreável em `matriculas_aulao` (mesmo valor R$69,90, boleto, com `asaas_payment_id` real) — parcela nº1 criada retroativamente pra cada um: Carla, Leila, Vanilson, Gabriel e Aline.
+  3. **Silvina Rosa Alencar ficou de fora do backfill de propósito:** o registro dela em `matriculas_aulao` está com `pagamento_status = 'pendente'`, valor diferente (R$997, cartão) e `aluno_id` nulo (não linkado à matrícula real dela) — não bate com o padrão dos outros 5, então não dá pra simplesmente replicar. Precisa checar no Asaas o que realmente aconteceu com o pagamento dela antes de lançar a parcela manualmente.
+- **Status:** ⚠️ Parcialmente resolvido — código corrigido e 5/6 alunos com backfill feito direto no banco; falta (a) aplicar o patch do código no repositório (sessão não tinha permissão de push pro GitHub, patch entregue separadamente) e (b) investigar o caso da Silvina.
+
 ## Conhecidos / Não Resolvidos ⚠️
 
 ### BUG-015: View recebimentos com double-counting
