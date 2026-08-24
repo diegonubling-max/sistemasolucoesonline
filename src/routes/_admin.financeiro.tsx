@@ -303,7 +303,12 @@ function Financeiro() {
         ));
         const cursos = (cursosNomes.length ? cursosNomes : pacoteNomes).join(", ");
 
-        const primeiraParcela = parcelas.find((p: any) => (p.tipo === 'parcela' || !p.tipo) && Number(p.numero) === 1);
+        // Parcela nº1 do parcelamento normal do curso; se ainda não foi cadastrada (ex: matrícula
+        // do Aulão com só a taxa paga, BUG-063), cai pra taxa de matrícula só pra mostrar a forma
+        // de pagamento aqui — não conta como "financeiro completo" (isso é decidido à parte, na
+        // lista de Alunos, olhando o tipo da parcela).
+        const primeiraParcela = parcelas.find((p: any) => (p.tipo === 'parcela' || !p.tipo) && Number(p.numero) === 1)
+          ?? parcelas.find((p: any) => p.tipo === 'taxa_matricula');
         const formaPagamento = primeiraParcela?.forma_pagamento ?? null;
 
         byMatricula.set(m.id, {

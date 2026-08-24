@@ -232,18 +232,23 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             return jsonResponse({ error: matriculaNovaError?.message || "Erro ao criar matrícula" }, 500);
           }
 
-          // 4.1 Registrar a parcela da taxa de matrícula já paga (BUG-0XX, 24/08/2026).
+          // 4.1 Registrar a parcela da taxa de matrícula já paga (BUG-063, 24/08/2026).
           // Sem isso a matrícula fica sem NENHUM registro em `parcelas`, mesmo com o pagamento
           // já confirmado no Asaas (a informação de pagamento só existia em `matriculas_aulao`).
-          // Telas como "Matrículas por Vendedora" e o Financeiro do aluno leem a forma de
-          // pagamento a partir da parcela nº1 — sem essa parcela, "Forma Pgto" fica em branco
-          // mesmo quando o aluno pagou normalmente.
+          // `tipo: 'taxa_matricula'` de propósito (mesmo padrão do fluxo manual em MatriculaFlow.tsx):
+          // - view_taxas_recebidas_mes soma isso em "Taxas de Matrícula no Mês" no Dashboard;
+          // - view_total_recebido_mes EXCLUI tipo='taxa_matricula' de "Recebido de Parcelas no Mês"
+          //   (senão a taxa do Aulão contaria duas vezes como faturamento normal);
+          // - a lista de Alunos só desliga o alerta "Financeiro não cadastrado" (💲) quando existe
+          //   parcela com tipo diferente de 'taxa_matricula' — então esse alerta continua aceso
+          //   até alguém cadastrar de fato o boleto/parcelamento do curso (a taxa sozinha não conta
+          //   como financeiro completo).
           const formaPagamentoConfirmada = (matricula.forma_pagamento || matricula.pagamento_forma_manual || "boleto").toLowerCase();
           const { error: parcelaError } = await supabase.from("parcelas").insert({
             matricula_id: novaMatricula.id,
             polo_id: matricula.polo_id || POLO_ID_FLORIPA,
-            numero: 1,
-            tipo: "parcela",
+            numero: 0,
+            tipo: "taxa_matricula",
             descricao: "Taxa de Matrícula (Aulão)",
             valor: matricula.pagamento_valor ?? 69.9,
             status: "pago",
@@ -254,7 +259,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
           });
           if (parcelaError) {
             // Não bloqueia o fluxo (aluno já pagou e precisa do acesso liberado), só loga pra
-            // investigação depois — igual ao padrão adotado nos webhooks do Asaas (BUG-XXX).
+            // investigação depois — igual ao padrão adotado nos webhooks do Asaas (BUG-059).
             console.error("[converter-matricula-aulao] Erro ao registrar parcela da taxa de matrícula:", parcelaError);
           }
 

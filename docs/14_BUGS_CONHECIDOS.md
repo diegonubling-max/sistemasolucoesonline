@@ -388,7 +388,7 @@
   1. **Código:** `converter-matricula-aulao.ts` agora grava a parcela nº1 (`tipo='parcela'`, `status='pago'`, valor/forma de pagamento espelhados de `matriculas_aulao`) logo depois de criar a matrícula — igual ao que o `MatriculaFlow.tsx` já fazia pro fluxo manual. Se essa gravação falhar, só loga o erro e segue o fluxo (não trava a liberação de acesso do aluno).
   2. **Backfill:** 5 dos 6 alunos tinham pagamento confirmado e rastreável em `matriculas_aulao` (mesmo valor R$69,90, boleto, com `asaas_payment_id` real) — parcela nº1 criada retroativamente pra cada um: Carla, Leila, Vanilson, Gabriel e Aline.
   3. **Silvina Rosa Alencar ficou de fora do backfill de propósito:** o registro dela em `matriculas_aulao` está com `pagamento_status = 'pendente'`, valor diferente (R$997, cartão) e `aluno_id` nulo (não linkado à matrícula real dela) — não bate com o padrão dos outros 5, então não dá pra simplesmente replicar. Precisa checar no Asaas o que realmente aconteceu com o pagamento dela antes de lançar a parcela manualmente.
-- **Status:** ⚠️ Parcialmente resolvido — código corrigido e 5/6 alunos com backfill feito direto no banco; falta (a) aplicar o patch do código no repositório (sessão não tinha permissão de push pro GitHub, patch entregue separadamente) e (b) investigar o caso da Silvina.
+- **Status:** ✅ Código aplicado no repositório (25/08/2026, commits em `converter-matricula-aulao.ts`, `_admin.alunos.index.tsx`, `_admin.financeiro.tsx`, `SalesReport.tsx`) e 5/6 alunos com backfill feito direto no banco. ⏳ Falta só investigar o caso da Silvina Rosa Alencar (ver acima).
 
 ## Conhecidos / Não Resolvidos ⚠️
 

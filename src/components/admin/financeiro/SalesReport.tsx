@@ -189,8 +189,11 @@ export function SalesReport() {
           pacoteNome = pacs.map((p: any) => p.nome).join(", ");
         }
 
-        // Enriquecer com info de forma de pagamento da 1ª parcela
-        const primeira = parcelas.find(p => p.tipo === 'parcela' && Number(p.numero) === 1);
+        // Enriquecer com info de forma de pagamento da 1ª parcela; se só existe a taxa de
+        // matrícula (ex: Aulão com o parcelamento do curso ainda não cadastrado, BUG-063),
+        // usa ela pra pelo menos mostrar a forma de pagamento.
+        const primeira = parcelas.find(p => p.tipo === 'parcela' && Number(p.numero) === 1)
+          ?? parcelas.find(p => p.tipo === 'taxa_matricula');
         let formaPagamentoKey: 'pix' | 'boleto' | 'cartao' | 'outro' = 'outro';
         let formaPagamentoLabel = '—';
         if (primeira) {

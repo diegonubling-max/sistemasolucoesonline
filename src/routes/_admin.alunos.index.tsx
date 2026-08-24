@@ -134,7 +134,7 @@ function AlunosList() {
 
       let q = supabase
         .from("alunos")
-        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, origem, cadastro_completo, matriculas(id, parcelas(id)), contratos(id, status), cursos_vitrine(id)", { count: "exact" })
+        .select("id, nome, email, telefone, cpf, data_nascimento, ativo, status, created_at, vendedora, ctr, origem, cadastro_completo, matriculas(id, parcelas(id, tipo)), contratos(id, status), cursos_vitrine(id)", { count: "exact" })
         .order("ctr", { ascending: false });
 
       if (statusFilter !== "all") {
@@ -317,8 +317,12 @@ function AlunosList() {
                 </TableRow>
               )}
               {data?.rows.map((a) => {
+                // Só conta como "financeiro cadastrado" se tiver parcela de verdade (boleto/pix/cartão
+                // com vencimento) — a taxa de matrícula sozinha (ex: R$69,90 do Aulão, tipo
+                // 'taxa_matricula') não é o plano de pagamento completo do curso, então não deve
+                // esconder o alerta (BUG-063, 24/08/2026).
                 const temFinanceiro = Array.isArray((a as any).matriculas) && (a as any).matriculas.some(
-                  (m: any) => Array.isArray(m.parcelas) && m.parcelas.length > 0
+                  (m: any) => Array.isArray(m.parcelas) && m.parcelas.some((p: any) => p.tipo !== 'taxa_matricula')
                 );
                 return (
                 <TableRow key={a.id}>
