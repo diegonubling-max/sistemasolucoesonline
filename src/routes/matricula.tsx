@@ -972,7 +972,7 @@ function MatriculaPublicaPage() {
                   >
                     <div className="text-3xl mb-1">📄</div>
                     <div className="font-semibold">Boleto Bancário</div>
-                    <div className="text-sm text-muted-foreground">1 + 9 parcelas de R$ 159,90</div>
+                    <div className="text-sm text-muted-foreground">Taxa de matrícula de R$ 69,90 + 1 + 9 parcelas de R$ 159,90</div>
                   </button>
                   <button
                     type="button"

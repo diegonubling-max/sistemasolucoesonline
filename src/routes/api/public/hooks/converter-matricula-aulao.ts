@@ -281,6 +281,22 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
               data_pagamento: dataPagamentoParcela,
               asaas_id: matricula.asaas_payment_id || null,
             });
+
+            // Pré-gera a parcela nº2 (próxima do plano 1+9), já em aberto, vencendo 30 dias
+            // depois do pagamento da nº1 — só ela, sem dar baixa (a pedido do Diego, 25/08/2026).
+            const vencimentoParcela2 = new Date(`${dataPagamentoParcela}T00:00:00`);
+            vencimentoParcela2.setDate(vencimentoParcela2.getDate() + 30);
+            parcelasParaInserir.push({
+              matricula_id: novaMatricula.id,
+              polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+              numero: 2,
+              tipo: "parcela",
+              descricao: "Parcela 2/10 (Aulão)",
+              valor: valorPrimeiraParcela,
+              status: "aberto",
+              forma_pagamento: formaPagamentoConfirmada,
+              data_vencimento: vencimentoParcela2.toISOString().slice(0, 10),
+            });
           } else {
             parcelasParaInserir.push({
               matricula_id: novaMatricula.id,
