@@ -284,13 +284,15 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
 
             // Gera o plano completo de 10 parcelas do boleto (1+9) de uma vez, a pedido do Diego
             // (25/08/2026): nº1 já paga (junto com a taxa, no PIX de entrada); nº2 a nº10 ficam em
-            // aberto, cada uma vencendo 30 dias depois da anterior (nº2 = nº1 + 30, nº3 = nº2 + 30,
-            // e assim por diante) — sem dar baixa em nenhuma delas além da nº1.
+            // aberto, cada uma vencendo no MESMO DIA do mês seguinte à anterior (ex: nº1 paga
+            // 25/08 → nº2 vence 25/09 → nº3 vence 25/10, e assim por diante) — não é "+30 dias
+            // corridos" (isso faria a data derivar, ex: 25/08 + 30d = 24/09, não 25/09). Sem dar
+            // baixa em nenhuma delas além da nº1.
             const TOTAL_PARCELAS_BOLETO = 10;
-            let vencimentoAnterior = new Date(`${dataPagamentoParcela}T00:00:00`);
+            const dataBaseParcela1 = new Date(`${dataPagamentoParcela}T00:00:00`);
             for (let numeroParcela = 2; numeroParcela <= TOTAL_PARCELAS_BOLETO; numeroParcela++) {
-              const vencimento = new Date(vencimentoAnterior);
-              vencimento.setDate(vencimento.getDate() + 30);
+              const vencimento = new Date(dataBaseParcela1);
+              vencimento.setMonth(vencimento.getMonth() + (numeroParcela - 1));
               parcelasParaInserir.push({
                 matricula_id: novaMatricula.id,
                 polo_id: matricula.polo_id || POLO_ID_FLORIPA,
@@ -302,7 +304,6 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
                 forma_pagamento: formaPagamentoConfirmada,
                 data_vencimento: vencimento.toISOString().slice(0, 10),
               });
-              vencimentoAnterior = vencimento;
             }
           } else {
             parcelasParaInserir.push({
