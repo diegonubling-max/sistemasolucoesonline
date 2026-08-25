@@ -282,21 +282,28 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
               asaas_id: matricula.asaas_payment_id || null,
             });
 
-            // Pré-gera a parcela nº2 (próxima do plano 1+9), já em aberto, vencendo 30 dias
-            // depois do pagamento da nº1 — só ela, sem dar baixa (a pedido do Diego, 25/08/2026).
-            const vencimentoParcela2 = new Date(`${dataPagamentoParcela}T00:00:00`);
-            vencimentoParcela2.setDate(vencimentoParcela2.getDate() + 30);
-            parcelasParaInserir.push({
-              matricula_id: novaMatricula.id,
-              polo_id: matricula.polo_id || POLO_ID_FLORIPA,
-              numero: 2,
-              tipo: "parcela",
-              descricao: "Parcela 2/10 (Aulão)",
-              valor: valorPrimeiraParcela,
-              status: "aberto",
-              forma_pagamento: formaPagamentoConfirmada,
-              data_vencimento: vencimentoParcela2.toISOString().slice(0, 10),
-            });
+            // Gera o plano completo de 10 parcelas do boleto (1+9) de uma vez, a pedido do Diego
+            // (25/08/2026): nº1 já paga (junto com a taxa, no PIX de entrada); nº2 a nº10 ficam em
+            // aberto, cada uma vencendo 30 dias depois da anterior (nº2 = nº1 + 30, nº3 = nº2 + 30,
+            // e assim por diante) — sem dar baixa em nenhuma delas além da nº1.
+            const TOTAL_PARCELAS_BOLETO = 10;
+            let vencimentoAnterior = new Date(`${dataPagamentoParcela}T00:00:00`);
+            for (let numeroParcela = 2; numeroParcela <= TOTAL_PARCELAS_BOLETO; numeroParcela++) {
+              const vencimento = new Date(vencimentoAnterior);
+              vencimento.setDate(vencimento.getDate() + 30);
+              parcelasParaInserir.push({
+                matricula_id: novaMatricula.id,
+                polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+                numero: numeroParcela,
+                tipo: "parcela",
+                descricao: `Parcela ${numeroParcela}/${TOTAL_PARCELAS_BOLETO} (Aulão)`,
+                valor: valorPrimeiraParcela,
+                status: "aberto",
+                forma_pagamento: formaPagamentoConfirmada,
+                data_vencimento: vencimento.toISOString().slice(0, 10),
+              });
+              vencimentoAnterior = vencimento;
+            }
           } else {
             parcelasParaInserir.push({
               matricula_id: novaMatricula.id,
