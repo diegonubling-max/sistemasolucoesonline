@@ -739,14 +739,18 @@ function MatriculaPublicaPage() {
               <div className="space-y-3">
                 <p className="text-sm font-medium text-center">Pague a taxa de matrícula + 1ª parcela via PIX — rápido e seguro:</p>
                 <Button
-                  className="w-full bg-green-600 hover:bg-green-700 text-base py-5"
+                  className="w-full h-auto whitespace-normal bg-green-600 hover:bg-green-700 text-base py-3 leading-tight"
                   onClick={() => gerarPagamento("PIX")}
                   disabled={pagLoading}
                 >
                   {pagLoading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PIX...</>
                   ) : (
-                    "💰 Pagar Taxa de Matrícula + 1ª Parcela — R$ 229,80"
+                    <span className="text-center">
+                      💰 Pagar Taxa de Matrícula + 1ª Parcela
+                      <br />
+                      R$ 229,80
+                    </span>
                   )}
                 </Button>
               </div>
