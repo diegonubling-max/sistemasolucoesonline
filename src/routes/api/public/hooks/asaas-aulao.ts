@@ -135,10 +135,12 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
           }
 
           // 4. Criar cobrança
-          // PIX = taxa de matrícula R$69,90 | Cartão = R$3.118,80 (12x R$259,90) — ou R$1.438,80 (12x R$119,90) com o voucher da aula ao vivo
+          // PIX = taxa de matrícula (R$69,90) + 1ª parcela do boleto (R$159,90) = R$229,80, cobrados
+          // juntos num único PIX de entrada (25/08/2026, a pedido do Diego) | Cartão = R$3.118,80
+          // (12x R$259,90) — ou R$1.438,80 (12x R$119,90) com o voucher da aula ao vivo
           const VOUCHER_CODE = "1627off";
           const codigoVoucherValido = (payload.voucher_code || "").trim().toLowerCase() === VOUCHER_CODE;
-          const valor = billing_type === "PIX" ? 69.90 : (codigoVoucherValido ? 1438.80 : 3118.80);
+          const valor = billing_type === "PIX" ? 229.80 : (codigoVoucherValido ? 1438.80 : 3118.80);
           const dueDate = new Date();
           dueDate.setDate(dueDate.getDate() + 1);
 
@@ -148,7 +150,7 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
             value: valor,
             dueDate: dueDate.toISOString().split("T")[0],
             description: billing_type === "PIX"
-              ? "Taxa de Matrícula - Aulão Soluções Online"
+              ? "Taxa de Matrícula + 1ª Parcela - Aulão Soluções Online"
               : "Curso Completo - Aulão Soluções Online",
             externalReference: matricula.id,
             postalService: false,

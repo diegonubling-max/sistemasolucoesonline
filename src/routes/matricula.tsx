@@ -479,7 +479,7 @@ function MatriculaPublicaPage() {
     if (!sucesso) return;
     if (!purchaseFired) {
       const utmCompra = getUtm();
-      const valorPago = typeof pagResult?.value === "number" ? pagResult.value : 69.90;
+      const valorPago = typeof pagResult?.value === "number" ? pagResult.value : 229.80;
       (window as any).fbq?.("track", "Purchase", {
         value: valorPago,
         currency: "BRL",
@@ -653,7 +653,7 @@ function MatriculaPublicaPage() {
               ) : pagResult.billing_type === "PIX" && pagResult.pix_qr_code ? (
                 <>
                   <h1 className="text-2xl font-bold">Escaneie o QR Code para pagar</h1>
-                  <p className="text-muted-foreground text-sm">Taxa de matrícula: <strong>R$ 69,90</strong></p>
+                  <p className="text-muted-foreground text-sm">Taxa de matrícula + 1ª parcela: <strong>R$ 229,80</strong></p>
                   <div className="flex justify-center">
                     <img
                       src={`data:image/png;base64,${pagResult.pix_qr_code}`}
@@ -737,7 +737,7 @@ function MatriculaPublicaPage() {
 
             {isBoleto ? (
               <div className="space-y-3">
-                <p className="text-sm font-medium text-center">Pague a taxa de matrícula via PIX — rápido e seguro:</p>
+                <p className="text-sm font-medium text-center">Pague a taxa de matrícula + 1ª parcela via PIX — rápido e seguro:</p>
                 <Button
                   className="w-full bg-green-600 hover:bg-green-700 text-base py-5"
                   onClick={() => gerarPagamento("PIX")}
@@ -746,7 +746,7 @@ function MatriculaPublicaPage() {
                   {pagLoading ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PIX...</>
                   ) : (
-                    "💰 Pagar Taxa de Matrícula — R$ 69,90"
+                    "💰 Pagar Taxa de Matrícula + 1ª Parcela — R$ 229,80"
                   )}
                 </Button>
               </div>

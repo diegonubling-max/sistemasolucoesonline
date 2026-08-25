@@ -232,31 +232,72 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             return jsonResponse({ error: matriculaNovaError?.message || "Erro ao criar matrícula" }, 500);
           }
 
-          // 4.1 Registrar a parcela da taxa de matrícula já paga (BUG-063, 24/08/2026).
-          // Sem isso a matrícula fica sem NENHUM registro em `parcelas`, mesmo com o pagamento
-          // já confirmado no Asaas (a informação de pagamento só existia em `matriculas_aulao`).
-          // `tipo: 'taxa_matricula'` de propósito (mesmo padrão do fluxo manual em MatriculaFlow.tsx):
-          // - view_taxas_recebidas_mes soma isso em "Taxas de Matrícula no Mês" no Dashboard;
+          // 4.1 Registrar a(s) parcela(s) do pagamento já confirmado (BUG-063, 24/08/2026 + ajuste
+          // de 25/08/2026 quando o PIX de entrada do boleto passou a cobrar taxa + 1ª parcela juntos).
+          // Sem isso a matrícula fica sem NENHUM registro em `parcelas`, mesmo com o pagamento já
+          // confirmado no Asaas (a informação de pagamento só existia em `matriculas_aulao`).
+          // - view_taxas_recebidas_mes soma tipo='taxa_matricula' em "Taxas de Matrícula no Mês";
           // - view_total_recebido_mes EXCLUI tipo='taxa_matricula' de "Recebido de Parcelas no Mês"
-          //   (senão a taxa do Aulão contaria duas vezes como faturamento normal);
+          //   (senão contaria duas vezes como faturamento normal);
           // - a lista de Alunos só desliga o alerta "Financeiro não cadastrado" (💲) quando existe
-          //   parcela com tipo diferente de 'taxa_matricula' — então esse alerta continua aceso
-          //   até alguém cadastrar de fato o boleto/parcelamento do curso (a taxa sozinha não conta
-          //   como financeiro completo).
+          //   parcela com tipo diferente de 'taxa_matricula'.
+          // No boleto, o PIX de entrada (R$229,80) cobra a taxa (R$69,90) + a 1ª parcela (R$159,90)
+          // juntos numa cobrança só — por isso, aqui, são gravadas DUAS parcelas separadas (uma
+          // taxa_matricula + uma parcela nº1 de verdade), em vez de jogar o valor inteiro como taxa
+          // (isso inflaria "Taxas de Matrícula no Mês" e não contaria a 1ª parcela como recebida).
+          // No cartão (cobrança única do curso inteiro), continua uma única parcela taxa_matricula,
+          // como antes.
+          const TAXA_MATRICULA = 69.9;
           const formaPagamentoConfirmada = (matricula.forma_pagamento || matricula.pagamento_forma_manual || "boleto").toLowerCase();
-          const { error: parcelaError } = await supabase.from("parcelas").insert({
-            matricula_id: novaMatricula.id,
-            polo_id: matricula.polo_id || POLO_ID_FLORIPA,
-            numero: 0,
-            tipo: "taxa_matricula",
-            descricao: "Taxa de Matrícula (Aulão)",
-            valor: matricula.pagamento_valor ?? 69.9,
-            status: "pago",
-            forma_pagamento: formaPagamentoConfirmada,
-            data_vencimento: (matricula.pagamento_confirmado_em || matricula.created_at || new Date().toISOString()).slice(0, 10),
-            data_pagamento: (matricula.pagamento_confirmado_em || matricula.created_at || new Date().toISOString()).slice(0, 10),
-            asaas_id: matricula.asaas_payment_id || null,
-          });
+          const dataPagamentoParcela = (matricula.pagamento_confirmado_em || matricula.created_at || new Date().toISOString()).slice(0, 10);
+          const valorTotalPago = Number(matricula.pagamento_valor ?? TAXA_MATRICULA);
+
+          const parcelasParaInserir: any[] = [];
+          if (formaPagamentoConfirmada === "boleto" && valorTotalPago > TAXA_MATRICULA) {
+            const valorPrimeiraParcela = Math.round((valorTotalPago - TAXA_MATRICULA) * 100) / 100;
+            parcelasParaInserir.push({
+              matricula_id: novaMatricula.id,
+              polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+              numero: 0,
+              tipo: "taxa_matricula",
+              descricao: "Taxa de Matrícula (Aulão)",
+              valor: TAXA_MATRICULA,
+              status: "pago",
+              forma_pagamento: formaPagamentoConfirmada,
+              data_vencimento: dataPagamentoParcela,
+              data_pagamento: dataPagamentoParcela,
+              asaas_id: matricula.asaas_payment_id || null,
+            });
+            parcelasParaInserir.push({
+              matricula_id: novaMatricula.id,
+              polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+              numero: 1,
+              tipo: "parcela",
+              descricao: "Parcela 1/10 (Aulão)",
+              valor: valorPrimeiraParcela,
+              status: "pago",
+              forma_pagamento: formaPagamentoConfirmada,
+              data_vencimento: dataPagamentoParcela,
+              data_pagamento: dataPagamentoParcela,
+              asaas_id: matricula.asaas_payment_id || null,
+            });
+          } else {
+            parcelasParaInserir.push({
+              matricula_id: novaMatricula.id,
+              polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+              numero: 0,
+              tipo: "taxa_matricula",
+              descricao: "Taxa de Matrícula (Aulão)",
+              valor: valorTotalPago,
+              status: "pago",
+              forma_pagamento: formaPagamentoConfirmada,
+              data_vencimento: dataPagamentoParcela,
+              data_pagamento: dataPagamentoParcela,
+              asaas_id: matricula.asaas_payment_id || null,
+            });
+          }
+
+          const { error: parcelaError } = await supabase.from("parcelas").insert(parcelasParaInserir);
           if (parcelaError) {
             // Não bloqueia o fluxo (aluno já pagou e precisa do acesso liberado), só loga pra
             // investigação depois — igual ao padrão adotado nos webhooks do Asaas (BUG-059).
