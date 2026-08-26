@@ -289,6 +289,30 @@ function WebinarPage() {
               const t = playerRef.current?.getCurrentTime?.();
               if (typeof t === "number") setVideoTime(t);
             }, 1000);
+
+            // Simula "entrar ao vivo no minuto certo" (pedido do Diego, 26/08/2026): calcula
+            // quantos segundos já se passaram desde o início real do webinar (webinar.iniciado_em,
+            // a mesma referência já usada pela portaria/tolerância) e avança o vídeo pra lá — em vez
+            // de sempre começar do zero, do jeito que o YouTube normalmente faz com um vídeo gravado.
+            // Reforça a tentativa em 3 momentos (0s / 1s / 2,5s) porque o player às vezes ainda está
+            // fazendo buffer/cueing no instante do onReady e ignora o primeiro seekTo — mesmo padrão
+            // de reforço já usado no player do aluno (use-video-progress.ts, playVideoAt).
+            if (webinar?.iniciado_em) {
+              const segundosDesdeInicio = Math.max(
+                0,
+                (Date.now() - new Date(webinar.iniciado_em).getTime()) / 1000,
+              );
+              const tentarSeek = () => {
+                const duracao = playerRef.current?.getDuration?.() || 0;
+                const alvo = duracao > 0 ? Math.min(segundosDesdeInicio, Math.max(0, duracao - 5)) : segundosDesdeInicio;
+                if (alvo > 1) {
+                  playerRef.current?.seekTo?.(alvo, true);
+                }
+              };
+              tentarSeek();
+              setTimeout(tentarSeek, 1000);
+              setTimeout(tentarSeek, 2500);
+            }
           },
         },
       });
