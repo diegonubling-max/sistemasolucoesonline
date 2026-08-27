@@ -11,6 +11,54 @@ import { maskPhone } from "@/lib/format";
 
 const TOLERANCIA_MINUTOS = 20;
 
+// Curva do contador de "pessoas ao vivo" simulado (pedido do Diego, 27/08/2026) — reproduz o
+// padrão real observado na aula original: a live no YouTube já estava no ar 18 minutos antes do
+// link ser divulgado (0 pessoas nesse período), poucos alunos entraram só 1-2 min antes do início
+// de fato (16-18min, tela "logo entraremos ao vivo"), a maioria entrou de uma vez quando a aula
+// realmente começou (18-21min, subindo até estabilizar entre 67-73), ficou nessa faixa a aula
+// toda, e caiu gradualmente nos últimos 3 minutos até ~30-35 no exato fim do vídeo.
+const CONTADOR_RAMPA1_INICIO = 16 * 60; // 16min — começa a aparecer gente (poucas, aguardando)
+const CONTADOR_RAMPA1_FIM = 18 * 60; // 18min — só uns 5 espectadores até aqui
+const CONTADOR_RAMPA2_FIM = 21 * 60; // 21min — sobe rápido até estabilizar no platô
+const CONTADOR_PLATO_MIN = 67;
+const CONTADOR_PLATO_MAX = 73;
+const CONTADOR_QUEDA_SEGUNDOS_ANTES_FIM = 3 * 60; // últimos 3 minutos
+const CONTADOR_FINAL = 32; // fica em torno de 30-35 no exato fim do vídeo
+
+function getEspectadoresSimulados(videoTime: number, duracaoVideo: number): number {
+  if (videoTime < CONTADOR_RAMPA1_INICIO) return 0;
+
+  if (videoTime < CONTADOR_RAMPA1_FIM) {
+    // 16 a 18min: sobe bem devagar, de 1 até uns 5 (os primeiros que chegaram cedo e caíram
+    // na tela "logo entraremos ao vivo").
+    const fracao = (videoTime - CONTADOR_RAMPA1_INICIO) / (CONTADOR_RAMPA1_FIM - CONTADOR_RAMPA1_INICIO);
+    return Math.max(1, Math.round(fracao * 5));
+  }
+
+  // Base "orgânica" do platô — soma de duas ondas senoidais (períodos diferentes, não múltiplos
+  // um do outro) pra oscilar sem parecer repetitivo, mantendo sempre dentro de 67-73.
+  const platoBase =
+    (CONTADOR_PLATO_MIN + CONTADOR_PLATO_MAX) / 2 +
+    Math.sin(videoTime / 17) * 2.5 +
+    Math.sin(videoTime / 41) * 1.5;
+  const plato = Math.min(CONTADOR_PLATO_MAX, Math.max(CONTADOR_PLATO_MIN, Math.round(platoBase)));
+
+  if (videoTime < CONTADOR_RAMPA2_FIM) {
+    // 18 a 21min: sobe rápido de 5 até o platô calculado acima (nunca para de entrar gente).
+    const fracao = (videoTime - CONTADOR_RAMPA1_FIM) / (CONTADOR_RAMPA2_FIM - CONTADOR_RAMPA1_FIM);
+    return Math.max(5, Math.round(5 + fracao * (plato - 5)));
+  }
+
+  const inicioQueda = duracaoVideo > 0 ? duracaoVideo - CONTADOR_QUEDA_SEGUNDOS_ANTES_FIM : Infinity;
+  if (duracaoVideo > 0 && videoTime >= inicioQueda) {
+    // Últimos 3 minutos: cai gradualmente do platô até ~30-35 bem no fim do vídeo.
+    const fracao = Math.min(1, (videoTime - inicioQueda) / CONTADOR_QUEDA_SEGUNDOS_ANTES_FIM);
+    return Math.round(plato - fracao * (plato - CONTADOR_FINAL));
+  }
+
+  return plato;
+}
+
 export const Route = createFileRoute("/webinar/$id")({
   component: WebinarPage,
 });
@@ -72,6 +120,7 @@ function WebinarPage() {
   const [novoComentario, setNovoComentario] = useState("");
   const [qtdOnline, setQtdOnline] = useState(0);
   const [videoTime, setVideoTime] = useState(0);
+  const [duracaoVideo, setDuracaoVideo] = useState(0);
   const chatRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const depoimentosMostradosRef = useRef<Set<string>>(new Set());
@@ -288,6 +337,8 @@ function WebinarPage() {
             poll = setInterval(() => {
               const t = playerRef.current?.getCurrentTime?.();
               if (typeof t === "number") setVideoTime(t);
+              const d = playerRef.current?.getDuration?.();
+              if (typeof d === "number" && d > 0) setDuracaoVideo(d);
             }, 1000);
 
             // Simula "entrar ao vivo no minuto certo" (pedido do Diego, 26/08/2026): calcula
@@ -535,7 +586,7 @@ function WebinarPage() {
           <h1 className="font-bold truncate">{webinar.titulo}</h1>
           <div className="flex items-center gap-1 text-sm bg-red-600 px-2 py-1 rounded-full">
             <Users className="h-4 w-4" />
-            {qtdOnline}
+            {webinar.gravado ? getEspectadoresSimulados(videoTime, duracaoVideo) : qtdOnline}
           </div>
         </div>
         <div className="text-xs text-center bg-neutral-800 text-neutral-300 py-1 shrink-0">
