@@ -102,6 +102,37 @@ function abrirYoutubeApp(youtubeUrl: string) {
   window.location.href = youtubeUrl;
 }
 
+// Detecta se a página está aberta dentro do navegador embutido de um app (WhatsApp, Instagram,
+// Facebook, etc.) — pedido do Diego, 28/08/2026, depois de descobrir que o webinar não funciona
+// direito dentro do navegador do WhatsApp: o vídeo até toca, mas a API que lê o tempo atual (usada
+// pro salto de entrada, pelos depoimentos sincronizados e pelo contador simulado) fica bloqueada,
+// deixando tudo "cego". Sem detecção universal 100% garantida (apps não expõem isso oficialmente),
+// então combina os sinais mais confiáveis conhecidos.
+function detectarNavegadorEmbutido(): { embutido: boolean; isAndroid: boolean; isIOS: boolean } {
+  if (typeof navigator === "undefined") return { embutido: false, isAndroid: false, isIOS: false };
+  const ua = navigator.userAgent || "";
+  const isAndroid = /Android/i.test(ua);
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const embutido =
+    /FBAN|FBAV/i.test(ua) || // Facebook
+    /Instagram/i.test(ua) ||
+    /WhatsApp/i.test(ua) ||
+    /Line\//i.test(ua) ||
+    /MicroMessenger/i.test(ua) || // WeChat
+    (isAndroid && /; wv\)/i.test(ua)); // WebView genérica no Android (assinatura comum de in-app browser)
+  return { embutido, isAndroid, isIOS };
+}
+
+// No Android dá pra forçar a saída pro navegador de verdade automaticamente: reabre a MESMA URL
+// atual via um "intent" do Android, que ignora o app hospedeiro e usa o navegador padrão do
+// aparelho. No iOS o WhatsApp não permite esse tipo de redirecionamento programático — só resta
+// orientar a pessoa a tocar em "Abrir no Safari" (ver overlay em WebinarPage).
+function forcarNavegadorExterno() {
+  if (typeof window === "undefined") return;
+  const urlAtual = window.location.href;
+  window.location.href = `intent://${urlAtual.replace(/^https?:\/\//, "")}#Intent;scheme=https;end`;
+}
+
 interface Participante {
   id: string;
   nome: string;
@@ -126,6 +157,22 @@ function WebinarPage() {
   const depoimentosMostradosRef = useRef<Set<string>>(new Set());
   const liveIframeRef = useRef<HTMLIFrameElement | null>(null);
   const [audioAtivo, setAudioAtivo] = useState(false);
+  const [navegadorEmbutido, setNavegadorEmbutido] = useState<{ embutido: boolean; isAndroid: boolean; isIOS: boolean }>({
+    embutido: false,
+    isAndroid: false,
+    isIOS: false,
+  });
+
+  // Detecta navegador embutido (WhatsApp, Instagram, etc.) assim que a página carrega. No Android
+  // tenta sair sozinho pro navegador de verdade; no iOS não dá pra forçar, então mostra instrução
+  // (ver overlay bloqueante mais abaixo, antes de qualquer outro conteúdo da página).
+  useEffect(() => {
+    const resultado = detectarNavegadorEmbutido();
+    setNavegadorEmbutido(resultado);
+    if (resultado.embutido && resultado.isAndroid) {
+      forcarNavegadorExterno();
+    }
+  }, []);
 
   const { data: webinar, isLoading } = useQuery({
     queryKey: ["webinar", id],
@@ -436,6 +483,38 @@ function WebinarPage() {
     });
   };
 
+  // Navegador embutido no iOS (WhatsApp, Instagram, etc.) — não dá pra forçar a saída
+  // automaticamente como no Android, então bloqueia com instrução clara antes de mostrar
+  // qualquer conteúdo (o player não funciona direito ali dentro).
+  if (navegadorEmbutido.embutido && navegadorEmbutido.isIOS) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-6 py-8">
+        <div className="max-w-sm w-full text-center space-y-5">
+          <div className="w-16 h-16 mx-auto rounded-full bg-[#2D6ADF]/10 flex items-center justify-center">
+            <School className="h-8 w-8 text-[#2D6ADF]" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900">Abra no navegador pra continuar</h1>
+          <p className="text-gray-600 text-sm">
+            Pra assistir a aula direito, você precisa abrir esse link no <strong>Safari</strong>, não
+            aqui dentro do WhatsApp.
+          </p>
+          <div className="bg-gray-50 rounded-xl p-4 text-left space-y-2 text-sm text-gray-700">
+            <p><strong>1.</strong> Toque nos <strong>•••</strong> (três pontinhos) no canto superior direito da tela</p>
+            <p><strong>2.</strong> Toque em <strong>"Abrir no Safari"</strong></p>
+          </div>
+          <Button
+            className="w-full"
+            onClick={() => {
+              navigator.clipboard?.writeText(window.location.href).catch(() => {});
+            }}
+          >
+            Copiar link
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -648,7 +727,7 @@ function WebinarPage() {
           {youtubeId && !audioAtivo && (
             <button
               onClick={ativarAudio}
-              className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium px-3 py-2 rounded-full shadow-lg z-10"
+              className="fixed bottom-4 right-4 flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg z-50"
             >
               🔇 Ativar áudio
             </button>
