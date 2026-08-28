@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Send, Users, Clock, PhoneCall, School, Maximize } from "lucide-react";
+import { Loader2, Send, Users, Clock, PhoneCall, School, Maximize, X } from "lucide-react";
 import { maskPhone } from "@/lib/format";
 
 const TOLERANCIA_MINUTOS = 20;
@@ -155,11 +155,35 @@ function WebinarPage() {
   const liveIframeRef = useRef<HTMLIFrameElement | null>(null);
   const videoWrapperRef = useRef<HTMLDivElement | null>(null);
   const [audioAtivo, setAudioAtivo] = useState(false);
+  const [telaCheia, setTelaCheia] = useState(false);
   const [navegadorEmbutido, setNavegadorEmbutido] = useState<{ embutido: boolean; isAndroid: boolean; isIOS: boolean }>({
     embutido: false,
     isAndroid: false,
     isIOS: false,
   });
+
+  // Trava o body inteiro (não só o container interno) enquanto essa página está aberta —
+  // reforço em cima do position:fixed do container (BUG encontrado em 28/08/2026: mesmo com o
+  // container interno fixo, o Safari/Chrome no mobile ainda conseguia rolar o body por trás dele
+  // quando o teclado abria no campo de comentário, sumindo o vídeo da tela). Restaura tudo ao sair.
+  useEffect(() => {
+    const original = {
+      position: document.body.style.position,
+      overflow: document.body.style.overflow,
+      width: document.body.style.width,
+      height: document.body.style.height,
+    };
+    document.body.style.position = "fixed";
+    document.body.style.overflow = "hidden";
+    document.body.style.width = "100%";
+    document.body.style.height = "100%";
+    return () => {
+      document.body.style.position = original.position;
+      document.body.style.overflow = original.overflow;
+      document.body.style.width = original.width;
+      document.body.style.height = original.height;
+    };
+  }, []);
 
   // Detecta navegador embutido (WhatsApp, Instagram, etc.) assim que a página carrega. No Android
   // tenta sair sozinho pro navegador de verdade; no iOS não dá pra forçar, então mostra instrução
@@ -680,24 +704,26 @@ function WebinarPage() {
     }
   };
 
-  // Maximizar/girar o vídeo pra paisagem no mobile (pedido do Diego, 28/08/2026) — entra em tela
-  // cheia no elemento do vídeo e tenta travar a orientação em paisagem. Nem todo navegador
-  // suporta as duas coisas (ex: Safari no iPhone não trava orientação por código) — nesse caso
-  // a pessoa ainda consegue girar o celular manualmente com o vídeo já em tela cheia.
-  const maximizarVideo = async () => {
+  // Maximizar/girar o vídeo pra paisagem no mobile (pedido do Diego, 28/08/2026). A API nativa
+  // de Fullscreen do navegador (requestFullscreen) não funciona de forma confiável no Safari do
+  // iPhone (testado, não funcionou) — então em vez de depender dela, cria uma "tela cheia" própria
+  // dentro da página (position:fixed cobrindo tudo), que funciona igual em qualquer navegador.
+  const maximizarVideo = () => {
+    setTelaCheia(true);
     try {
-      const el = videoWrapperRef.current as any;
-      if (!el) return;
-      if (el.requestFullscreen) await el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-      try {
-        await (screen.orientation as any)?.lock?.("landscape");
-      } catch {
-        // navegador não suporta travar orientação por código (comum no iOS) — sem problema,
-        // a pessoa gira o celular manualmente com o vídeo já em tela cheia.
-      }
-    } catch (e) {
-      console.error("Erro ao maximizar vídeo:", e);
+      (screen.orientation as any)?.lock?.("landscape").catch(() => {});
+    } catch {
+      // navegador não suporta travar orientação por código (comum no iOS) — sem problema,
+      // a pessoa gira o celular manualmente com o vídeo já em tela cheia.
+    }
+  };
+
+  const sairTelaCheia = () => {
+    setTelaCheia(false);
+    try {
+      (screen.orientation as any)?.unlock?.();
+    } catch {
+      // sem problema se não suportar
     }
   };
 
@@ -730,10 +756,17 @@ function WebinarPage() {
         <div className="text-xs text-center bg-gray-100 text-gray-500 py-1 shrink-0">
           🔇 O vídeo inicia sem som (regra dos navegadores) — toque no botão "Ativar áudio" no vídeo
         </div>
-        <div ref={videoWrapperRef} className="aspect-video w-full bg-black shrink-0 relative">
+        <div
+          ref={videoWrapperRef}
+          className={
+            telaCheia
+              ? "fixed inset-0 z-[100] bg-black flex items-center justify-center"
+              : "aspect-video w-full bg-black shrink-0 relative"
+          }
+        >
           {youtubeId ? (
             webinar.gravado ? (
-              <div id={`yt-player-${id}`} className="w-full h-full" />
+              <div id={`yt-player-${id}`} className={telaCheia ? "w-full h-full" : "w-full h-full"} />
             ) : (
               <iframe
                 ref={liveIframeRef}
@@ -749,21 +782,21 @@ function WebinarPage() {
             </div>
           )}
           <button
-            onClick={maximizarVideo}
+            onClick={telaCheia ? sairTelaCheia : maximizarVideo}
             className="absolute top-3 right-3 flex items-center justify-center bg-black/50 hover:bg-black/70 text-white p-2 rounded-full shadow-lg z-10"
             title="Girar / Tela cheia"
           >
-            <Maximize className="h-4 w-4" />
+            {telaCheia ? <X className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
           </button>
-          {youtubeId && !audioAtivo && (
-            <button
-              onClick={ativarAudio}
-              className="fixed bottom-4 right-4 flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg z-50"
-            >
-              🔇 Ativar áudio
-            </button>
-          )}
         </div>
+        {youtubeId && !audioAtivo && (
+          <button
+            onClick={ativarAudio}
+            className="flex items-center justify-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2.5 shrink-0"
+          >
+            🔇 Ativar áudio
+          </button>
+        )}
       </div>
 
       <div className="w-full lg:w-80 flex flex-col bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex-1 min-h-0 lg:flex-none">
