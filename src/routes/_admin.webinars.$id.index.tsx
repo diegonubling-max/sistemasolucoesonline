@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Users, LogOut, Loader2, PhoneCall, FileSpreadsheet } from "lucide-react";
+import { Users, LogOut, Loader2, PhoneCall, FileSpreadsheet, History, Send, MessageSquare } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import * as XLSX from "xlsx";
 
@@ -21,7 +23,26 @@ function WebinarMonitor() {
   const qc = useQueryClient();
   const [ultimaSaida, setUltimaSaida] = useState<{ nome: string; telefone: string; hora: string } | null>(null);
   const [onlineAgora, setOnlineAgora] = useState(0);
+  const [participanteHistorico, setParticipanteHistorico] = useState<any | null>(null);
+  const [comentarios, setComentarios] = useState<any[]>([]);
+  const [respostaAberta, setRespostaAberta] = useState<string | null>(null);
+  const [textoResposta, setTextoResposta] = useState("");
+  const [enviandoResposta, setEnviandoResposta] = useState(false);
   const participantesRef = useRef<any[]>([]);
+
+  const { data: sessoesHistorico } = useQuery({
+    queryKey: ["webinar-sessoes", participanteHistorico?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("webinar_sessoes" as any)
+        .select("*")
+        .eq("participante_id", participanteHistorico.id)
+        .order("entrou_em", { ascending: true });
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!participanteHistorico,
+  });
 
   const { data: webinar } = useQuery({
     queryKey: ["webinar", id],
@@ -87,6 +108,15 @@ function WebinarMonitor() {
           .is("saiu_em", null)
           .then(() => qc.invalidateQueries({ queryKey: ["webinar-participantes", id] }));
 
+        // Fecha a sessão mais recente em aberto no histórico (não só o campo único saiu_em) —
+        // é isso que permite mostrar TODAS as entradas/saídas de cada aluno, não só a 1ª/última.
+        supabase
+          .from("webinar_sessoes" as any)
+          .update({ saiu_em: saidoEm })
+          .eq("participante_id", key)
+          .is("saiu_em", null)
+          .then(() => qc.invalidateQueries({ queryKey: ["webinar-sessoes", id] }));
+
         const info = (leftPresences?.[0] as any) ?? {};
         const participanteLocal = participantesRef.current.find((p: any) => p.id === key);
         setUltimaSaida({
@@ -103,7 +133,52 @@ function WebinarMonitor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, webinar?.id]);
 
-  // Grava um snapshot da quantidade online a cada minuto, enquanto o painel está aberto e a aula ao vivo
+  // Comentários ao vivo (BUG-064, 28/08/2026): antes o admin não tinha nenhuma tela pra ver os
+  // comentários reais dos alunos durante a aula, nem como responder — carrega os existentes e
+  // escuta novos em tempo real, igual o aluno já faz do lado dele.
+  useEffect(() => {
+    if (!webinar) return;
+    supabase
+      .from("webinar_comentarios" as any)
+      .select("*")
+      .eq("webinar_id", id)
+      .order("created_at", { ascending: true })
+      .limit(300)
+      .then(({ data }) => setComentarios((data as any) ?? []));
+
+    const canal = supabase
+      .channel(`webinar-comentarios-admin-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "webinar_comentarios", filter: `webinar_id=eq.${id}` },
+        (payload) => setComentarios((prev) => [...prev, payload.new]),
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
+  }, [id, webinar?.id]);
+
+  const enviarResposta = async (comentario: any) => {
+    if (!textoResposta.trim()) return;
+    setEnviandoResposta(true);
+    try {
+      await supabase.from("webinar_comentarios" as any).insert({
+        webinar_id: id,
+        participante_id: comentario.participante_id,
+        nome: "Escola Soluções Online",
+        texto: textoResposta.trim(),
+        is_admin: true,
+      });
+      setTextoResposta("");
+      setRespostaAberta(null);
+    } finally {
+      setEnviandoResposta(false);
+    }
+  };
+
+
   useEffect(() => {
     if (!webinar || webinar.status !== "ao_vivo") return;
     const interval = setInterval(() => {
@@ -277,6 +352,7 @@ function WebinarMonitor() {
                   <TableHead>Entrou</TableHead>
                   <TableHead>Saiu</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -295,6 +371,11 @@ function WebinarMonitor() {
                         <Badge className="bg-green-100 text-green-700">🟢 Online</Badge>
                       )}
                     </TableCell>
+                    <TableCell>
+                      <Button size="sm" variant="outline" onClick={() => setParticipanteHistorico(p)}>
+                        <History className="h-3.5 w-3.5 mr-1.5" /> Histórico
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -302,6 +383,88 @@ function WebinarMonitor() {
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <MessageSquare className="h-5 w-5 text-primary" /> Comentários ao vivo
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 max-h-[500px] overflow-y-auto">
+          {comentarios.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhum comentário ainda.</p>
+          )}
+          {comentarios.map((c: any) => (
+            <div key={c.id} className={`p-3 rounded-lg border ${c.is_admin ? "bg-green-50 border-green-200" : "bg-muted/30"}`}>
+              <div className="flex items-center justify-between gap-2">
+                <span className={`font-bold text-sm ${c.is_admin ? "text-green-700" : "text-[#1E3A5F]"}`}>
+                  {c.is_admin ? "✅ Escola Soluções Online" : c.nome}
+                </span>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {new Date(c.created_at).toLocaleTimeString("pt-BR")}
+                </span>
+              </div>
+              <p className="text-sm mt-0.5">{c.texto}</p>
+              {!c.is_admin && (
+                respostaAberta === c.id ? (
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      autoFocus
+                      value={textoResposta}
+                      onChange={(e) => setTextoResposta(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && enviarResposta(c)}
+                      placeholder="Responder como Soluções Online..."
+                      className="text-sm"
+                    />
+                    <Button size="sm" disabled={enviandoResposta || !textoResposta.trim()} onClick={() => enviarResposta(c)}>
+                      {enviandoResposta ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setRespostaAberta(null); setTextoResposta(""); }}>
+                      Cancelar
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="mt-1 h-7 text-xs text-primary"
+                    onClick={() => { setRespostaAberta(c.id); setTextoResposta(""); }}
+                  >
+                    Responder
+                  </Button>
+                )
+              )}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!participanteHistorico} onOpenChange={(open) => !open && setParticipanteHistorico(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Histórico de {participanteHistorico?.nome}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {(sessoesHistorico ?? []).length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhuma sessão registrada.</p>
+            )}
+            {(sessoesHistorico ?? []).map((s: any, idx: number) => (
+              <div key={s.id} className="flex items-center justify-between text-sm border-b pb-2">
+                <span className="text-muted-foreground">Sessão {idx + 1}</span>
+                <span>
+                  Entrou às <strong>{new Date(s.entrou_em).toLocaleTimeString("pt-BR")}</strong>
+                  {" — "}
+                  {s.saiu_em ? (
+                    <>Saiu às <strong>{new Date(s.saiu_em).toLocaleTimeString("pt-BR")}</strong></>
+                  ) : (
+                    <span className="text-green-600 font-medium">🟢 ainda online</span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

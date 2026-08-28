@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Send, Users, Clock, PhoneCall, School } from "lucide-react";
+import { Loader2, Send, Users, Clock, PhoneCall, School, Maximize } from "lucide-react";
 import { maskPhone } from "@/lib/format";
 
 const TOLERANCIA_MINUTOS = 20;
@@ -153,6 +153,7 @@ function WebinarPage() {
   const playerRef = useRef<any>(null);
   const depoimentosMostradosRef = useRef<Set<string>>(new Set());
   const liveIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const videoWrapperRef = useRef<HTMLDivElement | null>(null);
   const [audioAtivo, setAudioAtivo] = useState(false);
   const [navegadorEmbutido, setNavegadorEmbutido] = useState<{ embutido: boolean; isAndroid: boolean; isIOS: boolean }>({
     embutido: false,
@@ -242,6 +243,10 @@ function WebinarPage() {
           .from("webinar_participantes" as any)
           .update({ saiu_em: null, ultimo_heartbeat: new Date().toISOString() })
           .eq("id", p.id);
+        // Registra essa reentrada como uma NOVA sessão no histórico (BUG encontrado em 28/08/2026:
+        // reentradas resetavam saiu_em pra null, mas nunca ficava registrado no histórico que a
+        // pessoa tinha voltado — só a 1ª entrada/saída aparecia pro admin).
+        await supabase.from("webinar_sessoes" as any).insert({ participante_id: p.id });
         setParticipante(p);
         localStorage.setItem(`webinar_${id}_participante`, JSON.stringify(p));
         return;
@@ -270,6 +275,7 @@ function WebinarPage() {
         .single();
       if (error) throw error;
       const p = data as any as Participante;
+      await supabase.from("webinar_sessoes" as any).insert({ participante_id: p.id });
       setParticipante(p);
       localStorage.setItem(`webinar_${id}_participante`, JSON.stringify(p));
     } catch (e) {
@@ -674,8 +680,29 @@ function WebinarPage() {
     }
   };
 
+  // Maximizar/girar o vídeo pra paisagem no mobile (pedido do Diego, 28/08/2026) — entra em tela
+  // cheia no elemento do vídeo e tenta travar a orientação em paisagem. Nem todo navegador
+  // suporta as duas coisas (ex: Safari no iPhone não trava orientação por código) — nesse caso
+  // a pessoa ainda consegue girar o celular manualmente com o vídeo já em tela cheia.
+  const maximizarVideo = async () => {
+    try {
+      const el = videoWrapperRef.current as any;
+      if (!el) return;
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      try {
+        await (screen.orientation as any)?.lock?.("landscape");
+      } catch {
+        // navegador não suporta travar orientação por código (comum no iOS) — sem problema,
+        // a pessoa gira o celular manualmente com o vídeo já em tela cheia.
+      }
+    } catch (e) {
+      console.error("Erro ao maximizar vídeo:", e);
+    }
+  };
+
   return (
-    <div className="h-dvh bg-gray-50 text-gray-900 flex flex-col lg:flex-row overflow-hidden">
+    <div className="fixed inset-0 h-dvh bg-gray-50 text-gray-900 flex flex-col lg:flex-row overflow-hidden">
       <div className="flex flex-col flex-none min-h-0 lg:flex-1">
         <div className="flex items-center justify-between px-4 py-2 bg-[#1E3A5F] shrink-0 gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -703,7 +730,7 @@ function WebinarPage() {
         <div className="text-xs text-center bg-gray-100 text-gray-500 py-1 shrink-0">
           🔇 O vídeo inicia sem som (regra dos navegadores) — toque no botão "Ativar áudio" no vídeo
         </div>
-        <div className="aspect-video w-full bg-black shrink-0 relative">
+        <div ref={videoWrapperRef} className="aspect-video w-full bg-black shrink-0 relative">
           {youtubeId ? (
             webinar.gravado ? (
               <div id={`yt-player-${id}`} className="w-full h-full" />
@@ -721,6 +748,13 @@ function WebinarPage() {
               Vídeo não configurado
             </div>
           )}
+          <button
+            onClick={maximizarVideo}
+            className="absolute top-3 right-3 flex items-center justify-center bg-black/50 hover:bg-black/70 text-white p-2 rounded-full shadow-lg z-10"
+            title="Girar / Tela cheia"
+          >
+            <Maximize className="h-4 w-4" />
+          </button>
           {youtubeId && !audioAtivo && (
             <button
               onClick={ativarAudio}
@@ -734,14 +768,17 @@ function WebinarPage() {
 
       <div className="w-full lg:w-80 flex flex-col bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex-1 min-h-0 lg:flex-none">
         <div ref={chatRef} className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
-          {comentarios.map((c) => (
+          {comentarios.map((c) => {
+            const ehMinhaMensagem = !c.replay && !c.is_admin && participante?.id && c.participante_id === participante.id;
+            return (
             <div key={c.id} className="text-sm">
-              <span className={`font-bold ${c.replay ? "text-[#2D6ADF]" : "text-orange-600"}`}>
-                {c.nome}{c.replay ? " 🎥" : ""}:{" "}
+              <span className={`font-bold ${c.is_admin ? "text-green-600" : ehMinhaMensagem ? "text-orange-600" : "text-[#2D6ADF]"}`}>
+                {c.is_admin ? "✅ Escola Soluções Online" : c.nome}{c.replay ? " 🎥" : ""}:{" "}
               </span>
               <span className="text-gray-800">{c.texto}</span>
             </div>
-          ))}
+            );
+          })}
         </div>
         <div className="p-2 border-t border-gray-200 space-y-2 shrink-0">
           <div className="flex gap-1 flex-wrap">
