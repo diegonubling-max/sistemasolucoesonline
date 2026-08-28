@@ -62,6 +62,53 @@ serve(async (req) => {
       ? "https://www.asaas.com/api/v3" 
       : "https://sandbox.asaas.com/api/v3";
 
+    if (action === 'cancel') {
+      // Cancela a cobrança existente no Asaas e limpa a parcela, pra deixar ela pronta pra
+      // gerar uma cobrança nova (pedido do Diego, 28/08/2026 — caso real: editar o valor/
+      // vencimento de uma parcela que já tinha boleto gerado não atualiza a cobrança no Asaas,
+      // só o que aparece na tela do sistema; o botão de baixar sempre volta a mesma cobrança
+      // antiga, com o valor errado).
+      if (!parcela.asaas_id) {
+        return new Response(JSON.stringify({ success: true, skipped: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      console.log(`Cancelando cobrança ${parcela.asaas_id} no Asaas...`);
+      const cancelResponse = await fetch(`${asaasBaseUrl}/payments/${parcela.asaas_id}`, {
+        method: "DELETE",
+        headers: { "access_token": asaas_api_key },
+      });
+      const cancelData = await cancelResponse.json();
+      console.log("RETORNO ASAAS (CANCEL):", JSON.stringify(cancelData));
+
+      // Se a cobrança já estava paga, o Asaas recusa o cancelamento (400) — nesse caso não faz
+      // sentido mesmo cancelar, então só avisa e não mexe em mais nada.
+      if (!cancelResponse.ok) {
+        const desc = cancelData.errors?.[0]?.description || cancelResponse.statusText;
+        throw new Error(`Erro ao cancelar cobrança no Asaas: ${desc}`);
+      }
+
+      const { error: clearError } = await supabaseClient
+        .from("parcelas")
+        .update({
+          asaas_id: null,
+          asaas_url: null,
+          asaas_barcode: null,
+          asaas_pix_chave: null,
+          asaas_pix_qrcode: null,
+        })
+        .eq("id", parcela_id);
+
+      if (clearError) console.error("Erro ao limpar parcela após cancelamento:", clearError);
+
+      return new Response(JSON.stringify({ success: true, cancelled: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     if (action === 'receive_in_cash') {
       if (!parcela.asaas_id) {
         console.log(`Parcela ${parcela_id} sem asaas_id — nada a confirmar.`);

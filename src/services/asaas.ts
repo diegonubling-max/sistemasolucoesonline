@@ -1,5 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export const cancelarCobrancaAsaas = async (parcelaId: string) => {
+  const { data, error } = await supabase.functions.invoke('asaas-cobrar', {
+    body: { parcela_id: parcelaId, action: 'cancel' }
+  });
+  if (error) {
+    let mensagemReal = error.message || 'Erro ao cancelar cobrança no Asaas';
+    try {
+      if (error.context && typeof error.context.json === 'function') {
+        const corpo = await error.context.json();
+        if (corpo?.error) mensagemReal = corpo.error;
+      }
+    } catch {
+      // corpo não era JSON ou já foi consumido — mantém a mensagem genérica
+    }
+    throw new Error(mensagemReal);
+  }
+  return data;
+};
+
 export const generateAsaasCobrar = async (parcelaId: string, tipo: 'PIX' | 'BOLETO' | null = null, action: 'create' | 'fetch' = 'create') => {
   const { data, error } = await supabase.functions.invoke('asaas-cobrar', {
     body: { parcela_id: parcelaId, tipo, action }

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText, MoreHorizontal, Sparkles, Eye, Star, Download } from "lucide-react";
+import { ArrowLeft, Pencil, GraduationCap, Key, Loader2, Wallet, Calendar as CalendarIcon, CheckCircle2, AlertCircle, ShoppingBag, Plus, Trash2, Lock, Receipt, Copy, MessageSquare, History, Clock, BookOpen, PlayCircle, LogIn, LogOut as LogOutIcon, FileCheck, FileText, MoreHorizontal, Sparkles, Eye, Star, Download, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -26,7 +26,7 @@ import { ResumoBaixaModal } from "@/components/admin/ResumoBaixaModal";
 import { HistoricoPagamentosModal } from "@/components/admin/HistoricoPagamentosModal";
 import { formatCurrency } from "@/lib/format";
 import { Switch } from "@/components/ui/switch";
-import { generateAsaasCobrar, asaasRequest, confirmarPagamentoAsaas } from "@/services/asaas";
+import { generateAsaasCobrar, cancelarCobrancaAsaas, asaasRequest, confirmarPagamentoAsaas } from "@/services/asaas";
 import { QRCodeSVG } from "qrcode.react";
 import declaracaoTemplate from "@/templates/declaracao-matricula.html?raw";
 import { ProgressoAulas } from "@/components/admin/alunos/ProgressoAulas";
@@ -409,6 +409,29 @@ function AlunoDetalhes() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const [regenerandoId, setRegenerandoId] = useState<string | null>(null);
+  const handleCancelarERegerar = async (parcela: any) => {
+    // Corrige o caso em que o valor/vencimento da parcela foi editado depois que o boleto/PIX
+    // já tinha sido gerado — a cobrança antiga no Asaas não se atualiza sozinha, então o link
+    // de pagamento continua mostrando os dados errados até alguém cancelar e gerar de novo.
+    if (!window.confirm(`Cancelar a cobrança atual no Asaas e gerar uma nova pra "${parcela.descricao || `Parcela ${parcela.numero}`}", com os valores/vencimento atuais (${formatCurrency(Number(parcela.valor))})?`)) {
+      return;
+    }
+    try {
+      setRegenerandoId(parcela.id);
+      await cancelarCobrancaAsaas(parcela.id);
+      const tipo = parcela.forma_pagamento === "pix" ? "PIX" : "BOLETO";
+      await generateAsaasCobrar(parcela.id, tipo, "create");
+      toast.success("Cobrança cancelada e nova cobrança gerada com sucesso!");
+      qc.invalidateQueries({ queryKey: ["aluno-parcelas", id] });
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao cancelar/regenerar a cobrança.");
+    } finally {
+      setRegenerandoId(null);
+    }
+  };
+
 
   const [baixandoBoletoId, setBaixandoBoletoId] = useState<string | null>(null);
   const handleBaixarBoleto = async (parcela: any) => {
@@ -1056,6 +1079,18 @@ function AlunoDetalhes() {
                               onClick={() => handleBaixarBoleto(p)}
                             >
                               {baixandoBoletoId === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                            </Button>
+                          )}
+                          {(p as any).asaas_id && (p.status === 'aberto' || p.status === 'parcial') && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                              title="Cancelar cobrança atual e gerar uma nova (use depois de editar valor/vencimento)"
+                              disabled={regenerandoId === p.id}
+                              onClick={() => handleCancelarERegerar(p)}
+                            >
+                              {regenerandoId === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                             </Button>
                           )}
                           <Button
