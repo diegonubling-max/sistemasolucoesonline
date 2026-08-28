@@ -345,9 +345,14 @@ function WebinarPage() {
             // quantos segundos já se passaram desde o início real do webinar (webinar.iniciado_em,
             // a mesma referência já usada pela portaria/tolerância) e avança o vídeo pra lá — em vez
             // de sempre começar do zero, do jeito que o YouTube normalmente faz com um vídeo gravado.
-            // Reforça a tentativa em 3 momentos (0s / 1s / 2,5s) porque o player às vezes ainda está
-            // fazendo buffer/cueing no instante do onReady e ignora o primeiro seekTo — mesmo padrão
-            // de reforço já usado no player do aluno (use-video-progress.ts, playVideoAt).
+            // Reforça a tentativa em 4 momentos (0s / 1s / 2,5s / 4,5s) porque o player às vezes ainda
+            // está fazendo buffer/cueing no instante do onReady e ignora o primeiro seekTo — mesmo
+            // padrão de reforço já usado no player do aluno (use-video-progress.ts, playVideoAt).
+            // IMPORTANTE (BUG encontrado em 28/08/2026): seekTo() logo no carregamento às vezes deixa
+            // o player PAUSADO depois do salto — como os controles ficam escondidos de propósito, o
+            // aluno não tem nenhum jeito de retomar o play manualmente e o vídeo trava parado pra
+            // sempre (nem depoimentos nem contador avançam, já que dependem do tempo real do vídeo).
+            // Por isso, playVideo() é chamado explicitamente logo depois de cada seekTo.
             if (webinar?.iniciado_em) {
               const segundosDesdeInicio = Math.max(
                 0,
@@ -358,11 +363,25 @@ function WebinarPage() {
                 const alvo = duracao > 0 ? Math.min(segundosDesdeInicio, Math.max(0, duracao - 5)) : segundosDesdeInicio;
                 if (alvo > 1) {
                   playerRef.current?.seekTo?.(alvo, true);
+                  playerRef.current?.playVideo?.();
                 }
               };
               tentarSeek();
               setTimeout(tentarSeek, 1000);
               setTimeout(tentarSeek, 2500);
+              setTimeout(tentarSeek, 4500);
+            } else {
+              // Sem iniciado_em (não deveria acontecer, mas por garantia): assegura que o vídeo
+              // está tocando mesmo sem precisar pular pra nenhum ponto específico.
+              playerRef.current?.playVideo?.();
+            }
+          },
+          // Reforço extra: se o player pausar sozinho em algum momento (ex: efeito colateral de
+          // buffering após um seek), retoma o play automaticamente — o aluno nunca deve conseguir
+          // ver o vídeo parado, já que não existe botão de play visível pra ele mesmo.
+          onStateChange: (event: any) => {
+            if (event?.data === (window as any).YT?.PlayerState?.PAUSED) {
+              playerRef.current?.playVideo?.();
             }
           },
         },
@@ -608,11 +627,6 @@ function WebinarPage() {
         <div className="text-xs text-center bg-gray-100 text-gray-500 py-1 shrink-0">
           🔇 O vídeo inicia sem som (regra dos navegadores) — toque no botão "Ativar áudio" no vídeo
         </div>
-        {webinar.gravado && (
-          <div className="text-xs text-center bg-gray-100/70 text-gray-400 py-1 shrink-0">
-            🎥 Aula gravada — comente à vontade, nosso time está online pra tirar dúvidas
-          </div>
-        )}
         <div className="aspect-video w-full bg-black shrink-0 relative">
           {youtubeId ? (
             webinar.gravado ? (
