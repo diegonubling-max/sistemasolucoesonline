@@ -11,15 +11,13 @@ import { maskPhone } from "@/lib/format";
 
 const TOLERANCIA_MINUTOS = 20;
 
-// Curva do contador de "pessoas ao vivo" simulado (pedido do Diego, 27/08/2026) — reproduz o
-// padrão real observado na aula original: a live no YouTube já estava no ar 18 minutos antes do
-// link ser divulgado (0 pessoas nesse período), poucos alunos entraram só 1-2 min antes do início
-// de fato (16-18min, tela "logo entraremos ao vivo"), a maioria entrou de uma vez quando a aula
-// realmente começou (18-21min, subindo até estabilizar entre 67-73), ficou nessa faixa a aula
-// toda, e caiu gradualmente nos últimos 3 minutos até ~30-35 no exato fim do vídeo.
-const CONTADOR_RAMPA1_INICIO = 16 * 60; // 16min — começa a aparecer gente (poucas, aguardando)
-const CONTADOR_RAMPA1_FIM = 18 * 60; // 18min — só uns 5 espectadores até aqui
-const CONTADOR_RAMPA2_FIM = 21 * 60; // 21min — sobe rápido até estabilizar no platô
+// Curva do contador de "pessoas ao vivo" simulado (pedido do Diego, 28/08/2026 — 2ª versão,
+// pontos de corte ajustados pra começar logo no início do vídeo em vez de aos 16-21min):
+// sobe devagar de 0:01 até 2:20, sobe rápido de 2:21 até 3:40, fica oscilando entre 67-73 dos
+// 4min até faltarem 3min pro fim, e cai gradualmente nos últimos 3 minutos até ~32 no fim.
+const CONTADOR_RAMPA1_INICIO = 1; // 0:01 — começa a subir
+const CONTADOR_RAMPA1_FIM = 2 * 60 + 20; // 2:20 — fim da subida devagar
+const CONTADOR_RAMPA2_FIM = 3 * 60 + 40; // 3:40 — fim da subida rápida, já no platô
 const CONTADOR_PLATO_MIN = 67;
 const CONTADOR_PLATO_MAX = 73;
 const CONTADOR_QUEDA_SEGUNDOS_ANTES_FIM = 3 * 60; // últimos 3 minutos
@@ -29,8 +27,7 @@ function getEspectadoresSimulados(videoTime: number, duracaoVideo: number): numb
   if (videoTime < CONTADOR_RAMPA1_INICIO) return 0;
 
   if (videoTime < CONTADOR_RAMPA1_FIM) {
-    // 16 a 18min: sobe bem devagar, de 1 até uns 5 (os primeiros que chegaram cedo e caíram
-    // na tela "logo entraremos ao vivo").
+    // 0:01 a 2:20: sobe devagar, de 1 até uns 5.
     const fracao = (videoTime - CONTADOR_RAMPA1_INICIO) / (CONTADOR_RAMPA1_FIM - CONTADOR_RAMPA1_INICIO);
     return Math.max(1, Math.round(fracao * 5));
   }
@@ -44,7 +41,7 @@ function getEspectadoresSimulados(videoTime: number, duracaoVideo: number): numb
   const plato = Math.min(CONTADOR_PLATO_MAX, Math.max(CONTADOR_PLATO_MIN, Math.round(platoBase)));
 
   if (videoTime < CONTADOR_RAMPA2_FIM) {
-    // 18 a 21min: sobe rápido de 5 até o platô calculado acima (nunca para de entrar gente).
+    // 2:21 a 3:40: sobe rápido de 5 até o platô calculado acima (nunca para de entrar gente).
     const fracao = (videoTime - CONTADOR_RAMPA1_FIM) / (CONTADOR_RAMPA2_FIM - CONTADOR_RAMPA1_FIM);
     return Math.max(5, Math.round(5 + fracao * (plato - 5)));
   }
