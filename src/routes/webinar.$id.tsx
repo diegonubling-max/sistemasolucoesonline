@@ -803,8 +803,14 @@ function WebinarPage() {
         <div ref={chatRef} className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
           {comentarios.map((c) => {
             const ehMinhaMensagem = !c.replay && !c.is_admin && participante?.id && c.participante_id === participante.id;
+            const original = c.resposta_a ? comentarios.find((o) => o.id === c.resposta_a) : null;
             return (
             <div key={c.id} className="text-sm">
+              {c.is_admin && original && (
+                <div className="border-l-2 border-green-300 bg-green-50 pl-2 py-1 mb-1 text-xs text-gray-600">
+                  <span className="font-semibold">{original.nome}:</span> {original.texto}
+                </div>
+              )}
               <span className={`font-bold ${c.is_admin ? "text-green-600" : ehMinhaMensagem ? "text-orange-600" : "text-[#2D6ADF]"}`}>
                 {c.is_admin ? "✅ Escola Soluções Online" : c.nome}{c.replay ? " 🎥" : ""}:{" "}
               </span>

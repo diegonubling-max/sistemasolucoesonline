@@ -170,6 +170,7 @@ function WebinarMonitor() {
         nome: "Escola Soluções Online",
         texto: textoResposta.trim(),
         is_admin: true,
+        resposta_a: comentario.id,
       });
       setTextoResposta("");
       setRespostaAberta(null);
@@ -394,7 +395,10 @@ function WebinarMonitor() {
           {comentarios.length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhum comentário ainda.</p>
           )}
-          {comentarios.map((c: any) => (
+          {comentarios.map((c: any) => {
+            const original = c.resposta_a ? comentarios.find((o: any) => o.id === c.resposta_a) : null;
+            const jaRespondido = !c.is_admin && comentarios.some((r: any) => r.is_admin && r.resposta_a === c.id);
+            return (
             <div key={c.id} className={`p-3 rounded-lg border ${c.is_admin ? "bg-green-50 border-green-200" : "bg-muted/30"}`}>
               <div className="flex items-center justify-between gap-2">
                 <span className={`font-bold text-sm ${c.is_admin ? "text-green-700" : "text-[#1E3A5F]"}`}>
@@ -404,6 +408,11 @@ function WebinarMonitor() {
                   {new Date(c.created_at).toLocaleTimeString("pt-BR")}
                 </span>
               </div>
+              {c.is_admin && original && (
+                <div className="border-l-2 border-green-300 bg-white/60 pl-2 py-1 mb-1 text-xs text-muted-foreground">
+                  Em resposta a <span className="font-semibold">{original.nome}:</span> {original.texto}
+                </div>
+              )}
               <p className="text-sm mt-0.5">{c.texto}</p>
               {!c.is_admin && (
                 respostaAberta === c.id ? (
@@ -427,15 +436,16 @@ function WebinarMonitor() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="mt-1 h-7 text-xs text-primary"
+                    className={`mt-1 h-7 text-xs ${jaRespondido ? "text-green-600" : "text-primary"}`}
                     onClick={() => { setRespostaAberta(c.id); setTextoResposta(""); }}
                   >
-                    Responder
+                    {jaRespondido ? "✓ Respondido — responder de novo" : "Responder"}
                   </Button>
                 )
               )}
             </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
 
