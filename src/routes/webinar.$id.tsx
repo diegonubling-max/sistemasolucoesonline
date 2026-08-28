@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Send, Users, Clock, PhoneCall } from "lucide-react";
+import { Loader2, Send, Users, Clock, PhoneCall, School } from "lucide-react";
 import { maskPhone } from "@/lib/format";
 
 const TOLERANCIA_MINUTOS = 20;
@@ -580,20 +580,36 @@ function WebinarPage() {
   };
 
   return (
-    <div className="h-dvh bg-black text-white flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-dvh bg-gray-50 text-gray-900 flex flex-col lg:flex-row overflow-hidden">
       <div className="flex flex-col flex-none min-h-0 lg:flex-1">
-        <div className="flex items-center justify-between px-4 py-2 bg-neutral-900 shrink-0">
-          <h1 className="font-bold truncate">{webinar.titulo}</h1>
-          <div className="flex items-center gap-1 text-sm bg-red-600 px-2 py-1 rounded-full">
-            <Users className="h-4 w-4" />
-            {webinar.gravado ? getEspectadoresSimulados(videoTime, duracaoVideo) : qtdOnline}
+        <div className="flex items-center justify-between px-4 py-2 bg-[#1E3A5F] shrink-0 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="bg-[#2D6ADF]/10 p-1.5 rounded-lg shrink-0">
+              <School className="h-5 w-5 text-[#2D6ADF]" />
+            </div>
+            <span className="text-base sm:text-lg font-bold truncate text-white">
+              Soluções <span className="text-[#2D6ADF]">Online</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600" />
+              </span>
+              <span className="text-xs font-bold text-white tracking-wide">AO VIVO</span>
+            </div>
+            <div className="flex items-center gap-1 text-sm bg-red-600 text-white px-2 py-1 rounded-full">
+              <Users className="h-4 w-4" />
+              {webinar.gravado ? getEspectadoresSimulados(videoTime, duracaoVideo) : qtdOnline}
+            </div>
           </div>
         </div>
-        <div className="text-xs text-center bg-neutral-800 text-neutral-300 py-1 shrink-0">
+        <div className="text-xs text-center bg-gray-100 text-gray-500 py-1 shrink-0">
           🔇 O vídeo inicia sem som (regra dos navegadores) — toque no botão "Ativar áudio" no vídeo
         </div>
         {webinar.gravado && (
-          <div className="text-xs text-center bg-neutral-800/60 text-neutral-400 py-1 shrink-0">
+          <div className="text-xs text-center bg-gray-100/70 text-gray-400 py-1 shrink-0">
             🎥 Aula gravada — comente à vontade, nosso time está online pra tirar dúvidas
           </div>
         )}
@@ -626,18 +642,18 @@ function WebinarPage() {
         </div>
       </div>
 
-      <div className="w-full lg:w-80 flex flex-col bg-neutral-900 border-t lg:border-t-0 lg:border-l border-neutral-800 flex-1 min-h-0 lg:flex-none">
+      <div className="w-full lg:w-80 flex flex-col bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex-1 min-h-0 lg:flex-none">
         <div ref={chatRef} className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
           {comentarios.map((c) => (
             <div key={c.id} className="text-sm">
-              <span className={`font-bold ${c.replay ? "text-blue-400" : "text-orange-400"}`}>
+              <span className={`font-bold ${c.replay ? "text-[#2D6ADF]" : "text-orange-600"}`}>
                 {c.nome}{c.replay ? " 🎥" : ""}:{" "}
               </span>
-              <span>{c.texto}</span>
+              <span className="text-gray-800">{c.texto}</span>
             </div>
           ))}
         </div>
-        <div className="p-2 border-t border-neutral-800 space-y-2 shrink-0">
+        <div className="p-2 border-t border-gray-200 space-y-2 shrink-0">
           <div className="flex gap-1 flex-wrap">
             {EMOJIS.map((e) => (
               <button
@@ -655,7 +671,7 @@ function WebinarPage() {
               onChange={(e) => setNovoComentario(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && enviarComentario()}
               placeholder="Comente..."
-              className="bg-neutral-800 border-neutral-700 text-white"
+              className="bg-gray-50 border-gray-300 text-gray-900 placeholder:text-gray-400"
             />
             <Button size="icon" onClick={enviarComentario} disabled={!novoComentario.trim()}>
               <Send className="h-4 w-4" />
