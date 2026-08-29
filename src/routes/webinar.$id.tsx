@@ -803,6 +803,11 @@ function WebinarPage() {
         <div ref={chatRef} className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
           {comentarios.map((c) => {
             const ehMinhaMensagem = !c.replay && !c.is_admin && participante?.id && c.participante_id === participante.id;
+            // Depoimentos roteirizados com o nome "Escola Soluções Online" (já vêm assim na
+            // planilha) também ficam em laranja pra se destacar dos demais — pedido do Diego,
+            // 29/08/2026. Diferente do is_admin (resposta real ao vivo, que fica verde ✅), esses
+            // já são parte do roteiro original importado.
+            const ehEscolaRoteiro = c.replay && c.nome === "Escola Soluções Online";
             const original = c.resposta_a ? comentarios.find((o) => o.id === c.resposta_a) : null;
             return (
             <div key={c.id} className="text-sm">
@@ -811,7 +816,15 @@ function WebinarPage() {
                   <span className="font-semibold">{original.nome}:</span> {original.texto}
                 </div>
               )}
-              <span className={`font-bold ${c.is_admin ? "text-green-600" : ehMinhaMensagem ? "text-orange-600" : "text-[#2D6ADF]"}`}>
+              <span
+                className={`font-bold ${
+                  c.is_admin
+                    ? "text-green-600"
+                    : ehMinhaMensagem || ehEscolaRoteiro
+                    ? "text-orange-600"
+                    : "text-[#2D6ADF]"
+                }`}
+              >
                 {c.is_admin ? "✅ Escola Soluções Online" : c.nome}{c.replay ? " 🎥" : ""}:{" "}
               </span>
               <span className="text-gray-800">{c.texto}</span>
