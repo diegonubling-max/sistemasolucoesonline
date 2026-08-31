@@ -86,6 +86,29 @@ function extrairYoutubeId(url: string): string | null {
   return match ? match[1] : null;
 }
 
+function ehUrlPanda(url: string): boolean {
+  return !!url && url.includes("pandavideo.com.br");
+}
+
+// Extrai o video_external_id (parâmetro ?v=) e o library_id (o pullzone_name, embutido no
+// subdomínio do player — ex: "player-vz-ee87ef4f-55f.tv.pandavideo.com.br" -> library_id
+// "vz-ee87ef4f-55f") a partir da URL de embed do Panda Video colada pelo Diego.
+function extrairDadosPanda(url: string): { videoId: string | null; libraryId: string | null } {
+  if (!url) return { videoId: null, libraryId: null };
+  let videoId: string | null = null;
+  let libraryId: string | null = null;
+  try {
+    const u = new URL(url);
+    videoId = u.searchParams.get("v");
+    const host = u.hostname; // player-vz-XXXX.tv.pandavideo.com.br
+    const hostMatch = host.match(/^player-(vz-[a-zA-Z0-9-]+)\.tv\.pandavideo\.com\.br$/);
+    libraryId = hostMatch ? hostMatch[1] : null;
+  } catch {
+    // URL inválida — segue com valores nulos, o resto do código já trata esse caso
+  }
+  return { videoId, libraryId };
+}
+
 // Monta/dispara a abertura no app do YouTube — configurável por webinar (modo_acesso).
 // - Android: o esquema intent:// força a abertura no app do YouTube quando ele está instalado,
 //   com fallback automático pro navegador se não tiver o app.
@@ -390,6 +413,9 @@ function WebinarPage() {
   }, [participante, id]);
 
   const youtubeId = extrairYoutubeId(webinar?.youtube_url || "");
+  const usaPanda = ehUrlPanda(webinar?.youtube_url || "");
+  const { videoId: pandaVideoId, libraryId: pandaLibraryId } = extrairDadosPanda(webinar?.youtube_url || "");
+  const temVideoConfigurado = usaPanda ? !!(pandaVideoId && pandaLibraryId) : !!youtubeId;
 
   useEffect(() => {
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
@@ -398,14 +424,50 @@ function WebinarPage() {
   // Player via YouTube IFrame API — só pra aulas gravadas, pra conseguir ler o tempo atual do vídeo
   // e revelar os depoimentos reais no minuto certo, igual aconteceram na aula ao vivo original.
   useEffect(() => {
-    if (!youtubeId || !webinar?.gravado || !participante) return;
+    if (!temVideoConfigurado || !webinar?.gravado || !participante) return;
     let destruido = false;
     let poll: any;
 
-    function criarPlayer() {
+    // Roda o "relógio" comum (poll de tempo/duração + salto pro minuto certo + garantir que o
+    // vídeo não fica pausado) — funciona igual pros dois provedores, só troca os nomes dos
+    // métodos chamados no player (getTempo/getDuracao/pular/tocar), passados por parâmetro.
+    function iniciarClock(getTempo: () => number | undefined, getDuracao: () => number | undefined, pular: (s: number) => void, tocar: () => void) {
+      poll = setInterval(() => {
+        const t = getTempo();
+        if (typeof t === "number") setVideoTime(t);
+        const d = getDuracao();
+        if (typeof d === "number" && d > 0) setDuracaoVideo(d);
+      }, 1000);
+
+      // Simula "entrar ao vivo no minuto certo" (pedido do Diego, 26/08/2026): calcula quantos
+      // segundos já se passaram desde o início real do webinar e avança o vídeo pra lá. Reforça
+      // em 4 momentos (0s/1s/2,5s/4,5s) porque o player às vezes ainda está fazendo buffer no
+      // instante do onReady e ignora a primeira tentativa — e sempre chama tocar() logo depois
+      // de pular, porque o salto às vezes deixa o player pausado (BUG 28/08/2026), e como os
+      // controles ficam escondidos de propósito, o aluno não teria como retomar sozinho.
+      if (webinar?.iniciado_em) {
+        const segundosDesdeInicio = Math.max(0, (Date.now() - new Date(webinar.iniciado_em).getTime()) / 1000);
+        const tentarSeek = () => {
+          const duracao = getDuracao() || 0;
+          const alvo = duracao > 0 ? Math.min(segundosDesdeInicio, Math.max(0, duracao - 5)) : segundosDesdeInicio;
+          if (alvo > 1) {
+            pular(alvo);
+            tocar();
+          }
+        };
+        tentarSeek();
+        setTimeout(tentarSeek, 1000);
+        setTimeout(tentarSeek, 2500);
+        setTimeout(tentarSeek, 4500);
+      } else {
+        tocar();
+      }
+    }
+
+    function criarPlayerYoutube() {
       const el = document.getElementById(`yt-player-${id}`);
       if (!el) {
-        if (!destruido) requestAnimationFrame(criarPlayer);
+        if (!destruido) requestAnimationFrame(criarPlayerYoutube);
         return;
       }
       playerRef.current = new (window as any).YT.Player(`yt-player-${id}`, {
@@ -426,47 +488,12 @@ function WebinarPage() {
         },
         events: {
           onReady: () => {
-            poll = setInterval(() => {
-              const t = playerRef.current?.getCurrentTime?.();
-              if (typeof t === "number") setVideoTime(t);
-              const d = playerRef.current?.getDuration?.();
-              if (typeof d === "number" && d > 0) setDuracaoVideo(d);
-            }, 1000);
-
-            // Simula "entrar ao vivo no minuto certo" (pedido do Diego, 26/08/2026): calcula
-            // quantos segundos já se passaram desde o início real do webinar (webinar.iniciado_em,
-            // a mesma referência já usada pela portaria/tolerância) e avança o vídeo pra lá — em vez
-            // de sempre começar do zero, do jeito que o YouTube normalmente faz com um vídeo gravado.
-            // Reforça a tentativa em 4 momentos (0s / 1s / 2,5s / 4,5s) porque o player às vezes ainda
-            // está fazendo buffer/cueing no instante do onReady e ignora o primeiro seekTo — mesmo
-            // padrão de reforço já usado no player do aluno (use-video-progress.ts, playVideoAt).
-            // IMPORTANTE (BUG encontrado em 28/08/2026): seekTo() logo no carregamento às vezes deixa
-            // o player PAUSADO depois do salto — como os controles ficam escondidos de propósito, o
-            // aluno não tem nenhum jeito de retomar o play manualmente e o vídeo trava parado pra
-            // sempre (nem depoimentos nem contador avançam, já que dependem do tempo real do vídeo).
-            // Por isso, playVideo() é chamado explicitamente logo depois de cada seekTo.
-            if (webinar?.iniciado_em) {
-              const segundosDesdeInicio = Math.max(
-                0,
-                (Date.now() - new Date(webinar.iniciado_em).getTime()) / 1000,
-              );
-              const tentarSeek = () => {
-                const duracao = playerRef.current?.getDuration?.() || 0;
-                const alvo = duracao > 0 ? Math.min(segundosDesdeInicio, Math.max(0, duracao - 5)) : segundosDesdeInicio;
-                if (alvo > 1) {
-                  playerRef.current?.seekTo?.(alvo, true);
-                  playerRef.current?.playVideo?.();
-                }
-              };
-              tentarSeek();
-              setTimeout(tentarSeek, 1000);
-              setTimeout(tentarSeek, 2500);
-              setTimeout(tentarSeek, 4500);
-            } else {
-              // Sem iniciado_em (não deveria acontecer, mas por garantia): assegura que o vídeo
-              // está tocando mesmo sem precisar pular pra nenhum ponto específico.
-              playerRef.current?.playVideo?.();
-            }
+            iniciarClock(
+              () => playerRef.current?.getCurrentTime?.(),
+              () => playerRef.current?.getDuration?.(),
+              (s) => playerRef.current?.seekTo?.(s, true),
+              () => playerRef.current?.playVideo?.(),
+            );
           },
           // Reforço extra: se o player pausar sozinho em algum momento (ex: efeito colateral de
           // buffering após um seek), retoma o play automaticamente — o aluno nunca deve conseguir
@@ -480,8 +507,66 @@ function WebinarPage() {
       });
     }
 
-    if ((window as any).YT && (window as any).YT.Player) {
-      criarPlayer();
+    // Panda Video (pedido do Diego, 30/08/2026 — substitui o YouTube nesse webinário). API
+    // oficial: https://docs.pandavideo.com/reference/player-api — carrega o script
+    // api.v2.js e instancia via PandaPlayer(elementId, {library_id, video_id, onReady}).
+    // Métodos equivalentes aos do YouTube: setCurrentTime() no lugar de seekTo(), play() no
+    // lugar de playVideo(). Não expõe um evento nativo de "pausou sozinho" tão direto quanto o
+    // onStateChange do YouTube, então o próprio poll (a cada 1s) confere isPaused() e retoma.
+    function criarPlayerPanda() {
+      const elId = `panda-player-${id}`;
+      const el = document.getElementById(elId);
+      if (!el) {
+        if (!destruido) requestAnimationFrame(criarPlayerPanda);
+        return;
+      }
+      (window as any).pandascripttag = (window as any).pandascripttag || [];
+      (window as any).pandascripttag.push(() => {
+        if (destruido) return;
+        const player = new (window as any).PandaPlayer(elId, {
+          library_id: pandaLibraryId,
+          video_id: pandaVideoId,
+          onReady: () => {
+            playerRef.current = player;
+            iniciarClock(
+              () => player.getCurrentTime?.(),
+              () => player.getDuration?.(),
+              (s) => player.setCurrentTime?.(s),
+              () => player.play?.(),
+            );
+            // Reforço equivalente ao onStateChange do YouTube: confere a cada ciclo do poll
+            // se o player ficou pausado sozinho e retoma.
+            const pollExtra = setInterval(() => {
+              if (destruido) {
+                clearInterval(pollExtra);
+                return;
+              }
+              if (player.isPaused?.()) player.play?.();
+            }, 1000);
+          },
+          playerConfigs: {
+            autoplay: true,
+            muted: true,
+          },
+        });
+      });
+    }
+
+    if (usaPanda) {
+      if ((window as any).PandaPlayer) {
+        criarPlayerPanda();
+      } else if (!document.getElementById("panda-player-api-script")) {
+        const tag = document.createElement("script");
+        tag.id = "panda-player-api-script";
+        tag.async = true;
+        tag.src = "https://player.pandavideo.com.br/api.v2.js";
+        document.body.appendChild(tag);
+        criarPlayerPanda(); // já enfileira via pandascripttag.push — funciona mesmo antes do script carregar
+      } else {
+        criarPlayerPanda();
+      }
+    } else if ((window as any).YT && (window as any).YT.Player) {
+      criarPlayerYoutube();
     } else {
       if (!document.getElementById("youtube-iframe-api-script")) {
         const tag = document.createElement("script");
@@ -492,7 +577,7 @@ function WebinarPage() {
       const anterior = (window as any).onYouTubeIframeAPIReady;
       (window as any).onYouTubeIframeAPIReady = () => {
         anterior?.();
-        criarPlayer();
+        criarPlayerYoutube();
       };
     }
 
@@ -506,7 +591,8 @@ function WebinarPage() {
       if (document.visibilityState !== "visible") return;
       const t = playerRef.current?.getCurrentTime?.();
       if (typeof t === "number") setVideoTime(t);
-      playerRef.current?.playVideo?.();
+      if (usaPanda) playerRef.current?.play?.();
+      else playerRef.current?.playVideo?.();
     };
     document.addEventListener("visibilitychange", aoVoltarVisivel);
 
@@ -515,7 +601,7 @@ function WebinarPage() {
       if (poll) clearInterval(poll);
       document.removeEventListener("visibilitychange", aoVoltarVisivel);
     };
-  }, [youtubeId, webinar?.gravado, participante, id]);
+  }, [youtubeId, usaPanda, pandaVideoId, pandaLibraryId, webinar?.gravado, participante, id]);
 
   // Revela os depoimentos reais da aula original conforme o vídeo avança
   useEffect(() => {
@@ -719,8 +805,14 @@ function WebinarPage() {
   const ativarAudio = () => {
     try {
       if (webinar?.gravado) {
-        playerRef.current?.unMute?.();
-        playerRef.current?.setVolume?.(100);
+        if (usaPanda) {
+          // API do Panda usa volume de 0 a 1 (não 0 a 100 como o YouTube), e não tem um método
+          // separado de "unMute" — setVolume já cuida de tirar do mudo.
+          playerRef.current?.setVolume?.(1);
+        } else {
+          playerRef.current?.unMute?.();
+          playerRef.current?.setVolume?.(100);
+        }
       } else {
         liveIframeRef.current?.contentWindow?.postMessage(
           JSON.stringify({ event: "command", func: "unMute", args: [] }),
@@ -818,9 +910,13 @@ function WebinarPage() {
               : "aspect-video w-full bg-black shrink-0 relative"
           }
         >
-          {youtubeId ? (
-            webinar.gravado ? (
-              <div id={`yt-player-${id}`} className={telaCheia ? "w-full h-full" : "w-full h-full"} />
+          {temVideoConfigurado ? (
+            usaPanda ? (
+              // Panda Video só é usado pra aulas gravadas (é isso que o Diego pediu — trocar
+              // o motor do webinar gravado). Aulas realmente ao vivo continuam via YouTube.
+              <div id={`panda-player-${id}`} className="w-full h-full" />
+            ) : webinar.gravado ? (
+              <div id={`yt-player-${id}`} className="w-full h-full" />
             ) : (
               <iframe
                 ref={liveIframeRef}
@@ -842,7 +938,7 @@ function WebinarPage() {
           >
             {telaCheia ? <X className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
           </button>
-          {youtubeId && !audioAtivo && (
+          {temVideoConfigurado && !audioAtivo && (
             <button
               onClick={ativarAudio}
               className="fixed top-20 left-4 flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold px-4 py-2.5 rounded-full shadow-lg z-50 animate-pulse"
