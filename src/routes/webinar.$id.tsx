@@ -483,9 +483,24 @@ function WebinarPage() {
       };
     }
 
+    // Reforço contra o navegador pausar a execução do JS quando a página fica em segundo plano
+    // (ex: iPhone minimizado) — o "relógio" que revela depoimentos e avança o contador fica
+    // parado até a pessoa voltar (BUG relatado em 29/08/2026: depoimentos só apareciam depois
+    // de minimizar e reabrir). Quando a aba volta a ficar visível, força uma leitura imediata
+    // do tempo do vídeo (sem esperar o próximo ciclo do poll) e garante que o vídeo não ficou
+    // pausado nesse meio tempo.
+    const aoVoltarVisivel = () => {
+      if (document.visibilityState !== "visible") return;
+      const t = playerRef.current?.getCurrentTime?.();
+      if (typeof t === "number") setVideoTime(t);
+      playerRef.current?.playVideo?.();
+    };
+    document.addEventListener("visibilitychange", aoVoltarVisivel);
+
     return () => {
       destruido = true;
       if (poll) clearInterval(poll);
+      document.removeEventListener("visibilitychange", aoVoltarVisivel);
     };
   }, [youtubeId, webinar?.gravado, participante, id]);
 
