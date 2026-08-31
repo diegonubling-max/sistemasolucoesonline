@@ -26,7 +26,7 @@ const CONTADOR_FINAL = 32; // fica em torno de 30-35 no exato fim do vídeo
 // Tempo (em segundos de vídeo) em que a tarja do cupom e o botão de matrícula aparecem,
 // simulando o "reveal" de uma VSL (pedido do Diego, 29/08/2026). Por enquanto fixo pra teste —
 // dá pra tornar configurável por webinário depois se ele confirmar que ficou bom.
-const CTA_TEMPO_SEGUNDOS = 2 * 60 + 20; // 2:20
+const CTA_TEMPO_SEGUNDOS = 49 * 60 + 22; // 49:22
 
 function getEspectadoresSimulados(videoTime: number, duracaoVideo: number): number {
   if (videoTime < CONTADOR_RAMPA1_INICIO) return 0;
