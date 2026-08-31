@@ -23,6 +23,11 @@ const CONTADOR_PLATO_MAX = 73;
 const CONTADOR_QUEDA_SEGUNDOS_ANTES_FIM = 3 * 60; // últimos 3 minutos
 const CONTADOR_FINAL = 32; // fica em torno de 30-35 no exato fim do vídeo
 
+// Tempo (em segundos de vídeo) em que a tarja do cupom e o botão de matrícula aparecem,
+// simulando o "reveal" de uma VSL (pedido do Diego, 29/08/2026). Por enquanto fixo pra teste —
+// dá pra tornar configurável por webinário depois se ele confirmar que ficou bom.
+const CTA_TEMPO_SEGUNDOS = 2 * 60 + 20; // 2:20
+
 function getEspectadoresSimulados(videoTime: number, duracaoVideo: number): number {
   if (videoTime < CONTADOR_RAMPA1_INICIO) return 0;
 
@@ -729,6 +734,15 @@ function WebinarPage() {
 
   return (
     <div className="fixed inset-0 h-dvh bg-gray-50 text-gray-900 flex flex-col lg:flex-row overflow-hidden">
+      <style>{`
+        @keyframes webinar-marquee-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .webinar-marquee {
+          animation: webinar-marquee-scroll 18s linear infinite;
+        }
+      `}</style>
       <div className="flex flex-col flex-none min-h-0 lg:flex-1">
         <div className="flex items-center justify-between px-4 py-2 bg-[#1E3A5F] shrink-0 gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -756,6 +770,18 @@ function WebinarPage() {
         <div className="text-xs text-center bg-gray-100 text-gray-500 py-1 shrink-0">
           🔇 O vídeo inicia sem som (regra dos navegadores) — toque no botão "Ativar áudio" no vídeo
         </div>
+        {!telaCheia && videoTime >= CTA_TEMPO_SEGUNDOS && (
+          <div className="bg-yellow-400 text-black font-bold text-sm py-1.5 overflow-hidden whitespace-nowrap shrink-0">
+            <div className="inline-block webinar-marquee">
+              🎉&nbsp;&nbsp;Use o cupom promocional&nbsp;
+              <span className="underline">1627OFF</span>
+              &nbsp;e garanta sua vaga com desconto!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              🎉&nbsp;&nbsp;Use o cupom promocional&nbsp;
+              <span className="underline">1627OFF</span>
+              &nbsp;e garanta sua vaga com desconto!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+          </div>
+        )}
         <div
           ref={videoWrapperRef}
           className={
@@ -789,6 +815,16 @@ function WebinarPage() {
             {telaCheia ? <X className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
           </button>
         </div>
+        {!telaCheia && videoTime >= CTA_TEMPO_SEGUNDOS && (
+          <a
+            href="/matricula"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-base py-3 shrink-0"
+          >
+            🎓 Quero realizar minha matrícula agora
+          </a>
+        )}
         {youtubeId && !audioAtivo && (
           <button
             onClick={ativarAudio}
