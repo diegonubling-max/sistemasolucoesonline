@@ -842,6 +842,14 @@ function WebinarPage() {
           >
             {telaCheia ? <X className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
           </button>
+          {youtubeId && !audioAtivo && (
+            <button
+              onClick={ativarAudio}
+              className="fixed top-20 left-4 flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold px-4 py-2.5 rounded-full shadow-lg z-50 animate-pulse"
+            >
+              🔇 Ativar áudio
+            </button>
+          )}
         </div>
         {!telaCheia && videoTime >= CTA_TEMPO_SEGUNDOS && (
           <a
@@ -852,14 +860,6 @@ function WebinarPage() {
           >
             🎓 Quero realizar minha matrícula agora
           </a>
-        )}
-        {youtubeId && !audioAtivo && (
-          <button
-            onClick={ativarAudio}
-            className="flex items-center justify-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2.5 shrink-0"
-          >
-            🔇 Ativar áudio
-          </button>
         )}
       </div>
 
