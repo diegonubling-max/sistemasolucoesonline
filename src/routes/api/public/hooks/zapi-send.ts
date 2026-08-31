@@ -24,7 +24,7 @@ export const Route = createFileRoute("/api/public/hooks/zapi-send")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
       POST: async ({ request }) => {
-        let payload: { phone?: string; message?: string };
+        let payload: { phone?: string; message?: string; image?: string };
         try {
           payload = await request.json();
         } catch {
@@ -33,6 +33,7 @@ export const Route = createFileRoute("/api/public/hooks/zapi-send")({
 
         const phoneRaw = payload?.phone;
         const message = payload?.message;
+        const image = payload?.image;
         if (!phoneRaw || !message || typeof message !== "string") {
           return jsonResponse({ error: "phone e message obrigatórios" }, 400);
         }
@@ -47,16 +48,22 @@ export const Route = createFileRoute("/api/public/hooks/zapi-send")({
         const phone = formatPhone(String(phoneRaw));
         if (!phone) return jsonResponse({ error: "telefone inválido" }, 400);
 
+        // Com imagem: manda a foto com o texto como legenda (send-image). Sem imagem: continua
+        // mandando só texto puro (send-text), como já era — pedido do Diego, 31/08/2026, pra
+        // acompanhar a mensagem de boas-vindas (login/senha) com uma imagem de destaque.
+        const endpoint = image ? "send-image" : "send-text";
+        const body = image ? { phone, image, caption: message } : { phone, message };
+
         try {
           const res = await fetch(
-            `https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`,
+            `https://api.z-api.io/instances/${instanceId}/token/${token}/${endpoint}`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 "Client-Token": clientToken,
               },
-              body: JSON.stringify({ phone, message }),
+              body: JSON.stringify(body),
             },
           );
           const text = await res.text().catch(() => "");

@@ -57,11 +57,15 @@ async function enviarWhatsappCredenciais(telefone: string, nome: string, ctr: nu
 
   try {
     const res = await fetch(
-      `https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`,
+      `https://api.z-api.io/instances/${instanceId}/token/${token}/send-image`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", "Client-Token": clientToken },
-        body: JSON.stringify({ phone, message }),
+        body: JSON.stringify({
+          phone,
+          image: "https://sistema.supletivosolucoesonline.com.br/boas-vindas-plataforma.png",
+          caption: message,
+        }),
       },
     );
     return { sent: res.ok, status: res.status };

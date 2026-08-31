@@ -82,11 +82,16 @@ async function registrarLog(
   }
 }
 
+// Link da própria plataforma (não é o link do aluno em si, é a imagem de destaque "Seja muito
+// bem-vindo!" que acompanha a mensagem de boas-vindas com login/senha — pedido do Diego, 31/08/2026).
+const IMAGEM_BOAS_VINDAS = "https://sistema.supletivosolucoesonline.com.br/boas-vindas-plataforma.png";
+
 // Função única de envio — usada por TODOS os disparos, sem duplicação.
 export async function sendWhatsApp(
   telefone: string,
   mensagem: string,
   log?: LogCtx,
+  imagem?: string,
 ): Promise<boolean> {
   const ctx: LogCtx = log ?? { tipo: "outro" };
   if (!telefone) {
@@ -100,7 +105,7 @@ export async function sendWhatsApp(
     const res = await fetch(ZAPI_SEND_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, message: mensagem }),
+      body: JSON.stringify(imagem ? { phone, message: mensagem, image: imagem } : { phone, message: mensagem }),
     });
     const text = await res.text();
     console.log(`[zApi] '${ctx.tipo}' -> HTTP ${res.status}:`, text);
@@ -173,7 +178,7 @@ Acesse sua área de estudos em:
 👉 ${SITE_URL}
 
 Qualquer dúvida estamos à disposição! 😊`;
-  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "boas_vindas" });
+  return await sendWhatsApp(params.telefone, msg, { alunoId: params.alunoId, tipo: "boas_vindas" }, IMAGEM_BOAS_VINDAS);
 }
 
 export async function sendLembreteVencimento(params: {
