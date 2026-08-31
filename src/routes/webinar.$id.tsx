@@ -62,6 +62,19 @@ function getEspectadoresSimulados(videoTime: number, duracaoVideo: number): numb
 }
 
 export const Route = createFileRoute("/webinar/$id")({
+  head: () => ({
+    meta: [
+      { title: "Estamos ao vivo! — Soluções Online" },
+      { name: "description", content: "Participe agora da nossa aula ao vivo." },
+      { property: "og:title", content: "Estamos ao vivo! — Soluções Online" },
+      { property: "og:description", content: "Participe agora da nossa aula ao vivo." },
+      { property: "og:image", content: "https://sistema.supletivosolucoesonline.com.br/webinar-ao-vivo.png" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Estamos ao vivo! — Soluções Online" },
+      { name: "twitter:image", content: "https://sistema.supletivosolucoesonline.com.br/webinar-ao-vivo.png" },
+    ],
+  }),
   component: WebinarPage,
 });
 
