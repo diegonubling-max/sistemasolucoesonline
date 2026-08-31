@@ -395,28 +395,37 @@ function WebinarMonitor() {
           {comentarios.length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhum comentário ainda.</p>
           )}
-          {comentarios.map((c: any) => {
-            const original = c.resposta_a ? comentarios.find((o: any) => o.id === c.resposta_a) : null;
-            const jaRespondido = !c.is_admin && comentarios.some((r: any) => r.is_admin && r.resposta_a === c.id);
-            return (
-            <div key={c.id} className={`p-3 rounded-lg border ${c.is_admin ? "bg-green-50 border-green-200" : "bg-muted/30"}`}>
-              <div className="flex items-center justify-between gap-2">
-                <span className={`font-bold text-sm ${c.is_admin ? "text-green-700" : "text-[#1E3A5F]"}`}>
-                  {c.is_admin ? "✅ Escola Soluções Online" : c.nome}
-                </span>
-                <span className="text-xs text-muted-foreground shrink-0">
-                  {new Date(c.created_at).toLocaleTimeString("pt-BR")}
-                </span>
-              </div>
-              {c.is_admin && original && (
-                <div className="border-l-2 border-green-300 bg-white/60 pl-2 py-1 mb-1 text-xs text-muted-foreground">
-                  Em resposta a <span className="font-semibold">{original.nome}:</span> {original.texto}
+          {comentarios
+            .filter((c: any) => !c.is_admin) // respostas do admin são renderizadas aninhadas abaixo do comentário original, não soltas na lista
+            .map((c: any) => {
+              const respostas = comentarios.filter((r: any) => r.is_admin && r.resposta_a === c.id);
+              const jaRespondido = respostas.length > 0;
+              return (
+              <div key={c.id} className="p-3 rounded-lg border bg-muted/30 space-y-2">
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-sm text-[#1E3A5F]">{c.nome}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {new Date(c.created_at).toLocaleTimeString("pt-BR")}
+                    </span>
+                  </div>
+                  <p className="text-sm mt-0.5">{c.texto}</p>
                 </div>
-              )}
-              <p className="text-sm mt-0.5">{c.texto}</p>
-              {!c.is_admin && (
-                respostaAberta === c.id ? (
-                  <div className="flex gap-2 mt-2">
+
+                {respostas.map((r: any) => (
+                  <div key={r.id} className="ml-4 p-2 rounded-lg bg-green-50 border border-green-200">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-sm text-green-700">✅ Escola Soluções Online</span>
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {new Date(r.created_at).toLocaleTimeString("pt-BR")}
+                      </span>
+                    </div>
+                    <p className="text-sm mt-0.5">{r.texto}</p>
+                  </div>
+                ))}
+
+                {respostaAberta === c.id ? (
+                  <div className="flex gap-2">
                     <Input
                       autoFocus
                       value={textoResposta}
@@ -436,16 +445,15 @@ function WebinarMonitor() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className={`mt-1 h-7 text-xs ${jaRespondido ? "text-green-600" : "text-primary"}`}
+                    className={`h-7 text-xs ${jaRespondido ? "text-green-600" : "text-primary"}`}
                     onClick={() => { setRespostaAberta(c.id); setTextoResposta(""); }}
                   >
-                    {jaRespondido ? "✓ Respondido — responder de novo" : "Responder"}
+                    {jaRespondido ? "Responder de novo" : "Responder"}
                   </Button>
-                )
-              )}
-            </div>
-            );
-          })}
+                )}
+              </div>
+              );
+            })}
         </CardContent>
       </Card>
 
