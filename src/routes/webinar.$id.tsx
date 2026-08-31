@@ -861,7 +861,7 @@ function WebinarPage() {
                     : "text-[#2D6ADF]"
                 }`}
               >
-                {c.is_admin ? "✅ Escola Soluções Online" : c.nome}{c.replay ? " 🎥" : ""}:{" "}
+                {c.is_admin ? "✅ Escola Soluções Online" : c.nome}:{" "}
               </span>
               <span className="text-gray-800">{c.texto}</span>
             </div>
