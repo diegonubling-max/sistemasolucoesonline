@@ -527,15 +527,19 @@ function WebinarPage() {
       (window as any).pandascripttag = (window as any).pandascripttag || [];
       (window as any).pandascripttag.push(() => {
         if (destruido) return;
+        let clockIniciado = false;
         const player = new (window as any).PandaPlayer(elId, {
           onReady: () => {
             playerRef.current = player;
-            iniciarClock(
-              () => player.getCurrentTime?.(),
-              () => player.getDuration?.(),
-              (s) => player.setCurrentTime?.(s),
-              () => player.play?.(),
-            );
+            if (!clockIniciado) {
+              clockIniciado = true;
+              iniciarClock(
+                () => player.getCurrentTime?.(),
+                () => player.getDuration?.(),
+                (s) => player.setCurrentTime?.(s),
+                () => player.play?.(),
+              );
+            }
             // Reforço equivalente ao onStateChange do YouTube: confere a cada ciclo do poll
             // se o player ficou pausado sozinho e retoma.
             const pollExtra = setInterval(() => {
@@ -551,6 +555,32 @@ function WebinarPage() {
             muted: true,
           },
         });
+        // BUG encontrado em 31/08/2026 (relatado no Android): quando o PandaPlayer se conecta a
+        // um <iframe> que JÁ existe (nosso caso, pra garantir o tamanho certo — ver comentário
+        // acima), o evento onReady às vezes nunca dispara (o "handshake" com o iframe pode já ter
+        // acontecido antes da gente conseguir escutar). Sem o onReady, o relógio (poll) NUNCA
+        // começava a rodar de verdade — só recebia UMA leitura pontual de tempo quando a página
+        // voltava a ficar visível (o reforço de minimizar/reabrir), por isso os depoimentos só
+        // apareciam nesse momento, tudo de uma vez, em vez de ir surgindo continuamente. Por
+        // garantia, tenta iniciar o relógio de novo por conta própria depois de 2s e 5s, mesmo
+        // que o onReady nunca tenha disparado — os métodos do player não fazem nada (retornam
+        // undefined, sem erro) se chamados cedo demais, então essa tentativa extra é inofensiva.
+        playerRef.current = player;
+        [2000, 5000].forEach((delay) =>
+          setTimeout(() => {
+            if (destruido || clockIniciado) return;
+            const t = player.getCurrentTime?.();
+            if (typeof t === "number") {
+              clockIniciado = true;
+              iniciarClock(
+                () => player.getCurrentTime?.(),
+                () => player.getDuration?.(),
+                (s) => player.setCurrentTime?.(s),
+                () => player.play?.(),
+              );
+            }
+          }, delay),
+        );
       });
     }
 
