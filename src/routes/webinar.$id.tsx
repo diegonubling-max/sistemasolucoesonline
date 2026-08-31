@@ -509,10 +509,14 @@ function WebinarPage() {
 
     // Panda Video (pedido do Diego, 30/08/2026 — substitui o YouTube nesse webinário). API
     // oficial: https://docs.pandavideo.com/reference/player-api — carrega o script
-    // api.v2.js e instancia via PandaPlayer(elementId, {library_id, video_id, onReady}).
-    // Métodos equivalentes aos do YouTube: setCurrentTime() no lugar de seekTo(), play() no
-    // lugar de playVideo(). Não expõe um evento nativo de "pausou sozinho" tão direto quanto o
-    // onStateChange do YouTube, então o próprio poll (a cada 1s) confere isPaused() e retoma.
+    // api.v2.js e conecta a um <iframe> que a GENTE já renderiza com src próprio (mesmo padrão
+    // já usado nos vídeos de curso do sistema) — passar só o elementId sem "video_id"/"library_id"
+    // faz o PandaPlayer usar o iframe existente em vez de criar um novo do zero.
+    // IMPORTANTE (BUG encontrado em 31/08/2026): deixar o PandaPlayer criar o próprio elemento
+    // (passando video_id/library_id, sem um iframe já existente) fazia o vídeo renderizar bem
+    // pequeno, sem preencher o container — usando nosso próprio <iframe> com className="w-full
+    // h-full" (que já resolve isso nos cursos) e só conectando o PandaPlayer nele, o tamanho
+    // fica correto.
     function criarPlayerPanda() {
       const elId = `panda-player-${id}`;
       const el = document.getElementById(elId);
@@ -524,8 +528,6 @@ function WebinarPage() {
       (window as any).pandascripttag.push(() => {
         if (destruido) return;
         const player = new (window as any).PandaPlayer(elId, {
-          library_id: pandaLibraryId,
-          video_id: pandaVideoId,
           onReady: () => {
             playerRef.current = player;
             iniciarClock(
@@ -914,7 +916,15 @@ function WebinarPage() {
             usaPanda ? (
               // Panda Video só é usado pra aulas gravadas (é isso que o Diego pediu — trocar
               // o motor do webinar gravado). Aulas realmente ao vivo continuam via YouTube.
-              <div id={`panda-player-${id}`} className="w-full h-full" />
+              // Iframe com src próprio (não deixamos o PandaPlayer criar o elemento sozinho —
+              // isso fazia o vídeo renderizar pequeno, sem preencher o container, BUG 31/08/2026).
+              <iframe
+                id={`panda-player-${id}`}
+                className="w-full h-full"
+                src={`${webinar.youtube_url}${webinar.youtube_url.includes("?") ? "&" : "?"}muted=true&autoplay=true`}
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                style={{ border: "none" }}
+              />
             ) : webinar.gravado ? (
               <div id={`yt-player-${id}`} className="w-full h-full" />
             ) : (
