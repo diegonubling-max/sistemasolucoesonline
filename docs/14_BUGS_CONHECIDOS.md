@@ -390,7 +390,62 @@
   3. **Silvina Rosa Alencar ficou de fora do backfill de propósito:** o registro dela em `matriculas_aulao` está com `pagamento_status = 'pendente'`, valor diferente (R$997, cartão) e `aluno_id` nulo (não linkado à matrícula real dela) — não bate com o padrão dos outros 5, então não dá pra simplesmente replicar. Precisa checar no Asaas o que realmente aconteceu com o pagamento dela antes de lançar a parcela manualmente.
 - **Status:** ✅ Código aplicado no repositório (25/08/2026, commits em `converter-matricula-aulao.ts`, `_admin.alunos.index.tsx`, `_admin.financeiro.tsx`, `SalesReport.tsx`) e 5/6 alunos com backfill feito direto no banco. ⏳ Falta só investigar o caso da Silvina Rosa Alencar (ver acima).
 
-## Conhecidos / Não Resolvidos ⚠️
+### BUG-064: Webinar — vídeo travava pausado depois do salto pro minuto certo
+- **Causa:** ao simular "entrar já no minuto certo" (seekTo do YouTube), o player às vezes ficava PAUSADO depois do salto. Como os controles ficam escondidos de propósito, o aluno não tinha nenhum jeito de retomar manualmente — nem depoimentos nem contador avançavam, já que dependem do tempo real do vídeo passando.
+- **Solução (28/08/2026):** `playVideo()` chamado explicitamente logo depois de cada `seekTo()`, mais reforço via `onStateChange` que retoma o play sozinho se o vídeo pausar em qualquer momento.
+- **Status:** ✅ Resolvido
+
+### BUG-065: Webinar — navegador embutido do WhatsApp/Instagram quebra o player
+- **Como foi descoberto:** teste real do Diego — no computador funcionou, no link aberto de dentro do WhatsApp não funcionou (vídeo tocava mas "cego": sem salto de entrada, sem depoimentos, sem contador).
+- **Causa:** o navegador embutido de apps (WhatsApp, Instagram, Facebook, WeChat, Line, ou WebView Android genérica) bloqueia a comunicação que a API do player (YouTube/Panda) precisa pra funcionar — o vídeo toca, mas não dá pra ler o tempo atual nem controlar programaticamente.
+- **Solução (28/08/2026):** função `detectarNavegadorEmbutido()` checa a UA assim que a página carrega. Android: sai sozinho pro navegador padrão via `intent://` (usuário nem percebe). iOS: mostra tela de instrução bloqueante ("toque nos ••• e escolha Abrir no Safari"), já que o WhatsApp no iPhone não permite forçar a saída programaticamente.
+- **Status:** ✅ Resolvido
+
+### BUG-066: Webinar — vídeo some da tela ao digitar comentário no mobile
+- **Causa:** o navegador mobile (Safari/Chrome) rolava a página inteira pra cima quando o teclado abria no campo de comentário, levando o vídeo junto pra fora da tela.
+- **Solução (28-29/08/2026):** container raiz com `position: fixed` (não só `h-dvh`), e reforço adicional travando o `<body>` inteiro (`position: fixed; overflow: hidden`) enquanto a página do webinar está aberta — o container fixo sozinho não bastou, o body ainda conseguia rolar por trás dele.
+- **Status:** ✅ Resolvido
+
+### BUG-067: Webinar — botão "Ativar áudio" desaparecendo (mobile e depois desktop)
+- **Histórico:** 3 tentativas até acertar. 1ª: botão dentro do vídeo (`absolute`) — sumia em telas onde o vídeo ficava mais alto que a tela toda (vídeo em aspect-ratio 16:9 baseado na largura). 2ª: botão fixo no rodapé (`fixed bottom`) — resolvia o desaparecimento, mas passou a sobrepor o campo de comentário no mobile. 3ª: botão numa barra normal logo abaixo do vídeo — voltou a sumir, dessa vez no desktop (telas largas fazem o vídeo ficar bem alto).
+- **Solução final (28-31/08/2026):** `position: fixed` no canto **superior esquerdo** da tela (`top-20 left-4`), com efeito pulsando — sempre visível, independente do tamanho do vídeo, sem sobrepor o campo de comentário (que fica embaixo, no mobile).
+- **Status:** ✅ Resolvido
+
+### BUG-068: Webinar — depoimentos só apareciam depois de minimizar e reabrir (iPhone)
+- **Causa:** o Safari/iOS pausa a execução do JavaScript da página quando ela fica em segundo plano (app minimizado) — o "relógio" que lê o tempo do vídeo e revela os depoimentos ficava parado até a pessoa voltar, e aí processava tudo de uma vez.
+- **Solução (29/08/2026):** listener de `visibilitychange` — quando a aba volta a ficar visível, força uma leitura imediata do tempo do vídeo (sem esperar o próximo ciclo do poll de 1s) e garante que o vídeo não ficou pausado nesse meio tempo.
+- **Status:** ✅ Resolvido
+
+### BUG-069: Webinar — histórico de entrada/saída não registrava reentradas
+- **Como foi descoberto:** teste real — aluna entrou, saiu, voltou; o sistema só registrou a 1ª entrada/saída, nunca a volta dela.
+- **Causa raiz:** a tabela `webinar_participantes` **não tinha policy de UPDATE pra visitante anônimo** (só INSERT e SELECT) — toda vez que o aluno reentrava ou mandava um "heartbeat", a atualização falhava **silenciosamente** por RLS, sem erro visível.
+- **Solução (29/08/2026):** adicionada a policy `anon_update` faltante + nova tabela `webinar_sessoes` (histórico completo — cada entrada/saída vira uma linha nova, não só a primeira/última). Admin ganhou botão "Histórico" por aluno na tela de monitoramento, com todas as sessões daquele aluno num modal.
+- **Status:** ✅ Resolvido
+
+### BUG-070: Webinar — vídeo do Panda renderizava pequeno, sobrando espaço preto
+- **Como foi descoberto:** print do Diego (Android e iPhone) — vídeo ocupava só um cantinho da área preta reservada pra ele.
+- **Causa:** deixar o `PandaPlayer` (API oficial do Panda Video) criar o próprio elemento do zero (passando `video_id`/`library_id`, sem um `<iframe>` já existente) fazia o player não respeitar o tamanho do container.
+- **Solução (31/08/2026):** passou a renderizar um `<iframe>` próprio com `src` direto (mesmo padrão já usado nos vídeos de curso do sistema, que sempre preenche 100% corretamente) e só conectar o `PandaPlayer` nesse iframe já existente (passando só o id do elemento) — em vez de deixar a biblioteca criar o player sozinha.
+- **Status:** ✅ Resolvido
+
+### BUG-071: Webinar — depoimentos do Panda só apareciam ao minimizar/reabrir (Android, sem estar em 2º plano)
+- **Como foi descoberto:** mesmo sintoma do BUG-068, mas dessa vez no Android e SEM precisar de segundo plano de verdade — só minimizar e reabrir na hora já resolvia, o que não bate com throttling de JS em background.
+- **Causa raiz (diferente do BUG-068):** conectar o `PandaPlayer` a um `<iframe>` que **já existe** (ver BUG-070) faz o evento `onReady` às vezes nunca disparar — o "handshake" com o iframe pode já ter acontecido antes da gente conseguir escutar. Sem o `onReady`, o relógio (poll que lê o tempo do vídeo a cada 1s) nunca começava de verdade — a única atualização de tempo vinha do reforço de "voltar a ficar visível" (BUG-068), que faz só UMA leitura pontual, revelando todos os depoimentos pendentes de uma vez só naquele momento.
+- **Solução (31/08/2026):** não depende mais só do `onReady` — tenta iniciar o relógio por conta própria depois de 2s e 5s, mesmo que o `onReady` nunca tenha disparado (seguro: os métodos do player não fazem nada se chamados cedo demais, só retornam `undefined`).
+- **Status:** ✅ Resolvido
+
+### BUG-072: Webinar Safari/iPhone — "Importing a module script failed" após deploys seguidos
+- **Como foi descoberto:** print do Diego — página em branco no Safari do iPhone com esse erro, enquanto no Android funcionava normal.
+- **Causa provável:** cache do Safari com uma versão antiga da página (HTML) tentando carregar um arquivo JS que já não existe mais no servidor, por causa dos vários deploys seguidos feitos na mesma sessão de testes.
+- **Status:** ⚠️ Não confirmado como bug de código — orientado o Diego a testar em aba anônima/recarregar sem cache antes de investigar mais a fundo. Se persistir mesmo com cache limpo, precisa investigar de verdade.
+
+### BUG-073: Editar valor/vencimento de uma parcela não atualizava a cobrança já gerada no Asaas
+- **Como foi descoberto:** Diego editou manualmente a parcela nº1 da Maria Aparecida Lopes (CTR 1772), de R$159,90/28-08 pra R$229,80/29-08. A tela do sistema já mostrava certo, mas o boleto baixado (PDF) continuou com os dados antigos.
+- **Causa:** o botão de baixar boleto sempre busca a cobrança pelo `asaas_id` já salvo na parcela — editar o valor/vencimento no banco não manda nenhuma atualização pro Asaas, então a cobrança lá continua com os dados de quando foi criada.
+- **Solução (28/08/2026):** botão novo "Cancelar e Regerar Cobrança" (ver `09_FEATURES.md`) — cancela a cobrança antiga e gera uma nova com os valores atuais, num clique só.
+- **Status:** ✅ Resolvido (feature nova) — o caso pontual da Maria Aparecida precisa o Diego clicar no botão novo pra corrigir de fato (o cancelamento da cobrança antiga não acontece retroativamente sozinho)
+
+
 
 ### BUG-015: View recebimentos com double-counting
 - **Causa:** Parcelas pagas em full também aparecem em parcelas_pagamentos, causando contagem dupla em algumas views

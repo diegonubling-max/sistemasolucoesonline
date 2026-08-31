@@ -622,20 +622,20 @@ Criado um registro em `cursos` com `is_prova_final = true`, vinculado ao segment
 ### Correção aplicada (23/07/2026)
 Diego ajustou a data-base dos 24 alunos migrados pra 01/07/2026 (em vez da data de reconstrução do banco, 17/07/2026) + 60 dias — todos liberam em 30/08/2026.
 
-## Tabelas: Sistema de Webinar (NOVAS — 23/07/2026)
+## Tabelas: Sistema de Webinar (NOVAS — 23/07/2026, expandido bastante entre 26-31/08/2026)
 
-Sistema de aula ao vivo com chat e monitoramento de presença. Vídeo em si é incorporado via link do YouTube — não há streaming próprio.
+Sistema de aula ao vivo com chat e monitoramento de presença. Vídeo incorporado via link do **YouTube** (ao vivo ou não listado) **ou Panda Video** (`youtube_url` guarda a URL de qualquer um dos dois — o sistema detecta o provedor pela URL, `pandavideo.com.br` = Panda).
 
 ### webinars
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | id | uuid PK | |
 | titulo | text | Nome da aula ao vivo |
-| youtube_url | text | Link do YouTube (ao vivo, não listado) |
+| youtube_url | text | Link de embed — YouTube **ou** Panda Video (campo genérico, nome histórico) |
 | status | text | `agendado` / `ao_vivo` / `encerrado` |
-| iniciado_em / encerrado_em | timestamptz | Preenchidos ao trocar o status |
-| gravado | boolean | Aula gravada (replay) — habilita depoimentos sincronizados por tempo |
-| modo_acesso | text | 19/08/2026. `'youtube'` (padrão) ou `'interno'` — destino do aluno depois de preencher nome/telefone: direto pro app do YouTube, ou pro player interno do sistema. Editável na listagem (badge 📺/💻 ao lado do título) a qualquer momento, inclusive já com o webinar ao vivo |
+| iniciado_em / encerrado_em | timestamptz | Preenchidos ao trocar o status. `iniciado_em` é o marco-zero usado por TUDO que depende de tempo: portaria/tolerância, salto de entrada, contador simulado |
+| gravado | boolean | Aula gravada (replay) — habilita depoimentos sincronizados, salto de entrada, contador simulado e troca o player pra API programável (YouTube IFrame API ou PandaPlayer) |
+| modo_acesso | text | 19/08/2026. `'youtube'` (padrão) ou `'interno'` — destino do aluno depois de preencher nome/telefone: direto pro app do YouTube, ou pro player interno do sistema |
 
 ### webinar_participantes
 | Coluna | Tipo | Descrição |
@@ -643,22 +643,63 @@ Sistema de aula ao vivo com chat e monitoramento de presença. Vídeo em si é i
 | id | uuid PK | |
 | webinar_id | uuid FK | |
 | nome, telefone | text | Preenchidos pelo aluno na entrada (sem login/senha) |
-| entrou_em | timestamptz | Hora de entrada |
-| saiu_em | timestamptz | Hora de saída (manual via beforeunload, ou automática por timeout de heartbeat) |
+| entrou_em | timestamptz | Hora da 1ª entrada (histórico completo de reentradas fica em `webinar_sessoes`, ver abaixo) |
+| saiu_em | timestamptz | Hora da saída mais recente (null = online agora) |
 | saida_automatica | boolean | true se detectado por timeout, não por fechamento explícito da aba |
-| ultimo_heartbeat | timestamptz | Atualizado a cada 20s pelo navegador do aluno enquanto a aba está aberta |
-| acesso_liberado | boolean (default true) | Portaria dos 10 min (05/08/2026) — false quando a pessoa tentou entrar pela 1ª vez mais de 10 min depois de `webinars.iniciado_em` e foi bloqueada. Quem já teve `acesso_liberado=true` antes é reconhecido pelo telefone e reentra a qualquer momento (ex: caiu o sinal), sem checar o horário de novo |
+| ultimo_heartbeat | timestamptz | Atualizado periodicamente pelo navegador do aluno enquanto a aba está aberta |
+| acesso_liberado | boolean (default true) | Portaria de tolerância (20 min, `TOLERANCIA_MINUTOS`) — false quando a pessoa tentou entrar pela 1ª vez depois desse prazo e foi bloqueada. Quem já teve `acesso_liberado=true` reentra a qualquer momento sem checar o horário de novo |
+- **RLS (BUG-069, 29/08/2026):** a tabela só tinha policy de `INSERT`/`SELECT` pra `anon` — faltava `UPDATE`, então reentradas e heartbeats do aluno falhavam **silenciosamente** (RLS bloqueava sem erro visível). Policy `anon_update` (`using true`, `with check true`) adicionada.
+
+### webinar_sessoes (NOVA — 29/08/2026, BUG-069)
+Histórico **completo** de entradas/saídas por participante — não só a primeira/última (que ficam em `webinar_participantes`, mantidas por compatibilidade). Toda entrada (1ª vez ou reentrada) grava uma linha nova aqui; a saída fecha a sessão em aberto mais recente.
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid PK | |
+| participante_id | uuid FK webinar_participantes (on delete cascade) | |
+| entrou_em | timestamptz NOT NULL DEFAULT now() | |
+| saiu_em | timestamptz | null = sessão em aberto (ainda online) |
+- Admin: botão "Histórico" na tabela de participantes (`/webinars/:id`) abre modal listando todas as sessões daquele aluno.
 
 ### webinar_comentarios
 Chat ao vivo — `webinar_id`, `participante_id`, `nome`, `texto`, `created_at`. Distribuído em tempo real via Supabase Realtime (Postgres Changes).
+- **is_admin** (boolean DEFAULT false, 28/08/2026) — true quando a mensagem é uma resposta da equipe (via painel admin), não um comentário de aluno. Renderizada no feed do aluno com selo verde "✅ Escola Soluções Online" (não conta pra cor laranja/azul de comentário próprio/alheio).
+- **resposta_a** (uuid FK webinar_comentarios, 28/08/2026) — quando `is_admin=true`, aponta pro comentário original que está sendo respondido. Usado pra mostrar uma citação (estilo reply do WhatsApp) acima da resposta, tanto pro aluno quanto no painel admin.
+- **Cor no chat do aluno:** própria mensagem = laranja; mensagens de outros alunos reais = azul; depoimentos roteirizados (replay) com `nome = 'Escola Soluções Online'` = laranja também (destaque, mesmo sendo replay); resposta real do admin (`is_admin`) = verde com selo ✅.
 
 ### webinar_snapshots
-Uma linha por minuto por webinar ao vivo, gravada pelo cron `webinar-presenca` — `webinar_id`, `registrado_em`, `quantidade_online`. Alimenta o gráfico de quedas no painel admin.
+Uma linha por minuto por webinar ao vivo, gravada enquanto o painel admin está aberto — `webinar_id`, `registrado_em`, `quantidade_online`. Alimenta o gráfico de quedas no painel admin (só pra webinars **realmente ao vivo**, não gravados — nesses o contador é simulado, ver abaixo).
+
+### webinar_depoimentos_replay
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | uuid PK | |
+| webinar_id | uuid FK webinars | |
+| nome | text NOT NULL | Nome de quem comentou na aula ao vivo original |
+| texto | text NOT NULL | Depoimento real |
+| timestamp_segundos | integer NOT NULL | Segundo exato do **vídeo** (não do relógio) em que reaparece pro aluno |
+| created_at | timestamptz | |
+Importados via planilha (nome, comentário, tempo) que Diego manda — Claude aplica um deslocamento (offset) pra ajustar o tempo do 1º comentário conforme pedido, mantendo a distância entre todos os outros.
 
 ### Trigger/Cron — atualizado 23/07/2026
-~~`processar_webinar_presenca()` (cron a cada minuto)~~ — **removido**. A detecção de entrada/saída agora usa o recurso de **Presence** do Supabase Realtime (websocket), que já cuida de detectar sozinho quando alguém fecha a aba ou perde conexão — sem heartbeat manual do navegador do aluno. O painel admin (`/webinars/:id`) fica escutando esse mesmo canal: ao receber um evento de saída, grava `saiu_em` no banco e atualiza o feed; a cada 1 minuto (enquanto o painel estiver aberto e a aula ao vivo), grava um snapshot em `webinar_snapshots` com a contagem em tempo real, alimentando o gráfico de quedas.
-- Realtime continua habilitado em `webinar_comentarios` (chat). `webinar_participantes` não precisa mais de Realtime via Postgres Changes — a contagem/saída usa Presence.
-- **Limitação aceita:** a gravação de saída e os snapshots dependem do painel admin estar aberto durante a aula (cenário esperado, já que o Diego assiste o painel ao vivo).
+~~`processar_webinar_presenca()` (cron a cada minuto)~~ — **removido**. A detecção de entrada/saída usa **Presence** do Supabase Realtime (websocket). O painel admin (`/webinars/:id`) escuta esse canal: ao receber evento de saída, fecha `webinar_participantes.saiu_em` E a sessão em aberto mais recente em `webinar_sessoes`; a cada 1 minuto (painel aberto + aula ao vivo de verdade), grava snapshot.
+- **Limitação aceita:** gravação de saída e snapshots dependem do painel admin estar aberto durante a aula.
+
+## Simulação de "aula ao vivo" em vídeo gravado (webinars.gravado = true)
+
+Conjunto de recursos, todos baseados no MESMO relógio (`videoTime`, lido do player a cada 1s + segundos passados desde `webinars.iniciado_em`), implementados entre 26-31/08/2026 em `webinar.$id.tsx`:
+
+- **Entrar já no minuto certo:** ao carregar, calcula `(agora - iniciado_em)` e pula o vídeo pra esse ponto (`seekTo`/`setCurrentTime`), em vez de sempre começar do zero. Reforçado em 4 tentativas (0s/1s/2,5s/4,5s) porque o player pode ainda estar em buffer no primeiro instante.
+- **Vídeo nunca pode ficar pausado:** depois de cada salto, chama `playVideo()`/`play()` explicitamente (BUG-064) + reforço contínuo via `onStateChange`/poll de `isPaused()`.
+- **Contador de espectadores simulado:** função `getEspectadoresSimulados(videoTime, duracaoVideo)` — curva roteirizada (não é gente real): 0 até 0:01, sobe devagar até 2:20, sobe rápido até 3:40, oscila entre 67-73 (soma de 2 ondas senoidais, pra não repetir padrão) até faltarem 3 min pro fim, cai gradualmente até ~32 no fim exato. Pontos de corte e faixa são ajustáveis por pedido do Diego (já foram reconfigurados mais de uma vez).
+- **Tarja + botão de matrícula (estilo VSL):** a partir de `CTA_TEMPO_SEGUNDOS` (constante, hoje 49:22), aparece uma tarja amarela deslizante (CSS `@keyframes`) com o cupom `1627OFF`, e um botão verde "Quero realizar minha matrícula agora" abrindo `/matricula` em nova aba.
+- **Navegador embutido (WhatsApp/Instagram) quebra tudo isso (BUG-065):** detecção via UA + saída automática (Android) ou tela de instrução (iOS).
+- **Sincronização ao voltar de segundo plano (BUG-068/071):** listener de `visibilitychange` força leitura imediata do tempo; no Panda especificamente, o relógio nem sempre iniciava sozinho via `onReady` (BUG-071) — reforçado com tentativas extras aos 2s/5s independente do evento.
+- **Tela cheia própria:** botão "Maximizar" não usa a Fullscreen API do navegador (não funciona bem no Safari iOS) — usa `position:fixed` cobrindo a tela inteira (CSS próprio), com botão X pra sair; tenta `screen.orientation.lock('landscape')` como bônus (best-effort).
+- **Botão "Ativar áudio":** `position:fixed` no canto superior esquerdo (`top-20 left-4`), pulsando — não fica preso nem dentro do vídeo nem embaixo dele (BUG-067, 3 tentativas até essa versão final).
+- **Panda Video (30/08/2026):** detecção automática pela URL; API oficial `https://docs.pandavideo.com/reference/player-api`. Conecta a um `<iframe>` já renderizado por nós (não deixa o `PandaPlayer` criar o elemento do zero — isso quebrava o tamanho, BUG-070). `library_id`/`video_id` extraídos da URL quando necessário; métodos equivalentes ao YouTube (`setCurrentTime` no lugar de `seekTo`, `play()` no lugar de `playVideo()`, volume 0-1 no lugar de 0-100).
+- **Meta tags Open Graph próprias** (`og:image`, 31/08/2026) — link do webinar mostra uma imagem própria ("Estamos ao vivo! Participe agora!", `public/webinar-ao-vivo.png`) ao ser compartilhado no WhatsApp, em vez do card genérico do sistema. Cuidado: WhatsApp cacheia preview de link já compartilhado antes — só reflete em links novos.
+
+
 
 ## Tabela: modelos_contrato (recriada)
 
@@ -726,18 +767,7 @@ Uma linha por minuto por webinar ao vivo, gravada pelo cron `webinar-presenca` �
 - data_assinatura (timestamptz)
 - ip_assinatura (text)
 
-### Tabela nova: webinar_depoimentos_replay
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | uuid PK | |
-| webinar_id | uuid FK webinars | |
-| nome | text NOT NULL | Nome de quem comentou na aula ao vivo original |
-| texto | text NOT NULL | Depoimento real |
-| timestamp_segundos | integer NOT NULL | Segundo exato do vídeo em que reaparece |
-| created_at | timestamptz | |
-
-### Coluna adicionada em webinars:
-- gravado (boolean DEFAULT false) — marca que é uma aula gravada (não ao vivo de verdade); habilita o replay sincronizado dos depoimentos e troca o player pra YouTube IFrame API (rastreia currentTime)
+(`webinar_depoimentos_replay` e a coluna `gravado` de `webinars` — ver seção completa "Tabelas: Sistema de Webinar", mais acima neste arquivo)
 
 ### Views novas (Dashboard — faturamento do polo):
 - view_total_recebido_mes — soma parcelas pagas no mês corrente, **excluindo taxa de matrícula** (`tipo <> 'taxa_matricula'`; usa valor_liquido se cartão, senão valor) — é o valor usado no fechamento com o responsável do polo
