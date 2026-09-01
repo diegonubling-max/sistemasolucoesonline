@@ -540,15 +540,6 @@ function WebinarPage() {
                 () => player.play?.(),
               );
             }
-            // Reforço equivalente ao onStateChange do YouTube: confere a cada ciclo do poll
-            // se o player ficou pausado sozinho e retoma.
-            const pollExtra = setInterval(() => {
-              if (destruido) {
-                clearInterval(pollExtra);
-                return;
-              }
-              if (player.isPaused?.()) player.play?.();
-            }, 1000);
           },
           playerConfigs: {
             autoplay: true,
@@ -556,19 +547,37 @@ function WebinarPage() {
           },
         });
         // BUG encontrado em 31/08/2026 (relatado no Android, e de novo em 01/09/2026 no
-        // iPhone): quando o PandaPlayer se conecta a um <iframe> que JÁ existe (nosso caso, pra
-        // garantir o tamanho certo — ver comentário acima), o evento onReady às vezes nunca
-        // dispara (o "handshake" com o iframe pode já ter acontecido antes da gente conseguir
-        // escutar). Sem o onReady, o relógio (poll) NUNCA começava a rodar de verdade — só
-        // recebia UMA leitura pontual de tempo quando a página voltava a ficar visível (o
-        // reforço de minimizar/reabrir), por isso os depoimentos só apareciam nesse momento,
-        // tudo de uma vez, em vez de ir surgindo continuamente.
-        // Primeira correção (2 tentativas fixas em 2s/5s) não bastou no iPhone — em rede mais
-        // lenta o vídeo ainda não tinha carregado nesse prazo curto. Agora fica tentando de
-        // verdade, a cada 1s, até conseguir (sem prazo de desistência formal — os métodos do
-        // player não fazem nada, só retornam undefined, se chamados cedo demais, então continuar
-        // tentando é inofensivo).
+        // iPhone, persistindo mesmo depois da 1ª correção): quando o PandaPlayer se conecta a
+        // um <iframe> que JÁ existe (nosso caso, pra garantir o tamanho certo — ver comentário
+        // acima), o evento onReady às vezes nunca dispara (o "handshake" com o iframe pode já
+        // ter acontecido antes da gente conseguir escutar). Isso quebrava DUAS coisas que
+        // dependiam dele:
+        // 1) o relógio nunca começava sozinho — corrigido antes com a tentativa insistente
+        //    abaixo, que não depende do onReady;
+        // 2) (causa real de o bug persistir) o reforço "se o vídeo pausar sozinho, retoma o
+        //    play" também só rodava dentro do onReady — ou seja, se o vídeo nunca chegasse a
+        //    tocar de verdade (autoplay bloqueado silenciosamente, comum no Safari/iPhone) ou
+        //    pausasse em algum momento, NADA tentava retomar, porque esse código nunca rodava.
+        //    getCurrentTime() continuava retornando um número válido (0, parado), então a
+        //    tentativa de iniciar o relógio "funcionava" (tecnicamente), só que o tempo nunca
+        //    avançava de verdade — por isso os depoimentos não apareciam mesmo com a correção
+        //    anterior.
+        // Agora o reforço de play roda numa verificação própria, independente do onReady,
+        // desde o instante em que o player é criado, e continua rodando pra sempre (não só
+        // durante a tentativa inicial). Chama play() sempre (não só quando isPaused() diz que
+        // está pausado) — isPaused() pode não ser confiável se o handshake nunca terminou de
+        // verdade; chamar play() num vídeo que já está tocando não faz mal nenhum.
         playerRef.current = player;
+        const forcarPlay = setInterval(() => {
+          if (destruido) {
+            clearInterval(forcarPlay);
+            return;
+          }
+          player.play?.();
+        }, 1000);
+
+        // Tentativa insistente de iniciar o relógio (não depende do onReady) — fica tentando a
+        // cada 1s, sem desistir, até getCurrentTime() responder um número válido.
         const tentativaClock = setInterval(() => {
           if (destruido || clockIniciado) {
             clearInterval(tentativaClock);
@@ -584,10 +593,6 @@ function WebinarPage() {
               (s) => player.setCurrentTime?.(s),
               () => player.play?.(),
             );
-          } else {
-            // Reforça o play mesmo antes do relógio conseguir ler o tempo — em rede lenta o
-            // autoplay pode não ter "pegado" ainda.
-            player.play?.();
           }
         }, 1000);
       });
