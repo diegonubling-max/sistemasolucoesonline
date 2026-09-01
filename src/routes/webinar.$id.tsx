@@ -265,16 +265,30 @@ function WebinarPage() {
     enabled: !!webinar?.gravado,
   });
 
-  // Recupera participante salvo localmente (evita re-cadastro ao atualizar a página)
+  // Recupera participante salvo localmente (evita re-cadastro ao atualizar/reabrir a página).
+  // BUG encontrado em 01/09/2026: isso só restaurava o estado NA TELA — nunca tocava no banco,
+  // então reabrir a mesma aba/navegador (o caso mais comum de "sair e voltar" de verdade) nunca
+  // registrava a reentrada no histórico (webinar_sessoes) nem resetava saiu_em. Só ficava
+  // registrada a 1ª entrada/saída porque só o formulário preenchido de novo (handleEntrar)
+  // passava por essa lógica — agora a restauração via localStorage faz a mesma coisa.
   useEffect(() => {
     const salvo = localStorage.getItem(`webinar_${id}_participante`);
-    if (salvo) {
-      try {
-        setParticipante(JSON.parse(salvo));
-      } catch {
-        localStorage.removeItem(`webinar_${id}_participante`);
-      }
+    if (!salvo) return;
+    let p: Participante;
+    try {
+      p = JSON.parse(salvo);
+    } catch {
+      localStorage.removeItem(`webinar_${id}_participante`);
+      return;
     }
+    setParticipante(p);
+    supabase
+      .from("webinar_participantes" as any)
+      .update({ saiu_em: null, ultimo_heartbeat: new Date().toISOString() })
+      .eq("id", p.id)
+      .then(() => {
+        supabase.from("webinar_sessoes" as any).insert({ participante_id: p.id }).then();
+      });
   }, [id]);
 
   // Acesso liberado (novo ou reentrada) — manda direto pro YouTube (app, quando possível) ou
