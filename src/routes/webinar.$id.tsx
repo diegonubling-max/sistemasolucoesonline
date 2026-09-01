@@ -555,32 +555,41 @@ function WebinarPage() {
             muted: true,
           },
         });
-        // BUG encontrado em 31/08/2026 (relatado no Android): quando o PandaPlayer se conecta a
-        // um <iframe> que JÁ existe (nosso caso, pra garantir o tamanho certo — ver comentário
-        // acima), o evento onReady às vezes nunca dispara (o "handshake" com o iframe pode já ter
-        // acontecido antes da gente conseguir escutar). Sem o onReady, o relógio (poll) NUNCA
-        // começava a rodar de verdade — só recebia UMA leitura pontual de tempo quando a página
-        // voltava a ficar visível (o reforço de minimizar/reabrir), por isso os depoimentos só
-        // apareciam nesse momento, tudo de uma vez, em vez de ir surgindo continuamente. Por
-        // garantia, tenta iniciar o relógio de novo por conta própria depois de 2s e 5s, mesmo
-        // que o onReady nunca tenha disparado — os métodos do player não fazem nada (retornam
-        // undefined, sem erro) se chamados cedo demais, então essa tentativa extra é inofensiva.
+        // BUG encontrado em 31/08/2026 (relatado no Android, e de novo em 01/09/2026 no
+        // iPhone): quando o PandaPlayer se conecta a um <iframe> que JÁ existe (nosso caso, pra
+        // garantir o tamanho certo — ver comentário acima), o evento onReady às vezes nunca
+        // dispara (o "handshake" com o iframe pode já ter acontecido antes da gente conseguir
+        // escutar). Sem o onReady, o relógio (poll) NUNCA começava a rodar de verdade — só
+        // recebia UMA leitura pontual de tempo quando a página voltava a ficar visível (o
+        // reforço de minimizar/reabrir), por isso os depoimentos só apareciam nesse momento,
+        // tudo de uma vez, em vez de ir surgindo continuamente.
+        // Primeira correção (2 tentativas fixas em 2s/5s) não bastou no iPhone — em rede mais
+        // lenta o vídeo ainda não tinha carregado nesse prazo curto. Agora fica tentando de
+        // verdade, a cada 1s, até conseguir (sem prazo de desistência formal — os métodos do
+        // player não fazem nada, só retornam undefined, se chamados cedo demais, então continuar
+        // tentando é inofensivo).
         playerRef.current = player;
-        [2000, 5000].forEach((delay) =>
-          setTimeout(() => {
-            if (destruido || clockIniciado) return;
-            const t = player.getCurrentTime?.();
-            if (typeof t === "number") {
-              clockIniciado = true;
-              iniciarClock(
-                () => player.getCurrentTime?.(),
-                () => player.getDuration?.(),
-                (s) => player.setCurrentTime?.(s),
-                () => player.play?.(),
-              );
-            }
-          }, delay),
-        );
+        const tentativaClock = setInterval(() => {
+          if (destruido || clockIniciado) {
+            clearInterval(tentativaClock);
+            return;
+          }
+          const t = player.getCurrentTime?.();
+          if (typeof t === "number") {
+            clockIniciado = true;
+            clearInterval(tentativaClock);
+            iniciarClock(
+              () => player.getCurrentTime?.(),
+              () => player.getDuration?.(),
+              (s) => player.setCurrentTime?.(s),
+              () => player.play?.(),
+            );
+          } else {
+            // Reforça o play mesmo antes do relógio conseguir ler o tempo — em rede lenta o
+            // autoplay pode não ter "pegado" ainda.
+            player.play?.();
+          }
+        }, 1000);
       });
     }
 
