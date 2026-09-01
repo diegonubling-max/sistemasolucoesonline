@@ -141,6 +141,20 @@ await fetch('/api/public/hooks/zapi-send', {
 });
 ```
 
+### Envio com imagem (31/08/2026)
+`zapi-send.ts` aceita um campo opcional `image` (URL pública) no corpo — quando presente, usa o endpoint `send-image` da Z-API em vez de `send-text`, mandando o texto como `caption` da foto (WhatsApp mostra a imagem com a legenda embaixo, tudo numa mensagem só). Usado hoje só na mensagem de boas-vindas (login/senha), com a imagem `public/boas-vindas-plataforma.png`:
+```typescript
+await fetch('/api/public/hooks/zapi-send', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    phone: telefone,
+    message: mensagem,
+    image: 'https://sistema.supletivosolucoesonline.com.br/boas-vindas-plataforma.png',
+  })
+});
+```
+
 ### Formatação de Telefone
 ```typescript
 let tel = telefone.replace(/\D/g, '');
