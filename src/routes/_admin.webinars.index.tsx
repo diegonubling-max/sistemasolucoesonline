@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Loader2, Radio, Users, Copy, Trash2, MessageSquareText } from "lucide-react";
+import { Plus, Loader2, Radio, Users, Copy, Trash2, MessageSquareText, CopyPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,8 @@ function WebinarsList() {
   const [gravado, setGravado] = useState(false);
   const [modoAcesso, setModoAcesso] = useState<"youtube" | "interno">("youtube");
   const [excluirAlvo, setExcluirAlvo] = useState<{ id: string; titulo: string } | null>(null);
+  const [duplicarAlvo, setDuplicarAlvo] = useState<any | null>(null);
+  const [tituloDuplicado, setTituloDuplicado] = useState("");
 
   const { data: webinars, isLoading } = useQuery({
     queryKey: ["webinars"],
@@ -103,6 +105,47 @@ function WebinarsList() {
       toast.success("Webinar excluído");
       qc.invalidateQueries({ queryKey: ["webinars"] });
       setExcluirAlvo(null);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  // Duplicar (01/09/2026) — o Diego mantém um webinar "molde" pronto (link do vídeo certo +
+  // depoimentos já importados) e nunca clica em Iniciar nele. Toda vez que precisa de um novo
+  // pra usar/testar, duplica esse molde — cria um webinar novo com o mesmo link/config e copia
+  // todos os depoimentos, sem precisar recriar nada nem pedir ajuda.
+  const duplicarMutation = useMutation({
+    mutationFn: async ({ original, novoTitulo }: { original: any; novoTitulo: string }) => {
+      const { data: novo, error } = await supabase
+        .from("webinars" as any)
+        .insert({
+          titulo: novoTitulo,
+          youtube_url: original.youtube_url,
+          gravado: original.gravado,
+          modo_acesso: original.modo_acesso,
+          status: "agendado",
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      const { data: depoimentos, error: depError } = await supabase
+        .from("webinar_depoimentos_replay" as any)
+        .select("nome, texto, timestamp_segundos")
+        .eq("webinar_id", original.id);
+      if (depError) throw depError;
+
+      if (depoimentos && depoimentos.length > 0) {
+        const linhas = (depoimentos as any[]).map((d) => ({ ...d, webinar_id: (novo as any).id }));
+        const { error: insertError } = await supabase.from("webinar_depoimentos_replay" as any).insert(linhas);
+        if (insertError) throw insertError;
+      }
+      return { total: depoimentos?.length ?? 0 };
+    },
+    onSuccess: ({ total }) => {
+      toast.success(`Webinar duplicado! ${total} depoimentos copiados.`);
+      qc.invalidateQueries({ queryKey: ["webinars"] });
+      setDuplicarAlvo(null);
+      setTituloDuplicado("");
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -203,6 +246,17 @@ function WebinarsList() {
                           Encerrar
                         </Button>
                       )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Duplicar (cria um novo com o mesmo vídeo e os mesmos depoimentos)"
+                        onClick={() => {
+                          setDuplicarAlvo(w);
+                          setTituloDuplicado(`${w.titulo} - Cópia`);
+                        }}
+                      >
+                        <CopyPlus className="h-4 w-4" />
+                      </Button>
                       <Button size="icon" variant="ghost" title="Excluir" onClick={() => setExcluirAlvo({ id: w.id, titulo: w.titulo })}>
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
@@ -266,6 +320,38 @@ function WebinarsList() {
             <Button onClick={() => criarMutation.mutate()} disabled={!titulo.trim() || criarMutation.isPending}>
               {criarMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!duplicarAlvo} onOpenChange={(v) => !v && setDuplicarAlvo(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicar webinar</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Cria um webinar novo com o mesmo vídeo e copia todos os depoimentos de{" "}
+              <strong>{duplicarAlvo?.titulo}</strong>. O original continua intacto.
+            </p>
+            <div>
+              <Label>Nome do novo webinar</Label>
+              <Input
+                autoFocus
+                value={tituloDuplicado}
+                onChange={(e) => setTituloDuplicado(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDuplicarAlvo(null)}>Cancelar</Button>
+            <Button
+              onClick={() => duplicarAlvo && duplicarMutation.mutate({ original: duplicarAlvo, novoTitulo: tituloDuplicado })}
+              disabled={!tituloDuplicado.trim() || duplicarMutation.isPending}
+            >
+              {duplicarMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Duplicar
             </Button>
           </DialogFooter>
         </DialogContent>
