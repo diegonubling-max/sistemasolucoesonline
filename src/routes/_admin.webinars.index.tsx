@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Loader2, Radio, Users, Copy, Trash2, MessageSquareText, CopyPlus } from "lucide-react";
+import { Plus, Loader2, Radio, Users, Copy, Trash2, MessageSquareText, CopyPlus, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -187,6 +187,11 @@ function WebinarsList() {
                   <TableRow key={w.id}>
                     <TableCell className="font-medium">
                       {w.titulo}
+                      {w.protegido && (
+                        <Badge className="ml-2 align-middle bg-gray-700 text-white" title="Molde protegido — duplique em vez de excluir ou editar">
+                          🔒 Molde
+                        </Badge>
+                      )}
                       <button
                         type="button"
                         onClick={() => gravadoMutation.mutate({ id: w.id, gravado: !w.gravado })}
@@ -257,9 +262,15 @@ function WebinarsList() {
                       >
                         <CopyPlus className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" title="Excluir" onClick={() => setExcluirAlvo({ id: w.id, titulo: w.titulo })}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
+                      {w.protegido ? (
+                        <Button size="icon" variant="ghost" disabled title="Protegido contra exclusão (é o webinar molde)">
+                          <Lock className="h-4 w-4 text-gray-300" />
+                        </Button>
+                      ) : (
+                        <Button size="icon" variant="ghost" title="Excluir" onClick={() => setExcluirAlvo({ id: w.id, titulo: w.titulo })}>
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
