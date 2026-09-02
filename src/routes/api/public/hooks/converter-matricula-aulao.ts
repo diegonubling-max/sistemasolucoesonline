@@ -236,8 +236,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             return jsonResponse({ error: matriculaNovaError?.message || "Erro ao criar matrícula" }, 500);
           }
 
-          // 4.1 Registrar a(s) parcela(s) do pagamento já confirmado (BUG-063, 24/08/2026 + ajuste
-          // de 25/08/2026 quando o PIX de entrada do boleto passou a cobrar taxa + 1ª parcela juntos).
+          // 4.1 Registrar a(s) parcela(s) do pagamento já confirmado (BUG-063, 24/08/2026).
           // Sem isso a matrícula fica sem NENHUM registro em `parcelas`, mesmo com o pagamento já
           // confirmado no Asaas (a informação de pagamento só existia em `matriculas_aulao`).
           // - view_taxas_recebidas_mes soma tipo='taxa_matricula' em "Taxas de Matrícula no Mês";
@@ -245,85 +244,49 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
           //   (senão contaria duas vezes como faturamento normal);
           // - a lista de Alunos só desliga o alerta "Financeiro não cadastrado" (💲) quando existe
           //   parcela com tipo diferente de 'taxa_matricula'.
-          // No boleto, o PIX de entrada (R$229,80) cobra a taxa (R$69,90) + a 1ª parcela (R$159,90)
-          // juntos numa cobrança só — por isso, aqui, são gravadas DUAS parcelas separadas (uma
-          // taxa_matricula + uma parcela nº1 de verdade), em vez de jogar o valor inteiro como taxa
-          // (isso inflaria "Taxas de Matrícula no Mês" e não contaria a 1ª parcela como recebida).
-          // No cartão (cobrança única do curso inteiro), continua uma única parcela taxa_matricula,
-          // como antes.
+          // Revertido em 01/09/2026 a pedido do Diego: o PIX de entrada do boleto voltou a cobrar
+          // só a taxa (R$69,90), como era antes de 25/08 — removida a geração automática das
+          // parcelas 2-10 (não fazia mais sentido gerar parcelas futuras sem a 1ª ter sido paga
+          // junto). Pagamento "à vista no PIX" (opção nova, mesma data) é tratado como parcela de
+          // verdade (não taxa), já que é o valor cheio do curso pago de uma vez, não uma taxa de
+          // matrícula — mesma lógica usada pro cartão de crédito à vista/parcelado.
           const TAXA_MATRICULA = 69.9;
           const formaPagamentoConfirmada = (matricula.forma_pagamento || matricula.pagamento_forma_manual || "boleto").toLowerCase();
           const dataPagamentoParcela = (matricula.pagamento_confirmado_em || matricula.created_at || new Date().toISOString()).slice(0, 10);
           const valorTotalPago = Number(matricula.pagamento_valor ?? TAXA_MATRICULA);
 
-          const parcelasParaInserir: any[] = [];
-          if (formaPagamentoConfirmada === "boleto" && valorTotalPago > TAXA_MATRICULA) {
-            const valorPrimeiraParcela = Math.round((valorTotalPago - TAXA_MATRICULA) * 100) / 100;
-            parcelasParaInserir.push({
-              matricula_id: novaMatricula.id,
-              polo_id: matricula.polo_id || POLO_ID_FLORIPA,
-              numero: 0,
-              tipo: "taxa_matricula",
-              descricao: "Taxa de Matrícula (Aulão)",
-              valor: TAXA_MATRICULA,
-              status: "pago",
-              forma_pagamento: formaPagamentoConfirmada,
-              data_vencimento: dataPagamentoParcela,
-              data_pagamento: dataPagamentoParcela,
-              asaas_id: matricula.asaas_payment_id || null,
-            });
-            parcelasParaInserir.push({
-              matricula_id: novaMatricula.id,
-              polo_id: matricula.polo_id || POLO_ID_FLORIPA,
-              numero: 1,
-              tipo: "parcela",
-              descricao: "Parcela 1/10 (Aulão)",
-              valor: valorPrimeiraParcela,
-              status: "pago",
-              forma_pagamento: formaPagamentoConfirmada,
-              data_vencimento: dataPagamentoParcela,
-              data_pagamento: dataPagamentoParcela,
-              asaas_id: matricula.asaas_payment_id || null,
-            });
-
-            // Gera o plano completo de 10 parcelas do boleto (1+9) de uma vez, a pedido do Diego
-            // (25/08/2026): nº1 já paga (junto com a taxa, no PIX de entrada); nº2 a nº10 ficam em
-            // aberto, cada uma vencendo no MESMO DIA do mês seguinte à anterior (ex: nº1 paga
-            // 25/08 → nº2 vence 25/09 → nº3 vence 25/10, e assim por diante) — não é "+30 dias
-            // corridos" (isso faria a data derivar, ex: 25/08 + 30d = 24/09, não 25/09). Sem dar
-            // baixa em nenhuma delas além da nº1.
-            const TOTAL_PARCELAS_BOLETO = 10;
-            const dataBaseParcela1 = new Date(`${dataPagamentoParcela}T00:00:00`);
-            for (let numeroParcela = 2; numeroParcela <= TOTAL_PARCELAS_BOLETO; numeroParcela++) {
-              const vencimento = new Date(dataBaseParcela1);
-              vencimento.setMonth(vencimento.getMonth() + (numeroParcela - 1));
-              parcelasParaInserir.push({
-                matricula_id: novaMatricula.id,
-                polo_id: matricula.polo_id || POLO_ID_FLORIPA,
-                numero: numeroParcela,
-                tipo: "parcela",
-                descricao: `Parcela ${numeroParcela}/${TOTAL_PARCELAS_BOLETO} (Aulão)`,
-                valor: valorPrimeiraParcela,
-                status: "aberto",
-                forma_pagamento: formaPagamentoConfirmada,
-                data_vencimento: vencimento.toISOString().slice(0, 10),
-              });
-            }
-          } else {
-            parcelasParaInserir.push({
-              matricula_id: novaMatricula.id,
-              polo_id: matricula.polo_id || POLO_ID_FLORIPA,
-              numero: 0,
-              tipo: "taxa_matricula",
-              descricao: "Taxa de Matrícula (Aulão)",
-              valor: valorTotalPago,
-              status: "pago",
-              forma_pagamento: formaPagamentoConfirmada,
-              data_vencimento: dataPagamentoParcela,
-              data_pagamento: dataPagamentoParcela,
-              asaas_id: matricula.asaas_payment_id || null,
-            });
-          }
+          const parcelasParaInserir: any[] =
+            formaPagamentoConfirmada === "avista"
+              ? [
+                  {
+                    matricula_id: novaMatricula.id,
+                    polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+                    numero: 1,
+                    tipo: "parcela",
+                    descricao: "Pagamento à Vista (Aulão)",
+                    valor: valorTotalPago,
+                    status: "pago",
+                    forma_pagamento: formaPagamentoConfirmada,
+                    data_vencimento: dataPagamentoParcela,
+                    data_pagamento: dataPagamentoParcela,
+                    asaas_id: matricula.asaas_payment_id || null,
+                  },
+                ]
+              : [
+                  {
+                    matricula_id: novaMatricula.id,
+                    polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+                    numero: 0,
+                    tipo: "taxa_matricula",
+                    descricao: "Taxa de Matrícula (Aulão)",
+                    valor: valorTotalPago,
+                    status: "pago",
+                    forma_pagamento: formaPagamentoConfirmada,
+                    data_vencimento: dataPagamentoParcela,
+                    data_pagamento: dataPagamentoParcela,
+                    asaas_id: matricula.asaas_payment_id || null,
+                  },
+                ];
 
           const { error: parcelaError } = await supabase.from("parcelas").insert(parcelasParaInserir);
           if (parcelaError) {

@@ -25,7 +25,7 @@ export const Route = createFileRoute("/matricula")({
 });
 
 type Step = 0 | 1 | 2;
-type FormaPag = "boleto" | "cartao";
+type FormaPag = "boleto" | "cartao" | "avista";
 
 interface DadosAluno {
   nome: string;
@@ -91,10 +91,12 @@ function parseDateBR(value: string): string | null {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-const PLANOS: Record<FormaPag, { entrada: string; qtdParc: string; parcelasExibicao: string; valorParc: string; total: string }> = {
+const PLANOS: Record<"boleto" | "cartao", { entrada: string; qtdParc: string; parcelasExibicao: string; valorParc: string; total: string }> = {
   boleto: { entrada: "69,90", qtdParc: "10", parcelasExibicao: "1 + 9", valorParc: "159,90", total: "1.668,90" },
   cartao: { entrada: "69,90", qtdParc: "12", parcelasExibicao: "12", valorParc: "259,90", total: "3.188,70" },
 };
+
+const VALOR_AVISTA = "1.198,80";
 
 // Voucher da aula ao vivo — quem assiste ganha condição especial no cartão (12x R$119,90 em vez de 12x R$259,90)
 const VOUCHER_CODE = "1627off";
@@ -282,8 +284,10 @@ function MatriculaPublicaPage() {
 
   const contratoHtml = useMemo(() => {
     if (!modelo?.conteudo_html || !forma) return "";
-    const plano = forma === "cartao" ? planoCartaoAtual : PLANOS[forma];
-    const formaLabel = forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito";
+    const plano = forma === "cartao" ? planoCartaoAtual : forma === "avista"
+      ? { entrada: VALOR_AVISTA, parcelasExibicao: "1 (à vista)", valorParc: VALOR_AVISTA, total: VALOR_AVISTA }
+      : PLANOS[forma];
+    const formaLabel = forma === "boleto" ? "Boleto Bancário" : forma === "avista" ? "Pix à Vista" : "Cartão de Crédito";
     let html = modelo.conteudo_html;
     const variables: Record<string, string> = {
       "[NOME_ALUNO]": dados.nome,
@@ -399,7 +403,7 @@ function MatriculaPublicaPage() {
     <tr><td style="padding:4px 8px;color:#555;">CPF do signatário:</td><td style="padding:4px 8px;"><strong>${dados.cpf}</strong></td></tr>
     <tr><td style="padding:4px 8px;color:#555;">Data e hora:</td><td style="padding:4px 8px;"><strong>${dataHoraAssinatura}</strong></td></tr>
     <tr><td style="padding:4px 8px;color:#555;">Código de validação:</td><td style="padding:4px 8px;font-family:monospace;"><strong>${codigoValidacao}</strong></td></tr>
-    <tr><td style="padding:4px 8px;color:#555;">Forma de pagamento:</td><td style="padding:4px 8px;"><strong>${forma === "boleto" ? "Boleto Bancário" : "Cartão de Crédito"}</strong></td></tr>
+    <tr><td style="padding:4px 8px;color:#555;">Forma de pagamento:</td><td style="padding:4px 8px;"><strong>${forma === "boleto" ? "Boleto Bancário" : forma === "avista" ? "Pix à Vista" : "Cartão de Crédito"}</strong></td></tr>
   </table>
   <div style="margin-top:12px;padding-top:8px;border-top:1px solid #ddd;color:#777;font-size:10px;text-align:center;">
     Este termo foi aceito eletronicamente conforme MP 2.200-2/2001 e art. 784, §4º do CPC.<br>
@@ -455,7 +459,7 @@ function MatriculaPublicaPage() {
         utm_content: utmSucesso.utm_content,
         utm_term: utmSucesso.utm_term,
         content_category: contentCategoryFromUtm(utmSucesso),
-        content_name: forma === "boleto" ? "matricula_aulao_boleto" : "matricula_aulao_cartao",
+        content_name: forma === "boleto" ? "matricula_aulao_boleto" : forma === "avista" ? "matricula_aulao_avista" : "matricula_aulao_cartao",
       });
 
       setSucesso({ jaExistia: false, matriculaId: matriculaId!, formaPagamento: forma! });
@@ -477,9 +481,10 @@ function MatriculaPublicaPage() {
 
   const converterAcesso = async () => {
     if (!sucesso) return;
+    const isAvistaAcesso = sucesso.formaPagamento === "avista";
     if (!purchaseFired) {
       const utmCompra = getUtm();
-      const valorPago = typeof pagResult?.value === "number" ? pagResult.value : 229.80;
+      const valorPago = typeof pagResult?.value === "number" ? pagResult.value : 69.90;
       (window as any).fbq?.("track", "Purchase", {
         value: valorPago,
         currency: "BRL",
@@ -489,7 +494,7 @@ function MatriculaPublicaPage() {
         utm_content: utmCompra.utm_content,
         utm_term: utmCompra.utm_term,
         content_category: contentCategoryFromUtm(utmCompra),
-        content_name: pagResult?.billing_type === "CREDIT_CARD" ? "matricula_aulao_cartao" : "taxa_matricula_aulao",
+        content_name: pagResult?.billing_type === "CREDIT_CARD" ? "matricula_aulao_cartao" : isAvistaAcesso ? "matricula_aulao_avista" : "taxa_matricula_aulao",
       });
       setPurchaseFired(true);
     }
@@ -525,7 +530,7 @@ function MatriculaPublicaPage() {
     return () => clearInterval(interval);
   }, [sucesso, pagResult, acessoCriado]);
 
-  const gerarPagamento = async (billingType: "PIX" | "CREDIT_CARD", ccData?: any) => {
+  const gerarPagamento = async (billingType: "PIX" | "CREDIT_CARD", ccData?: any, opts?: { avista?: boolean }) => {
     if (!sucesso) return;
     setPagLoading(true);
     setPagErro(null);
@@ -535,6 +540,7 @@ function MatriculaPublicaPage() {
         billing_type: billingType,
         installment_count: billingType === "CREDIT_CARD" ? parcelas : undefined,
         voucher_code: voucherCode,
+        avista: opts?.avista || undefined,
       };
       if (billingType === "CREDIT_CARD" && ccData) {
         body.credit_card = ccData;
@@ -618,6 +624,7 @@ function MatriculaPublicaPage() {
 
   if (sucesso) {
     const isBoleto = sucesso.formaPagamento === "boleto";
+    const isAvista = sucesso.formaPagamento === "avista";
 
     if (pagResult) {
       return (
@@ -653,7 +660,10 @@ function MatriculaPublicaPage() {
               ) : pagResult.billing_type === "PIX" && pagResult.pix_qr_code ? (
                 <>
                   <h1 className="text-2xl font-bold">Escaneie o QR Code para pagar</h1>
-                  <p className="text-muted-foreground text-sm">Taxa de matrícula + 1ª parcela: <strong>R$ 229,80</strong></p>
+                  <p className="text-muted-foreground text-sm">
+                    {isAvista ? "Pagamento à vista" : "Taxa de matrícula"}:{" "}
+                    <strong>R$ {Number(pagResult.value ?? 0).toFixed(2).replace(".", ",")}</strong>
+                  </p>
                   <div className="flex justify-center">
                     <img
                       src={`data:image/png;base64,${pagResult.pix_qr_code}`}
@@ -737,7 +747,7 @@ function MatriculaPublicaPage() {
 
             {isBoleto ? (
               <div className="space-y-3">
-                <p className="text-sm font-medium text-center">Pague a taxa de matrícula + 1ª parcela via PIX — rápido e seguro:</p>
+                <p className="text-sm font-medium text-center">Pague a taxa de matrícula via PIX — rápido e seguro:</p>
                 <Button
                   className="w-full h-auto whitespace-normal bg-green-600 hover:bg-green-700 text-base py-3 leading-tight"
                   onClick={() => gerarPagamento("PIX")}
@@ -747,9 +757,28 @@ function MatriculaPublicaPage() {
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PIX...</>
                   ) : (
                     <span className="text-center">
-                      💰 Pagar Taxa de Matrícula + 1ª Parcela
+                      💰 Pagar Taxa de Matrícula
                       <br />
-                      R$ 229,80
+                      R$ 69,90
+                    </span>
+                  )}
+                </Button>
+              </div>
+            ) : isAvista ? (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-center">Pague o valor total à vista via PIX — rápido e seguro:</p>
+                <Button
+                  className="w-full h-auto whitespace-normal bg-green-600 hover:bg-green-700 text-base py-3 leading-tight"
+                  onClick={() => gerarPagamento("PIX", undefined, { avista: true })}
+                  disabled={pagLoading}
+                >
+                  {pagLoading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Gerando PIX...</>
+                  ) : (
+                    <span className="text-center">
+                      ⚡ Pagar À Vista
+                      <br />
+                      R$ {VALOR_AVISTA}
                     </span>
                   )}
                 </Button>
@@ -977,6 +1006,15 @@ function MatriculaPublicaPage() {
                     <div className="text-3xl mb-1">📄</div>
                     <div className="font-semibold">Boleto Bancário</div>
                     <div className="text-sm text-muted-foreground">Taxa de matrícula de R$ 69,90 + 1 + 9 parcelas de R$ 159,90</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForma("avista")}
+                    className={`border rounded-lg p-4 text-left transition ${forma === "avista" ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500" : "border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <div className="text-3xl mb-1">⚡</div>
+                    <div className="font-semibold">À Vista no Pix</div>
+                    <div className="text-sm text-muted-foreground">Pagamento único de R$ {VALOR_AVISTA}</div>
                   </button>
                   <button
                     type="button"
