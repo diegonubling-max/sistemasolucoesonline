@@ -194,7 +194,12 @@ function WebinarsList() {
                       )}
                       <button
                         type="button"
-                        onClick={() => gravadoMutation.mutate({ id: w.id, gravado: !w.gravado })}
+                        onClick={() => {
+                          if (w.gravado && !window.confirm(
+                            `Desmarcar "${w.titulo}" como gravado desliga TODA a simulação de aula ao vivo (depoimentos, contador de espectadores, salto pro minuto certo). Tem certeza?`
+                          )) return;
+                          gravadoMutation.mutate({ id: w.id, gravado: !w.gravado });
+                        }}
                         title={w.gravado ? "Clique pra desmarcar como gravada" : "Clique pra marcar como aula gravada"}
                       >
                         <Badge className={`ml-2 align-middle cursor-pointer ${w.gravado ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400"}`}>

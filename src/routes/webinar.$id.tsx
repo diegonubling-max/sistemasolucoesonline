@@ -981,7 +981,7 @@ function WebinarPage() {
               <iframe
                 id={`panda-player-${id}`}
                 className="w-full h-full"
-                src={`${webinar.youtube_url}${webinar.youtube_url.includes("?") ? "&" : "?"}muted=true&autoplay=true`}
+                src={`${webinar.youtube_url}${webinar.youtube_url.includes("?") ? "&" : "?"}muted=true&autoplay=true&controls=fullscreen&smartAutoplay=false`}
                 allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
                 style={{ border: "none" }}
               />
