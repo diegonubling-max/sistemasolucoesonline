@@ -634,8 +634,9 @@ Sistema de aula ao vivo com chat e monitoramento de presença. Vídeo incorporad
 | youtube_url | text | Link de embed — YouTube **ou** Panda Video (campo genérico, nome histórico) |
 | status | text | `agendado` / `ao_vivo` / `encerrado` |
 | iniciado_em / encerrado_em | timestamptz | Preenchidos ao trocar o status. `iniciado_em` é o marco-zero usado por TUDO que depende de tempo: portaria/tolerância, salto de entrada, contador simulado |
-| gravado | boolean | Aula gravada (replay) — habilita depoimentos sincronizados, salto de entrada, contador simulado e troca o player pra API programável (YouTube IFrame API ou PandaPlayer) |
+| gravado | boolean | Aula gravada (replay) — habilita depoimentos sincronizados, salto de entrada, contador simulado e troca o player pra API programável (YouTube IFrame API ou PandaPlayer). **CUIDADO (BUG-076):** desligar isso sem querer desativa TODA a simulação de uma vez — o selo clicável "🎥 Gravado" na lista fica fácil de esbarrar; desmarcar pede confirmação desde 01/09/2026 |
 | modo_acesso | text | 19/08/2026. `'youtube'` (padrão) ou `'interno'` — destino do aluno depois de preencher nome/telefone: direto pro app do YouTube, ou pro player interno do sistema |
+| protegido | boolean DEFAULT false | 01/09/2026. Marca o webinar "molde" (**"As 3 formas de concluir os estudos"**, mantido de propósito, nunca clicado em Iniciar) — trigger `trg_impedir_exclusao_webinar_protegido` bloqueia qualquer `DELETE` na linha (funciona mesmo fora da tela normal). Na tela, o botão de excluir vira um cadeado desabilitado pra esses registros. Fluxo de uso: duplicar esse webinar (botão "Duplicar" na lista) toda vez que precisar de um novo pra usar/testar, em vez de recriar do zero |
 
 ### webinar_participantes
 | Coluna | Tipo | Descrição |

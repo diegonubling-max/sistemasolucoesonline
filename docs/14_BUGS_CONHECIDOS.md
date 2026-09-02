@@ -445,6 +445,24 @@
 - **Solução (28/08/2026):** botão novo "Cancelar e Regerar Cobrança" (ver `09_FEATURES.md`) — cancela a cobrança antiga e gera uma nova com os valores atuais, num clique só.
 - **Status:** ✅ Resolvido (feature nova) — o caso pontual da Maria Aparecida precisa o Diego clicar no botão novo pra corrigir de fato (o cancelamento da cobrança antiga não acontece retroativamente sozinho)
 
+### BUG-074: Webinar — reabrir a mesma aba/navegador não registrava reentrada no histórico
+- **Como foi descoberto:** teste real — só ficava registrada a 1ª entrada/saída de cada aluno, mesmo quando ele claramente saiu e voltou várias vezes.
+- **Causa raiz:** a restauração do participante salvo no `localStorage` (usada pra evitar pedir nome/telefone de novo ao atualizar/reabrir a página) só atualizava o estado **na tela** — nunca tocava no banco. Só a lógica de reentrada manual (formulário preenchido de novo) gravava a sessão nova em `webinar_sessoes` e resetava `saiu_em`. Como reabrir a mesma aba/navegador é o jeito mais comum de "sair e voltar" de verdade, esse caminho passava batido pelo banco.
+- **Solução (01/09/2026):** a restauração via `localStorage` agora também reseta `saiu_em` e insere uma sessão nova no histórico, igual já acontecia na reentrada manual.
+- **Status:** ✅ Resolvido
+
+### BUG-075: Webinar Panda Video — vídeo travado no iPhone mesmo depois de 2 tentativas de correção
+- **Como foi descoberto:** persistia mesmo depois do BUG-071 (retry insistente do relógio) — no iPhone, os depoimentos continuavam só aparecendo ao minimizar/reabrir.
+- **Causa raiz de verdade:** o reforço "se o vídeo pausar sozinho, retoma o play" só rodava **dentro do `onReady`** — que é justamente o evento que não dispara de forma confiável quando o `PandaPlayer` se conecta a um `<iframe>` já existente (ver BUG-070/071). Se o vídeo nunca chegasse a tocar de verdade (autoplay bloqueado silenciosamente no Safari), nada tentava dar play de novo — `getCurrentTime()` continuava retornando um número válido (0, parado), então a tentativa de iniciar o relógio "funcionava" tecnicamente, só que o tempo nunca avançava.
+- **Solução (01/09/2026):** o reforço de `play()` passou a rodar numa verificação própria, **independente do `onReady`**, chamando `play()` a cada segundo sem parar, desde o instante em que o player é criado — não só quando `isPaused()` confirma que está pausado (que também pode não ser confiável sem o handshake completo).
+- **Status:** ✅ Resolvido
+
+### BUG-076: Webinar — "gravado" desligado sem querer desativa toda a simulação de aula ao vivo
+- **Como foi descoberto:** teste real com alunos de verdade (01/09/2026) — depoimentos roteirizados não apareceram (só comentários reais), contador de espectadores mostrou o número real de gente online (não a curva simulada), e o vídeo voltava pro início toda vez que um aluno saía e voltava, em vez de pular pro minuto certo.
+- **Causa raiz:** os 3 sintomas têm uma causa só — o campo `webinars.gravado` estava `false` no webinar usado. Esse campo liga TUDO: depoimentos sincronizados, contador simulado, e o salto de entrada pro minuto certo (ver seção "Simulação de aula ao vivo" em `03_DATABASE.md`). Causa mais provável: clique acidental no selo **"🎥 Gravado"**, que fica bem do lado do título na lista de Webinars e é fácil de esbarrar sem querer.
+- **Solução (01/09/2026):** adicionada uma confirmação (`window.confirm`) antes de **desmarcar** gravado, explicando claramente o que isso desliga — assim não dá mais pra desligar sem querer com um clique único.
+- **Status:** ✅ Resolvido (proteção contra o erro humano — o webinar específico de ontem já tinha encerrado, sem correção retroativa possível)
+
 
 
 ### BUG-015: View recebimentos com double-counting
