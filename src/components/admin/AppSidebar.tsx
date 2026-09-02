@@ -36,7 +36,7 @@ const items: SidebarItem[] = [
   { title: "Alunos", url: "/alunos", icon: Users, enabled: true, perm: 'ver_alunos' },
   { title: "Cursos", url: "/cursos", icon: BookOpen, enabled: true, adminOnly: true },
   { title: "Segmentos", url: "/segmentos", icon: Tags, enabled: true, adminOnly: true },
-  { title: "Pacotes de Cursos", url: "/pacotes", icon: GraduationCap, enabled: true, adminOnly: true },
+  { title: "Pacotes", url: "/pacotes", icon: GraduationCap, enabled: true, adminOnly: true },
   { title: "Dashboard Aulão", url: "/dashboard-aulao", icon: BarChart3, enabled: true, adminOnly: true },
   { title: "Matrículas Aulão", url: "/matriculas-aulao", icon: Megaphone, enabled: true, adminOnly: true },
   { title: "Webinars", url: "/webinars", icon: Radio, enabled: true, adminOnly: true },
