@@ -192,6 +192,12 @@ function WebinarPage() {
   const [duracaoVideo, setDuracaoVideo] = useState(0);
   const chatRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
+  // Marca quando o vídeo chegou sozinho no fim (pedido do Diego, 03/09/2026): a partir daí,
+  // TODO reforço de "manter tocando" (forcarPlay, retomar no PAUSED, retomar ao voltar de
+  // segundo plano) precisa checar essa flag antes de chamar play() de novo — senão o vídeo
+  // reinicia do zero em vez de ficar travado no último frame. Só o botão "Encerrar" do admin
+  // (que muda webinar.status pra "encerrado" e troca a tela inteira) deve tirar o aluno daqui.
+  const videoTerminadoRef = useRef(false);
   const depoimentosMostradosRef = useRef<Set<string>>(new Set());
   const liveIframeRef = useRef<HTMLIFrameElement | null>(null);
   const videoWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -441,6 +447,7 @@ function WebinarPage() {
     if (!temVideoConfigurado || !webinar?.gravado || !participante) return;
     let destruido = false;
     let poll: any;
+    videoTerminadoRef.current = false;
 
     // Roda o "relógio" comum (poll de tempo/duração + salto pro minuto certo + garantir que o
     // vídeo não fica pausado) — funciona igual pros dois provedores, só troca os nomes dos
@@ -451,6 +458,12 @@ function WebinarPage() {
         if (typeof t === "number") setVideoTime(t);
         const d = getDuracao();
         if (typeof d === "number" && d > 0) setDuracaoVideo(d);
+        // Chegou no fim sozinho: trava aqui (não mexe mais no player, deixa o último frame
+        // parado na tela) e para de gastar recurso perguntando tempo/duração à toa.
+        if (typeof t === "number" && typeof d === "number" && d > 0 && t >= d - 0.75) {
+          videoTerminadoRef.current = true;
+          clearInterval(poll);
+        }
       }, 1000);
 
       // Simula "entrar ao vivo no minuto certo" (pedido do Diego, 26/08/2026): calcula quantos
@@ -511,8 +524,15 @@ function WebinarPage() {
           },
           // Reforço extra: se o player pausar sozinho em algum momento (ex: efeito colateral de
           // buffering após um seek), retoma o play automaticamente — o aluno nunca deve conseguir
-          // ver o vídeo parado, já que não existe botão de play visível pra ele mesmo.
+          // ver o vídeo parado, já que não existe botão de play visível pra ele mesmo. EXCETO
+          // quando chegou no fim de verdade (ENDED): aí trava no último frame e nunca mais chama
+          // play(), pra não reiniciar o vídeo sozinho.
           onStateChange: (event: any) => {
+            if (event?.data === (window as any).YT?.PlayerState?.ENDED) {
+              videoTerminadoRef.current = true;
+              return;
+            }
+            if (videoTerminadoRef.current) return;
             if (event?.data === (window as any).YT?.PlayerState?.PAUSED) {
               playerRef.current?.playVideo?.();
             }
@@ -587,6 +607,18 @@ function WebinarPage() {
             clearInterval(forcarPlay);
             return;
           }
+          // Checa o tempo/duração direto no player (não só a flag) antes de cada play(): se já
+          // chegou no fim, marca como terminado e para de vez — chamar play() num vídeo que já
+          // acabou faz ele reiniciar do zero em vez de ficar parado no último frame.
+          const dur = player.getDuration?.();
+          const cur = player.getCurrentTime?.();
+          if (typeof dur === "number" && dur > 0 && typeof cur === "number" && cur >= dur - 0.75) {
+            videoTerminadoRef.current = true;
+          }
+          if (videoTerminadoRef.current) {
+            clearInterval(forcarPlay);
+            return;
+          }
           player.play?.();
         }, 1000);
 
@@ -649,6 +681,7 @@ function WebinarPage() {
     // pausado nesse meio tempo.
     const aoVoltarVisivel = () => {
       if (document.visibilityState !== "visible") return;
+      if (videoTerminadoRef.current) return; // já travou no fim — não reviver o vídeo
       const t = playerRef.current?.getCurrentTime?.();
       if (typeof t === "number") setVideoTime(t);
       if (usaPanda) playerRef.current?.play?.();
