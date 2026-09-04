@@ -399,3 +399,13 @@
 - Consolidadas matrículas duplicadas + corrigido MatriculaFlow.tsx pra reaproveitar matrícula existente (BUG-037)
 - Criada automação de Pós-Venda via triggers (1º/2º/3º com regra de dias após confirmação) — nunca existia (BUG-038)
 - **A partir desta sessão: toda alteração feita no sistema deve atualizar os arquivos .md correspondentes no mesmo momento, não só ao final.**
+
+### Aulão — vídeo trava no último frame ao terminar (03/09/2026)
+- Os reforços de "manter tocando" em `webinar.$id.tsx` (forcarPlay do Panda a cada 1s, retomar em PAUSED no YouTube, retomar ao voltar de segundo plano) chamavam play() sem checar se o vídeo já tinha acabado — isso fazia a aula reiniciar sozinha em loop no final
+- Corrigido: ao detectar o fim (tempo≈duração no Panda, evento ENDED no YouTube), a flag `videoTerminadoRef` trava esses reforços — o vídeo fica parado no último frame e só sai dali quando o admin clica "Encerrar" no painel de Webinars (`webinar.status = "encerrado"`, tela já existia)
+
+### Reversão YouTube→Panda em 10 matérias (04/09/2026)
+- A pedido do Diego: revertida a migração "Panda→YouTube por playlist indexada" de 04/08/2026 (ver sessão acima) nas 10 matérias que tinham sido migradas — Biologia, Filosofia, Física, Geografia, História, Inglês, Matemática, Português, Química e Sociologia
+- Alteração só de dado: `cursos.youtube_playlist_id` e `cursos.youtube_playlist_count` zerados (`UPDATE` direto no Supabase) nesses 10 cursos — nenhum código mudou, porque `_student.aluno.curso.$id.tsx` (`resolverUrlVideo`) já cai automaticamente pro `aulas.url_video` (link do Panda) quando essas colunas estão vazias
+- O link do Panda de cada aula nunca foi apagado (ficou guardado em `aulas.url_video` o tempo todo, só não era usado enquanto a playlist do YouTube estava configurada) — reversão é 100% segura e sem perda de dado
+- Playlists do YouTube removidas (guardar aqui caso precise reverter de novo): Biologia `PLjjq9N4QfcP_6DkcymUqlMasm4bK57kKm`, Filosofia `PLjjq9N4QfcP-WrD62k1J9XOy565orbdaV`, Física `PLjjq9N4QfcP-vCM_wY1Th3HGpWCFXSAhy`, Geografia `PLjjq9N4QfcP9RmG2LluSq-56ovrldyR-J`, História `PLjjq9N4QfcP-zE4EWz3Y28w_PGeqWj-sb`, Inglês `PLjjq9N4QfcP81kptfMs4LbSBl5-gVW_Nl`, Matemática `PLjjq9N4QfcP8DnG9MvmmBJGuRkxbZck3E`, Português `PLjjq9N4QfcP-Wf2kOiCrDGcORPoRTd1e3`, Química `PLjjq9N4QfcP8MHfdmDHL-djEyewFLDWjD`, Sociologia `PLjjq9N4QfcP_78vxvEUSQNW2GZHelcYe_`
