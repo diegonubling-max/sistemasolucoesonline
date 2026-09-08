@@ -70,9 +70,14 @@
 **A Receber:**
 - Exclui: parcelas canceladas, alunos inativos
 - Badge colorida de forma de pagamento
+- Filtro: forma de pagamento (todas/boleto/cartão/PIX), além do período (04/09/2026)
 
 **Alunos em Atraso:**
 - Exclui: parcelas canceladas, isento, alunos inativos
+- Coluna e filtro de forma de pagamento (todas/boleto/cartão/PIX), igual A Receber (04/09/2026)
+
+**Recebimentos por Período:**
+- Filtros: vendedora, forma de pagamento (todas/boleto/cartão/PIX — 04/09/2026), período
 
 **Fechamento Semanal (05/08/2026):**
 - Componente `FechamentoSemanalReport.tsx` — pra fechamento periódico com um colaborador responsável de polo (ex: Felipe)
