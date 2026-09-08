@@ -73,6 +73,14 @@ function Financeiro() {
   const [selectedVendedora, setSelectedVendedora] = useState<string>("todas");
   const [selectedVendedoraRec, setSelectedVendedoraRec] = useState<string>("todas");
 
+  // Filtro por forma de pagamento (pedido do Diego, 04/09/2026) — mesma ideia em Recebimentos,
+  // A Receber, Alunos em Atraso e Matrículas por Vendedora: "todas" ou uma das 3 formas que
+  // existem no sistema (pix é sempre à vista — não existe pix parcelado nos pacotes).
+  const [formaPagamentoRec, setFormaPagamentoRec] = useState<string>("todas");
+  const [formaPagamentoAReceber, setFormaPagamentoAReceber] = useState<string>("todas");
+  const [formaPagamentoAtraso, setFormaPagamentoAtraso] = useState<string>("todas");
+  const [formaPagamentoVendedora, setFormaPagamentoVendedora] = useState<string>("todas");
+
   // Lowering status modal state
   const [baixaModal, setBaixaModal] = useState<{ 
     id: string; 
@@ -173,7 +181,7 @@ function Financeiro() {
   });
 
   const { data: recebimentos, refetch: refetchRecebimentos } = useQuery({
-    queryKey: ["financeiro-recebimentos", recPeriod, selectedVendedoraRec],
+    queryKey: ["financeiro-recebimentos", recPeriod, selectedVendedoraRec, formaPagamentoRec],
     queryFn: async () => {
       let q = (supabase as any)
         .from("view_recebimentos_periodo")
@@ -184,6 +192,9 @@ function Financeiro() {
 
       if (selectedVendedoraRec !== "todas") {
         q = q.eq("vendedora", selectedVendedoraRec);
+      }
+      if (formaPagamentoRec !== "todas") {
+        q = q.eq("forma_pagamento", formaPagamentoRec);
       }
 
       const { data, error } = await q;
@@ -198,7 +209,7 @@ function Financeiro() {
 
 
   const { data: aReceber, refetch: refetchAReceber } = useQuery({
-    queryKey: ["financeiro-a-receber", aRecPeriod, selectedPoloId, userRole, colabData],
+    queryKey: ["financeiro-a-receber", aRecPeriod, selectedPoloId, userRole, colabData, formaPagamentoAReceber],
     queryFn: async () => {
       let q = supabase
         .from("parcelas")
@@ -208,7 +219,11 @@ function Financeiro() {
         .gte("data_vencimento", aRecPeriod.start)
         .lte("data_vencimento", aRecPeriod.end)
         .order("data_vencimento", { ascending: true });
-      
+
+      if (formaPagamentoAReceber !== "todas") {
+        q = q.eq("forma_pagamento", formaPagamentoAReceber);
+      }
+
       const { data, error } = await filterByPolo(q);
       if (error) throw error;
       return data;
@@ -220,7 +235,7 @@ function Financeiro() {
 
 
   const { data: atraso, refetch: refetchAtraso } = useQuery({
-    queryKey: ["financeiro-atraso", atrasoPeriod, selectedPoloId, userRole, colabData],
+    queryKey: ["financeiro-atraso", atrasoPeriod, selectedPoloId, userRole, colabData, formaPagamentoAtraso],
     queryFn: async () => {
       let q = supabase
         .from("parcelas")
@@ -231,7 +246,11 @@ function Financeiro() {
         .gte("data_vencimento", atrasoPeriod.start)
         .lte("data_vencimento", atrasoPeriod.end)
         .order("data_vencimento", { ascending: true });
-      
+
+      if (formaPagamentoAtraso !== "todas") {
+        q = q.eq("forma_pagamento", formaPagamentoAtraso);
+      }
+
       const { data, error } = await filterByPolo(q);
       if (error) throw error;
 
@@ -244,7 +263,7 @@ function Financeiro() {
   });
 
   const { data: matriculasVendedora, refetch: refetchVendedora } = useQuery({
-    queryKey: ["financeiro-vendedora", vendedoraPeriod, selectedVendedora, selectedPoloId, userRole, colabData],
+    queryKey: ["financeiro-vendedora", vendedoraPeriod, selectedVendedora, selectedPoloId, userRole, colabData, formaPagamentoVendedora],
     queryFn: async () => {
       let query = supabase
         .from("matriculas")
@@ -324,7 +343,13 @@ function Financeiro() {
           formaPagamento,
         });
       }
-      return Array.from(byMatricula.values());
+      let matriculasArr = Array.from(byMatricula.values());
+      // Forma de pagamento vem da 1ª parcela (calculada acima) — filtro é feito aqui em vez de na
+      // query porque não dá pra filtrar direto no Supabase um campo derivado depois do agrupamento.
+      if (formaPagamentoVendedora !== "todas") {
+        matriculasArr = matriculasArr.filter((m) => (m.formaPagamento || "").toLowerCase() === formaPagamentoVendedora);
+      }
+      return matriculasArr;
     },
     enabled: activeFilter === "vendedora"
   });
@@ -462,6 +487,13 @@ function Financeiro() {
     ? Number(p.valor) - Number(p.valor_pago_total || 0)
     : Number(p.valor);
 
+  const FORMAS_PAGAMENTO = [
+    { value: "todas", label: "Todas as formas" },
+    { value: "boleto", label: "Boleto" },
+    { value: "cartao", label: "Cartão" },
+    { value: "pix", label: "PIX" },
+  ];
+
   const filterButtons = [
     { id: "recebimentos", label: "Recebimentos", sub: "por período", icon: TrendingUp },
     { id: "a_receber", label: "A Receber", sub: "por período", icon: Landmark },
@@ -540,6 +572,14 @@ function Financeiro() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={formaPagamentoRec} onValueChange={setFormaPagamentoRec}>
+                  <SelectTrigger className="w-44"><SelectValue placeholder="Forma de pagamento" /></SelectTrigger>
+                  <SelectContent>
+                    {FORMAS_PAGAMENTO.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Input type="date" className="w-40" value={recPeriod.start} onChange={(e) => setRecPeriod(p => ({ ...p, start: e.target.value }))} />
                 <span className="text-muted-foreground">até</span>
                 <Input type="date" className="w-40" value={recPeriod.end} onChange={(e) => setRecPeriod(p => ({ ...p, end: e.target.value }))} />
@@ -610,6 +650,14 @@ function Financeiro() {
                 A Receber por Período
               </h3>
               <div className="flex flex-wrap items-center gap-2">
+                <Select value={formaPagamentoAReceber} onValueChange={setFormaPagamentoAReceber}>
+                  <SelectTrigger className="w-44"><SelectValue placeholder="Forma de pagamento" /></SelectTrigger>
+                  <SelectContent>
+                    {FORMAS_PAGAMENTO.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Input type="date" className="w-40" value={aRecPeriod.start} onChange={(e) => setARecPeriod(p => ({ ...p, start: e.target.value }))} />
                 <span className="text-muted-foreground">até</span>
                 <Input type="date" className="w-40" value={aRecPeriod.end} onChange={(e) => setARecPeriod(p => ({ ...p, end: e.target.value }))} />
@@ -684,6 +732,14 @@ function Financeiro() {
                 Alunos em Atraso
               </h3>
               <div className="flex flex-wrap items-center gap-2">
+                <Select value={formaPagamentoAtraso} onValueChange={setFormaPagamentoAtraso}>
+                  <SelectTrigger className="w-44"><SelectValue placeholder="Forma de pagamento" /></SelectTrigger>
+                  <SelectContent>
+                    {FORMAS_PAGAMENTO.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Input type="date" className="w-40" value={atrasoPeriod.start} onChange={(e) => setAtrasoPeriod(p => ({ ...p, start: e.target.value }))} />
                 <span className="text-muted-foreground">até</span>
                 <Input type="date" className="w-40" value={atrasoPeriod.end} onChange={(e) => setAtrasoPeriod(p => ({ ...p, end: e.target.value }))} />
@@ -692,7 +748,7 @@ function Financeiro() {
             </div>
             <Table>
               <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Telefone</TableHead><TableHead>Descrição</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Dias em Atraso</TableHead><TableHead className="text-right">Ações</TableHead>
+                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Telefone</TableHead><TableHead>Descrição</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Dias em Atraso</TableHead><TableHead className="text-right">Ações</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {(atraso ?? []).map((p: any) => (
@@ -701,6 +757,15 @@ function Financeiro() {
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.telefone}</TableCell>
                     <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell>
+                      {p.forma_pagamento === 'pix' ? (
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none rounded-full text-xs font-bold">PIX</Badge>
+                      ) : p.forma_pagamento === 'boleto' ? (
+                        <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none rounded-full text-xs font-bold">Boleto</Badge>
+                      ) : p.forma_pagamento === 'cartao' ? (
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none rounded-full text-xs font-bold">Cartão</Badge>
+                      ) : null}
+                    </TableCell>
                     <TableCell>{formatDate(p.data_vencimento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(getValorEmAtraso(p))}</TableCell>
                     <TableCell><Badge variant="destructive">{p.diasAtraso} dias</Badge></TableCell>
@@ -711,7 +776,7 @@ function Financeiro() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {atraso?.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhum aluno em atraso no período selecionado.</TableCell></TableRow>}
+                {atraso?.length === 0 && <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Nenhum aluno em atraso no período selecionado.</TableCell></TableRow>}
               </TableBody>
             </Table>
             <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -746,6 +811,14 @@ function Financeiro() {
                       <SelectItem key={v.id} value={v.nome}>
                         {v.nome}{v.ativo === false ? " (inativa)" : ""}
                       </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={formaPagamentoVendedora} onValueChange={setFormaPagamentoVendedora}>
+                  <SelectTrigger className="w-44"><SelectValue placeholder="Forma de pagamento" /></SelectTrigger>
+                  <SelectContent>
+                    {FORMAS_PAGAMENTO.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
