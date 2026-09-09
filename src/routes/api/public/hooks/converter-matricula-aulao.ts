@@ -370,11 +370,35 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
                   },
                 ];
 
-          const { error: parcelaError } = await supabase.from("parcelas").insert(parcelasParaInserir);
+          const { data: parcelasInseridas, error: parcelaError } = await supabase
+            .from("parcelas")
+            .insert(parcelasParaInserir)
+            .select("id, status, forma_pagamento, valor, data_pagamento");
           if (parcelaError) {
             // Não bloqueia o fluxo (aluno já pagou e precisa do acesso liberado), só loga pra
             // investigação depois — igual ao padrão adotado nos webhooks do Asaas (BUG-059).
             console.error("[converter-matricula-aulao] Erro ao registrar parcela da taxa de matrícula:", parcelaError);
+          } else {
+            // BUG-079 (09/09/2026): essa conversão sempre gravou o pagamento só em `parcelas`
+            // (status="pago"), sem passar pela RPC registrar_pagamento_parcela — que é a única
+            // coisa que grava em `parcelas_pagamentos`. Resultado: recebimentos do Aulão nunca
+            // apareciam em "Recebimentos por Período" (Financeiro) nem no histórico de
+            // pagamentos da parcela, mesmo já contando certinho nos totais do Dashboard (que
+            // leem direto de `parcelas`). Espelha aqui o mesmo registro que a RPC faria.
+            const pagas = (parcelasInseridas || []).filter((p: any) => p.status === "pago");
+            if (pagas.length > 0) {
+              const { error: pagamentoError } = await supabase.from("parcelas_pagamentos").insert(
+                pagas.map((p: any) => ({
+                  parcela_id: p.id,
+                  valor_pago: p.valor,
+                  data_pagamento: p.data_pagamento,
+                  forma_pagamento: p.forma_pagamento,
+                })),
+              );
+              if (pagamentoError) {
+                console.error("[converter-matricula-aulao] Erro ao registrar em parcelas_pagamentos:", pagamentoError);
+              }
+            }
           }
 
           // 5. Liberar acesso aos cursos EJA (a Prova Final é vinculada automaticamente por trigger)

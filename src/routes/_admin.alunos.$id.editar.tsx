@@ -721,19 +721,23 @@ function EditarParcelas({ matriculaId, alunoId, aluno, parcelas, onSuccess }: an
       // BUG-061 (19/08/2026): o código espalhava o objeto inteiro do formulário direto no
       // update, incluindo campos que não são colunas reais da tabela parcelas (valor_pago,
       // parcelas_cartao, taxa_cartao) — quebrava TODO "Dar Baixa" com erro de schema.
-      const updatePayload: any = {
-        status: "pago",
-        data_pagamento: data.data_pagamento,
-        forma_pagamento: data.forma_pagamento,
-        valor_pago_total: data.valor_pago,
-      };
-      if (data.valor_liquido != null) updatePayload.valor_liquido = data.valor_liquido;
+      // BUG-079 (09/09/2026): esse "Dar Baixa" fazia um UPDATE direto na tabela parcelas, sem
+      // passar pela RPC registrar_pagamento_parcela (única coisa que grava em
+      // parcelas_pagamentos) — diferente dos outros dois "Dar Baixa" do sistema
+      // (_admin.financeiro.tsx e _admin.alunos.$id.index.tsx), que já usavam a RPC. Resultado:
+      // pagamentos dados de baixa por aqui nunca apareciam em "Recebimentos por Período"
+      // (Financeiro) nem no histórico de pagamentos da parcela. Trocado pra usar a mesma RPC.
+      const { error } = await supabase.rpc("registrar_pagamento_parcela", {
+        p_parcela_id: baixaData.id,
+        p_valor_pago: data.valor_pago,
+        p_data_pagamento: data.data_pagamento,
+        p_forma_pagamento: data.forma_pagamento,
+        p_parcelas_cartao: data.parcelas_cartao ?? null,
+        p_taxa_cartao: data.taxa_cartao ?? null,
+        p_valor_liquido: data.valor_liquido ?? null,
+        p_observacao: undefined,
+      });
 
-      const { error } = await supabase
-        .from("parcelas")
-        .update(updatePayload)
-        .eq("id", baixaData.id);
-      
       if (error) throw error;
       notifyPagamentoRecebido(baixaData.id, baixaData.valor, data.forma_pagamento);
       confirmarPagamentoAsaas(baixaData.id, data.valor_pago ?? baixaData.valor, data.data_pagamento);
