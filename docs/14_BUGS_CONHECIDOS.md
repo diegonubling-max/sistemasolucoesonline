@@ -489,6 +489,13 @@
 
 
 
+### BUG-080: Aulão — pagamento no cartão mostrava valor bruto como "Pago" em vez do líquido
+- **Como foi descoberto:** Diego comparou o financeiro de duas alunas do Aulão pagas no cartão (Wiviane Keiser CTR 1775 e Eliane Teresinha Pinto Thaines CTR 1778) — ambas mostravam "Pago: R$1.438,80" — com o de um aluno matriculado pelo fluxo normal (Wendel Kevin Gauthier, CTR 1755), que corretamente mostrava "Pago: R$1.199,10" (valor líquido, depois da taxa da operadora de cartão).
+- **Causa raiz:** o card "Pago" da tela do aluno soma `valor_liquido` quando a forma é cartão e esse campo está preenchido, senão cai pro valor bruto (`_admin.alunos.$id.index.tsx`). Toda matrícula com "Dar Baixa" manual no cartão sempre calcula e grava `valor_liquido` (via `BaixaModal.tsx`, que tem uma tabela de taxa por nº de parcelas). A conversão automática do Aulão (`converter-matricula-aulao.ts`), porém, nunca calculava isso — gravava só o valor bruto — e nem tinha como calcular, porque o nº de parcelas escolhido pelo aluno no checkout do cartão (`asaas-aulao.ts`) nunca era salvo em lugar nenhum.
+- **Solução (09/09/2026):** nova coluna `matriculas_aulao.parcelas_cartao`, preenchida no checkout (`asaas-aulao.ts`) com o nº de parcelas realmente enviado pro Asaas. `converter-matricula-aulao.ts` passou a usar esse valor + a mesma tabela de taxa por parcela do `BaixaModal.tsx` pra calcular e gravar `valor_liquido` na parcela do cartão (e a observação correspondente em `parcelas_pagamentos`).
+- **Correção pontual:** Diego confirmou que Wiviane (CTR 1775) e Eliane (CTR 1778) pagaram em 12x — `parcelas_cartao=12` preenchido retroativamente nas duas `matriculas_aulao`, e `valor_liquido` das parcelas corrigido pra R$1.199,10 (taxa de 16,66%, mesma taxa do exemplo de referência do Wendel).
+- **Status:** ✅ Resolvido
+
 ### BUG-015: View recebimentos com double-counting
 - **Causa:** Parcelas pagas em full também aparecem em parcelas_pagamentos, causando contagem dupla em algumas views
 - **Solução pendente:** Ajustar view para usar `NOT EXISTS` corretamente
