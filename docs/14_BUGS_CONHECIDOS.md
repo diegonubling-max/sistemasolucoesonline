@@ -477,6 +477,16 @@
 - **Correção pontual:** dados da Wiviane Keiser (CTR 1775) corrigidos direto no banco — a `taxa_matricula` existente ajustada pra `valor=69.90`/`status=isento`/sem data de pagamento nem `asaas_id`, e criada uma nova `parcela` nº1 com o valor real recebido (`R$1.438,80`, `status=pago`, `forma_pagamento=cartao`).
 - **Status:** ✅ Resolvido
 
+### BUG-079: Financeiro — "Recebimentos por Período" não mostrava pagamentos do Aulão nem alguns "Dar Baixa" manuais
+- **Como foi descoberto:** Diego filtrou a aba Recebimentos por Período de 01/09 a 30/09/2026 e não apareceu nada, mesmo tendo recebido dois pagamentos no cartão e uma taxa de matrícula no dia anterior (justamente os casos investigados no BUG-077/078).
+- **Causa raiz:** a view `view_recebimentos_periodo` só lê da tabela `parcelas_pagamentos`, que só é preenchida pela RPC `registrar_pagamento_parcela` (usada pelos "Dar Baixa" de `_admin.financeiro.tsx` e `_admin.alunos.$id.index.tsx`). Dois fluxos, porém, sempre gravaram o pagamento direto em `parcelas` (`status="pago"`) sem nunca passar pela RPC: (1) a conversão automática do Aulão via webhook (`converter-matricula-aulao.ts`) — ou seja, **todo** recebimento do Aulão desde que ele existe nunca apareceu nessa aba; e (2) o "Dar Baixa" da tela de editar aluno (`_admin.alunos.$id.editar.tsx`), que tinha sua própria implementação (um `UPDATE` direto) em vez de usar a mesma RPC dos outros dois "Dar Baixa". Os totais do Dashboard (`view_total_recebido_mes`, `view_taxas_recebidas_mes`) nunca tiveram esse problema por lerem direto de `parcelas` — só a listagem detalhada de Recebimentos por Período dependia de `parcelas_pagamentos`.
+- **Solução (09/09/2026):**
+  - `view_recebimentos_periodo` ganhou um `UNION ALL` com um fallback: parcelas com `status='pago'` que não têm registro em `parcelas_pagamentos` também aparecem, usando os dados da própria parcela. Corrige a exibição retroativamente, sem depender de backfill.
+  - `converter-matricula-aulao.ts` passou a inserir também em `parcelas_pagamentos` pra cada parcela que já nasce paga (espelhando a RPC).
+  - `_admin.alunos.$id.editar.tsx`: "Dar Baixa" trocado do `UPDATE` direto pra chamar `registrar_pagamento_parcela`, igual aos outros dois "Dar Baixa" do sistema — também corrige o histórico de pagamentos por parcela (`HistoricoPagamentosModal.tsx`), que também lê só de `parcelas_pagamentos` e ficava vazio pra esses casos.
+  - Backfill: as 13 parcelas pagas que já existiam sem registro em `parcelas_pagamentos` (a maioria do Aulão, mais 2 vindas do "Dar Baixa" antigo da tela de editar) foram inseridas retroativamente, com uma observação identificando o backfill.
+- **Status:** ✅ Resolvido
+
 
 
 ### BUG-015: View recebimentos com double-counting
