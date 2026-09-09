@@ -463,6 +463,20 @@
 - **Solução (01/09/2026):** adicionada uma confirmação (`window.confirm`) antes de **desmarcar** gravado, explicando claramente o que isso desliga — assim não dá mais pra desligar sem querer com um clique único.
 - **Status:** ✅ Resolvido (proteção contra o erro humano — o webinar específico de ontem já tinha encerrado, sem correção retroativa possível)
 
+### BUG-077: Aulão — pagamento no cartão gerava 3 matrículas/CTRs duplicados pro mesmo aluno
+- **Como foi descoberto:** Diego relatou aluna Wiviane Keiser com 3 matrículas geradas pra ela mesma (CTR 1773, 1774 e 1775) a partir de um único pagamento no cartão via Aulão; ele já tinha excluído manualmente as duas duplicadas (1773 e 1774).
+- **Causa raiz:** o endpoint `converter-matricula-aulao.ts` checava se a `matricula_aulao` já tinha `aluno_id` preenchido e, se não, seguia em frente criando aluno+matrícula+parcelas — sem nenhuma trava atômica entre a checagem e a criação. O Asaas manda mais de um evento de webhook pro mesmo pagamento (`PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED`, além de retries), e cada evento chama esse endpoint; como as chamadas podem ser concorrentes, mais de uma passava pela checagem "ainda não convertido" antes de qualquer uma gravar o `aluno_id`, e cada uma criava seu próprio conjunto de registros.
+- **Solução (09/09/2026):** nova coluna `matriculas_aulao.conversao_iniciada_em` + trava de concorrência atômica logo no início da conversão — um `UPDATE` condicional (`WHERE aluno_id IS NULL AND (conversao_iniciada_em IS NULL OR < 2min atrás)`) que só uma chamada consegue "ganhar"; quem não ganha reconfere se outra chamada já terminou a conversão (devolve os dados do aluno já criado) ou devolve erro 409 pra tentar de novo. Janela de 2 minutos evita deadlock permanente se uma tentativa anterior falhar no meio do caminho.
+- **Correção pontual:** as 2 matrículas duplicadas da Wiviane Keiser (CTR 1773 e 1774) já tinham sido excluídas manualmente pelo Diego antes da correção de código.
+- **Status:** ✅ Resolvido
+
+### BUG-078: Aulão — pagamento no cartão contabilizado no financeiro como se fosse só a taxa de matrícula
+- **Como foi descoberto:** junto com o BUG-077 — Diego notou que o financeiro da Wiviane Keiser (CTR 1775, pagou no cartão) mostrava o valor da matrícula inteira lançado como `taxa_matricula` recebida no cartão, em vez de faturamento de parcela de verdade.
+- **Causa raiz:** em `converter-matricula-aulao.ts`, o branch de geração de parcelas só tinha um caso especial pra `formaPagamentoConfirmada === "avista"` (PIX à vista) — cartão caía no branch padrão (mesmo tratamento de boleto), mas com uma única parcela cujo `tipo` ficava `taxa_matricula` em vez de `parcela`. Isso jogava o valor cheio recebido no cartão dentro de "Taxas de Matrícula no Mês" (que deveria só somar a taxinha de R$69,90) em vez de "Recebido de Parcelas no Mês" (faturamento real) — subestimando o faturamento e distorcendo o relatório por forma de pagamento.
+- **Solução (09/09/2026):** cartão passou a ter tratamento próprio, igual ao PIX à vista (cobrança única — quem divide em N vezes é a operadora do cartão, não o sistema): gera 2 linhas em `parcelas` — a taxa de matrícula (`tipo=taxa_matricula`) marcada como `isento` (não cobrada separadamente, já embutida na cobrança única) e uma parcela nº1 (`tipo=parcela`, `status=pago`) com o valor integral recebido no cartão.
+- **Correção pontual:** dados da Wiviane Keiser (CTR 1775) corrigidos direto no banco — a `taxa_matricula` existente ajustada pra `valor=69.90`/`status=isento`/sem data de pagamento nem `asaas_id`, e criada uma nova `parcela` nº1 com o valor real recebido (`R$1.438,80`, `status=pago`, `forma_pagamento=cartao`).
+- **Status:** ✅ Resolvido
+
 
 
 ### BUG-015: View recebimentos com double-counting
