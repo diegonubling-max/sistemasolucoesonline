@@ -162,6 +162,13 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
           };
 
           // Se for cartão, adicionar dados do cartão e parcelamento
+          // BUG-080 (09/09/2026): o nº de parcelas escolhido pelo aluno no cartão nunca era
+          // salvo em lugar nenhum — sem isso, converter-matricula-aulao.ts não tinha como
+          // calcular o valor líquido recebido (a taxa da operadora varia por nº de parcelas), e
+          // a matrícula acabava aparecendo no financeiro do aluno com o valor BRUTO como se
+          // fosse líquido. Guardado em `parcelasCartaoEscolhidas` (fora do if) pra poder salvar
+          // em matriculas_aulao.parcelas_cartao mais abaixo, independente do resultado do pagamento.
+          let parcelasCartaoEscolhidas = 1;
           if (billing_type === "CREDIT_CARD" && payload.credit_card) {
             paymentBody.creditCard = {
               holderName: payload.credit_card.holderName,
@@ -182,6 +189,7 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
             // Parcelamento: mínimo R$5 por parcela no Asaas
             const maxParcelas = Math.max(1, Math.floor(valor / 5));
             const parcelas = Math.min(payload.installment_count || 1, maxParcelas);
+            parcelasCartaoEscolhidas = parcelas;
             if (parcelas > 1) {
               paymentBody.installmentCount = parcelas;
               paymentBody.installmentValue = Math.round((valor / parcelas) * 100) / 100;
@@ -229,6 +237,7 @@ export const Route = createFileRoute("/api/public/hooks/asaas-aulao")({
             } else {
               updateData.pagamento_status = "pendente";
             }
+            updateData.parcelas_cartao = parcelasCartaoEscolhidas;
           }
 
           await supabase

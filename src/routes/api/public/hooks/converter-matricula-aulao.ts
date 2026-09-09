@@ -299,6 +299,21 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
           const dataPagamentoParcela = (matricula.pagamento_confirmado_em || matricula.created_at || new Date().toISOString()).slice(0, 10);
           const valorTotalPago = Number(matricula.pagamento_valor ?? TAXA_MATRICULA);
 
+          // BUG-080 (09/09/2026): mesma tabela de taxa da operadora de cartão usada no "Dar
+          // Baixa" manual (BaixaModal.tsx) — sem calcular o valor líquido aqui, o financeiro do
+          // aluno mostrava o valor BRUTO do cartão como se já fosse o valor líquido recebido
+          // (inconsistente com toda matrícula dada baixa manualmente no cartão, que sempre
+          // registra o líquido). `parcelas_cartao` vem do checkout (asaas-aulao.ts); se por
+          // algum motivo não tiver sido salvo (matrícula antiga, antes do BUG-080), assume 1x
+          // como fallback conservador (sem desconto de taxa).
+          const TAXAS_CARTAO: Record<number, number> = {
+            1: 4.20, 2: 6.09, 3: 7.01, 4: 7.91, 5: 8.80, 6: 9.67,
+            7: 12.59, 8: 13.42, 9: 14.25, 10: 15.06, 11: 15.87, 12: 16.66,
+          };
+          const parcelasCartao = Math.min(12, Math.max(1, Number(matricula.parcelas_cartao) || 1));
+          const taxaCartao = TAXAS_CARTAO[parcelasCartao] ?? 0;
+          const valorLiquidoCartao = Math.round((valorTotalPago - (valorTotalPago * taxaCartao) / 100) * 100) / 100;
+
           // Cartão (09/09/2026, pedido do Diego — aluna Wiviane Keiser, CTR 1775): igual ao PIX
           // à vista, é cobrança ÚNICA e integral (a operadora do cartão divide em N vezes, não o
           // sistema — mesma regra do fluxo normal de matrícula). Antes, o valor cheio do cartão
@@ -347,6 +362,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
                     tipo: "parcela",
                     descricao: "Pagamento no Cartão (Aulão)",
                     valor: valorTotalPago,
+                    valor_liquido: valorLiquidoCartao,
                     status: "pago",
                     forma_pagamento: formaPagamentoConfirmada,
                     data_vencimento: dataPagamentoParcela,
@@ -393,6 +409,12 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
                   valor_pago: p.valor,
                   data_pagamento: p.data_pagamento,
                   forma_pagamento: p.forma_pagamento,
+                  // Mesmo formato de observação que a RPC registrar_pagamento_parcela grava
+                  // pra pagamentos no cartão dados de baixa manualmente (BUG-080).
+                  observacao:
+                    p.forma_pagamento === "cartao"
+                      ? `Cartão ${parcelasCartao}x — taxa R$${((Number(p.valor) * taxaCartao) / 100).toFixed(2)} — líquido R$${valorLiquidoCartao.toFixed(2)}`
+                      : null,
                 })),
               );
               if (pagamentoError) {
