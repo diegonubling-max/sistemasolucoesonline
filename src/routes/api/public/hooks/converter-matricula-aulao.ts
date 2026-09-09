@@ -147,6 +147,50 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             return jsonResponse({ error: "Pagamento ainda não confirmado" }, 400);
           }
 
+          // Trava de concorrência (BUG relatado pelo Diego em 09/09/2026 — aluna Wiviane Keiser
+          // ganhou 3 matrículas/CTRs pra ela mesma: 1773, 1774 e 1775). Causa: o Asaas manda
+          // PAYMENT_CONFIRMED e PAYMENT_RECEIVED pro MESMO pagamento (às vezes com retry), e cada
+          // evento chama esse endpoint — sem trava, cada chamada concorrente passava pela
+          // checagem de "já convertido" (acima) ANTES de qualquer uma marcar aluno_id, então cada
+          // uma seguia em frente e criava seu próprio aluno + matrícula.
+          // Reivindica a conversão com um UPDATE condicional atômico: só segue quem conseguir
+          // gravar `conversao_iniciada_em` (ninguém tinha reivindicado ainda, ou a reivindicação
+          // anterior já passou de 2 minutos — evita travar pra sempre se uma tentativa anterior
+          // quebrou no meio do caminho).
+          const agora = new Date();
+          const reivindicacaoExpiradaAntesDe = new Date(agora.getTime() - 2 * 60 * 1000).toISOString();
+          const { data: reivindicada } = await supabase
+            .from("matriculas_aulao")
+            .update({ conversao_iniciada_em: agora.toISOString() })
+            .eq("id", matriculaAulaoId)
+            .is("aluno_id", null)
+            .or(`conversao_iniciada_em.is.null,conversao_iniciada_em.lt.${reivindicacaoExpiradaAntesDe}`)
+            .select("id")
+            .maybeSingle();
+
+          if (!reivindicada) {
+            // Não conseguiu reivindicar: outra chamada concorrente já está processando essa
+            // mesma matrícula agora (dentro dos últimos 2 minutos), ou ela terminou entre a
+            // checagem de aluno_id lá em cima e agora — reconfere antes de desistir.
+            const { data: recheck } = await supabase
+              .from("matriculas_aulao")
+              .select("aluno_id")
+              .eq("id", matriculaAulaoId)
+              .single();
+
+            if (recheck?.aluno_id) {
+              const { data: alunoExistente } = await supabase
+                .from("alunos")
+                .select("ctr, nome")
+                .eq("id", recheck.aluno_id)
+                .single();
+              const senha = alunoExistente ? gerarSenha(alunoExistente.nome) : null;
+              return jsonResponse({ ok: true, already: true, ctr: alunoExistente?.ctr, senha });
+            }
+
+            return jsonResponse({ error: "Conversão já em andamento para essa matrícula, tente novamente em instantes" }, 409);
+          }
+
           // 1. Próximo CTR disponível — pega da MESMA fonte usada pelo cadastro manual
           // (função proximo_ctr_aluno(), que puxa da sequence alunos_ctr_seq), pra nunca mais
           // ficar fora de sincronia entre os dois fluxos (isso já causou CTR duplicado de
@@ -255,6 +299,15 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
           const dataPagamentoParcela = (matricula.pagamento_confirmado_em || matricula.created_at || new Date().toISOString()).slice(0, 10);
           const valorTotalPago = Number(matricula.pagamento_valor ?? TAXA_MATRICULA);
 
+          // Cartão (09/09/2026, pedido do Diego — aluna Wiviane Keiser, CTR 1775): igual ao PIX
+          // à vista, é cobrança ÚNICA e integral (a operadora do cartão divide em N vezes, não o
+          // sistema — mesma regra do fluxo normal de matrícula). Antes, o valor cheio do cartão
+          // caía inteiro em tipo='taxa_matricula', que é somado em "Taxas de Matrícula no Mês" (a
+          // taxinha de R$69,90) em vez de "Recebido de Parcelas no Mês" (faturamento de verdade) —
+          // subestimava o faturamento real e mostrava a matrícula toda como se fosse só a taxa.
+          // Agora gera as duas linhas: a taxa de matrícula fica ISENTA (não é cobrada separada,
+          // já está embutida na cobrança única do cartão) e o valor recebido de verdade vai
+          // inteiro na parcela nº1.
           const parcelasParaInserir: any[] =
             formaPagamentoConfirmada === "avista"
               ? [
@@ -264,6 +317,35 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
                     numero: 1,
                     tipo: "parcela",
                     descricao: "Pagamento à Vista (Aulão)",
+                    valor: valorTotalPago,
+                    status: "pago",
+                    forma_pagamento: formaPagamentoConfirmada,
+                    data_vencimento: dataPagamentoParcela,
+                    data_pagamento: dataPagamentoParcela,
+                    asaas_id: matricula.asaas_payment_id || null,
+                  },
+                ]
+              : formaPagamentoConfirmada === "cartao"
+              ? [
+                  {
+                    matricula_id: novaMatricula.id,
+                    polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+                    numero: 0,
+                    tipo: "taxa_matricula",
+                    descricao: "Taxa de Matrícula (Aulão)",
+                    valor: TAXA_MATRICULA,
+                    status: "isento",
+                    forma_pagamento: formaPagamentoConfirmada,
+                    data_vencimento: dataPagamentoParcela,
+                    data_pagamento: null,
+                    asaas_id: null,
+                  },
+                  {
+                    matricula_id: novaMatricula.id,
+                    polo_id: matricula.polo_id || POLO_ID_FLORIPA,
+                    numero: 1,
+                    tipo: "parcela",
+                    descricao: "Pagamento no Cartão (Aulão)",
                     valor: valorTotalPago,
                     status: "pago",
                     forma_pagamento: formaPagamentoConfirmada,
