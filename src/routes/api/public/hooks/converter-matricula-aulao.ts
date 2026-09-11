@@ -280,6 +280,21 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
             return jsonResponse({ error: matriculaNovaError?.message || "Erro ao criar matrícula" }, 500);
           }
 
+          // BUG-081 (11/09/2026, alunas Juliana Marques CTR 1779, Jaenne Patrícia Nunes de Melo
+          // CTR 1780 e Gesica Tayane dos Santos CTR 1781): o botão "Gerar acesso (Aulão)" chama
+          // esse endpoint com `force: true` justamente pra liberar acesso ANTES do pagamento —
+          // uso legítimo, quando a equipe já combinou o pagamento por fora e não quer fazer a
+          // aluna esperar. O problema é que o bloco de registro de parcela abaixo (4.1) sempre
+          // rodava do mesmo jeito, mesmo sem pagamento confirmado de verdade — criando uma
+          // "Taxa de Matrícula (Aulão)" com status="pago" (ou virando `isento` se caísse no
+          // branch do cartão) pra uma taxa que na real NUNCA foi paga. Isso então precisava ser
+          // corrigido manualmente depois (ver correção pontual em 14_BUGS_CONHECIDOS.md). Agora
+          // só roda o bloco 4.1 quando o pagamento foi REALMENTE confirmado — acesso liberado
+          // via `force` sem pagamento confirmado não cria nenhuma parcela/taxa automaticamente;
+          // a equipe monta o pacote e as parcelas reais manualmente (como já vinha fazendo).
+          if (matricula.pagamento_status !== "confirmado") {
+            console.log(`[converter-matricula-aulao] Acesso liberado via force sem pagamento confirmado (matrícula_aulao ${matriculaAulaoId}) — nenhuma parcela/taxa criada automaticamente.`);
+          } else {
           // 4.1 Registrar a(s) parcela(s) do pagamento já confirmado (BUG-063, 24/08/2026).
           // Sem isso a matrícula fica sem NENHUM registro em `parcelas`, mesmo com o pagamento já
           // confirmado no Asaas (a informação de pagamento só existia em `matriculas_aulao`).
@@ -422,6 +437,7 @@ export const Route = createFileRoute("/api/public/hooks/converter-matricula-aula
               }
             }
           }
+          } // fim do if (pagamento_status === "confirmado") — BUG-081
 
           // 5. Liberar acesso aos cursos EJA (a Prova Final é vinculada automaticamente por trigger)
           const { data: cursosEja } = await supabase
