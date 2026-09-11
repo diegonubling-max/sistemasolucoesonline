@@ -432,3 +432,9 @@
 - Causa: o cálculo de valor líquido do cartão (tabela de taxa por nº de parcelas) só existia no "Dar Baixa" manual (`BaixaModal.tsx`); a conversão automática do Aulão nunca calculava isso, e nem tinha como — o nº de parcelas escolhido no checkout do cartão nunca era salvo
 - Corrigido: `asaas-aulao.ts` agora salva o nº de parcelas em `matriculas_aulao.parcelas_cartao`; `converter-matricula-aulao.ts` usa esse valor + a mesma tabela de taxa do `BaixaModal.tsx` pra calcular e gravar `valor_liquido`
 - Backfill: confirmado com o Diego que as duas alunas pagaram em 12x — `parcelas_cartao` e `valor_liquido` (R$1.199,10) corrigidos retroativamente pras duas
+
+### Aulão — "Gerar acesso" sem pagamento confirmado criava taxa de matrícula falsa como paga (11/09/2026)
+- Diego relatou 3 alunas (Juliana Marques CTR 1779, Jaenne Patrícia Nunes de Melo CTR 1780, Gesica Tayane dos Santos CTR 1781) com 2 "Matrícula" no financeiro — uma de R$69,90 marcada paga/isenta que nunca foi paga de verdade, e outra corretamente agendada que a equipe cadastrou na mão. Ver `14_BUGS_CONHECIDOS.md` (BUG-081)
+- Causa: o botão "Gerar acesso (Aulão)" libera acesso antes do pagamento (`force: true` em `converter-matricula-aulao.ts`, pulando a checagem de pagamento confirmado) — uso legítimo — mas o bloco que registra a parcela/taxa sempre rodava do mesmo jeito, criando uma taxa "paga" mesmo sem pagamento real
+- Corrigido: esse bloco só roda quando `pagamento_status === "confirmado"`; acesso liberado via force sem pagamento não cria mais parcela nenhuma automaticamente
+- Correção pontual: removidas as 3 taxas falsas (e os registros em `parcelas_pagamentos`) das alunas CTR 1779, 1780 e 1781 — confirmado que nenhuma comissão tinha sido gerada a partir delas

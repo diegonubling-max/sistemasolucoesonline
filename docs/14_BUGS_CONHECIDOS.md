@@ -496,6 +496,13 @@
 - **Correção pontual:** Diego confirmou que Wiviane (CTR 1775) e Eliane (CTR 1778) pagaram em 12x — `parcelas_cartao=12` preenchido retroativamente nas duas `matriculas_aulao`, e `valor_liquido` das parcelas corrigido pra R$1.199,10 (taxa de 16,66%, mesma taxa do exemplo de referência do Wendel).
 - **Status:** ✅ Resolvido
 
+### BUG-081: "Gerar acesso (Aulão)" sem pagamento confirmado criava taxa de matrícula falsa como paga
+- **Como foi descoberto:** Diego relatou 3 alunas do Aulão (Juliana Marques CTR 1779, Jaenne Patrícia Nunes de Melo CTR 1780 e Gesica Tayane dos Santos CTR 1781) com 2 linhas de "Matrícula" no financeiro cada — uma de R$69,90 marcada como paga (ou isenta), que na real nunca foi paga, e outra corretamente agendada (aberta, com data futura) que a equipe cadastrou manualmente junto com as 10 parcelas reais.
+- **Causa raiz:** o botão "Gerar acesso (Aulão)" (`GerarAcessoAulaoModal.tsx`) existe justamente pra liberar o acesso de uma aluna do Aulão ANTES do pagamento — uso legítimo quando a equipe já combinou o pagamento por fora. Ele chama `converter-matricula-aulao.ts` com `force: true`, que pula a checagem de "pagamento confirmado" pra liberar acesso mesmo assim. O problema é que o bloco que registra a parcela/taxa (adicionado no BUG-063) sempre rodava do mesmo jeito, sem checar se o pagamento tinha sido realmente confirmado — criava uma "Taxa de Matrícula (Aulão)" com `status="pago"` pra uma taxa que nunca foi cobrada de verdade.
+- **Solução (11/09/2026):** o bloco de registro de parcela/taxa só roda quando `matricula.pagamento_status === "confirmado"`. Acesso liberado via `force` sem pagamento confirmado não cria mais nenhuma parcela automaticamente — a equipe monta o pacote e as parcelas reais manualmente, como já vinha fazendo nesses 3 casos.
+- **Correção pontual:** removidas as 3 "Taxa de Matrícula (Aulão)" falsas (e os registros correspondentes em `parcelas_pagamentos`) das alunas CTR 1779, 1780 e 1781 — confirmado que nenhuma comissão tinha sido gerada a partir delas (o trigger de comissão só dispara em `UPDATE`, não no `INSERT` direto que esse bloco fazia). Ficou só a "Taxa de Matrícula" real e agendada de cada uma.
+- **Status:** ✅ Resolvido
+
 ### BUG-015: View recebimentos com double-counting
 - **Causa:** Parcelas pagas em full também aparecem em parcelas_pagamentos, causando contagem dupla em algumas views
 - **Solução pendente:** Ajustar view para usar `NOT EXISTS` corretamente
