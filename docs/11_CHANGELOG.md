@@ -438,3 +438,9 @@
 - Causa: o botão "Gerar acesso (Aulão)" libera acesso antes do pagamento (`force: true` em `converter-matricula-aulao.ts`, pulando a checagem de pagamento confirmado) — uso legítimo — mas o bloco que registra a parcela/taxa sempre rodava do mesmo jeito, criando uma taxa "paga" mesmo sem pagamento real
 - Corrigido: esse bloco só roda quando `pagamento_status === "confirmado"`; acesso liberado via force sem pagamento não cria mais parcela nenhuma automaticamente
 - Correção pontual: removidas as 3 taxas falsas (e os registros em `parcelas_pagamentos`) das alunas CTR 1779, 1780 e 1781 — confirmado que nenhuma comissão tinha sido gerada a partir delas
+
+### Financeiro — guias "1ª Parcela" e "Última Parcela" recriadas (18/09/2026)
+- Diego pediu um jeito de filtrar/saber quantos alunos pagaram a 1ª parcela do parcelamento num período X, e também ver quem está pagando ou já pagou a última parcela
+- Essas duas guias já tinham existido antes (removidas em 11/07/2026 na reorganização que trouxe Matrículas por Vendedora) — recriadas do zero em `_admin.financeiro.tsx`
+- **1ª Parcela:** lista parcelas com `numero=1`/`tipo='parcela'`/`status='pago'` no período (filtro por data de pagamento + forma de pagamento) — diferente de "Recebimentos por Período", que soma todas as parcelas do período, não só as primeiras
+- **Última Parcela:** agrupa as parcelas de cada matrícula e pega a de maior `numero` (a última do parcelamento — pode ser a 10ª ou a 1ª, se o aluno só tem uma parcela por ter pago à vista/cartão/PIX); filtros de status (já pagou / ainda vai pagar / todos), forma de pagamento e período; tem botão "Dar baixa" pra quem ainda não pagou

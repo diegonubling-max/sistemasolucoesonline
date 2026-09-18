@@ -55,7 +55,14 @@
 
 ### Financeiro
 
-**Guias removidas:** Primeiras Parcelas, Últimas Parcelas
+**1ª Parcela (18/09/2026, recriada a pedido do Diego — existia antes, foi removida em 11/07/2026 na reorganização que trouxe Matrículas por Vendedora):**
+- Mostra quem pagou a parcela nº1 do parcelamento (`tipo='parcela'`, `numero=1`, `status='pago'`) dentro do período — diferente de "Recebimentos por Período", que soma TODAS as parcelas recebidas no período, não só as primeiras
+- Filtros: período (por data de pagamento), forma de pagamento
+
+**Última Parcela (18/09/2026, mesma recriação):**
+- Mostra a parcela de MAIOR número de cada matrícula (a última do parcelamento — 10ª pra quem parcelou em 10x, mas a 1ª mesmo pra quem pagou à vista/cartão/PIX, já que só têm 1 parcela), pra saber quem está terminando de pagar
+- Filtros: status (todos/já pagou/ainda vai pagar), forma de pagamento, período (por data de pagamento pra quem já pagou, por data de vencimento pra quem ainda não pagou)
+- Tem botão "Dar baixa" pra quem ainda não pagou, igual Alunos em Atraso
 
 **Matrículas por Vendedora:**
 - Colunas: Data, Aluno, CTR, Forma Pgto (badge colorida), Telefone, Vendedora
