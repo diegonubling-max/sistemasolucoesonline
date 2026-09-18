@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { startOfMonth, endOfMonth, format, isBefore, parseISO, startOfDay, differenceInDays } from "date-fns";
-import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, UserX, BarChart3, CalendarCheck, Rocket, Flag } from "lucide-react";
+import { TrendingUp, Landmark, AlertCircle, Wallet, Filter, FileDown, CheckCircle, UserX, BarChart3, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_admin/financeiro")({
   component: Financeiro,
 });
 
-type FilterType = "recebimentos" | "a_receber" | "atraso" | "vendedora" | "vendas" | "comissoes" | "fechamento_semanal" | "primeira_parcela" | "ultima_parcela" | null;
+type FilterType = "recebimentos" | "a_receber" | "atraso" | "vendedora" | "vendas" | "comissoes" | "fechamento_semanal" | null;
 
 
 function Financeiro() {
@@ -84,25 +84,6 @@ function Financeiro() {
   const [numeroParcelaAReceber, setNumeroParcelaAReceber] = useState<string>("");
   const [formaPagamentoAtraso, setFormaPagamentoAtraso] = useState<string>("todas");
   const [formaPagamentoVendedora, setFormaPagamentoVendedora] = useState<string>("todas");
-
-  // "1ª Parcela" e "Última Parcela" (pedido do Diego, 18/09/2026): a 1ª quer saber, num período,
-  // quantos alunos entraram/pagaram a 1ª parcela do parcelamento (numero=1, tipo='parcela') — uma
-  // visão de "novas entradas" diferente de Recebimentos (que soma TODAS as parcelas do período,
-  // não só as primeiras). A 2ª quer ver quem está pagando ou já pagou a ÚLTIMA parcela do
-  // parcelamento dele (o maior "numero" entre as parcelas de cada matrícula — 10 pra maioria, mas
-  // 1 pra quem pagou à vista/cartão/PIX), pra saber quem está terminando de pagar.
-  const [primeiraParcelaPeriod, setPrimeiraParcelaPeriod] = useState({
-    start: format(startOfMonth(today), "yyyy-MM-dd"),
-    end: format(endOfMonth(today), "yyyy-MM-dd")
-  });
-  const [formaPagamentoPrimeira, setFormaPagamentoPrimeira] = useState<string>("todas");
-
-  const [ultimaParcelaPeriod, setUltimaParcelaPeriod] = useState({
-    start: `${today.getFullYear()}-01-01`,
-    end: `${today.getFullYear() + 1}-12-31`,
-  });
-  const [formaPagamentoUltima, setFormaPagamentoUltima] = useState<string>("todas");
-  const [statusUltimaParcela, setStatusUltimaParcela] = useState<string>("todas");
 
   // Lowering status modal state
   const [baixaModal, setBaixaModal] = useState<{ 
@@ -315,70 +296,6 @@ function Financeiro() {
     },
     enabled: activeFilter === "atraso"
   });
-
-  const { data: primeiraParcela, refetch: refetchPrimeiraParcela } = useQuery({
-    queryKey: ["financeiro-primeira-parcela", primeiraParcelaPeriod, formaPagamentoPrimeira, selectedPoloId, userRole, colabData],
-    queryFn: async () => {
-      let q = supabase
-        .from("parcelas")
-        .select("*, matriculas!inner(alunos!inner(nome, ctr, telefone, ativo, vendedora))")
-        .eq("tipo", "parcela")
-        .eq("numero", 1)
-        .eq("status", "pago")
-        .gte("data_pagamento", primeiraParcelaPeriod.start)
-        .lte("data_pagamento", primeiraParcelaPeriod.end)
-        .order("data_pagamento", { ascending: false });
-
-      if (formaPagamentoPrimeira !== "todas") {
-        q = q.eq("forma_pagamento", formaPagamentoPrimeira);
-      }
-
-      const { data, error } = await filterByPolo(q);
-      if (error) throw error;
-      return data;
-    },
-    enabled: activeFilter === "primeira_parcela"
-  });
-
-  const { data: ultimaParcelaBruta, refetch: refetchUltimaParcela } = useQuery({
-    queryKey: ["financeiro-ultima-parcela", selectedPoloId, userRole, colabData],
-    queryFn: async () => {
-      let q = supabase
-        .from("parcelas")
-        .select("*, matriculas!inner(id, alunos!inner(nome, ctr, telefone, ativo, vendedora))")
-        .eq("tipo", "parcela")
-        .eq("matriculas.alunos.ativo", true);
-
-      const { data, error } = await filterByPolo(q);
-      if (error) throw error;
-
-      // Agrupa por matrícula e fica só com a parcela de maior "numero" — a última do
-      // parcelamento (10 pra maioria, mas 1 pra quem pagou à vista/cartão/PIX).
-      const porMatricula = new Map<string, any>();
-      for (const p of (data ?? [])) {
-        const matriculaId = p.matriculas?.id;
-        if (!matriculaId) continue;
-        const atual = porMatricula.get(matriculaId);
-        if (!atual || Number(p.numero) > Number(atual.numero)) {
-          porMatricula.set(matriculaId, p);
-        }
-      }
-      return Array.from(porMatricula.values());
-    },
-    enabled: activeFilter === "ultima_parcela"
-  });
-
-  // Filtro de status/forma/período aplicado em memória (o agrupamento por matrícula acima já
-  // precisa de TODAS as parcelas antes de decidir qual é a última, então filtrar direto na query
-  // do Supabase cortaria parcelas que ainda seriam necessárias pra comparação).
-  const ultimaParcela = (ultimaParcelaBruta ?? []).filter((p: any) => {
-    if (formaPagamentoUltima !== "todas" && p.forma_pagamento !== formaPagamentoUltima) return false;
-    if (statusUltimaParcela === "pago" && p.status !== "pago") return false;
-    if (statusUltimaParcela === "pendente" && p.status === "pago") return false;
-    const dataRef = p.status === "pago" ? p.data_pagamento : p.data_vencimento;
-    if (dataRef && (dataRef < ultimaParcelaPeriod.start || dataRef > ultimaParcelaPeriod.end)) return false;
-    return true;
-  }).sort((a: any, b: any) => (a.data_vencimento || "").localeCompare(b.data_vencimento || ""));
 
   const { data: matriculasVendedora, refetch: refetchVendedora } = useQuery({
     queryKey: ["financeiro-vendedora", vendedoraPeriod, selectedVendedora, selectedPoloId, userRole, colabData, formaPagamentoVendedora],
@@ -617,8 +534,6 @@ function Financeiro() {
     { id: "a_receber", label: "A Receber", sub: "por período", icon: Landmark },
     { id: "atraso", label: "Alunos em", sub: "Atraso", icon: UserX },
     { id: "vendedora", label: "Matrículas por", sub: "Vendedora", icon: Wallet },
-    { id: "primeira_parcela", label: "1ª Parcela", sub: "novas entradas", icon: Rocket },
-    { id: "ultima_parcela", label: "Última Parcela", sub: "quem está terminando", icon: Flag },
     { id: "vendas", label: "Relatório de", sub: "Vendas", icon: BarChart3 },
     { id: "comissoes", label: "Comissões", sub: "Vendedoras", icon: Wallet },
     { id: "fechamento_semanal", label: "Fechamento", sub: "Semanal", icon: CalendarCheck },
@@ -651,7 +566,7 @@ function Financeiro() {
         })}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         {filterButtons.map((btn) => {
           const Icon = btn.icon;
           const isSelected = activeFilter === btn.id;
@@ -916,158 +831,6 @@ function Financeiro() {
                 <p className="font-bold">Total em atraso: {formatCurrency((atraso ?? []).reduce((acc: number, p: any) => acc + getValorEmAtraso(p), 0))}</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => exportCSV(atraso || [], "alunos-em-atraso", ["Dias em Atraso"], (p) => [String(p.diasAtraso)])}>
-                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {activeFilter === "primeira_parcela" && (
-        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Rocket className="h-5 w-5 text-[#1E3A5F]" />
-                1ª Parcela — novas entradas no parcelamento
-              </h3>
-              <div className="flex flex-wrap items-center gap-2">
-                <Select value={formaPagamentoPrimeira} onValueChange={setFormaPagamentoPrimeira}>
-                  <SelectTrigger className="w-44"><SelectValue placeholder="Forma de pagamento" /></SelectTrigger>
-                  <SelectContent>
-                    {FORMAS_PAGAMENTO.map((f) => (
-                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input type="date" className="w-40" value={primeiraParcelaPeriod.start} onChange={(e) => setPrimeiraParcelaPeriod(p => ({ ...p, start: e.target.value }))} />
-                <span className="text-muted-foreground">até</span>
-                <Input type="date" className="w-40" value={primeiraParcelaPeriod.end} onChange={(e) => setPrimeiraParcelaPeriod(p => ({ ...p, end: e.target.value }))} />
-                <Button size="sm" onClick={() => refetchPrimeiraParcela()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground -mt-4 mb-4">
-              Mostra quem pagou a 1ª parcela do parcelamento (nº1) dentro do período — diferente de "Recebimentos", que soma todas as parcelas recebidas no período, não só as primeiras.
-            </p>
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Telefone</TableHead><TableHead>Vendedora</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Data Pagamento</TableHead><TableHead className="text-right">Valor</TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
-                {(primeiraParcela ?? []).map((p: any) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.telefone}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.vendedora || "—"}</TableCell>
-                    <TableCell>
-                      {p.forma_pagamento === 'pix' ? (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none rounded-full text-xs font-bold">PIX</Badge>
-                      ) : p.forma_pagamento === 'boleto' ? (
-                        <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none rounded-full text-xs font-bold">Boleto</Badge>
-                      ) : p.forma_pagamento === 'cartao' ? (
-                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none rounded-full text-xs font-bold">Cartão</Badge>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>{formatDate(p.data_pagamento)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(p.valor)}</TableCell>
-                  </TableRow>
-                ))}
-                {primeiraParcela?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma 1ª parcela recebida no período selecionado.</TableCell></TableRow>}
-              </TableBody>
-            </Table>
-            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold">{primeiraParcela?.length || 0} alunos entraram no parcelamento nesse período</p>
-                <p className="font-bold">Total recebido: {formatCurrency((primeiraParcela ?? []).reduce((acc: number, p: any) => acc + Number(p.valor || 0), 0))}</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => exportCSV(primeiraParcela || [], "primeira-parcela", ["Forma Pag.", "Vendedora"], (p) => [p.forma_pagamento || "", p.matriculas?.alunos?.vendedora || ""])}>
-                <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {activeFilter === "ultima_parcela" && (
-        <Card className="animate-in fade-in slide-in-from-top-4 duration-300">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Flag className="h-5 w-5 text-[#1E3A5F]" />
-                Última Parcela — quem está terminando de pagar
-              </h3>
-              <div className="flex flex-wrap items-center gap-2">
-                <Select value={statusUltimaParcela} onValueChange={setStatusUltimaParcela}>
-                  <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todas">Todos os status</SelectItem>
-                    <SelectItem value="pago">Já pagou</SelectItem>
-                    <SelectItem value="pendente">Ainda vai pagar</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={formaPagamentoUltima} onValueChange={setFormaPagamentoUltima}>
-                  <SelectTrigger className="w-44"><SelectValue placeholder="Forma de pagamento" /></SelectTrigger>
-                  <SelectContent>
-                    {FORMAS_PAGAMENTO.map((f) => (
-                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input type="date" className="w-40" value={ultimaParcelaPeriod.start} onChange={(e) => setUltimaParcelaPeriod(p => ({ ...p, start: e.target.value }))} />
-                <span className="text-muted-foreground">até</span>
-                <Input type="date" className="w-40" value={ultimaParcelaPeriod.end} onChange={(e) => setUltimaParcelaPeriod(p => ({ ...p, end: e.target.value }))} />
-                <Button size="sm" onClick={() => refetchUltimaParcela()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground -mt-4 mb-4">
-              A "última parcela" é a de maior número do parcelamento de cada matrícula (10ª pra quem parcelou em 10x, mas a 1ª mesmo pra quem pagou à vista/cartão/PIX). O período filtra pela data de pagamento de quem já pagou, ou pela data de vencimento de quem ainda vai pagar.
-            </p>
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Telefone</TableHead><TableHead>Vendedora</TableHead><TableHead>Nº</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Status</TableHead><TableHead>Vencimento</TableHead><TableHead>Pago em</TableHead><TableHead className="text-right">Valor</TableHead><TableHead className="text-right">Ações</TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
-                {ultimaParcela.map((p: any) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.telefone}</TableCell>
-                    <TableCell>{p.matriculas?.alunos?.vendedora || "—"}</TableCell>
-                    <TableCell>{p.numero}ª</TableCell>
-                    <TableCell>
-                      {p.forma_pagamento === 'pix' ? (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none rounded-full text-xs font-bold">PIX</Badge>
-                      ) : p.forma_pagamento === 'boleto' ? (
-                        <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none rounded-full text-xs font-bold">Boleto</Badge>
-                      ) : p.forma_pagamento === 'cartao' ? (
-                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none rounded-full text-xs font-bold">Cartão</Badge>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(p)}</TableCell>
-                    <TableCell>{formatDate(p.data_vencimento)}</TableCell>
-                    <TableCell>{p.data_pagamento ? formatDate(p.data_pagamento) : "—"}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(p.status === "parcial" ? Number(p.valor) - Number(p.valor_pago_total || 0) : Number(p.valor))}</TableCell>
-                    <TableCell className="text-right">
-                      {p.status !== "pago" && p.status !== "isento" && p.status !== "cancelado" && (
-                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => openBaixaModal(p)}>
-                          <CheckCircle className="h-4 w-4 mr-2" /> Dar baixa
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {ultimaParcela.length === 0 && <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Nenhuma matrícula encontrada com esses filtros.</TableCell></TableRow>}
-              </TableBody>
-            </Table>
-            <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold">{ultimaParcela.length} alunos na última parcela do parcelamento</p>
-                <p className="font-bold">
-                  {ultimaParcela.filter((p: any) => p.status === "pago").length} já pagaram · {ultimaParcela.filter((p: any) => p.status !== "pago").length} ainda vão pagar
-                </p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => exportCSV(ultimaParcela, "ultima-parcela", ["Nº", "Forma Pag.", "Vendedora"], (p) => [`${p.numero}ª`, p.forma_pagamento || "", p.matriculas?.alunos?.vendedora || ""])}>
                 <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
             </div>

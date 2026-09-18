@@ -450,3 +450,8 @@
 - Não existe coluna de "total de parcelas" salva na matrícula — calculado na hora: pra parcelas de boleto/negociação (1 registro por parcela), o total é a contagem de registros `tipo='parcela'` daquela matrícula; pra parcelas de cartão (1 registro único cobrindo toda a cobrança), o total vem de `parcelas.parcelas_cartao`/`cartao_parcelas` (o nº de parcelas do cartão escolhido no checkout)
 - Adicionado campo "Nº parcela" na aba: filtra a lista só pelas parcelas com aquele número (ex: digitar "1" mostra só quem está devendo a 1ª parcela; "10" só quem está na última de um parcelamento de 10x)
 - Coluna "Parcela" (nº/total) incluída também na exportação CSV dessa aba
+
+### Financeiro — guias "1ª Parcela" e "Última Parcela" removidas de novo (18/09/2026)
+- Diego pediu pra remover essas duas guias criadas mais cedo hoje — não serão mais necessárias (provavelmente porque o novo filtro "Nº parcela" em "A Receber por Período" já cobre parte do caso de uso)
+- Removido de `_admin.financeiro.tsx`: os 2 botões de aba, os 2 painéis de tabela, as 2 queries (`primeiraParcela`/`ultimaParcelaBruta`), os states de período/forma/status associados e os ícones `Rocket`/`Flag` que ficaram sem uso
+- Grid de abas voltou de `lg:grid-cols-9` pra `lg:grid-cols-7`
