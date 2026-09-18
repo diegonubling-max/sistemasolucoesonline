@@ -444,3 +444,9 @@
 - Essas duas guias já tinham existido antes (removidas em 11/07/2026 na reorganização que trouxe Matrículas por Vendedora) — recriadas do zero em `_admin.financeiro.tsx`
 - **1ª Parcela:** lista parcelas com `numero=1`/`tipo='parcela'`/`status='pago'` no período (filtro por data de pagamento + forma de pagamento) — diferente de "Recebimentos por Período", que soma todas as parcelas do período, não só as primeiras
 - **Última Parcela:** agrupa as parcelas de cada matrícula e pega a de maior `numero` (a última do parcelamento — pode ser a 10ª ou a 1ª, se o aluno só tem uma parcela por ter pago à vista/cartão/PIX); filtros de status (já pagou / ainda vai pagar / todos), forma de pagamento e período; tem botão "Dar baixa" pra quem ainda não pagou
+
+### Financeiro — "A Receber por Período" ganhou "(nº/total)" na Descrição e filtro por nº da parcela (18/09/2026)
+- Diego pediu pra Descrição da aba "A Receber por Período" mostrar tipo "(1/10)" ou "(8/10)" (parcela 1 de 10, parcela 8 de 10) e poder filtrar por isso
+- Não existe coluna de "total de parcelas" salva na matrícula — calculado na hora: pra parcelas de boleto/negociação (1 registro por parcela), o total é a contagem de registros `tipo='parcela'` daquela matrícula; pra parcelas de cartão (1 registro único cobrindo toda a cobrança), o total vem de `parcelas.parcelas_cartao`/`cartao_parcelas` (o nº de parcelas do cartão escolhido no checkout)
+- Adicionado campo "Nº parcela" na aba: filtra a lista só pelas parcelas com aquele número (ex: digitar "1" mostra só quem está devendo a 1ª parcela; "10" só quem está na última de um parcelamento de 10x)
+- Coluna "Parcela" (nº/total) incluída também na exportação CSV dessa aba

@@ -78,6 +78,10 @@ function Financeiro() {
   // existem no sistema (pix é sempre à vista — não existe pix parcelado nos pacotes).
   const [formaPagamentoRec, setFormaPagamentoRec] = useState<string>("todas");
   const [formaPagamentoAReceber, setFormaPagamentoAReceber] = useState<string>("todas");
+  // Filtro por número da parcela em "A Receber" (pedido do Diego, 18/09/2026): a Descrição
+  // passa a mostrar "Parcela (nº/total)" e dá pra filtrar só pela parcela nº X (ex: só a 1ª,
+  // só a última de cada aluno etc.) — string vazia = sem filtro.
+  const [numeroParcelaAReceber, setNumeroParcelaAReceber] = useState<string>("");
   const [formaPagamentoAtraso, setFormaPagamentoAtraso] = useState<string>("todas");
   const [formaPagamentoVendedora, setFormaPagamentoVendedora] = useState<string>("todas");
 
@@ -245,10 +249,41 @@ function Financeiro() {
 
       const { data, error } = await filterByPolo(q);
       if (error) throw error;
-      return data;
+
+      // Calcula o total de parcelas de cada matrícula, para exibir "Parcela (nº/total)".
+      // No cartão é uma cobrança única (1 registro), então o total real vem de
+      // parcelas_cartao/cartao_parcelas; no boleto/negociação, cada parcela é um registro
+      // próprio, então o total é a contagem de registros tipo='parcela' daquela matrícula.
+      const matriculaIds = Array.from(
+        new Set((data || []).filter((p: any) => p.tipo === "parcela" && p.matricula_id).map((p: any) => p.matricula_id))
+      );
+      let contagemPorMatricula: Record<string, number> = {};
+      if (matriculaIds.length > 0) {
+        const { data: todasParcelas } = await supabase
+          .from("parcelas")
+          .select("matricula_id")
+          .eq("tipo", "parcela")
+          .in("matricula_id", matriculaIds);
+        contagemPorMatricula = (todasParcelas || []).reduce((acc: Record<string, number>, row: any) => {
+          acc[row.matricula_id] = (acc[row.matricula_id] || 0) + 1;
+          return acc;
+        }, {});
+      }
+
+      return (data || []).map((p: any) => ({
+        ...p,
+        totalParcelas:
+          p.tipo === "parcela"
+            ? (p.parcelas_cartao ?? p.cartao_parcelas ?? contagemPorMatricula[p.matricula_id] ?? 1)
+            : null,
+      }));
     },
     enabled: activeFilter === "a_receber"
   });
+
+  const aReceberFiltrado = (aReceber ?? []).filter((p: any) =>
+    !numeroParcelaAReceber || (p.tipo === "parcela" && String(p.numero) === numeroParcelaAReceber)
+  );
 
 
 
@@ -746,6 +781,14 @@ function Financeiro() {
                 <Input type="date" className="w-40" value={aRecPeriod.start} onChange={(e) => setARecPeriod(p => ({ ...p, start: e.target.value }))} />
                 <span className="text-muted-foreground">até</span>
                 <Input type="date" className="w-40" value={aRecPeriod.end} onChange={(e) => setARecPeriod(p => ({ ...p, end: e.target.value }))} />
+                <Input
+                  type="number"
+                  min={1}
+                  placeholder="Nº parcela"
+                  className="w-28"
+                  value={numeroParcelaAReceber}
+                  onChange={(e) => setNumeroParcelaAReceber(e.target.value)}
+                />
                 <Button size="sm" onClick={() => refetchAReceber()}><Filter className="h-4 w-4 mr-2" /> Filtrar</Button>
               </div>
             </div>
@@ -754,7 +797,7 @@ function Financeiro() {
                 <TableHead>Aluno</TableHead><TableHead>CTR</TableHead><TableHead>Descrição</TableHead><TableHead>Forma Pag.</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {(aReceber ?? []).map((p: any) => {
+                {aReceberFiltrado.map((p: any) => {
                   const alunoId = p.matriculas?.alunos?.id;
                   return (
                   <TableRow
@@ -764,7 +807,10 @@ function Financeiro() {
                   >
                     <TableCell className="font-medium">{p.matriculas?.alunos?.nome}</TableCell>
                     <TableCell>{p.matriculas?.alunos?.ctr}</TableCell>
-                    <TableCell className="capitalize">{p.tipo.replace("_", " ")}</TableCell>
+                    <TableCell className="capitalize">
+                      {p.tipo.replace("_", " ")}
+                      {p.tipo === "parcela" && p.totalParcelas ? ` (${p.numero}/${p.totalParcelas})` : ""}
+                    </TableCell>
                     <TableCell>
                       {p.forma_pagamento === 'pix' ? (
                         <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none rounded-full text-xs font-bold">PIX</Badge>
@@ -792,12 +838,12 @@ function Financeiro() {
                   </TableRow>
                   );
                 })}
-                {aReceber?.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nada a receber no período.</TableCell></TableRow>}
+                {aReceberFiltrado.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nada a receber no período.</TableCell></TableRow>}
               </TableBody>
             </Table>
             <div className="mt-4 pt-4 border-t flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <p className="font-bold">Total a receber: {formatCurrency((aReceber ?? []).reduce((acc: number, p: any) => acc + (p.status === "parcial" ? Number(p.valor) - Number(p.valor_pago_total || 0) : Number(p.valor)), 0))}</p>
-              <Button variant="outline" size="sm" onClick={() => exportCSV(aReceber || [], "a-receber")}>
+              <p className="font-bold">Total a receber: {formatCurrency(aReceberFiltrado.reduce((acc: number, p: any) => acc + (p.status === "parcial" ? Number(p.valor) - Number(p.valor_pago_total || 0) : Number(p.valor)), 0))}</p>
+              <Button variant="outline" size="sm" onClick={() => exportCSV(aReceberFiltrado, "a-receber", ["Parcela"], (p) => [p.tipo === "parcela" && p.totalParcelas ? `${p.numero}/${p.totalParcelas}` : ""])}>
                 <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
             </div>

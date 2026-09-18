@@ -78,6 +78,7 @@
 - Exclui: parcelas canceladas, alunos inativos
 - Badge colorida de forma de pagamento
 - Filtro: forma de pagamento (todas/boleto/cartão/PIX), além do período (04/09/2026)
+- Descrição mostra "(nº/total)" pra parcelas (ex: "parcela (1/10)"); filtro por nº da parcela (18/09/2026)
 
 **Alunos em Atraso:**
 - Exclui: parcelas canceladas, isento, alunos inativos
