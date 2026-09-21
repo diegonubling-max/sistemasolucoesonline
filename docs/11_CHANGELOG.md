@@ -455,3 +455,9 @@
 - Diego pediu pra remover essas duas guias criadas mais cedo hoje — não serão mais necessárias (provavelmente porque o novo filtro "Nº parcela" em "A Receber por Período" já cobre parte do caso de uso)
 - Removido de `_admin.financeiro.tsx`: os 2 botões de aba, os 2 painéis de tabela, as 2 queries (`primeiraParcela`/`ultimaParcelaBruta`), os states de período/forma/status associados e os ícones `Rocket`/`Flag` que ficaram sem uso
 - Grid de abas voltou de `lg:grid-cols-9` pra `lg:grid-cols-7`
+
+### Alunos — editar status de parcela pra "Pago" direto não somava no faturamento (21/09/2026)
+- Diego relatou que deu baixa como pago na aluna Jaenne Patrícia Nunes de Melo (CTR 1780) e o valor não estava somando no faturamento. Ver detalhes completos em `14_BUGS_CONHECIDOS.md` (BUG-082)
+- Causa: a tabela de parcelas na tela "Editar" do aluno tem um dropdown de Status que, ao salvar, faz `UPDATE` direto em `parcelas` — sem passar pela RPC `registrar_pagamento_parcela` (que só roda via o botão "Dar baixa"). Isso deixava `data_pagamento` vazio, e os relatórios de faturamento dependem de `data_pagamento` preenchido pra contar o pagamento
+- Corrigido em `_admin.alunos.$id.editar.tsx`: dropdown de Status não deixa mais escolher "Pago" (só mostra quando já está nesse status, e trava a edição); e `handleSave` ignora qualquer tentativa de mudar pra "pago" por esse caminho, avisando pra usar "Dar baixa"
+- Correção pontual: parcela nº1 da Jaenne (CTR 1780, PIX R$1.128,90) registrada corretamente via RPC com data de pagamento 21/09/2026 — confirmado que era o único caso do sistema com esse problema

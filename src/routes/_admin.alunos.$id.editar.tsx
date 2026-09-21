@@ -646,20 +646,41 @@ function EditarParcelas({ matriculaId, alunoId, aluno, parcelas, onSuccess }: an
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updates = localParcelas.map(p => ({
-        id: p.id,
-        valor: Number(p.valor),
-        data_vencimento: typeof p.data_vencimento === 'string' ? p.data_vencimento : format(p.data_vencimento, 'yyyy-MM-dd'),
-        status: p.status,
-        data_pagamento: p.data_pagamento
-      }));
+      // BUG-082: essa tabela edita parcelas.status direto no banco, sem passar pela RPC
+      // registrar_pagamento_parcela — então marcar "Pago" aqui não grava data_pagamento nem
+      // valor_pago_total, nem cria registro em parcelas_pagamentos, e a parcela simplesmente
+      // some do faturamento (ficou assim com a Jaenne Patricia, CTR 1780). Pra marcar como pago
+      // é obrigatório usar o botão "Dar baixa" (que abre o modal e chama a RPC). Se alguém tentar
+      // mudar o status pra "pago" direto no dropdown, ignora essa mudança aqui e avisa.
+      const statusOriginal = new Map(parcelas.map((p: any) => [p.id, p.status]));
+      const bloqueadas: string[] = [];
+      const updates = localParcelas.map(p => {
+        let status = p.status;
+        if (status === "pago" && statusOriginal.get(p.id) !== "pago") {
+          status = statusOriginal.get(p.id);
+          bloqueadas.push(p.tipo === "taxa_matricula" ? "Taxa de matrícula" : `Parcela ${p.numero}`);
+        }
+        return {
+          id: p.id,
+          valor: Number(p.valor),
+          data_vencimento: typeof p.data_vencimento === 'string' ? p.data_vencimento : format(p.data_vencimento, 'yyyy-MM-dd'),
+          status,
+          data_pagamento: p.data_pagamento
+        };
+      });
 
       for (const upd of updates) {
         const { error } = await supabase.from("parcelas").update(upd).eq("id", upd.id);
         if (error) throw error;
       }
 
-      toast.success("Parcelas salvas!");
+      if (bloqueadas.length > 0) {
+        toast.warning(`Use o botão "Dar baixa" pra marcar como pago: ${bloqueadas.join(", ")}`, {
+          description: "Mudar o status aqui não registra forma de pagamento nem soma no faturamento.",
+        });
+      } else {
+        toast.success("Parcelas salvas!");
+      }
       onSuccess();
     } catch (e: any) {
       toast.error("Erro ao salvar parcelas", { description: e.message });
@@ -857,17 +878,26 @@ function EditarParcelas({ matriculaId, alunoId, aluno, parcelas, onSuccess }: an
                   />
                 </td>
                 <td className="px-4 py-2">
-                  <Select 
-                    value={p.status} 
+                  {/* BUG-082: "Pago" só aparece pra exibir o status de uma parcela já paga (via
+                      "Dar baixa") — não fica disponível como opção pra escolher daqui, e o select
+                      fica travado quando já está pago/parcial/cancelado, pra não dar pra reverter
+                      ou re-marcar status sem passar pela baixa de verdade. */}
+                  <Select
+                    value={p.status}
                     onValueChange={(v) => handleUpdateLocal(p.id, 'status', v)}
+                    disabled={p.status !== 'aberto' && p.status !== 'isento'}
                   >
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="aberto">Aberto</SelectItem>
-                      <SelectItem value="pago">Pago</SelectItem>
                       <SelectItem value="isento">Isento</SelectItem>
+                      {(p.status === 'pago' || p.status === 'parcial' || p.status === 'cancelado') && (
+                        <SelectItem value={p.status}>
+                          {p.status === 'pago' ? 'Pago' : p.status === 'parcial' ? 'Parcial' : 'Cancelado'}
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </td>

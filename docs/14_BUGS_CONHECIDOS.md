@@ -503,6 +503,13 @@
 - **Correção pontual:** removidas as 3 "Taxa de Matrícula (Aulão)" falsas (e os registros correspondentes em `parcelas_pagamentos`) das alunas CTR 1779, 1780 e 1781 — confirmado que nenhuma comissão tinha sido gerada a partir delas (o trigger de comissão só dispara em `UPDATE`, não no `INSERT` direto que esse bloco fazia). Ficou só a "Taxa de Matrícula" real e agendada de cada uma.
 - **Status:** ✅ Resolvido
 
+### BUG-082: Editar status de parcela direto pra "Pago" na tela do aluno não somava no faturamento
+- **Como foi descoberto:** Diego relatou que deu baixa como pago na aluna Jaenne Patrícia Nunes de Melo (CTR 1780), mas o valor não estava somando no faturamento.
+- **Causa raiz:** a tabela de edição de parcelas em `_admin.alunos.$id.editar.tsx` (aba "Editar" do aluno) tem um dropdown de Status com opção "Pago", que ao ser salvo (`handleSave`) faz um `UPDATE` direto na tabela `parcelas` — diferente do botão "Dar baixa" (ícone verde), que abre o `BaixaModal` e chama a RPC `registrar_pagamento_parcela`. O `UPDATE` direto muda o `status` pra "pago" mas não seta `data_pagamento`, não seta `valor_pago_total` e não cria registro em `parcelas_pagamentos`. Como `view_recebimentos_periodo` e `view_total_recebido_mes` dependem de `data_pagamento IS NOT NULL`, a parcela ficava com status pago mas invisível em qualquer relatório de faturamento — a Parcela nº1 da Jaenne (R$1.128,90, PIX) foi exatamente esse caso.
+- **Solução (21/09/2026):** dropdown de Status na tela de editar aluno não deixa mais escolher "Pago" — só aparece como item quando a parcela JÁ está paga/parcial/cancelada (pra exibir corretamente), e nesses casos o select fica travado (não dá pra mudar por ali). Como segunda camada de proteção, `handleSave` agora ignora qualquer tentativa de mudar o status pra "pago" que não veio assim do banco, mantém o status original e avisa o usuário pra usar o botão "Dar baixa". Pra marcar uma parcela como paga, o único caminho agora é o "Dar baixa" (que pede forma de pagamento, data e — se cartão — parcelamento, e sempre passa pela RPC).
+- **Correção pontual:** parcela nº1 da Jaenne Patrícia Nunes de Melo (CTR 1780) registrada corretamente via `registrar_pagamento_parcela` (PIX, R$1.128,90, pago em 21/09/2026) — conferido que era o único caso no sistema com `status='pago'` e `data_pagamento IS NULL`.
+- **Status:** ✅ Resolvido
+
 ### BUG-015: View recebimentos com double-counting
 - **Causa:** Parcelas pagas em full também aparecem em parcelas_pagamentos, causando contagem dupla em algumas views
 - **Solução pendente:** Ajustar view para usar `NOT EXISTS` corretamente
