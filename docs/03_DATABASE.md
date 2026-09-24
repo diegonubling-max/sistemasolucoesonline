@@ -296,26 +296,28 @@
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
 | id | uuid PK | Identificador |
-| aluno_id | uuid | Aluno (NULL para externos) |
+| aluno_id | uuid | Aluno vinculado — NULL para externos e para registros históricos/migrados sem aluno cadastrado |
 | data_prova | date | Data da prova |
 | hora_prova | time | Horário |
 | status | text | agendada, iniciado, aprovado, reprovado |
 | docs_solicitados | boolean | Documentos solicitados |
 | docs_recebidos | boolean | Documentos recebidos |
-| nome_aluno | text | Nome (para externos sem aluno_id) |
-| telefone | text | Telefone |
-| polo | text | Nome do polo |
-| ctr | text | CTR do aluno |
+| nome_aluno | text | Nome — usado como fallback de exibição sempre que não há `aluno_id` vinculado (externos e histórico/migrado), não só para externos (ver BUG-084) |
+| telefone | text | Telefone — mesmo fallback de `nome_aluno` |
+| polo | text | Nome do polo — mesmo fallback de `nome_aluno` |
+| ctr | text | CTR do aluno — mesmo fallback de `nome_aluno` |
 | quem_agendou | text | Nome de quem agendou |
-| situacao_financeira | text | 'ja_pago' ou 'boleto' |
+| situacao_financeira | text | 'ja_pago' ou 'boleto' — mesmo fallback de `nome_aluno` |
 | resultado | text | 'aprovado' ou 'reprovado' |
 | observacao | text | Observação |
-| is_externo | boolean | Se é aluno externo |
+| is_externo | boolean | Se é aluno externo (CTR série P) |
 | materias_selecionadas | text[] | Array de matérias para a prova |
 | ultimo_heartbeat | timestamptz | Último ping de presença |
 | created_at | timestamptz | Data de criação |
 
 **4 guias no admin:** Agendadas (inclui status 'iniciado'), Aprovados, Reprovados, Reagendar (data passada + resultado NULL)
+
+⚠️ **BUG-084 (corrigido 24/09/2026):** o admin (`_admin.provas-agendadas.tsx`) só usava `nome_aluno`/`telefone`/`polo`/`ctr`/`situacao_financeira` como fonte de exibição quando `is_externo=true`; qualquer registro `is_externo=false` sem `aluno_id` (caso de dado histórico/migrado, não só de aluno externo) aparecia com tudo em branco. Corrigido pra usar esses campos como fallback sempre que não há aluno vinculado, independente de `is_externo`. Ver `14_BUGS_CONHECIDOS.md`.
 
 ---
 

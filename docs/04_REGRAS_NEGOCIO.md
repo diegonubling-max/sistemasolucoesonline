@@ -129,6 +129,11 @@
 - Se algum processo (migração manual, correção de dado, importação) só preencher `resultado` sem também atualizar `status`, o registro fica "invisível" na guia certa — se a `data_prova` já passou, cai sozinho na guia "Reagendar" mesmo tendo `resultado='aprovado'`/`'reprovado'` preenchido
 - Ao inserir ou corrigir `prova_agendamentos` manualmente (SQL direto, importação), sempre setar `status` igual ao `resultado` quando o resultado já é conhecido
 
+### Exibição de dados sem `aluno_id` vinculado em `prova_agendamentos` (BUG-084, 24/09/2026)
+- Registros de `prova_agendamentos` sem `aluno_id` (alunos externos com `is_externo=true`, e também dado histórico/migrado sem aluno cadastrado no sistema) dependem dos campos próprios do agendamento (`nome_aluno`, `telefone`, `polo`, `ctr`, `situacao_financeira`) pra aparecer na tela — não têm de onde puxar esses dados via join com `alunos`
+- O admin (`_admin.provas-agendadas.tsx`) usa esses campos como fallback de exibição sempre que não há aluno vinculado, independente de `is_externo` — corrigido em 24/09/2026, antes só funcionava pra `is_externo=true`
+- Ao importar ou inserir manualmente um agendamento sem `aluno_id`, sempre preencher `nome_aluno`, `telefone` e `polo` (mínimo pra tela não ficar em branco); `ctr` e `situacao_financeira` quando disponíveis
+
 ### Comparação de Respostas
 - Usa `UPPER()` na comparação (aluno pode digitar 'a' ou 'A')
 - Bug corrigido: anteriormente comparação era case-sensitive

@@ -52,6 +52,7 @@
 
 **Colunas da tabela (todas as guias):**
 - Sem coluna "Notas" (removida — notas aparecem só nos detalhes via 👁️)
+- Aluno/Telefone/CTR/Polo/Sit. Financeira: pra registro com `aluno_id` vinculado, vem do cadastro do aluno (ao vivo); sem `aluno_id` (externo ou histórico/migrado), vem dos campos próprios do agendamento (`nome_aluno`, `telefone`, `polo`, `ctr`, `situacao_financeira`) — ver BUG-084 em `14_BUGS_CONHECIDOS.md`
 
 ### Financeiro
 
