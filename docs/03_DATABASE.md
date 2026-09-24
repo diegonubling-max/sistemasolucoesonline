@@ -387,6 +387,9 @@
 
 ### documentacao_alunos
 **Objetivo:** Controle de documentação e certificação do aluno
+
+⚠️ **BUG-083 (23/09/2026) — schema da tabela está desalinhado do código da tela:** a tela "Documentação e Certificação" (`_admin.setor-provas.tsx`, 3 guias: Documentação / Envios para Certificadora / Certificados) usa ~20 nomes de coluna que **não existem** nessa tabela hoje (`nome_aluno`, `polo`, `quem_vendeu`, `telefone`, `ctr`, `documentacao_completa`, `declaracao_gerada`, `declaracao_data`, `cert_observacao`, `doc_rg_cpf`, `doc_comprovante_residencia`, `doc_historico_fundamental`, `doc_historico_fundamental_medio`, `doc_outros`, `doc_outros_descricao`, `arquivos_paths`, `cert_digital_enviado`, `cert_fisico_recebido`, `cert_fisico_enviado_aluno`, `cert_fisico_rastreio`, `cert_fisico_data_recebimento`, `updated_at`) — a tabela real só tem as colunas abaixo (nomenclatura antiga). Não existe migração no repositório criando essas colunas novas. Resultado: a tela inteira não carrega nada (erro `42703: column does not exist`), pra qualquer usuário, independente de filtro ou permissão. Um lote de 100 registros migrados (lotes 02/03/04-2026) foi excluído em 24/09/2026 a pedido do Diego em vez de consertar o schema — ver `14_BUGS_CONHECIDOS.md` (BUG-083) e `11_CHANGELOG.md`. Antes de usar essa tela ou migrar dado novo pra ela, o schema precisa ser decidido/corrigido primeiro.
+
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
 | id | uuid PK | Identificador |

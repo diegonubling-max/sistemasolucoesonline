@@ -116,12 +116,14 @@ Depois de conectar um número novo no Z-API (ver `/areas/whatsapp-automation.md`
 - ✅ WhatsApp automático (agendamento + lembrete 30min)
 
 ## Módulo: Documentação e Certificação
-- ✅ Checklist de documentos
-- ✅ 6 certificadoras cadastradas
-- ✅ Envio para certificadora com lotes
-- ✅ Controle de certificados (digital + físico)
-- ✅ Upload de documentos (Storage)
-- ✅ 541 registros migrados do sistema antigo
+- ⚠️ **Tela quebrada (BUG-083, 23/09/2026):** o código usa ~20 colunas que não existem na tabela `documentacao_alunos` — a tela não carrega nada até o schema ser corrigido. Ver `03_DATABASE.md` e `14_BUGS_CONHECIDOS.md`
+- Tabela está zerada hoje (0 registros) — um lote de teste de 100 registros migrados foi excluído em 24/09/2026 a pedido do Diego
+- Funcionalidades abaixo descrevem o que o código PRETENDE fazer, não o estado atual (que está quebrado):
+  - Checklist de documentos
+  - 6 certificadoras cadastradas (CECO, Educa Nexus, Ifope, Nobel, Referencial, Santa Rita)
+  - Envio para certificadora com lotes
+  - Controle de certificados (digital + físico)
+  - Upload de documentos (Storage)
 
 ## Módulo: Pós-Venda
 - ✅ 3 etapas: D+1, D+5, D+15

@@ -84,6 +84,7 @@ Jovens e adultos que não concluíram o Ensino Fundamental ou Médio. Perfil: pe
 - WhatsApp automático com CTR + senha no agendamento e 30min antes
 
 ### 9. Documentação e Certificação
+- ⚠️ **Tela quebrada (BUG-083, 23/09/2026)** — schema de `documentacao_alunos` desalinhado do código, tela não carrega nada. Ver `03_DATABASE.md` e `14_BUGS_CONHECIDOS.md` antes de mexer nela
 - 3 guias: Documentação, Envios para Certificadora, Certificados
 - Checklist de documentos (RG/CPF, Comp. Residência, Históricos)
 - 6 certificadoras cadastradas (CECO, Educa Nexus, Ifope, Nobel, Referencial, Santa Rita)

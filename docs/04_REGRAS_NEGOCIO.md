@@ -82,6 +82,11 @@
 - Badge 🟡 Parcial na listagem
 - Comissão proporcional ao valor pago
 
+### Regra: como marcar uma parcela como "pago" (BUG-079/BUG-082, 21/09/2026)
+- **Única forma correta:** chamar a RPC `registrar_pagamento_parcela` (sempre atrás do botão "Dar baixa" em qualquer tela do sistema). Ela grava em `parcelas_pagamentos`, soma `valor_pago_total`, seta `data_pagamento` e calcula `valor_liquido` (cartão)
+- **Nunca** fazer `UPDATE parcelas SET status = 'pago' ...` direto — já causou duas classes de bug: parcela fica "paga" mas some do faturamento (`data_pagamento` fica vazio, e as views de faturamento exigem `data_pagamento IS NOT NULL`), e nenhum registro fica em `parcelas_pagamentos` (histórico de pagamentos do aluno fica incompleto)
+- Na tela de editar aluno, o dropdown de status das parcelas não deixa mais escolher "Pago" por causa disso — só mostra o status quando a parcela já está paga (BUG-082)
+
 ## Regra de Liberação da Prova
 
 ### Aluno Regular (não Acelerado)
@@ -117,6 +122,12 @@
 ### Critério de Aprovação
 - **Por matéria:** >= 60% de acertos = aprovado
 - **Geral:** aprovado em TODAS as matérias = aprovado geral
+
+### `status` vs `resultado` em `prova_agendamentos` (BUG-083, 23/09/2026)
+- As guias da tela "Provas Agendadas" (Agendadas/Aprovados/Reprovados/Reagendar) classificam cada linha pelo campo **`status`**, não pelo `resultado` — os dois têm que ficar sincronizados
+- Fluxo normal (via `trg_prova_completa`): ao aluno terminar todas as matérias, o trigger atualiza `status` E `resultado` juntos (`aprovado`/`reprovado`)
+- Se algum processo (migração manual, correção de dado, importação) só preencher `resultado` sem também atualizar `status`, o registro fica "invisível" na guia certa — se a `data_prova` já passou, cai sozinho na guia "Reagendar" mesmo tendo `resultado='aprovado'`/`'reprovado'` preenchido
+- Ao inserir ou corrigir `prova_agendamentos` manualmente (SQL direto, importação), sempre setar `status` igual ao `resultado` quando o resultado já é conhecido
 
 ### Comparação de Respostas
 - Usa `UPPER()` na comparação (aluno pode digitar 'a' ou 'A')

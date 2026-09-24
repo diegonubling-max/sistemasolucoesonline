@@ -16,8 +16,8 @@
 ### Dados dos Alunos
 - [ ] Aguardar resposta do Lovable sobre export do Supabase antigo
 - [ ] Se não devolver: re-cadastrar alunos manualmente (lista com Mônica/equipe)
-- [ ] Reimportar 431 agendamentos de prova do sistema antigo
-- [ ] Reimportar 541 registros de documentação do sistema antigo
+- [ ] Reimportar 431 agendamentos de prova do sistema antigo — uma tentativa parcial (100 registros, jan-jun/2026) foi feita e depois excluída em 24/09/2026 a pedido do Diego (ver BUG-083 em `14_BUGS_CONHECIDOS.md`); ainda falta reimportar do zero, com o campo `status` sincronizado com `resultado` desde a importação
+- [ ] Reimportar 541 registros de documentação do sistema antigo — uma tentativa parcial (100 registros, lotes 02/03/04-2026) foi feita e depois excluída em 24/09/2026; **bloqueado** até corrigir o schema de `documentacao_alunos` (~20 colunas que o código espera não existem na tabela — ver BUG-083 em `14_BUGS_CONHECIDOS.md` e a nota em `03_DATABASE.md`)
 
 ## 🟡 Média Prioridade
 
@@ -28,7 +28,7 @@
 - [ ] Configurar UTM tracking
 
 ### Financeiro
-- [ ] Criar views: view_total_recebido_mes, view_a_receber_mes, view_em_atraso
+- [x] Criar views: view_total_recebido_mes, view_a_receber_mes, view_em_atraso — já existem no banco
 - [ ] Baixa sincronizar com Asaas automaticamente (testar)
 - [ ] Criar função de integridade do banco (verificar inconsistências)
 
