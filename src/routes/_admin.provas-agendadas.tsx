@@ -287,15 +287,15 @@ Boa prova! 🍀`;
 
       return agendamentos.map((a) => {
         const aluno = a.aluno_id ? alunosMap.get(a.aluno_id) : null;
-        const nome = a.is_externo ? (a.nome_aluno ?? "—") : (aluno?.nome ?? "—");
-        const ctr = a.is_externo ? (a.ctr ?? "—") : (aluno?.ctr ?? "—");
-        const telefone = a.is_externo ? (a.telefone ?? "—") : (aluno?.telefone ?? "—");
+        const nome = a.is_externo ? (a.nome_aluno ?? "—") : (aluno?.nome ?? a.nome_aluno ?? "—");
+        const ctr = a.is_externo ? (a.ctr ?? "—") : (aluno?.ctr ?? a.ctr ?? "—");
+        const telefone = a.is_externo ? (a.telefone ?? "—") : (aluno?.telefone ?? a.telefone ?? "—");
         const poloDisplay = a.is_externo
           ? (a.polo ?? "—")
-          : (aluno?.polo_id ? (poloMap.get(aluno.polo_id) ?? "—") : "—");
+          : (aluno?.polo_id ? (poloMap.get(aluno.polo_id) ?? "—") : (a.polo ?? "—"));
         const sitFinComputed = a.is_externo
           ? (a.situacao_financeira ?? null)
-          : (a.aluno_id ? (sitFinAlunoMap.get(a.aluno_id) ?? null) : null);
+          : (a.aluno_id ? (sitFinAlunoMap.get(a.aluno_id) ?? a.situacao_financeira ?? null) : (a.situacao_financeira ?? null));
         const nota = a.is_externo ? null : (a.aluno_id ? (notaAlunoMap.get(a.aluno_id) ?? null) : null);
         return {
           ...a,
