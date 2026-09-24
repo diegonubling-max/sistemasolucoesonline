@@ -16,7 +16,7 @@
 ### Dados dos Alunos
 - [ ] Aguardar resposta do Lovable sobre export do Supabase antigo
 - [ ] Se não devolver: re-cadastrar alunos manualmente (lista com Mônica/equipe)
-- [ ] Reimportar 431 agendamentos de prova do sistema antigo — uma tentativa parcial (100 registros, jan-jun/2026) foi feita e depois excluída em 24/09/2026 a pedido do Diego (ver BUG-083 em `14_BUGS_CONHECIDOS.md`); ainda falta reimportar do zero, com o campo `status` sincronizado com `resultado` desde a importação
+- [x] Reimportar agendamentos de prova do sistema antigo — feito em 24/09/2026: 563 registros importados de um CSV novo (jan-dez/2026), com `status` já derivado de `resultado` na importação (evitando repetir o problema do BUG-083). Distribuição: Agendadas=11, Reagendar=72, Aprovados=479, Reprovados=1
 - [ ] Reimportar 541 registros de documentação do sistema antigo — uma tentativa parcial (100 registros, lotes 02/03/04-2026) foi feita e depois excluída em 24/09/2026; **bloqueado** até corrigir o schema de `documentacao_alunos` (~20 colunas que o código espera não existem na tabela — ver BUG-083 em `14_BUGS_CONHECIDOS.md` e a nota em `03_DATABASE.md`)
 
 ## 🟡 Média Prioridade
